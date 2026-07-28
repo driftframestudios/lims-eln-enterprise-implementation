@@ -1,16 +1,41 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "2.0.0",
   "name": "lims-eln-enterprise-implementation",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "python": ">=3.12",
-  "repository_role": "actual_implementation",
+  "repository_role": "enterprise_implementation",
+  "evidence_role": "actual_implementation",
   "fixture_policy": "synthetic_only",
   "validation_command": "python3 scripts/validate_repository.py",
+  "control_plane": {
+    "governance_schema_release": "2.0.0",
+    "control_plane_profile": "0.3.0",
+    "machine_node": "machine-node.json",
+    "first_receipt": "first-receipt.json",
+    "coordination_horizon": "COORDINATION-HORIZON.json",
+    "historical_machine_node": "release/seed-lineage-machine-node-v0.2.json"
+  },
   "contract_versions": {
     "specimen_command": "1.0.0",
     "execution_receipt": "1.0.0",
     "provenance": "1.0.0",
-    "runtime_setting_catalog": "1.0.0"
+    "runtime_setting_catalog": "1.0.0",
+    "bounded_caller_binding": "0.3.0",
+    "open_receipt_ledger": "2.0.0"
+  },
+  "bounded_caller": {
+    "binding_manifest": "release/bounded-caller-bindings.json",
+    "binding_digest": "sha256:f0e05a5ce3c4ae98b410d2a33b3722565263214c4efd5964997f9ce39c67733b",
+    "registered_operations": [
+      "specimen.read",
+      "specimen.review_flag.set",
+      "specimen.quarantine.bulk"
+    ],
+    "effect_classes": [
+      "read",
+      "narrow_write",
+      "broad_write"
+    ]
   },
   "runtime_configuration": {
     "configuration_source": "aws_systems_manager_parameter_store",
@@ -19,6 +44,12 @@
     "cache": "bounded_process_memory_fail_closed_at_expiry",
     "credential_source": "workload_identity"
   },
+  "receipt_families": [
+    "configured_vendor_environments",
+    "representative_migration_restore_rehearsals",
+    "production_security_observability",
+    "accountable_scientific_quality_regulatory_acceptance"
+  ],
   "acceptance_domains": [
     "engineering",
     "scientific",

@@ -41,7 +41,18 @@ def require_aware_utc(value: datetime) -> datetime:
 
 def canonical_json(value: Any) -> str:
     """Serialize a value into a stable comparison form."""
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    try:
+        return json.dumps(
+            value,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+            allow_nan=False,
+        )
+    except (TypeError, ValueError) as error:
+        raise DomainError(
+            "canonical content requires finite JSON values and string-keyed mappings"
+        ) from error
 
 
 def canonical_digest(value: Any) -> str:
@@ -120,4 +131,3 @@ class SpecimenAggregate:
                 f"specimen {self.specimen_id} is revision {self.version}; "
                 f"reload it and plan from that revision"
             )
-

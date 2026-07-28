@@ -1,7 +1,7 @@
 name: branch-policy
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, edited, synchronize, reopened]
 
 permissions:
@@ -12,17 +12,21 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Check GitFlow-like branch shape
+      - name: Check out base-controlled policy
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base-policy
+          persist-credentials: false
+
+      - name: Check GitFlow-like branch coordinates
+        working-directory: base-policy
         env:
           HEAD_REF: ${{ github.head_ref }}
           BASE_REF: ${{ github.base_ref }}
-        run: |
-          case "$HEAD_REF:$BASE_REF" in
-            feature/*:develop|fix/*:develop|chore/*:develop|forecast/*:develop|evidence/*:develop|release/*:main|hotfix/*:main)
-              exit 0
-              ;;
-            *)
-              echo "Use a governed change branch into develop, and release/ or hotfix/ into main."
-              exit 1
-              ;;
-          esac
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: >-
+          python3 scripts/check_branch_flow.py
+          --base "$BASE_REF"
+          --head "$HEAD_REF"
+          --author "$PR_AUTHOR"
