@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "receipt_id": "RECEIPT-LOCAL-REFERENCE-001",
+  "claim_id": "CLAIM-LOCAL-SYNTHETIC-PROOF-FLOOR",
+  "evidence_mode": "observed",
+  "assurance_stage": "verified",
+  "environment": "local-synthetic-reference",
+  "version_bindings": {
+    "repository": "0.1.0",
+    "python": "3.12+",
+    "fixture_profile": "synthetic-v1"
+  },
+  "scenario_ids": [
+    "SCN-LIFECYCLE-REPLAY",
+    "SCN-INSTRUMENT-QUARANTINE",
+    "SCN-VENDOR-AMBIGUOUS-READBACK",
+    "SCN-MIGRATION-RESTORE"
+  ],
+  "artifact_digests": [
+    "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  ],
+  "observed_at": "2026-07-28T12:00:00Z",
+  "performer_id": "SYN-AUTOMATION-RUNNER",
+  "reviewer_id": "SYN-INDEPENDENT-REVIEWER",
+  "limitations": [
+    "Configured vendor environments require separate qualification receipts.",
+    "Production security and observability require production-bound exercises.",
+    "Scientific, Quality, and Regulatory acceptance require accountable owners."
+  ]
+}
+

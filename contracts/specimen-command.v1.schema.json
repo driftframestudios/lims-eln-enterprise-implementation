@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://driftframe.example/contracts/specimen-command.v1.schema.json",
+  "title": "Specimen Command v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "command_id",
+    "tenant_id",
+    "specimen_id",
+    "actor_id",
+    "action",
+    "expected_version",
+    "occurred_at",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "command_id": {"type": "string", "minLength": 1},
+    "tenant_id": {"type": "string", "pattern": "^SYN-[A-Z0-9-]+$"},
+    "specimen_id": {"type": "string", "pattern": "^SYN-[A-Z0-9-]+$"},
+    "actor_id": {"type": "string", "pattern": "^SYN-[A-Z0-9-]+$"},
+    "action": {
+      "enum": [
+        "register",
+        "accession",
+        "start_processing",
+        "submit_review",
+        "release",
+        "correct",
+        "void"
+      ]
+    },
+    "expected_version": {"type": "integer", "minimum": 0},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "payload": {"type": "object"},
+    "reason_code": {"type": ["string", "null"]}
+  }
+}
+

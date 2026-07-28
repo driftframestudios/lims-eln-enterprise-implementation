@@ -1,0 +1,23 @@
+[
+  {
+    "tenant_id": "SYN-TENANT-A",
+    "canonical_identity": "SYN-SPECIMEN-0001",
+    "revision": 3,
+    "payload": {
+      "state": "under_review",
+      "specimen_type": "synthetic_plasma"
+    },
+    "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+    "tenant_id": "SYN-TENANT-A",
+    "canonical_identity": "SYN-SPECIMEN-0002",
+    "revision": 2,
+    "payload": {
+      "state": "in_process",
+      "specimen_type": "synthetic_tissue"
+    },
+    "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+]
+

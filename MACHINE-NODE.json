@@ -1,0 +1,38 @@
+{
+  "@id": "driftframe:site-reading:lims-eln-enterprise-implementation",
+  "type": "ImplementationRepository",
+  "name": "LIMS/ELN Enterprise Implementation",
+  "schema_version": "2.0.0",
+  "version": "0.1.0",
+  "as_of": "2026-07-28",
+  "repository_role": "actual_implementation",
+  "campaigns": [
+    {
+      "id": "lims-eln-open-receipts",
+      "marking_schema_version": "1.0.0",
+      "status": "implementation_floor_established"
+    },
+    {
+      "id": "comparative-literacy-constellation",
+      "marking_schema_version": "1.0.0",
+      "status": "comparison_ready"
+    }
+  ],
+  "proof_classes": [
+    "configured_vendor_environments",
+    "representative_migration_and_restore",
+    "production_security_and_observability",
+    "scientific_quality_regulatory_acceptance"
+  ],
+  "evidence_contract": {
+    "modes": ["planned", "simulated", "observed"],
+    "stages": ["specified", "verified", "qualified", "validated", "accepted"],
+    "promotion_rule": "Named evidence and accountable acceptance advance each stage."
+  },
+  "provenance": {
+    "repository": "driftframestudios/prototype-exemplars",
+    "pull_request": 3,
+    "merge_commit": "613f524821a25389748a9cd98d1bb0d303de87cf"
+  }
+}
+

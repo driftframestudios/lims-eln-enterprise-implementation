@@ -1,0 +1,88 @@
+from __future__ import annotations
+
+import unittest
+
+from lims_eln_implementation.idempotency import ContentCollision
+from lims_eln_implementation.lifecycle import LifecycleService
+from lims_eln_implementation.model import (
+    RevisionConflict,
+    SpecimenState,
+    TransitionRejected,
+)
+from lims_eln_implementation.store import InMemorySpecimenRepository
+
+from helpers import command
+
+
+class LifecycleTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.repository = InMemorySpecimenRepository()
+        self.service = LifecycleService(self.repository)
+
+    def test_registration_is_attributable_and_versioned(self) -> None:
+        aggregate = self.service.register(
+            command("cmd-001", "register", 0, payload={"type": "synthetic_plasma"})
+        )
+        self.assertEqual(aggregate.state, SpecimenState.REGISTERED)
+        self.assertEqual(aggregate.version, 1)
+        self.assertEqual(aggregate.events[0].actor_id, "SYN-ACTOR-01")
+        self.assertEqual(aggregate.events[0].aggregate_version, 1)
+
+    def test_exact_registration_replay_returns_recorded_outcome(self) -> None:
+        original = command("cmd-001", "register", 0)
+        first = self.service.register(original)
+        second = self.service.register(original)
+        self.assertIs(first, second)
+        self.assertEqual(len(second.events), 1)
+
+    def test_changed_content_on_stable_command_identity_is_a_collision(self) -> None:
+        self.service.register(command("cmd-001", "register", 0, payload={"type": "A"}))
+        with self.assertRaises(ContentCollision):
+            self.service.register(
+                command("cmd-001", "register", 0, payload={"type": "B"})
+            )
+
+    def test_full_review_and_correction_cycle(self) -> None:
+        aggregate = self.service.register(command("cmd-001", "register", 0))
+        for command_id, action, reason in (
+            ("cmd-002", "accession", None),
+            ("cmd-003", "start_processing", None),
+            ("cmd-004", "submit_review", None),
+            ("cmd-005", "release", "scientific_review_complete"),
+            ("cmd-006", "correct", "amended_interpretation"),
+            ("cmd-007", "submit_review", None),
+            ("cmd-008", "release", "scientific_review_complete"),
+        ):
+            aggregate = self.service.transition(
+                command(command_id, action, aggregate.version, reason=reason)
+            )
+        self.assertEqual(aggregate.state, SpecimenState.RELEASED)
+        self.assertEqual(aggregate.version, 8)
+        self.assertEqual(len(aggregate.events), 8)
+
+    def test_stale_revision_prompts_reload(self) -> None:
+        aggregate = self.service.register(command("cmd-001", "register", 0))
+        aggregate = self.service.transition(
+            command("cmd-002", "accession", aggregate.version)
+        )
+        with self.assertRaisesRegex(RevisionConflict, "reload"):
+            self.service.transition(command("cmd-stale", "start_processing", 1))
+
+    def test_unsupported_transition_explains_next_action(self) -> None:
+        aggregate = self.service.register(command("cmd-001", "register", 0))
+        with self.assertRaisesRegex(TransitionRejected, "select its next supported action"):
+            self.service.transition(command("cmd-002", "release", aggregate.version))
+
+    def test_void_requires_accountable_reason(self) -> None:
+        aggregate = self.service.register(command("cmd-001", "register", 0))
+        with self.assertRaisesRegex(TransitionRejected, "reason code"):
+            self.service.transition(command("cmd-002", "void", aggregate.version))
+        voided = self.service.transition(
+            command("cmd-003", "void", aggregate.version, reason="sample_compromised")
+        )
+        self.assertEqual(voided.state, SpecimenState.VOIDED)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
