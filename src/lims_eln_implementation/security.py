@@ -4,11 +4,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
-from typing import Any, Mapping
+from typing import Any, ClassVar, Mapping, Protocol
 
 
 class AccessBoundaryError(PermissionError):
     """An access request requires a matching tenant and capability."""
+
+
+class TenantSessionBindingError(RuntimeError):
+    """A database transaction requires a verified tenant session setting."""
+
+
+class TransactionCursor(Protocol):
+    def execute(self, operation: str, parameters: tuple[str]) -> Any: ...
+
+    def fetchone(self) -> tuple[Any, ...] | None: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +37,31 @@ class AccessContext:
             raise AccessBoundaryError(
                 f"capability {capability} requires an assigned role; "
                 "request access through the accountable owner"
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class PostgresTenantBinding:
+    """Bind and verify one tenant identity for the current database transaction."""
+
+    tenant_id: str
+    STATEMENT: ClassVar[str] = (
+        "select set_config('app.tenant_id', %s, true)"
+    )
+
+    def __post_init__(self) -> None:
+        if not self.tenant_id or len(self.tenant_id) > 128:
+            raise ValueError("tenant_id requires 1..128 characters")
+        if any(ord(character) < 32 for character in self.tenant_id):
+            raise ValueError("tenant_id requires printable characters")
+
+    def bind(self, cursor: TransactionCursor) -> None:
+        cursor.execute(self.STATEMENT, (self.tenant_id,))
+        observed = cursor.fetchone()
+        if observed != (self.tenant_id,):
+            raise TenantSessionBindingError(
+                "database transaction requires the requested tenant identity; "
+                "return the connection to the pool and open a fresh transaction"
             )
 
 
@@ -59,4 +94,3 @@ class EvidenceRedactor:
         if isinstance(value, tuple):
             return tuple(self.redact(item) for item in value)
         return value
-

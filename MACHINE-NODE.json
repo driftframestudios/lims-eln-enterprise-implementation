@@ -3,7 +3,7 @@
   "type": "ImplementationRepository",
   "name": "LIMS/ELN Enterprise Implementation",
   "schema_version": "2.0.0",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "as_of": "2026-07-28",
   "repository_role": "actual_implementation",
   "campaigns": [
@@ -35,4 +35,3 @@
     "merge_commit": "613f524821a25389748a9cd98d1bb0d303de87cf"
   }
 }
-

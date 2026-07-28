@@ -25,7 +25,13 @@
       "target_state": "Scientific, Quality, and Regulatory owners make separate, evidence-bound decisions.",
       "replacement_when_pending": "Keep the intended use in preauthorization and route evidence questions to the named owner.",
       "accountable_domains": ["scientific", "quality", "regulatory"]
+    },
+    {
+      "id": "OPEN-CONTAINER-DIGEST-QUALIFICATION",
+      "risk_severity": "medium",
+      "target_state": "Production container references bind approved upstream images to verified immutable digests with provenance and update ownership.",
+      "replacement_when_pending": "Keep version-tagged images in the local synthetic profile and qualify registry-specific digests before environment promotion.",
+      "accountable_domains": ["platform", "security", "operations", "quality"]
     }
   ]
 }
-

@@ -26,6 +26,8 @@ The standard-library test suite exercises:
 - byte-preserving instrument ingress and explainable quarantine;
 - ambiguous vendor-write reconciliation through authoritative readback;
 - resumable migration, semantic reconciliation, rollback, restore, and data exit;
+- account-scoped Parameter Store configuration and Secrets Manager retrieval;
+- bounded secret caching, explicit rotation stages, and value-free failure events;
 - allowlisted telemetry with recursive sensitive-value replacement;
 - service-level indicators with explicit numerator and denominator;
 - scientific, Quality, and Regulatory acceptance as separate accountable acts.
@@ -79,3 +81,17 @@ This repository supplies engineering evidence. Scientific meaning, Quality
 fitness, Regulatory applicability, and production authorization remain
 separate decisions by named accountable owners.
 
+## AWS runtime settings
+
+The implementation maps non-sensitive settings to AWS Systems Manager Parameter
+Store and rotatable credentials to AWS Secrets Manager. Full resource ARNs bind
+each catalog to one AWS partition, Region, and account. The runtime resolver
+accepts injected AWS SDK-shaped clients, supports Parameter Store versions and
+labels plus Secrets Manager version IDs and stages, and uses bounded
+process-memory caching with explicit refresh and invalidation.
+
+Terraform creates value-free secret metadata, a customer-managed KMS boundary,
+and an exact-resource read policy. A protected deployment or rotation workflow
+supplies secret versions. Workloads use platform identity credentials. See the
+[AWS runtime configuration and secret rotation runbook](docs/runbooks/aws-runtime-configuration-and-secret-rotation.md)
+and the value-free [synthetic catalog](fixtures/synthetic/runtime-setting-catalog.v1.json).

@@ -9,7 +9,8 @@ permissions:
 
 jobs:
   branch-shape:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - name: Check GitFlow-like branch shape
         env:
@@ -17,12 +18,11 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           case "$HEAD_REF:$BASE_REF" in
-            feature/*:develop|experiment/*:develop|release/*:main|hotfix/*:main)
+            feature/*:develop|fix/*:develop|chore/*:develop|forecast/*:develop|evidence/*:develop|release/*:main|hotfix/*:main)
               exit 0
               ;;
             *)
-              echo "Use feature/ or experiment/ into develop, and release/ or hotfix/ into main."
+              echo "Use a governed change branch into develop, and release/ or hotfix/ into main."
               exit 1
               ;;
           esac
-
