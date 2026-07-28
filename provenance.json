@@ -1,0 +1,25 @@
+{
+  "$schema": "./contracts/provenance.v1.schema.json",
+  "schema_version": "1.0.0",
+  "repository_role": "actual_implementation",
+  "created_as_of": "2026-07-28",
+  "seed": {
+    "repository": "driftframestudios/prototype-exemplars",
+    "pull_request": 3,
+    "pull_request_url": "https://github.com/driftframestudios/prototype-exemplars/pull/3",
+    "head_commit": "8be1e2c2ce239e51dcd5d1e19d1ff52e9d080b72",
+    "merge_commit": "613f524821a25389748a9cd98d1bb0d303de87cf",
+    "source_pack": "lims-eln-enterprise-reference-v0.1",
+    "source_validation": {
+      "tests_passed": 69,
+      "python_versions": ["3.12", "3.13"],
+      "source_digest": "e5fec68e639e9c056dc503335e0b60ef2d229c65ed4b72e7269df0bf7e2d5329"
+    }
+  },
+  "independence_boundary": {
+    "runtime_source_imported_from_simulation": false,
+    "shared_surface": "versioned_contracts_and_synthetic_fixtures",
+    "evidence_namespace": "observed_actual"
+  }
+}
+

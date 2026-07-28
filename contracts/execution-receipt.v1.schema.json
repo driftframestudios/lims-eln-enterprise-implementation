@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://driftframe.example/contracts/execution-receipt.v1.schema.json",
+  "title": "Execution Receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_id",
+    "claim_id",
+    "evidence_mode",
+    "assurance_stage",
+    "environment",
+    "version_bindings",
+    "scenario_ids",
+    "artifact_digests",
+    "observed_at",
+    "performer_id",
+    "reviewer_id",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "receipt_id": {"type": "string", "minLength": 1},
+    "claim_id": {"type": "string", "minLength": 1},
+    "evidence_mode": {"enum": ["planned", "simulated", "observed"]},
+    "assurance_stage": {
+      "enum": ["specified", "verified", "qualified", "validated", "accepted"]
+    },
+    "environment": {"type": "string", "minLength": 1},
+    "version_bindings": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"type": "string", "minLength": 1}
+    },
+    "scenario_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "artifact_digests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+    },
+    "observed_at": {"type": "string", "format": "date-time"},
+    "performer_id": {"type": "string", "minLength": 1},
+    "reviewer_id": {"type": "string", "minLength": 1},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  }
+}
+
