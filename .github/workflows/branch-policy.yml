@@ -1,0 +1,28 @@
+name: branch-policy
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  branch-shape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check GitFlow-like branch shape
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          case "$HEAD_REF:$BASE_REF" in
+            feature/*:develop|experiment/*:develop|release/*:main|hotfix/*:main)
+              exit 0
+              ;;
+            *)
+              echo "Use feature/ or experiment/ into develop, and release/ or hotfix/ into main."
+              exit 1
+              ;;
+          esac
+

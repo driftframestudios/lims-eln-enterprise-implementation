@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "command_id": "SYN-CMD-0001",
+  "tenant_id": "SYN-TENANT-A",
+  "specimen_id": "SYN-SPECIMEN-0001",
+  "actor_id": "SYN-ACTOR-SCIENTIST-01",
+  "action": "register",
+  "expected_version": 0,
+  "occurred_at": "2026-07-28T12:00:00Z",
+  "payload": {
+    "specimen_type": "synthetic_plasma",
+    "collection_protocol": "SYN-PROTOCOL-01"
+  },
+  "reason_code": null
+}
+
