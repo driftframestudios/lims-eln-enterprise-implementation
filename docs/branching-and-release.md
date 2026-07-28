@@ -13,7 +13,32 @@
 | `feature/<claim-or-receipt>` | `develop` | `develop` | Capability, specification, test, or receipt work |
 | `release/<semver>` | `develop` | `main` and `develop` | Frozen release candidate and evidence assembly |
 | `hotfix/<receipt-id>` | `main` | `main` and `develop` | Production correction with bounded evidence |
-| `experiment/<question>` | `develop` | proposal or archived tag | Time-boxed exploration with an explicit learning record |
+| `experiment/<question>` | `develop` | `develop` when promoted, or archived tag | Time-boxed exploration with an explicit learning record |
+
+## Automated maintenance branches
+
+Automated dependency maintenance is admitted as its own governed flow:
+
+- Dependabot uses the complete
+  `dependabot/github_actions/<dependency-update>` grammar and the
+  `dependabot[bot]` pull-request identity.
+- Renovate uses the complete `renovate/<dependency-update>` grammar and the
+  `renovate[bot]` pull-request identity.
+- Either flow targets `main` or `develop`; branch grammar, bot identity, and
+  target must agree.
+
+Each maintenance pull request continues through the ordinary validation,
+review, and merge controls. GitHub Actions execute with read-only repository
+permission. Dependabot jobs use Dependabot-scoped secrets when an approved
+workflow requires a secret. Default-branch security updates are merged forward
+to `develop` so both long-lived branches retain the correction.
+
+The branch-policy workflow runs on pull-request metadata while checking out the
+target branch's immutable base commit into a dedicated path. Its checker,
+workflow, tests, dependency-automation configuration, bounded-caller sources,
+release manifests, and governance orientation surfaces all require code-owner
+review. Repository rulesets retain the required-check and fresh-approval
+enforcement around these repository-local controls.
 
 ## Pull-request gates
 
@@ -57,4 +82,3 @@ Configure GitHub rulesets so that:
   an independent reviewer;
 - workflow permissions are read-only by default;
 - reusable workflows are pinned by immutable commit SHA.
-

@@ -49,6 +49,16 @@ CREDENTIAL_PATTERNS = {
         r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b"
     ),
 }
+CANONICAL_RECEIPT_FAMILIES = (
+    "configured_vendor_environments",
+    "representative_migration_restore_rehearsals",
+    "production_security_observability",
+    "accountable_scientific_quality_regulatory_acceptance",
+)
+
+
+def file_digest(path: Path) -> str:
+    return f"sha256:{sha256(path.read_bytes()).hexdigest()}"
 
 
 def load_json_files() -> list[Path]:
@@ -73,10 +83,14 @@ def validate_contracts() -> None:
 
 def validate_manifests() -> None:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
-    if manifest["version"] != "0.2.0":
-        raise AssertionError("manifest requires repository release 0.2.0")
-    if manifest["repository_role"] != "actual_implementation":
-        raise AssertionError("manifest repository role requires actual_implementation")
+    if manifest["version"] != "0.3.0":
+        raise AssertionError("manifest requires repository release 0.3.0")
+    if manifest["repository_role"] != "enterprise_implementation":
+        raise AssertionError(
+            "manifest repository role requires enterprise_implementation"
+        )
+    if manifest["evidence_role"] != "actual_implementation":
+        raise AssertionError("manifest evidence role requires actual_implementation")
     if manifest["fixture_policy"] != "synthetic_only":
         raise AssertionError("fixture policy requires synthetic_only")
     if manifest["contract_versions"].get("runtime_setting_catalog") != "1.0.0":
@@ -88,17 +102,112 @@ def validate_manifests() -> None:
         raise AssertionError(
             "runtime configuration source requires Systems Manager Parameter Store"
         )
+    control_plane = manifest.get("control_plane", {})
+    if control_plane.get("governance_schema_release") != "2.0.0":
+        raise AssertionError("control plane requires governance schema release 2.0.0")
+    if control_plane.get("control_plane_profile") != "0.3.0":
+        raise AssertionError("control plane requires profile 0.3.0")
+
     provenance = json.loads((ROOT / "provenance.json").read_text(encoding="utf-8"))
     seed = provenance["seed"]
     if seed["pull_request"] != 3:
         raise AssertionError("provenance requires source pull request 3")
     if seed["merge_commit"] != "613f524821a25389748a9cd98d1bb0d303de87cf":
         raise AssertionError("provenance requires the reviewed merge commit")
-    machine = json.loads((ROOT / "MACHINE-NODE.json").read_text(encoding="utf-8"))
-    if machine["schema_version"] != "2.0.0" or not machine["campaigns"]:
-        raise AssertionError("Machine Node requires schema v2 and campaign markings")
-    if machine["version"] != manifest["version"]:
-        raise AssertionError("Machine Node and manifest require one repository release")
+
+    machine = json.loads((ROOT / "machine-node.json").read_text(encoding="utf-8"))
+    first_receipt = json.loads(
+        (ROOT / "first-receipt.json").read_text(encoding="utf-8")
+    )
+    horizon = json.loads(
+        (ROOT / "COORDINATION-HORIZON.json").read_text(encoding="utf-8")
+    )
+    if machine["schema_release"] != "2.0.0" or not machine["campaigns"]:
+        raise AssertionError(
+            "canonical Machine Node requires governance schema v2 and campaigns"
+        )
+    if machine["repository_role"] != manifest["repository_role"]:
+        raise AssertionError(
+            "canonical Machine Node and manifest require one repository role"
+        )
+    if first_receipt["machine_node_id"] != machine["machine_node_id"]:
+        raise AssertionError("first receipt requires the canonical Machine Node")
+    if machine["coordination_horizon_id"] != horizon["horizon_id"]:
+        raise AssertionError("Machine Node requires the released Coordination Horizon")
+    if first_receipt["coordination_horizon_id"] != horizon["horizon_id"]:
+        raise AssertionError("first receipt requires the released Coordination Horizon")
+
+    historical_machine = json.loads(
+        (
+            ROOT / "release" / "seed-lineage-machine-node-v0.2.json"
+        ).read_text(encoding="utf-8")
+    )
+    if historical_machine.get("version") != "0.2.0":
+        raise AssertionError(
+            "historical Machine Node remains release 0.2.0 seed lineage"
+        )
+    if machine.get("seed_lineage", {}).get("release") != "implementation-v0.2.0":
+        raise AssertionError(
+            "canonical Machine Node requires explicit release 0.2.0 seed lineage"
+        )
+
+    binding_path = ROOT / manifest["bounded_caller"]["binding_manifest"]
+    binding = json.loads(binding_path.read_text(encoding="utf-8"))
+    if binding["binding_version"] != manifest["version"]:
+        raise AssertionError("bounded-caller binding requires the repository release")
+    for artifact in binding["source_artifacts"]:
+        path = ROOT / artifact["path"]
+        if sha256(path.read_bytes()).hexdigest() != artifact["sha256"]:
+            raise AssertionError(
+                f"bounded-caller source binding differs for {artifact['path']}"
+            )
+    binding_digest = file_digest(binding_path)
+    if manifest["bounded_caller"]["binding_digest"] != binding_digest:
+        raise AssertionError("manifest requires the bounded-caller binding digest")
+
+    ledger_path = ROOT / "receipts" / "open-receipt-ledger.json"
+    ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+    if ledger["schema_version"] != "2.0.0":
+        raise AssertionError("open receipt ledger requires schema release 2.0.0")
+    families = {
+        item["receipt_family"]
+        for item in ledger["receipts"]
+        if item["receipt_family"] in CANONICAL_RECEIPT_FAMILIES
+    }
+    if families != set(CANONICAL_RECEIPT_FAMILIES):
+        raise AssertionError("open receipt ledger requires four canonical families")
+    ledger_digest = file_digest(ledger_path)
+
+    release = json.loads(
+        (ROOT / "release" / "repository-role.json").read_text(encoding="utf-8")
+    )
+    if release["repository_release"] != manifest["version"]:
+        raise AssertionError("release role manifest requires repository release 0.3.0")
+    if release["repository_role"] != manifest["repository_role"]:
+        raise AssertionError("release role manifest requires enterprise_implementation")
+    if release["bounded_caller_binding_digest"] != binding_digest:
+        raise AssertionError("release role requires the bounded-caller binding digest")
+    if release["open_receipt_ledger_digest"] != ledger_digest:
+        raise AssertionError("release role requires the open receipt ledger digest")
+    if tuple(release["receipt_families"]) != CANONICAL_RECEIPT_FAMILIES:
+        raise AssertionError("release role requires canonical receipt-family order")
+
+    contracts = {
+        item["contract_id"]: item["digest"] for item in machine["contracts"]
+    }
+    receipt_contracts = {
+        item["contract_id"]: item["digest"]
+        for item in first_receipt["contract_state"]
+    }
+    for contract_id, expected in (
+        ("IMPLEMENTATION-BOUNDED-CALLER-001", binding_digest),
+        ("IMPLEMENTATION-OPEN-RECEIPTS-001", ledger_digest),
+    ):
+        if contracts.get(contract_id) != expected:
+            raise AssertionError(f"Machine Node requires {contract_id} digest")
+        if receipt_contracts.get(contract_id) != expected:
+            raise AssertionError(f"first receipt requires {contract_id} digest")
+
     receipt = json.loads(
         (ROOT / "receipts" / "local-verification.example.json").read_text(
             encoding="utf-8"
@@ -106,6 +215,10 @@ def validate_manifests() -> None:
     )
     if receipt["version_bindings"]["repository"] != manifest["version"]:
         raise AssertionError("local verification receipt requires the repository release")
+    if binding_digest not in receipt["artifact_digests"]:
+        raise AssertionError(
+            "local verification receipt requires the bounded-caller binding digest"
+        )
 
 
 def validate_synthetic_fixtures() -> None:
@@ -273,7 +386,7 @@ def main() -> int:
     result = run_tests()
     report = {
         "status": "passed",
-        "repository_role": "actual_implementation",
+        "repository_role": "enterprise_implementation",
         "json_files_validated": len(json_paths),
         "tests_run": result.testsRun,
         "source_digest": source_digest(),
@@ -282,12 +395,7 @@ def main() -> int:
         "runtime_configuration": "parameter_store_and_secrets_manager",
         "evidence_mode": "observed",
         "assurance_stage": "verified",
-        "open_receipts": [
-            "configured_vendor_environments",
-            "representative_migration_and_restore",
-            "production_security_and_observability",
-            "accountable_scientific_quality_regulatory_acceptance",
-        ],
+        "open_receipts": list(CANONICAL_RECEIPT_FAMILIES),
     }
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0

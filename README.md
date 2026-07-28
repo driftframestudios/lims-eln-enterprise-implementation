@@ -20,6 +20,11 @@ repository and consumes versioned contracts rather than simulation code.
 
 The standard-library test suite exercises:
 
+- a typed bounded caller with task-scoped identity, tenant, capability,
+  resource, request-budget, exact-approval, and replay boundaries;
+- registered read, idempotent narrow-write, and approval-gated broad-write
+  operations whose services retain effect control;
+- durable PostgreSQL receipt persistence and version-banded vendor SDK seams;
 - tenant-bound, attributable, revision-checked specimen transitions;
 - exact replay and changed-content collision handling;
 - custody transfer with an atomic outbox plan;
@@ -53,10 +58,20 @@ deterministic source digest.
 | `accepted` | Named accountable owners approved the bounded use and residual risk. |
 
 Execution and acceptance remain separate dimensions. Local verification creates
-a strong proof floor. Configured-vendor qualification, representative migration
-and restore rehearsals, production security and observability, and accountable
-scientific, Quality, and Regulatory decisions require environment-bound,
-date-bound receipts.
+a strong proof floor. The constellation then retains two explicit receipt
+paths:
+
+- a selected future reality fully closes configured vendor environments,
+  representative migration and restore rehearsals, production security and
+  observability, and accountable Scientific, Quality, and Regulatory
+  acceptance with modeled roles and executable simulated evidence; and
+- an independently versioned observed-successor path can add configured
+  environment and organizational evidence later without rewriting the
+  selected-future baseline.
+
+The simulated closure grants no production authorization. The observed path
+remains separately unasserted until its own environment, time, performer,
+reviewer, artifacts, and decisions are recorded.
 
 ## Repository map
 
@@ -67,7 +82,72 @@ date-bound receipts.
 - `infra` — local production-shape services and an AWS recovery baseline.
 - `docs` — architecture, GitFlow-like delivery, qualification, and runbooks.
 - `receipts` — example manifests whose evidence mode is explicit.
+- `release` — digest-bound source, role, and promotion manifests.
 - `scripts` — one-command repository validation.
+
+## Bounded caller
+
+AI, workflow, service, and human callers enter through the same service-owned
+operation boundary. A call carries a task-scoped caller grant, accountable
+actor, tenant, named operation, exact resources, typed payload, request time,
+and—when the effect requires it—an independent approval bound to the exact
+call identity, caller, actor, tenant, immutable operation contract, resource
+set, effect class, payload digest, and service-evaluated time window.
+
+The reference registry exposes:
+
+| Operation | Implementation effect | Governance effect |
+|---|---|---|
+| `specimen.read` | `read` | `read` |
+| `specimen.review_flag.set` | `idempotent_narrow_write` | `narrow_write` |
+| `specimen.quarantine.bulk` | `approval_gated_broad_write` | `broad_write` |
+
+The invocation ledger reserves a tenant and call identity before execution,
+replays an exact completed call, surfaces in-progress work, and routes
+changed-content collisions to recovery. The receipt store records decisions,
+effects, contract and invocation digests, grants, budget windows, approvals,
+result digests, request times, and record times independently from caller
+memory. Grants, approvals, budgets, resource scopes, payloads, and serialized
+outcomes become immutable construction snapshots, keeping authority and retries
+stable when caller-owned objects change.
+
+`InMemoryInvocationLedger` is the deterministic conformance model. A production
+`DbApiInvocationLedger` implements the PostgreSQL binding with tenant-scoped
+insertion, exact-content collision checks, leases, fencing-token compare-and-set
+transitions, completed-outcome replay, and an owned `recovery_required` state.
+Expired leases and ambiguous write exceptions enter reconciliation; they do not
+become automatic write retries.
+
+The production transaction contract calls for reservation, tenant-scoped
+effects, outcome, receipt publication, and an outbox in one service-owned
+transaction. The included adapters implement and test the durable invocation
+and receipt transitions independently. A deployment adapter still has to
+compose those transitions with its domain mutation and outbox on one
+connection, then prove the resulting crash points in a configured PostgreSQL
+encounter. Until that receipt lands, separate-transaction or external write
+uncertainty remains in `recovery_required` and receives no automatic write
+retry.
+External vendor effects use a stable request identity, qualified SDK and API
+bands, response-identity checks, and authoritative readback for timeouts,
+cleanup ambiguity, or unexpected confirmation. Driver and SDK bands accept
+complete released `major.minor.patch` coordinates. Deployment qualification
+binds these seams to the service-owned transaction and recovery policy.
+
+The released source coordinates and digests live in
+[`release/bounded-caller-bindings.json`](release/bounded-caller-bindings.json).
+
+## Governance orientation
+
+[`machine-node.json`](machine-node.json),
+[`first-receipt.json`](first-receipt.json), and
+[`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) implement Site Reading
+governance schema release `2.0.0` and Control Plane Profile `0.3.0`. They orient
+collaborators; they do not grant runtime authority.
+
+The earlier Machine Node is preserved as
+[`release/seed-lineage-machine-node-v0.2.json`](release/seed-lineage-machine-node-v0.2.json).
+It remains useful for historical comparison and is not the canonical governance
+Machine Node for release `0.3.0`.
 
 ## Data and authority boundaries
 

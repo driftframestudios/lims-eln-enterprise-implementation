@@ -1,0 +1,58 @@
+{
+  "binding_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
+  "binding_version": "0.3.0",
+  "governance_schema_release": "2.0.0",
+  "control_plane_profile": "0.3.0",
+  "python": ">=3.12",
+  "source_artifacts": [
+    {
+      "path": "src/lims_eln_implementation/bounded_caller.py",
+      "sha256": "7e7c6e2fd0ae3daedb3c2ee508377c4fe30d58b700601df778f3cea23658e50d",
+      "responsibility": "authority grants, budgets, exact approvals, invocation replay, operation dispatch, and attributable receipts"
+    },
+    {
+      "path": "src/lims_eln_implementation/bounded_examples.py",
+      "sha256": "9cadef804334d79f5405e7b9cfad61376fd7960945e3469cf6d40be90a46bb11",
+      "responsibility": "typed read, idempotent narrow-write, and approval-gated broad-write specimen operations"
+    },
+    {
+      "path": "src/lims_eln_implementation/production_adapters.py",
+      "sha256": "402fddeb7049fe2574671b9efb2e414be221d92bc069115ed07b4a7ccf1d20e6",
+      "responsibility": "qualified durable invocation and receipt persistence plus version-banded vendor SDK integration seams"
+    },
+    {
+      "path": "sql/001_laboratory_core.sql",
+      "sha256": "9ca1e85f87c19b9cf155e6daff10eb124226a6e55f3184df95b69dc98b92b218",
+      "responsibility": "tenant-scoped invocation leases, fencing state, recovery ownership, completed outcomes, receipts, and row-level security"
+    }
+  ],
+  "operation_bindings": [
+    {
+      "operation_name": "specimen.read",
+      "version": "1.0.0",
+      "implementation_effect_class": "read",
+      "governance_effect_class": "read"
+    },
+    {
+      "operation_name": "specimen.review_flag.set",
+      "version": "1.0.0",
+      "implementation_effect_class": "idempotent_narrow_write",
+      "governance_effect_class": "narrow_write"
+    },
+    {
+      "operation_name": "specimen.quarantine.bulk",
+      "version": "1.0.0",
+      "implementation_effect_class": "approval_gated_broad_write",
+      "governance_effect_class": "broad_write"
+    }
+  ],
+  "receipt_requirements": [
+    "caller and accountable actor identity",
+    "tenant and resource scope",
+    "operation name version contract digest and effect class",
+    "payload invocation and result digests",
+    "decision reason grant budget window approval and timing",
+    "durable replay fencing lease or owned recovery state"
+  ],
+  "binding_posture": "candidate_release_content"
+}

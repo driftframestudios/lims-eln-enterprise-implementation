@@ -1,5 +1,46 @@
 # Changelog
 
+## 0.3.0 — 2026-07-28
+
+- Added a typed bounded-caller boundary with task-scoped grants, tenant and
+  resource scope, request budgets, exact independent approvals, durable replay
+  seams, and attributable call receipts.
+- Added service-owned read, idempotent narrow-write, and approval-gated
+  broad-write operations with explicit governance effect-class mappings.
+- Added version-banded PostgreSQL receipt persistence and vendor SDK adapter
+  seams with explicit connection and client lifecycle handling.
+- Bound broad approvals to one call and immutable operation contract; evaluated
+  expiry and revocation against service time; and canonicalized payload and
+  replay snapshots at ingress.
+- Added fenced, leased PostgreSQL invocation state plus receipt provenance for
+  operation contracts, invocation digests, grants, budget windows, and request
+  time. Vendor confirmation mismatches and post-write cleanup enter
+  authoritative reconciliation as ambiguous outcomes.
+- Added governance schema release 2.0.0 Machine Node, first receipt, and
+  Coordination Horizon surfaces. The earlier Machine Node remains documented
+  seed lineage under `release/`.
+- Added digest-bound source and release manifests, canonical receipt-family
+  names, and a separate observed-successor ledger for the four substantive
+  receipt families.
+- Bound the implementation to the fully closed selected-future simulation
+  while preserving environment-observed qualification and organizational
+  acceptance as independent evidence.
+- Added bot-identity-bound Dependabot and Renovate branch flows, grouped
+  GitHub Actions maintenance, and regression coverage for spoofed, malformed,
+  partial, and wrong-target coordinates.
+- Moved branch-policy execution to base-controlled source and expanded code
+  ownership across dependency automation, authority, release, and orientation
+  surfaces.
+- Snapshotted every authority-bearing container at construction and added
+  mutation regressions for grants, budgets, payloads, and resource scopes.
+- Added the DB-API PostgreSQL invocation ledger with lease-expiry and
+  fencing-token compare-and-set transitions, completed replay, durable recovery
+  ownership, and deterministic adapter tests.
+- Routed ambiguous write failures to authoritative reconciliation and released
+  pre-effect reservations when authorization-receipt persistence fails.
+- Restricted qualified driver and SDK versions to complete released
+  `major.minor.patch` coordinates.
+
 ## 0.2.0 — 2026-07-28
 
 - Added an account- and Region-scoped runtime setting catalog.

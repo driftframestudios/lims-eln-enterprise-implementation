@@ -15,6 +15,9 @@ Release candidates flow from `develop` to `release/<version>`, then to `main`.
 Production corrections flow from `main` through `hotfix/<receipt-id>` and return
 to both `main` and `develop`. Details live in `docs/branching-and-release.md`.
 
+Dependabot and Renovate maintenance pull requests follow the bot-bound branch
+policy in the branching guide. Their updates retain the same tests, review,
+release evidence, and merge-forward expectations as contributor changes.
+
 A merge approval confirms engineering review. Scientific, Quality, Regulatory,
 security, privacy, and production acceptance remain distinct, named decisions.
-

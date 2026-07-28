@@ -113,6 +113,111 @@ create table vendor_projection (
     unique (tenant_id, vendor_name, request_id)
 );
 
+create table bounded_call_invocation (
+    tenant_id text not null references tenant(tenant_id),
+    call_id text not null,
+    invocation_sha256 text not null check (invocation_sha256 ~ '^[a-f0-9]{64}$'),
+    operation_name text not null,
+    operation_version text not null,
+    operation_contract_sha256 text not null check (
+        operation_contract_sha256 ~ '^[a-f0-9]{64}$'
+    ),
+    state text not null check (
+        state in ('in_progress', 'completed', 'recovery_required')
+    ),
+    lease_token uuid not null,
+    fencing_token bigint not null check (fencing_token >= 1),
+    lease_expires_at_utc timestamptz not null,
+    output_document jsonb,
+    result_sha256 text check (
+        result_sha256 is null or result_sha256 ~ '^[a-f0-9]{64}$'
+    ),
+    recovery_reason text,
+    reserved_at_utc timestamptz not null default now(),
+    completed_at_utc timestamptz,
+    primary key (tenant_id, call_id),
+    check (
+        state <> 'completed'
+        or (
+            output_document is not null
+            and result_sha256 is not null
+            and completed_at_utc is not null
+        )
+    ),
+    check (
+        state <> 'recovery_required'
+        or recovery_reason is not null
+    ),
+    check (
+        state <> 'in_progress'
+        or (
+            output_document is null
+            and result_sha256 is null
+            and completed_at_utc is null
+            and recovery_reason is null
+        )
+    )
+);
+
+create table bounded_call_receipt (
+    receipt_id text primary key,
+    call_id text not null,
+    caller_id text not null,
+    actor_id text not null,
+    tenant_id text not null references tenant(tenant_id),
+    operation_name text not null,
+    operation_version text not null,
+    operation_contract_sha256 text check (
+        operation_contract_sha256 is null
+        or operation_contract_sha256 ~ '^[a-f0-9]{64}$'
+    ),
+    effect_class text not null check (
+        effect_class in (
+            'unclassified', 'read', 'idempotent_narrow_write',
+            'approval_gated_broad_write'
+        )
+    ),
+    resource_ids jsonb not null check (
+        jsonb_typeof(resource_ids) = 'array'
+        and jsonb_array_length(resource_ids) between 1 and 25
+    ),
+    payload_sha256 text not null check (payload_sha256 ~ '^[a-f0-9]{64}$'),
+    invocation_sha256 text check (
+        invocation_sha256 is null or invocation_sha256 ~ '^[a-f0-9]{64}$'
+    ),
+    decision text not null check (
+        decision in ('authorized', 'succeeded', 'replayed', 'denied', 'failed')
+    ),
+    reason_code text not null,
+    grant_id text,
+    budget_window_id text,
+    approval_id text,
+    result_sha256 text check (
+        result_sha256 is null or result_sha256 ~ '^[a-f0-9]{64}$'
+    ),
+    requested_at_utc timestamptz not null,
+    recorded_at_utc timestamptz not null,
+    check (
+        effect_class <> 'approval_gated_broad_write'
+        or decision in ('denied', 'failed')
+        or approval_id is not null
+    ),
+    check (effect_class <> 'unclassified' or decision = 'denied'),
+    check (
+        decision = 'denied'
+        or (
+            operation_contract_sha256 is not null
+            and invocation_sha256 is not null
+            and grant_id is not null
+            and budget_window_id is not null
+        )
+    ),
+    check (
+        decision not in ('succeeded', 'replayed')
+        or result_sha256 is not null
+    )
+);
+
 create table migration_checkpoint (
     rehearsal_id text not null,
     tenant_id text not null references tenant(tenant_id),
@@ -168,6 +273,9 @@ create index outbox_delivery_queue
 create index instrument_quarantine_queue
     on instrument_inbox (tenant_id, recorded_at_utc)
     where disposition = 'quarantined';
+create index bounded_call_expired_lease
+    on bounded_call_invocation (tenant_id, lease_expires_at_utc)
+    where state = 'in_progress';
 
 -- SAFETY BOUNDARY: workload transactions carry one verified tenant identity;
 -- forced row policies provide the replacement state for every tenant table.
@@ -179,6 +287,8 @@ alter table custody_position enable row level security;
 alter table instrument_inbox enable row level security;
 alter table transactional_outbox enable row level security;
 alter table vendor_projection enable row level security;
+alter table bounded_call_invocation enable row level security;
+alter table bounded_call_receipt enable row level security;
 alter table migration_checkpoint enable row level security;
 
 alter table tenant force row level security;
@@ -189,6 +299,8 @@ alter table custody_position force row level security;
 alter table instrument_inbox force row level security;
 alter table transactional_outbox force row level security;
 alter table vendor_projection force row level security;
+alter table bounded_call_invocation force row level security;
+alter table bounded_call_receipt force row level security;
 alter table migration_checkpoint force row level security;
 
 create policy tenant_tenant_policy on tenant
@@ -215,6 +327,25 @@ create policy outbox_tenant_policy on transactional_outbox
 create policy vendor_projection_tenant_policy on vendor_projection
     using (tenant_id = current_setting('app.tenant_id', true))
     with check (tenant_id = current_setting('app.tenant_id', true));
+create policy bounded_call_invocation_tenant_policy on bounded_call_invocation
+    using (tenant_id = current_setting('app.tenant_id', true))
+    with check (tenant_id = current_setting('app.tenant_id', true));
+create policy bounded_call_receipt_tenant_policy on bounded_call_receipt
+    using (tenant_id = current_setting('app.tenant_id', true))
+    with check (tenant_id = current_setting('app.tenant_id', true));
 create policy migration_checkpoint_tenant_policy on migration_checkpoint
     using (tenant_id = current_setting('app.tenant_id', true))
     with check (tenant_id = current_setting('app.tenant_id', true));
+
+create function preserve_bounded_call_receipt()
+returns trigger
+language plpgsql
+as $$
+begin
+    raise exception 'bounded call receipts are append-only';
+end;
+$$;
+
+create trigger bounded_call_receipt_append_only
+before update or delete on bounded_call_receipt
+for each row execute function preserve_bounded_call_receipt();
