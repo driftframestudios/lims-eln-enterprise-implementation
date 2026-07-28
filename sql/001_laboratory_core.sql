@@ -169,23 +169,52 @@ create index instrument_quarantine_queue
     on instrument_inbox (tenant_id, recorded_at_utc)
     where disposition = 'quarantined';
 
--- SAFETY: database sessions carry one tenant identity; row policies supply the
--- replacement boundary for cross-tenant reads and writes.
+-- SAFETY BOUNDARY: workload transactions carry one verified tenant identity;
+-- forced row policies provide the replacement state for every tenant table.
+alter table tenant enable row level security;
 alter table specimen enable row level security;
 alter table specimen_event enable row level security;
+alter table idempotency_ledger enable row level security;
 alter table custody_position enable row level security;
+alter table instrument_inbox enable row level security;
 alter table transactional_outbox enable row level security;
+alter table vendor_projection enable row level security;
+alter table migration_checkpoint enable row level security;
 
+alter table tenant force row level security;
+alter table specimen force row level security;
+alter table specimen_event force row level security;
+alter table idempotency_ledger force row level security;
+alter table custody_position force row level security;
+alter table instrument_inbox force row level security;
+alter table transactional_outbox force row level security;
+alter table vendor_projection force row level security;
+alter table migration_checkpoint force row level security;
+
+create policy tenant_tenant_policy on tenant
+    using (tenant_id = current_setting('app.tenant_id', true))
+    with check (tenant_id = current_setting('app.tenant_id', true));
 create policy specimen_tenant_policy on specimen
     using (tenant_id = current_setting('app.tenant_id', true))
     with check (tenant_id = current_setting('app.tenant_id', true));
 create policy specimen_event_tenant_policy on specimen_event
     using (tenant_id = current_setting('app.tenant_id', true))
     with check (tenant_id = current_setting('app.tenant_id', true));
+create policy idempotency_ledger_tenant_policy on idempotency_ledger
+    using (tenant_id = current_setting('app.tenant_id', true))
+    with check (tenant_id = current_setting('app.tenant_id', true));
 create policy custody_tenant_policy on custody_position
+    using (tenant_id = current_setting('app.tenant_id', true))
+    with check (tenant_id = current_setting('app.tenant_id', true));
+create policy instrument_inbox_tenant_policy on instrument_inbox
     using (tenant_id = current_setting('app.tenant_id', true))
     with check (tenant_id = current_setting('app.tenant_id', true));
 create policy outbox_tenant_policy on transactional_outbox
     using (tenant_id = current_setting('app.tenant_id', true))
     with check (tenant_id = current_setting('app.tenant_id', true));
-
+create policy vendor_projection_tenant_policy on vendor_projection
+    using (tenant_id = current_setting('app.tenant_id', true))
+    with check (tenant_id = current_setting('app.tenant_id', true));
+create policy migration_checkpoint_tenant_policy on migration_checkpoint
+    using (tenant_id = current_setting('app.tenant_id', true))
+    with check (tenant_id = current_setting('app.tenant_id', true));

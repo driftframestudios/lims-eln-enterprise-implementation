@@ -1,5 +1,6 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_kms_key" "evidence" {
   description             = "${var.name} evidence encryption"
@@ -91,4 +92,3 @@ output "evidence_bucket" {
 output "backup_vault" {
   value = aws_backup_vault.laboratory.name
 }
-

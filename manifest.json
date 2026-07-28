@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "name": "lims-eln-enterprise-implementation",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "python": ">=3.12",
   "repository_role": "actual_implementation",
   "fixture_policy": "synthetic_only",
@@ -9,7 +9,15 @@
   "contract_versions": {
     "specimen_command": "1.0.0",
     "execution_receipt": "1.0.0",
-    "provenance": "1.0.0"
+    "provenance": "1.0.0",
+    "runtime_setting_catalog": "1.0.0"
+  },
+  "runtime_configuration": {
+    "configuration_source": "aws_systems_manager_parameter_store",
+    "secret_source": "aws_secrets_manager",
+    "resource_scope": "full_arn_partition_region_account",
+    "cache": "bounded_process_memory_fail_closed_at_expiry",
+    "credential_source": "workload_identity"
   },
   "acceptance_domains": [
     "engineering",
@@ -20,4 +28,3 @@
     "operations"
   ]
 }
-

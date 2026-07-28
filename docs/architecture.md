@@ -73,3 +73,44 @@ Observed evidence advances an assurance stage only after its named gate passes.
 Simulated evidence remains useful for forecasting and comparative literacy while
 its `evidence_mode` keeps authority legible.
 
+## Runtime configuration boundary
+
+The deployed setting catalog separates non-sensitive configuration from
+rotatable secrets:
+
+```text
+Terraform output ──> value-free catalog ──> account/Region scope gate
+                                                │
+                         ┌──────────────────────┴──────────────────────┐
+                         ▼                                             ▼
+              Parameter Store `String`                     Secrets Manager
+              version or label selector                  version ID / stage
+                         │                                             │
+                         └──────────────────────┬──────────────────────┘
+                                                ▼
+                                  bounded process-memory cache
+                                                │
+                                                ▼
+                                 narrow consuming integration
+```
+
+The workload role can read only the named parameters and secrets. KMS
+decryption is constrained to the runtime key, Secrets Manager service path,
+and named secret encryption contexts. Provider failures become value-free
+structured events; resolved values retain redacted representations and can be
+registered with the logging guard.
+
+## Governance-plane database boundary
+
+`evidence_receipt` and `acceptance_decision` are deliberate governance-plane
+records rather than workload tenant tables. They bind cross-tenant claims to
+independent reviewers and accountable Scientific, Quality, and Regulatory
+decisions. The application workload role receives zero direct write authority
+to these tables. A separate evidence-writer role uses reviewed procedures,
+append-only audit capture, and the minimum statement set needed to record a
+receipt or decision.
+
+Tenant-scoped workload tables use forced row-level security and a verified,
+transaction-local `app.tenant_id` setting. Migration activity uses a dedicated,
+time-bounded administration role with audited `BYPASSRLS` authority; application
+connections remain outside that role.

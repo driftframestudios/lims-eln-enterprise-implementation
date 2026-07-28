@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "aws_scope": {
+    "partition": "aws",
+    "region": "us-east-1",
+    "account_id": "111122223333"
+  },
+  "settings": [
+    {
+      "logical_name": "vendor.base_url",
+      "classification": "configuration",
+      "source": "parameter_store",
+      "resource_arn": "arn:aws:ssm:us-east-1:111122223333:parameter/example-laboratory/lims-eln-reference/sandbox/config/vendor-base-url",
+      "cache_ttl_seconds": 900,
+      "parameter_version": 1
+    },
+    {
+      "logical_name": "vendor.timeout_seconds",
+      "classification": "configuration",
+      "source": "parameter_store",
+      "resource_arn": "arn:aws:ssm:us-east-1:111122223333:parameter/example-laboratory/lims-eln-reference/sandbox/config/vendor-timeout-seconds",
+      "cache_ttl_seconds": 900
+    },
+    {
+      "logical_name": "vendor.credentials",
+      "classification": "secret",
+      "source": "secrets_manager",
+      "resource_arn": "arn:aws:secretsmanager:us-east-1:111122223333:secret:example-laboratory/lims-eln-reference/sandbox/vendor-credentials-SYN001",
+      "cache_ttl_seconds": 300,
+      "secret_version_stage": "AWSCURRENT"
+    }
+  ]
+}
