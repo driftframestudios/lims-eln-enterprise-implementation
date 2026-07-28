@@ -6,7 +6,7 @@
   "assurance_stage": "verified",
   "environment": "local-synthetic-reference",
   "version_bindings": {
-    "repository": "0.1.0",
+    "repository": "0.2.0",
     "python": "3.12+",
     "fixture_profile": "synthetic-v1"
   },
@@ -28,4 +28,3 @@
     "Scientific, Quality, and Regulatory acceptance require accountable owners."
   ]
 }
-
