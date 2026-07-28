@@ -25,8 +25,18 @@
     "scientific_quality_regulatory_acceptance"
   ],
   "evidence_contract": {
-    "modes": ["planned", "simulated", "observed"],
-    "stages": ["specified", "verified", "qualified", "validated", "accepted"],
+    "modes": [
+      "planned",
+      "simulated",
+      "observed"
+    ],
+    "stages": [
+      "specified",
+      "verified",
+      "qualified",
+      "validated",
+      "accepted"
+    ],
     "promotion_rule": "Named evidence and accountable acceptance advance each stage."
   },
   "provenance": {

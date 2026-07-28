@@ -35,14 +35,28 @@ instrument bytes ──> durable inbox ──> canonical domain ──> scientif
    and artifact bytes.
 9. Operational rates retain their good-event numerator and valid-event denominator.
 10. Scientific, Quality, and Regulatory acceptance remain separate decisions.
+11. Authority grants, approval scopes, budgets, request resources, and payloads
+    retain immutable construction snapshots.
+12. A write exception retains durable recovery ownership until authoritative
+    reconciliation determines its material effect.
 
 ## Transaction boundaries
 
-The production persistence adapter places aggregate mutation, append-only domain
-event, idempotency commit, and outbox message in one database transaction.
+The production persistence contract places aggregate mutation, append-only
+domain event, idempotency commit, and outbox message in one database transaction.
+The reference adapters implement the durable invocation and receipt
+transitions; the deployment adapter composes them with domain SQL and the outbox
+on one connection and retains a configured-environment crash-point receipt.
 External delivery begins after commit. A worker claims outbox rows with bounded
 leases, records each attempt, and moves exhausted work to a reviewable recovery
 queue with its source identity intact.
+
+The bounded-caller invocation row uses a lease token and monotonically governed
+fencing token for every completion, pre-effect release, and recovery transition.
+Exact completed content replays its stored output. Changed content receives a
+collision. An expired lease and an ambiguous write exception move to
+`recovery_required`, preserving the call identity for authoritative
+reconciliation.
 
 Instrument ingress stores bytes in versioned object storage before parsing.
 Database metadata binds the object key and checksum to the inbox identity.

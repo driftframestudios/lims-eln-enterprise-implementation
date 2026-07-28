@@ -1,33 +1,60 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "2.0.0",
   "as_of": "2026-07-28",
+  "pathway": "environment_observed_successors",
+  "selected_future_closure": {
+    "status": "closed_in_simulation",
+    "digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9",
+    "environment_observed_closure": "separate_unasserted_state",
+    "production_authorization_effect": "none"
+  },
   "receipts": [
     {
-      "id": "OPEN-CONFIGURED-VENDORS",
+      "id": "RCP-OBSERVED-VENDORS-001",
+      "receipt_family": "configured_vendor_environments",
+      "evidence_mode": "observed",
+      "assurance_stage": "specified",
+      "status": "designed_but_unexercised",
       "target_state": "Sapio, Benchling, and LabKey configured environments pass the shared conformance suite.",
       "replacement_when_pending": "Keep adapter claims at locally verified and schedule environment-bound execution.",
       "accountable_domains": ["engineering", "platform", "scientific-data", "quality"]
     },
     {
-      "id": "OPEN-MIGRATION-RESTORE",
+      "id": "RCP-OBSERVED-MIGRATION-RESTORE-001",
+      "receipt_family": "representative_migration_restore_rehearsals",
+      "evidence_mode": "observed",
+      "assurance_stage": "specified",
+      "status": "designed_but_unexercised",
       "target_state": "Representative migration, rollback, clean restore, and data exit meet approved parity, RTO, and RPO.",
       "replacement_when_pending": "Keep cutover authority with the source system and rehearse with an approved representative profile.",
       "accountable_domains": ["data", "operations", "scientific", "quality"]
     },
     {
-      "id": "OPEN-PRODUCTION-SECURITY-OBSERVABILITY",
+      "id": "RCP-OBSERVED-SECURITY-OBSERVABILITY-001",
+      "receipt_family": "production_security_observability",
+      "evidence_mode": "observed",
+      "assurance_stage": "specified",
+      "status": "designed_but_unexercised",
       "target_state": "Production-bound controls, redaction, SLOs, alerts, and incident exercises produce reviewed evidence.",
       "replacement_when_pending": "Keep production authorization at the current gate and exercise the production-shape environment.",
       "accountable_domains": ["security", "privacy", "operations"]
     },
     {
-      "id": "OPEN-ACCOUNTABLE-ACCEPTANCE",
+      "id": "RCP-OBSERVED-ACCOUNTABLE-ACCEPTANCE-001",
+      "receipt_family": "accountable_scientific_quality_regulatory_acceptance",
+      "evidence_mode": "observed",
+      "assurance_stage": "specified",
+      "status": "designed_but_unexercised",
       "target_state": "Scientific, Quality, and Regulatory owners make separate, evidence-bound decisions.",
       "replacement_when_pending": "Keep the intended use in preauthorization and route evidence questions to the named owner.",
       "accountable_domains": ["scientific", "quality", "regulatory"]
     },
     {
-      "id": "OPEN-CONTAINER-DIGEST-QUALIFICATION",
+      "id": "RCP-OBSERVED-CONTAINER-SUPPLY-CHAIN-001",
+      "receipt_family": "container_supply_chain_qualification",
+      "evidence_mode": "observed",
+      "assurance_stage": "specified",
+      "status": "designed_but_unexercised",
       "risk_severity": "medium",
       "target_state": "Production container references bind approved upstream images to verified immutable digests with provenance and update ownership.",
       "replacement_when_pending": "Keep version-tagged images in the local synthetic profile and qualify registry-specific digests before environment promotion.",

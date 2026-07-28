@@ -21,6 +21,8 @@ TENANT_TABLES = {
     "transactional_outbox",
     "vendor_projection",
     "migration_checkpoint",
+    "bounded_call_invocation",
+    "bounded_call_receipt",
 }
 
 
@@ -83,6 +85,41 @@ class SqlTenantStructureTests(unittest.TestCase):
             if re.search(r"\btenant_id\s+text\b", columns)
         }
         self.assertEqual(declared, TENANT_TABLES)
+
+    def test_bounded_call_persistence_has_fencing_and_audit_provenance(self) -> None:
+        invocation = re.search(
+            r"create\s+table\s+bounded_call_invocation\s*\((.*?)\);",
+            self.sql,
+            flags=re.DOTALL,
+        )
+        receipt = re.search(
+            r"create\s+table\s+bounded_call_receipt\s*\((.*?)\);",
+            self.sql,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(invocation)
+        self.assertIsNotNone(receipt)
+        assert invocation is not None and receipt is not None
+        for field in (
+            "invocation_sha256",
+            "operation_contract_sha256",
+            "lease_token",
+            "fencing_token",
+            "lease_expires_at_utc",
+            "output_document",
+            "result_sha256",
+            "recovery_reason",
+        ):
+            self.assertIn(field, invocation.group(1))
+        for field in (
+            "operation_contract_sha256",
+            "invocation_sha256",
+            "grant_id",
+            "budget_window_id",
+            "requested_at_utc",
+            "recorded_at_utc",
+        ):
+            self.assertIn(field, receipt.group(1))
 
 
 class PostgresTenantBindingTests(unittest.TestCase):

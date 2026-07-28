@@ -1,0 +1,68 @@
+{
+  "manifest_version": "2.0.0",
+  "repository_role": "enterprise_implementation",
+  "repository_release": "0.3.0",
+  "external_release": "implementation-v0.3.0",
+  "bounded_caller_binding_digest": "sha256:f0e05a5ce3c4ae98b410d2a33b3722565263214c4efd5964997f9ce39c67733b",
+  "open_receipt_ledger_digest": "sha256:dd4ba99d45727605114b08208eff355a6ae217ecd4b7eb7da5d92264e773c707",
+  "selected_future_closure_digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9",
+  "first_receipt_contract": {
+    "path": "first-receipt.json",
+    "authority_mode": "orientation_only",
+    "local_evidence_mode": "observed",
+    "local_assurance_stage": "verified",
+    "simulated_closure_status": "closed_in_simulation",
+    "environment_observed_closure": "separate_unasserted_state",
+    "production_authorization_effect": "none"
+  },
+  "machine_node": "machine-node.json",
+  "coordination_horizon": "COORDINATION-HORIZON.json",
+  "historical_machine_node": {
+    "path": "release/seed-lineage-machine-node-v0.2.json",
+    "release": "0.2.0",
+    "status": "preserved_seed_lineage"
+  },
+  "historical_external_releases": [
+    {
+      "repository_release": "0.2.0",
+      "external_release": "implementation-v0.2.0",
+      "status": "preserved_historical_baseline"
+    },
+    {
+      "repository_release": "0.1.0",
+      "external_release": "implementation-v0.1.0",
+      "status": "preserved_historical_baseline"
+    }
+  ],
+  "contract_bindings": {
+    "governance_schema": "2.0.0",
+    "control_plane_profile": "0.3.0",
+    "execution_receipt_schema": "1.0.0",
+    "provenance_schema": "1.0.0",
+    "runtime_setting_catalog_schema": "1.0.0",
+    "bounded_caller_binding": "0.3.0",
+    "open_receipt_ledger": "2.0.0"
+  },
+  "receipt_families": [
+    "configured_vendor_environments",
+    "representative_migration_restore_rehearsals",
+    "production_security_observability",
+    "accountable_scientific_quality_regulatory_acceptance"
+  ],
+  "seed_release_coordinates": {
+    "governance_commit": "716d4581d723a5c1b56f16efdbcd25790549ae33",
+    "program_specification_commit": "fc7707134b58ed12ad349bf649d2af1c3689bd01",
+    "implementation_commit": "c79f8727963a427164a11eacb14837d795cd757d"
+  },
+  "promotion_coordinates": {
+    "status": "pending_cross_repository_settlement",
+    "open_receipt_id": "RCP-IMPLEMENTATION-PROMOTION-003",
+    "required_roles": [
+      "site_reading_governance",
+      "program_specification",
+      "enterprise_implementation",
+      "simulated_final_state",
+      "comparative_evidence"
+    ]
+  }
+}

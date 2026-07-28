@@ -1,9 +1,19 @@
 /contracts/ @driftframestudios
+/machine-node.json @driftframestudios
+/first-receipt.json @driftframestudios
+/COORDINATION-HORIZON.json @driftframestudios
+/manifest.json @driftframestudios
+/release/ @driftframestudios
+/scripts/check_branch_flow.py @driftframestudios
+/tests/test_branch_flow.py @driftframestudios
+/src/lims_eln_implementation/bounded_caller.py @driftframestudios
+/src/lims_eln_implementation/bounded_examples.py @driftframestudios
+/src/lims_eln_implementation/production_adapters.py @driftframestudios
 /src/lims_eln_implementation/migration.py @driftframestudios
 /src/lims_eln_implementation/security.py @driftframestudios
 /src/lims_eln_implementation/acceptance.py @driftframestudios
 /sql/ @driftframestudios
 /infra/ @driftframestudios
 /receipts/ @driftframestudios
+/.github/dependabot.yml @driftframestudios
 /.github/workflows/ @driftframestudios
-
