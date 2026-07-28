@@ -5,7 +5,11 @@ from __future__ import annotations
 from dataclasses import replace
 from uuid import UUID, uuid5
 
-from .idempotency import IdempotencyLedger, ReservationState
+from .idempotency import (
+    IdempotencyInProgress,
+    IdempotencyLedger,
+    ReservationState,
+)
 from .model import (
     Command,
     DomainEvent,
@@ -14,7 +18,7 @@ from .model import (
     TransitionRejected,
     require_aware_utc,
 )
-from .store import SpecimenRepository
+from .store import AtomicExecutor, InMemoryAtomicExecutor, SpecimenRepository
 
 
 _EVENT_NAMESPACE = UUID("85f45b64-16d2-4e80-a90b-37a181443dd2")
@@ -34,11 +38,26 @@ class LifecycleService:
         self,
         repository: SpecimenRepository,
         idempotency: IdempotencyLedger[SpecimenAggregate] | None = None,
+        atomic: AtomicExecutor | None = None,
     ) -> None:
         self._repository = repository
         self._idempotency = idempotency or IdempotencyLedger()
+        if atomic is None:
+            if not all(
+                hasattr(participant, "transaction_snapshot")
+                and hasattr(participant, "transaction_restore")
+                for participant in (repository, self._idempotency)
+            ):
+                raise ValueError(
+                    "durable lifecycle adapters require one shared atomic executor"
+                )
+            atomic = InMemoryAtomicExecutor((repository, self._idempotency))  # type: ignore[arg-type]
+        self._atomic = atomic
 
     def register(self, command: Command) -> SpecimenAggregate:
+        return self._atomic.execute(lambda: self._register(command))
+
+    def _register(self, command: Command) -> SpecimenAggregate:
         if command.action != "register":
             raise TransitionRejected("registration requires action=register")
         reservation = self._idempotency.reserve(
@@ -47,6 +66,11 @@ class LifecycleService:
         if reservation.state is ReservationState.REPLAY:
             assert reservation.outcome is not None
             return reservation.outcome
+        if reservation.state is ReservationState.IN_PROGRESS:
+            raise IdempotencyInProgress(
+                f"command {command.command_id} is already in progress; "
+                "reconcile its recorded outcome before another execution"
+            )
         current = self._repository.get(command.tenant_id, command.specimen_id)
         if current is not None:
             raise TransitionRejected(
@@ -67,12 +91,20 @@ class LifecycleService:
         return aggregate
 
     def transition(self, command: Command) -> SpecimenAggregate:
+        return self._atomic.execute(lambda: self._transition(command))
+
+    def _transition(self, command: Command) -> SpecimenAggregate:
         reservation = self._idempotency.reserve(
             command.tenant_id, command.command_id, command.content_digest
         )
         if reservation.state is ReservationState.REPLAY:
             assert reservation.outcome is not None
             return reservation.outcome
+        if reservation.state is ReservationState.IN_PROGRESS:
+            raise IdempotencyInProgress(
+                f"command {command.command_id} is already in progress; "
+                "reconcile its recorded outcome before another execution"
+            )
         current = self._repository.get(command.tenant_id, command.specimen_id)
         if current is None:
             raise TransitionRejected(
@@ -132,4 +164,3 @@ class LifecycleService:
             reason_code=command.reason_code,
         )
         return replace(aggregate, events=aggregate.events + (event,))
-

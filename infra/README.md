@@ -9,13 +9,15 @@ attribute removal.
 - customer-managed encryption and rotation;
 - private, versioned object storage;
 - archival lifecycle and explicit retention;
-- a backup vault;
+- a backup vault awaiting an environment-owned plan, selection, vault lock,
+  and restore schedule;
 - encrypted operational logs.
 - Parameter Store entries for non-sensitive runtime configuration;
 - Secrets Manager metadata with customer-managed encryption;
 - a value-free runtime catalog and exact-resource read policy.
 
-The Terraform is an architectural baseline. An adopting organization adds its
+The Terraform is an architectural baseline rather than an active backup
+implementation. An adopting organization adds its
 network, identity federation, database topology, workload runtime, backup plan,
 regional design, policy-as-code, and accountable approval before deployment.
 

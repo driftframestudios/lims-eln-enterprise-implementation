@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import unittest
 
-from lims_eln_implementation.idempotency import ContentCollision
+from lims_eln_implementation.idempotency import (
+    ContentCollision,
+    IdempotencyInProgress,
+    IdempotencyLedger,
+)
 from lims_eln_implementation.lifecycle import LifecycleService
 from lims_eln_implementation.model import (
     RevisionConflict,
@@ -41,6 +45,28 @@ class LifecycleTests(unittest.TestCase):
             self.service.register(
                 command("cmd-001", "register", 0, payload={"type": "B"})
             )
+
+    def test_matching_in_progress_command_fails_closed(self) -> None:
+        ledger: IdempotencyLedger = IdempotencyLedger()
+        pending = command("cmd-pending", "register", 0)
+        ledger.reserve(pending.tenant_id, pending.command_id, pending.content_digest)
+        service = LifecycleService(InMemorySpecimenRepository(), ledger)
+
+        with self.assertRaisesRegex(IdempotencyInProgress, "reconcile"):
+            service.register(pending)
+
+    def test_failed_idempotency_commit_rolls_back_specimen(self) -> None:
+        class FailingCommitLedger(IdempotencyLedger):
+            def commit(self, tenant_id, key, outcome):
+                raise RuntimeError("synthetic ledger failure")
+
+        repository = InMemorySpecimenRepository()
+        service = LifecycleService(repository, FailingCommitLedger())
+
+        with self.assertRaisesRegex(RuntimeError, "synthetic ledger failure"):
+            service.register(command("cmd-atomic", "register", 0))
+
+        self.assertIsNone(repository.get("SYN-TENANT-A", "SYN-SPECIMEN-0001"))
 
     def test_full_review_and_correction_cycle(self) -> None:
         aggregate = self.service.register(command("cmd-001", "register", 0))
@@ -85,4 +111,3 @@ class LifecycleTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -110,7 +110,7 @@ class BranchFlowTests(unittest.TestCase):
         self.assertEqual(check_branch_flow.DEPENDABOT_BRANCH_ECOSYSTEMS, configured)
         self.assertNotIn("pull-request-branch-name:", config)
         self.assertEqual(
-            1,
+            0,
             self.invoke(
                 base="main",
                 head="dependabot/pip/urllib3-3.0.0",
@@ -142,6 +142,7 @@ class BranchFlowTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("permissions:\n  contents: read", workflow)
         self.assertIn("pull_request_target:", workflow)
+        self.assertIn("\n  branch-policy:\n", workflow)
         self.assertIn("ref: ${{ github.event.pull_request.base.sha }}", workflow)
         self.assertIn("path: base-policy", workflow)
         self.assertIn("working-directory: base-policy", workflow)
@@ -170,6 +171,15 @@ class BranchFlowTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertIn(f"{path} @driftframestudios", owners)
+
+
+    def test_stable_implementation_context_fails_closed_on_matrix_result(self):
+        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("\n  implementation-validation:\n", workflow)
+        self.assertIn("if: ${{ always() }}", workflow)
+        self.assertIn('test "$VALIDATE_RESULT" = "success"', workflow)
 
 
 if __name__ == "__main__":

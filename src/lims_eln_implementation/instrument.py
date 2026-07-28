@@ -61,7 +61,11 @@ class InstrumentIngress:
                     raw_sha256=prior.raw_sha256,
                     normalized_digest=prior.normalized_digest,
                     reason_code=prior.reason_code,
-                    recovery="reuse the original normalized outcome",
+                    recovery=(
+                        "reuse the original normalized outcome"
+                        if prior.normalized_digest is not None
+                        else "reuse the original quarantine decision"
+                    ),
                 )
             return self._quarantine(
                 envelope,
@@ -81,6 +85,12 @@ class InstrumentIngress:
                 envelope,
                 "malformed_json",
                 "repair the source export and submit it with a new message identity",
+            )
+        if not isinstance(payload, dict):
+            return self._quarantine(
+                envelope,
+                "invalid_document_shape",
+                "supply one JSON object through the approved instrument profile",
             )
         required = {"analyte", "value", "unit"}
         missing = sorted(required.difference(payload))
@@ -127,5 +137,5 @@ class InstrumentIngress:
             recovery=recovery,
         )
         self.quarantine.append((envelope, result))
+        self._ledger.setdefault((envelope.tenant_id, envelope.message_id), result)
         return result
-

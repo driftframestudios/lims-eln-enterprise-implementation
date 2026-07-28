@@ -55,6 +55,9 @@ CANONICAL_RECEIPT_FAMILIES = (
     "production_security_observability",
     "accountable_scientific_quality_regulatory_acceptance",
 )
+CANONICAL_SELECTED_FUTURE_CLOSURE_DIGEST = (
+    "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb"
+)
 
 
 def file_digest(path: Path) -> str:
@@ -83,8 +86,8 @@ def validate_contracts() -> None:
 
 def validate_manifests() -> None:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
-    if manifest["version"] != "0.3.0":
-        raise AssertionError("manifest requires repository release 0.3.0")
+    if manifest["version"] != "0.3.1":
+        raise AssertionError("manifest requires repository release 0.3.1")
     if manifest["repository_role"] != "enterprise_implementation":
         raise AssertionError(
             "manifest repository role requires enterprise_implementation"
@@ -103,8 +106,8 @@ def validate_manifests() -> None:
             "runtime configuration source requires Systems Manager Parameter Store"
         )
     control_plane = manifest.get("control_plane", {})
-    if control_plane.get("governance_schema_release") != "2.0.0":
-        raise AssertionError("control plane requires governance schema release 2.0.0")
+    if control_plane.get("governance_schema_release") != "2.0.1":
+        raise AssertionError("control plane requires governance schema release 2.0.1")
     if control_plane.get("control_plane_profile") != "0.3.0":
         raise AssertionError("control plane requires profile 0.3.0")
 
@@ -122,7 +125,7 @@ def validate_manifests() -> None:
     horizon = json.loads(
         (ROOT / "COORDINATION-HORIZON.json").read_text(encoding="utf-8")
     )
-    if machine["schema_release"] != "2.0.0" or not machine["campaigns"]:
+    if machine["schema_release"] != "2.0.1" or not machine["campaigns"]:
         raise AssertionError(
             "canonical Machine Node requires governance schema v2 and campaigns"
         )
@@ -155,6 +158,13 @@ def validate_manifests() -> None:
     binding = json.loads(binding_path.read_text(encoding="utf-8"))
     if binding["binding_version"] != manifest["version"]:
         raise AssertionError("bounded-caller binding requires the repository release")
+    if (
+        binding["governance_schema_release"]
+        != control_plane["governance_schema_release"]
+    ):
+        raise AssertionError(
+            "bounded-caller binding requires the selected governance schema release"
+        )
     for artifact in binding["source_artifacts"]:
         path = ROOT / artifact["path"]
         if sha256(path.read_bytes()).hexdigest() != artifact["sha256"]:
@@ -169,6 +179,13 @@ def validate_manifests() -> None:
     ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
     if ledger["schema_version"] != "2.0.0":
         raise AssertionError("open receipt ledger requires schema release 2.0.0")
+    if (
+        ledger["selected_future_closure"]["digest"]
+        != CANONICAL_SELECTED_FUTURE_CLOSURE_DIGEST
+    ):
+        raise AssertionError(
+            "open receipt ledger requires the canonical selected-future closure"
+        )
     families = {
         item["receipt_family"]
         for item in ledger["receipts"]
@@ -182,7 +199,7 @@ def validate_manifests() -> None:
         (ROOT / "release" / "repository-role.json").read_text(encoding="utf-8")
     )
     if release["repository_release"] != manifest["version"]:
-        raise AssertionError("release role manifest requires repository release 0.3.0")
+        raise AssertionError("release role manifest requires repository release 0.3.1")
     if release["repository_role"] != manifest["repository_role"]:
         raise AssertionError("release role manifest requires enterprise_implementation")
     if release["bounded_caller_binding_digest"] != binding_digest:
@@ -191,6 +208,13 @@ def validate_manifests() -> None:
         raise AssertionError("release role requires the open receipt ledger digest")
     if tuple(release["receipt_families"]) != CANONICAL_RECEIPT_FAMILIES:
         raise AssertionError("release role requires canonical receipt-family order")
+    if (
+        release["selected_future_closure_digest"]
+        != CANONICAL_SELECTED_FUTURE_CLOSURE_DIGEST
+    ):
+        raise AssertionError(
+            "release role requires the canonical selected-future closure"
+        )
 
     contracts = {
         item["contract_id"]: item["digest"] for item in machine["contracts"]
@@ -207,6 +231,17 @@ def validate_manifests() -> None:
             raise AssertionError(f"Machine Node requires {contract_id} digest")
         if receipt_contracts.get(contract_id) != expected:
             raise AssertionError(f"first receipt requires {contract_id} digest")
+    for surface_name, surface in (
+        ("Machine Node", contracts),
+        ("first receipt", receipt_contracts),
+    ):
+        if (
+            surface.get("SIMULATED-SUBSTANTIVE-CLOSURE-2028-V1")
+            != CANONICAL_SELECTED_FUTURE_CLOSURE_DIGEST
+        ):
+            raise AssertionError(
+                f"{surface_name} requires the canonical selected-future closure"
+            )
 
     receipt = json.loads(
         (ROOT / "receipts" / "local-verification.example.json").read_text(
@@ -215,6 +250,13 @@ def validate_manifests() -> None:
     )
     if receipt["version_bindings"]["repository"] != manifest["version"]:
         raise AssertionError("local verification receipt requires the repository release")
+    if (
+        receipt["version_bindings"]["governance_schema"]
+        != control_plane["governance_schema_release"]
+    ):
+        raise AssertionError(
+            "local verification receipt requires the selected governance schema"
+        )
     if binding_digest not in receipt["artifact_digests"]:
         raise AssertionError(
             "local verification receipt requires the bounded-caller binding digest"

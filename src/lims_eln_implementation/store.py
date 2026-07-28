@@ -2,10 +2,58 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Protocol
+from threading import RLock
+from typing import Generic, Protocol, TypeVar
 
 from .model import RevisionConflict, SpecimenAggregate
+
+
+T = TypeVar("T")
+
+
+class TransactionParticipant(Protocol):
+    """State that can participate in the deterministic transaction adapter."""
+
+    def transaction_snapshot(self) -> object: ...
+
+    def transaction_restore(self, snapshot: object) -> None: ...
+
+
+class AtomicExecutor(Protocol):
+    """One commit boundary shared by application state and its evidence."""
+
+    def execute(self, operation: Callable[[], T]) -> T: ...
+
+
+class InMemoryAtomicExecutor(Generic[T]):
+    """Serial, rollback-capable conformance adapter for a database transaction.
+
+    Deployment adapters implement ``AtomicExecutor`` with one database
+    transaction and pass the same connection to every durable participant.
+    """
+
+    def __init__(self, participants: tuple[TransactionParticipant, ...]) -> None:
+        if not participants:
+            raise ValueError("an atomic executor requires at least one participant")
+        self._participants = participants
+        self._lock = RLock()
+
+    def execute(self, operation: Callable[[], T]) -> T:
+        with self._lock:
+            snapshots = tuple(
+                participant.transaction_snapshot()
+                for participant in self._participants
+            )
+            try:
+                return operation()
+            except BaseException:
+                for participant, snapshot in reversed(
+                    tuple(zip(self._participants, snapshots))
+                ):
+                    participant.transaction_restore(snapshot)
+                raise
 
 
 class SpecimenRepository(Protocol):
@@ -32,6 +80,14 @@ class InMemorySpecimenRepository:
             )
         self._items[identity] = aggregate
 
+    def transaction_snapshot(self) -> object:
+        return dict(self._items)
+
+    def transaction_restore(self, snapshot: object) -> None:
+        if not isinstance(snapshot, dict):
+            raise TypeError("specimen transaction snapshot requires a dictionary")
+        self._items = dict(snapshot)
+
 
 @dataclass(frozen=True, slots=True)
 class OutboxMessage:
@@ -52,3 +108,10 @@ class InMemoryOutbox:
             return
         self.messages.append(message)
 
+    def transaction_snapshot(self) -> object:
+        return tuple(self.messages)
+
+    def transaction_restore(self, snapshot: object) -> None:
+        if not isinstance(snapshot, tuple):
+            raise TypeError("outbox transaction snapshot requires a tuple")
+        self.messages = list(snapshot)

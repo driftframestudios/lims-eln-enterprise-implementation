@@ -106,9 +106,10 @@ rotation interval appropriate to the threat model.
 
 `ConfigurationResolutionError` exposes a stable resolution code, logical name,
 source, one-way resource fingerprint, retryability decision, and sanitized
-provider code. Provider exception messages remain attached only as the Python
-exception cause for protected diagnostics and stay outside the public message
-and structured fields.
+provider code. Provider exception messages leave the raised exception chain.
+The logging filter also replaces registered values in messages, arguments,
+structured extras, stack text, and exception rendering before a handler emits
+the record.
 
 | Resolution code | Operational route |
 |---|---|

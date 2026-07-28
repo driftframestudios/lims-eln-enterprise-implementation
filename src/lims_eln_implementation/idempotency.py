@@ -18,6 +18,10 @@ class ContentCollision(IdempotencyError):
     """A stable key arrived with different semantic content."""
 
 
+class IdempotencyInProgress(IdempotencyError):
+    """A matching reservation already owns the right to execute."""
+
+
 class ReservationState(StrEnum):
     ACQUIRED = "acquired"
     REPLAY = "replay"
@@ -67,3 +71,21 @@ class IdempotencyLedger(Generic[T]):
         entry = self._entries.get((tenant_id, key))
         return entry.outcome if entry and entry.committed else None
 
+    def transaction_snapshot(self) -> object:
+        """Capture ledger state for the deterministic atomic conformance adapter."""
+
+        return {
+            identity: _Entry(
+                content_digest=entry.content_digest,
+                outcome=entry.outcome,
+                committed=entry.committed,
+            )
+            for identity, entry in self._entries.items()
+        }
+
+    def transaction_restore(self, snapshot: object) -> None:
+        """Restore a snapshot after a reference transaction fails."""
+
+        if not isinstance(snapshot, dict):
+            raise TypeError("idempotency transaction snapshot requires a dictionary")
+        self._entries = dict(snapshot)

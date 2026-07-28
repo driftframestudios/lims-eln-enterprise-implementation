@@ -57,6 +57,28 @@ class CustodyTests(unittest.TestCase):
             service.current("SYN-TENANT-A", "SYN-SPECIMEN-0001"), first
         )
 
+    def test_outbox_failure_rolls_back_custody_position(self) -> None:
+        class FailingOutbox(InMemoryOutbox):
+            def append(self, message):
+                super().append(message)
+                raise RuntimeError("synthetic outbox failure")
+
+        outbox = FailingOutbox()
+        service = CustodyService(outbox)
+        with self.assertRaisesRegex(RuntimeError, "synthetic outbox failure"):
+            service.place(
+                tenant_id="SYN-TENANT-A",
+                specimen_id="SYN-SPECIMEN-0001",
+                location="SYN-FREEZER",
+                custodian_id="SYN-ACTOR-01",
+                expected_version=0,
+                transfer_id="SYN-TRANSFER-ATOMIC",
+                occurred_at=NOW,
+            )
+
+        self.assertIsNone(service.current("SYN-TENANT-A", "SYN-SPECIMEN-0001"))
+        self.assertEqual(outbox.messages, [])
+
 
 class InstrumentIngressTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -117,7 +139,22 @@ class InstrumentIngressTests(unittest.TestCase):
         self.assertEqual(result.reason_code, "malformed_json")
         self.assertIn("repair", result.recovery)
 
+    def test_quarantine_replay_retains_original_decision_and_identity(self) -> None:
+        envelope = self.envelope(b"{broken")
+        first = self.ingress.ingest(envelope)
+        replay = self.ingress.ingest(envelope)
+        changed = self.ingress.ingest(
+            self.envelope(
+                b'{"analyte":"A","value":"1","unit":"ng/uL"}',
+                message_id=envelope.message_id,
+            )
+        )
+
+        self.assertEqual(first.disposition, IngressDisposition.QUARANTINED)
+        self.assertEqual(replay.disposition, IngressDisposition.REPLAYED)
+        self.assertEqual(replay.reason_code, "malformed_json")
+        self.assertEqual(changed.reason_code, "message_identity_collision")
+
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.1 — 2026-07-28
+
+- Route the golden specimen journey through the bounded caller.
+- Fail closed on in-progress lifecycle and vendor reservations.
+- Add rollback-capable atomic reference seams for state and evidence.
+- Add least-privilege PostgreSQL identities, tenant-scoped acceptance evidence,
+  and leased outbox recovery state.
+- Bind acceptance to one intended use and release claim.
+- Harden AWS response binding and runtime-value log redaction.
+- Add a credential-free LabKey JSON API exemplar with bounded reads and pagination.
+- Strengthen migration parity, package validation, and the stable CI aggregate.
+- Migrate orientation and evidence bindings to governance 2.0.1 and the corrected
+  canonical selected-future closure.
+- Make the stable implementation aggregate run on every outcome and fail when any
+  proof-matrix member differs from success.
+
 ## 0.3.0 — 2026-07-28
 
 - Added a typed bounded-caller boundary with task-scoped grants, tenant and

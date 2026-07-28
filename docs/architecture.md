@@ -44,12 +44,13 @@ instrument bytes ──> durable inbox ──> canonical domain ──> scientif
 
 The production persistence contract places aggregate mutation, append-only
 domain event, idempotency commit, and outbox message in one database transaction.
-The reference adapters implement the durable invocation and receipt
-transitions; the deployment adapter composes them with domain SQL and the outbox
-on one connection and retains a configured-environment crash-point receipt.
-External delivery begins after commit. A worker claims outbox rows with bounded
-leases, records each attempt, and moves exhausted work to a reviewable recovery
-queue with its source identity intact.
+The in-memory atomic adapter proves rollback semantics for lifecycle plus
+idempotency and custody plus outbox. The PostgreSQL schema supplies outbox
+leases, fencing, and recovery state, while the durable invocation and receipt
+adapters prove their statements independently. The configured deployment still
+needs one connection-scoped composition and a worker that claims rows, records
+attempts, and routes exhausted work to reviewable recovery. Those two
+configured-environment receipts remain open.
 
 The bounded-caller invocation row uses a lease token and monotonically governed
 fencing token for every completion, pre-effect release, and recovery transition.
@@ -58,10 +59,12 @@ collision. An expired lease and an ambiguous write exception move to
 `recovery_required`, preserving the call identity for authoritative
 reconciliation.
 
-Instrument ingress stores bytes in versioned object storage before parsing.
-Database metadata binds the object key and checksum to the inbox identity.
-Scientific normalization creates a new canonical digest while preserving the
-raw digest.
+The production contract stores instrument bytes in versioned object storage
+before parsing and binds object key and checksum to the inbox identity.
+The current executable ingress is an in-memory conformance model; a durable
+object-store/inbox adapter and its crash-point proof remain configured-
+environment work. Scientific normalization creates a new canonical digest
+while preserving the raw digest.
 
 ## Vendor boundaries
 
@@ -116,15 +119,15 @@ registered with the logging guard.
 
 ## Governance-plane database boundary
 
-`evidence_receipt` and `acceptance_decision` are deliberate governance-plane
-records rather than workload tenant tables. They bind cross-tenant claims to
-independent reviewers and accountable Scientific, Quality, and Regulatory
-decisions. The application workload role receives zero direct write authority
-to these tables. A separate evidence-writer role uses reviewed procedures,
-append-only audit capture, and the minimum statement set needed to record a
-receipt or decision.
+`evidence_receipt` and `acceptance_decision` are tenant-scoped governance-plane
+records. They bind one intended use and release claim to independent reviewers
+and accountable Scientific, Quality, and Regulatory decisions. The application
+workload role receives zero direct write authority to these tables. A separate
+evidence-writer role uses append-only tables and the minimum statement set
+needed to record a receipt or decision.
 
-Tenant-scoped workload tables use forced row-level security and a verified,
-transaction-local `app.tenant_id` setting. Migration activity uses a dedicated,
-time-bounded administration role with audited `BYPASSRLS` authority; application
-connections remain outside that role.
+Tenant-scoped tables use forced row-level security and a verified,
+transaction-local `app.tenant_id` setting. Application, outbox, evidence, and
+migration identities are distinct `NOSUPERUSER NOBYPASSRLS` roles. A separately
+approved break-glass administration identity belongs to the adopting
+environment and is intentionally absent from the ordinary repository runtime.

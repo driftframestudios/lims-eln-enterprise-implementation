@@ -38,3 +38,35 @@ jobs:
 
       - name: Validate repository
         run: python3 scripts/validate_repository.py
+
+  implementation-validation:
+    name: implementation-validation
+    if: ${{ always() }}
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Require the complete implementation proof matrix
+        env:
+          VALIDATE_RESULT: ${{ needs.validate.result }}
+        run: test "$VALIDATE_RESULT" = "success"
+
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Select Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+          cache: ""
+
+      - name: Validate package type surfaces schemas and secret patterns
+        run: python3 scripts/validate_implementation.py
+
+      - name: Build and import-check dependency-free package archive
+        run: >-
+          python3 scripts/build_package_archive.py
+          /tmp/lims_eln_enterprise_implementation-0.3.1-py3-none-any.whl

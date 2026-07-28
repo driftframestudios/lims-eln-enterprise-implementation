@@ -22,8 +22,8 @@ The standard-library test suite exercises:
 
 - a typed bounded caller with task-scoped identity, tenant, capability,
   resource, request-budget, exact-approval, and replay boundaries;
-- registered read, idempotent narrow-write, and approval-gated broad-write
-  operations whose services retain effect control;
+- registered read, idempotent narrow-write, approval-gated broad-write, and
+  bounded golden-journey operations whose services retain effect control;
 - durable PostgreSQL receipt persistence and version-banded vendor SDK seams;
 - tenant-bound, attributable, revision-checked specimen transitions;
 - exact replay and changed-content collision handling;
@@ -101,6 +101,7 @@ The reference registry exposes:
 | `specimen.read` | `read` | `read` |
 | `specimen.review_flag.set` | `idempotent_narrow_write` | `narrow_write` |
 | `specimen.quarantine.bulk` | `approval_gated_broad_write` | `broad_write` |
+| `specimen.golden_journey.execute` | `idempotent_narrow_write` | `narrow_write` |
 
 The invocation ledger reserves a tenant and call identity before execution,
 replays an exact completed call, surfaces in-progress work, and routes
@@ -120,11 +121,12 @@ become automatic write retries.
 
 The production transaction contract calls for reservation, tenant-scoped
 effects, outcome, receipt publication, and an outbox in one service-owned
-transaction. The included adapters implement and test the durable invocation
-and receipt transitions independently. A deployment adapter still has to
-compose those transitions with its domain mutation and outbox on one
+transaction. `InMemoryAtomicExecutor` proves rollback behavior for lifecycle
+plus idempotency and custody plus outbox, while durable invocation and receipt
+adapters prove their PostgreSQL statements independently. A deployment adapter
+still has to compose those transitions with domain SQL and the outbox on one
 connection, then prove the resulting crash points in a configured PostgreSQL
-encounter. Until that receipt lands, separate-transaction or external write
+encounter. Until that receipt lands, separate-transaction or external-write
 uncertainty remains in `recovery_required` and receives no automatic write
 retry.
 External vendor effects use a stable request identity, qualified SDK and API
@@ -132,6 +134,13 @@ bands, response-identity checks, and authoritative readback for timeouts,
 cleanup ambiguity, or unexpected confirmation. Driver and SDK bands accept
 complete released `major.minor.patch` coordinates. Deployment qualification
 binds these seams to the service-owned transaction and recovery policy.
+
+The credential-free LabKey JSON API exemplar adds tenant-scoped selection,
+identity and revision confirmation, bounded read retry, rate-gate seams, and
+cursor pagination. Its transport receives runtime credentials from the narrow
+consumer boundary. A configured LabKey environment remains responsible for
+qualifying container paths, schemas, permissions, API behavior, and version
+coordinates against the [documented LabKey APIs](https://www.labkey.org/Documentation/wiki-page.view?name=viewApis).
 
 The released source coordinates and digests live in
 [`release/bounded-caller-bindings.json`](release/bounded-caller-bindings.json).
@@ -147,7 +156,7 @@ collaborators; they do not grant runtime authority.
 The earlier Machine Node is preserved as
 [`release/seed-lineage-machine-node-v0.2.json`](release/seed-lineage-machine-node-v0.2.json).
 It remains useful for historical comparison and is not the canonical governance
-Machine Node for release `0.3.0`.
+Machine Node for release `0.3.1`.
 
 ## Data and authority boundaries
 

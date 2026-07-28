@@ -235,7 +235,7 @@ class RuntimeSettingCatalog:
                 resource_fingerprint="catalog",
                 retryable=False,
                 provider_code="UnknownLogicalName",
-            ) from cause
+            ) from None
 
 
 class ParameterStoreClient(Protocol):
@@ -394,7 +394,7 @@ class RuntimeConfigurationResolver:
                 resource_fingerprint=_fingerprint(spec.resource_arn),
                 retryable=False,
                 provider_code=type(cause).__name__,
-            ) from cause
+            ) from None
         return ResolvedSetting(
             logical_name=f"{spec.logical_name}.{member}",
             source=resolved.source,
@@ -431,7 +431,7 @@ class RuntimeConfigurationResolver:
                 resource_fingerprint=_fingerprint(spec.resource_arn),
                 retryable=retryable,
                 provider_code=provider_code,
-            ) from cause
+            ) from None
 
     def _retrieve_parameter(
         self, spec: SettingSpec, *, now: float
@@ -441,7 +441,21 @@ class RuntimeConfigurationResolver:
             WithDecryption=False,
         )
         parameter = _mapping(response.get("Parameter"), field_name="Parameter")
-        if parameter.get("Type") == "SecureString":
+        observed_name = parameter.get("Name")
+        expected_names = {
+            spec.resource_arn,
+            "/" + spec.resource_arn.split(":parameter/", 1)[1],
+        }
+        if observed_name not in expected_names:
+            raise ConfigurationResolutionError(
+                code=ResolutionCode.RESOURCE_SCOPE,
+                logical_name=spec.logical_name,
+                source=spec.source,
+                resource_fingerprint=_fingerprint(spec.resource_arn),
+                retryable=False,
+                provider_code="ParameterIdentityMismatch",
+            )
+        if parameter.get("Type") != "String":
             raise ConfigurationResolutionError(
                 code=ResolutionCode.CLASSIFICATION,
                 logical_name=spec.logical_name,
@@ -461,6 +475,27 @@ class RuntimeConfigurationResolver:
                 retryable=False,
                 provider_code="InvalidParameterPayload",
             )
+        if spec.parameter_version is not None and version != spec.parameter_version:
+            raise ConfigurationResolutionError(
+                code=ResolutionCode.PAYLOAD,
+                logical_name=spec.logical_name,
+                source=spec.source,
+                resource_fingerprint=_fingerprint(spec.resource_arn),
+                retryable=False,
+                provider_code="ParameterVersionMismatch",
+            )
+        if (
+            spec.parameter_version is not None
+            or spec.parameter_label is not None
+        ) and parameter.get("Selector") != _parameter_reference(spec):
+            raise ConfigurationResolutionError(
+                code=ResolutionCode.PAYLOAD,
+                logical_name=spec.logical_name,
+                source=spec.source,
+                resource_fingerprint=_fingerprint(spec.resource_arn),
+                retryable=False,
+                provider_code="ParameterSelectorMismatch",
+            )
         return ResolvedSetting(
             logical_name=spec.logical_name,
             source=spec.source,
@@ -476,6 +511,15 @@ class RuntimeConfigurationResolver:
         if spec.secret_version_stage is not None:
             request["VersionStage"] = spec.secret_version_stage
         response = self._secrets_manager.get_secret_value(**request)
+        if response.get("ARN") != spec.resource_arn:
+            raise ConfigurationResolutionError(
+                code=ResolutionCode.RESOURCE_SCOPE,
+                logical_name=spec.logical_name,
+                source=spec.source,
+                resource_fingerprint=_fingerprint(spec.resource_arn),
+                retryable=False,
+                provider_code="SecretIdentityMismatch",
+            )
         value = response.get("SecretString")
         version = response.get("VersionId")
         if not isinstance(value, str) or not value or not isinstance(version, str):
@@ -486,6 +530,30 @@ class RuntimeConfigurationResolver:
                 resource_fingerprint=_fingerprint(spec.resource_arn),
                 retryable=False,
                 provider_code="SecretStringRequired",
+            )
+        if spec.secret_version_id is not None and version != spec.secret_version_id:
+            raise ConfigurationResolutionError(
+                code=ResolutionCode.PAYLOAD,
+                logical_name=spec.logical_name,
+                source=spec.source,
+                resource_fingerprint=_fingerprint(spec.resource_arn),
+                retryable=False,
+                provider_code="SecretVersionMismatch",
+            )
+        stages = response.get("VersionStages")
+        expected_stage = spec.secret_version_stage or "AWSCURRENT"
+        if (
+            not isinstance(stages, list)
+            or not all(isinstance(stage, str) for stage in stages)
+            or expected_stage not in stages
+        ):
+            raise ConfigurationResolutionError(
+                code=ResolutionCode.PAYLOAD,
+                logical_name=spec.logical_name,
+                source=spec.source,
+                resource_fingerprint=_fingerprint(spec.resource_arn),
+                retryable=False,
+                provider_code="SecretStageMismatch",
             )
         return ResolvedSetting(
             logical_name=spec.logical_name,
@@ -522,6 +590,43 @@ class RuntimeValueRedactionFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         record.msg = self._redact(record.msg)
         record.args = self._redact(record.args)
+        if record.exc_text is not None:
+            record.exc_text = self._redact(record.exc_text)
+        if record.stack_info is not None:
+            record.stack_info = self._redact(record.stack_info)
+        if record.exc_info is not None:
+            _, exception, _ = record.exc_info
+            safe_message = self._redact(str(exception))
+            safe_exception = RuntimeError(
+                f"{type(exception).__name__}: {safe_message}"
+            )
+            record.exc_info = (RuntimeError, safe_exception, None)
+        standard = {
+            "name",
+            "msg",
+            "args",
+            "levelname",
+            "levelno",
+            "pathname",
+            "filename",
+            "module",
+            "exc_info",
+            "exc_text",
+            "stack_info",
+            "lineno",
+            "funcName",
+            "created",
+            "msecs",
+            "relativeCreated",
+            "thread",
+            "threadName",
+            "processName",
+            "process",
+            "taskName",
+        }
+        for key, value in tuple(record.__dict__.items()):
+            if key not in standard:
+                record.__dict__[key] = self._redact(value)
         return True
 
     def _redact(self, value: Any) -> Any:

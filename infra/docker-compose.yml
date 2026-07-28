@@ -3,18 +3,42 @@ services:
     image: postgres:17.5-alpine
     environment:
       POSTGRES_DB: laboratory
-      POSTGRES_USER: laboratory
+      POSTGRES_USER: laboratory_bootstrap
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
     secrets:
       - postgres_password
+      - postgres_app_password
+      - postgres_outbox_password
+      - postgres_evidence_password
+      - postgres_migrator_password
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ../sql/001_laboratory_core.sql:/docker-entrypoint-initdb.d/001_laboratory_core.sql:ro
+      - ./postgres-init/010_application_password.sh:/docker-entrypoint-initdb.d/010_application_password.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U laboratory -d laboratory"]
+      test: ["CMD-SHELL", "pg_isready -U laboratory_bootstrap -d laboratory"]
       interval: 5s
       timeout: 3s
       retries: 20
+
+  application-db-check:
+    image: postgres:17.5-alpine
+    profiles: ["proof"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGDATABASE: laboratory
+      PGUSER: laboratory_app
+    secrets:
+      - postgres_app_password
+    entrypoint: ["/bin/sh", "-eu", "-c"]
+    command:
+      - >-
+        export PGPASSWORD="$$(cat /run/secrets/postgres_app_password)";
+        psql --set=ON_ERROR_STOP=1
+        --command="select current_user, rolsuper, rolbypassrls from pg_roles where rolname = current_user"
 
   object-store:
     image: minio/minio:RELEASE.2025-07-23T15-54-02Z
@@ -41,8 +65,15 @@ secrets:
     file: ./secrets/postgres_password.txt
   minio_password:
     file: ./secrets/minio_password.txt
+  postgres_app_password:
+    file: ./secrets/postgres_app_password.txt
+  postgres_outbox_password:
+    file: ./secrets/postgres_outbox_password.txt
+  postgres_evidence_password:
+    file: ./secrets/postgres_evidence_password.txt
+  postgres_migrator_password:
+    file: ./secrets/postgres_migrator_password.txt
 
 volumes:
   postgres-data:
   object-data:
-
