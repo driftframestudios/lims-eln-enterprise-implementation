@@ -14,7 +14,7 @@
     "governance_schema": "2.0.1",
     "control_plane_profile": "0.3.0",
     "postgresql": "17.10",
-    "database_migration_head": "002",
+    "database_migration_head": "003",
     "tenant_authority": "signed_short_lived_database_verified_context"
   },
   "scenario_ids": [
@@ -28,8 +28,8 @@
     "SCN-BOUNDED-CALLER-FAILURE-TWINS"
   ],
   "artifact_digests": [
-    "sha256:b4afd14ac944fa951ed4b1bfa772af8e9bc71c0cedf9682ca9c533d26c444793",
-    "sha256:5868f82fd3357f234b579f3cbe0fde794cd9fa33bcfac04a1bba908ea40444ca"
+    "sha256:67425cbbad74068efda86af4f1f7102a12913cbf0c028d6cc88bfef307b77650",
+    "sha256:4a157b842fb721662c3724d106612c836a2c9d99abf209c4ec5bacdf0ba8eb3e"
   ],
   "observed_at": "2026-08-04T12:00:00Z",
   "performer_id": "SYN-AUTOMATION-RUNNER",

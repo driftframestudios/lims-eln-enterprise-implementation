@@ -18,6 +18,12 @@
       "path": "sql/002_principal_data_boundaries.sql",
       "sha256": "2d5f3778d1b3c557590b265f06821435effb1ea9e1e0675dda5e74f5b213ee64",
       "transactional": true
+    },
+    {
+      "id": "003",
+      "path": "sql/003_trusted_routines_and_outbox_cas.sql",
+      "sha256": "3b26bb582428ca5f4386b37aa7d18792ecd79c2bd0562d211bda9a3150e483c3",
+      "transactional": true
     }
   ]
 }

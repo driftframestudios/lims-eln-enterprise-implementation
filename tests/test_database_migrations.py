@@ -22,7 +22,10 @@ SPEC.loader.exec_module(apply_database_migrations)
 class DatabaseMigrationTests(unittest.TestCase):
     def test_released_manifest_covers_every_sql_migration_with_valid_hashes(self) -> None:
         migrations = apply_database_migrations.load_manifest()
-        self.assertEqual(tuple(item.migration_id for item in migrations), ("001", "002"))
+        self.assertEqual(
+            tuple(item.migration_id for item in migrations),
+            ("001", "002", "003"),
+        )
         self.assertEqual(
             {item.path for item in migrations},
             set((ROOT / "sql").glob("[0-9][0-9][0-9]_*.sql")),

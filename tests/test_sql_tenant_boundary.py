@@ -188,6 +188,62 @@ class SqlTenantStructureTests(unittest.TestCase):
         ):
             self.assertIn(field, outbox.group(1))
 
+    def test_outbox_worker_mutations_use_tenant_bound_fenced_functions(self) -> None:
+        migration = (ROOT / "sql" / "003_trusted_routines_and_outbox_cas.sql").read_text(
+            encoding="utf-8"
+        ).lower()
+        self.assertIn(
+            "revoke all privileges on public.transactional_outbox "
+            "from laboratory_outbox_worker",
+            migration,
+        )
+        self.assertIn(
+            "grant select on public.transactional_outbox to laboratory_outbox_worker",
+            migration,
+        )
+        for function_name in (
+            "claim_outbox_delivery",
+            "reclaim_outbox_delivery",
+            "confirm_outbox_delivery",
+        ):
+            with self.subTest(function=function_name):
+                self.assertIn(f"create function public.{function_name}", migration)
+                self.assertIn(
+                    f"grant execute on function public.{function_name}",
+                    migration,
+                )
+        self.assertGreaterEqual(
+            migration.count("laboratory_security.authorized_tenant_id()"),
+            4,
+        )
+        self.assertIn("lease_principal = session_user", migration)
+        self.assertIn("for update skip locked", migration)
+        self.assertIn("delivery.fencing_token = expected_fencing_value", migration)
+        self.assertIn("delivery.lease_token = lease_token_value", migration)
+        self.assertIn("delivery.lease_expires_at_utc > pg_catalog.clock_timestamp()", migration)
+
+    def test_security_definer_data_objects_are_schema_qualified(self) -> None:
+        migration = (ROOT / "sql" / "003_trusted_routines_and_outbox_cas.sql").read_text(
+            encoding="utf-8"
+        ).lower()
+        self.assertGreaterEqual(
+            migration.count("set search_path = pg_catalog, pg_temp"),
+            5,
+        )
+        self.assertIn("returns public.custody_position", migration)
+        self.assertIn("public.custody_position%rowtype", migration)
+        self.assertIn("public.custody_event%rowtype", migration)
+        for fragment in (
+            "from public.custody_event",
+            "from public.custody_position",
+            "insert into public.custody_event",
+            "insert into public.custody_position",
+            "update public.custody_position",
+            "insert into public.transactional_outbox",
+        ):
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, migration)
+
     def test_regulated_evidence_is_tenant_scoped_and_append_only(self) -> None:
         self.assertIn("evidence_receipt_append_only", self.sql)
         self.assertIn("acceptance_decision_append_only", self.sql)

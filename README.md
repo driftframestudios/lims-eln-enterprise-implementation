@@ -29,7 +29,10 @@ The standard-library test suite exercises:
 - database-verified, short-lived signed tenant assertions for every row policy;
 - tenant-bound, attributable, revision-checked specimen transitions;
 - exact replay and changed-content collision handling;
-- custody compare-and-set transfer with append-only history and atomic full-payload outbox;
+- custody compare-and-set transfer with append-only history, a schema-qualified
+  privileged routine, and an atomic full-payload outbox;
+- tenant-bound outbox claim, expired-lease reclaim, and exact confirmation with
+  database-principal attribution, rotating UUIDs, and monotonic fencing;
 - byte-preserving instrument ingress with exact finite decimal quantities,
   UCUM-coded units, and explainable quarantine;
 - ambiguous vendor-write reconciliation through authoritative readback;
@@ -53,8 +56,9 @@ deterministic source digest.
 The ordinary local proof runs configured-database tests when their explicit
 synthetic DSNs and verification key are present. CI also provisions PostgreSQL
 17, applies the immutable migration chain, and exercises unsigned and tampered
-tenant contexts, custody CAS/replay, tenant-scoped outbox identity, and immutable
-outbox content.
+tenant contexts, temporary-relation shadowing, custody CAS/replay, tenant-scoped
+outbox identity, immutable outbox content, worker crash/reclaim, and stale-fence
+rejection.
 
 ## Evidence ladder
 
@@ -160,7 +164,9 @@ The released source coordinates and digests live in
 
 Migration 001 remains the immutable historical baseline. Migration 002 adds the
 trusted tenant authority, finite temporal checks, exact measurement primitives,
-custody history and CAS, and immutable outbox semantics. The migration runner
+custody history and CAS, and immutable outbox semantics. Migration 003 adds
+schema-qualified privileged execution and function-governed outbox lease CAS.
+The migration runner
 verifies every released checksum before database contact, serializes concurrent
 runners with a transaction-level advisory lock, and records an applied row only
 after its transaction succeeds.

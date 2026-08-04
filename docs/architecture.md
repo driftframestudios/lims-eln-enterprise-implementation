@@ -45,6 +45,10 @@ instrument bytes ──> durable inbox ──> canonical domain ──> scientif
     and scale, a released unit code/system, and raw-to-normalized lineage.
 15. Applied schema migrations retain immutable identity, path, checksum, actor,
     database time, transaction ownership, and serialized runner coordination.
+16. Privileged database routines resolve canonical relations and composite types
+    by released schema, with temporary schemas last in the fixed search path.
+17. Outbox delivery requires the signed tenant, invoking SQL principal,
+    worker-instance label, rotating lease UUID, monotonic fence, and database time.
 
 ## Transaction boundaries
 
@@ -54,12 +58,15 @@ The in-memory atomic adapter proves rollback semantics for lifecycle plus
 idempotency and custody plus outbox. PostgreSQL's `record_custody_transfer`
 function locks the current position, enforces expected-version CAS, appends one
 immutable custody event, updates the position, and inserts the full-payload
-outbox message in one transaction. The schema supplies outbox leases, fencing,
-and recovery state, while the durable invocation and receipt adapters prove
+outbox message in one transaction. The schema supplies tenant-bound claim,
+expired-lease reclaim, and exact confirmation functions. These functions record
+the invoking SQL principal separately from the worker-instance label, rotate the
+lease UUID, advance a monotonic fence, and compare the complete unexpired lease
+coordinate before completion. The durable invocation and receipt adapters prove
 their statements independently. The configured deployment still needs a
-connection-scoped specimen-lifecycle composition and a worker that claims rows,
-records attempts, and routes exhausted work to reviewable recovery. Those
-configured-environment receipts remain open.
+connection-scoped specimen-lifecycle composition and broker-facing worker that
+routes exhausted work to reviewable recovery. Those configured-environment
+receipts remain open.
 
 The bounded-caller invocation row uses a lease token and monotonically governed
 fencing token for every completion, pre-effect release, and recovery transition.
@@ -159,7 +166,9 @@ a successor forward repair.
 
 Migration 002 establishes finite temporal values, state coherence, the signed
 tenant authority, typed instrument measurements, custody history/CAS, and
-immutable outbox content. A populated untracked baseline enters through a
+immutable outbox content. Migration 003 fixes privileged routine name resolution,
+removes direct worker delivery mutation, and introduces fenced outbox lease
+functions plus transition guards. A populated untracked baseline enters through a
 fresh-target restore and semantic comparison rehearsal rather than object-name
 inference. The complete adoption and evidence gates are documented in
 `docs/database-migrations.md`.

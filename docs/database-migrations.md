@@ -66,11 +66,16 @@ partial and hand-edited schemas receive an explicit disposition.
 ## Lock and availability posture
 
 Migration 002 introduces constraints, policies, tables, triggers, grants, and a
-backfill of outbox digests and existing custody positions. Several `ALTER TABLE`
+backfill of outbox digests and existing custody positions. Migration 003 requires
+a drained outbox lease set before it records the invoking database principal,
+replaces direct worker updates with fenced functions, and replaces the privileged
+custody function with schema-qualified execution. Several `ALTER TABLE`
 forms can take strong locks. A populated-environment rehearsal records:
 
 - row and byte counts per affected table;
 - constraint exception counts before the change;
+- ready, leased, delivered, and recovery-required outbox counts, with a zero
+  active-lease gate for migration 003;
 - expected and observed lock modes and wait time;
 - transaction duration, WAL growth, replica lag, and storage headroom;
 - application compatibility before, during, and after the change;
