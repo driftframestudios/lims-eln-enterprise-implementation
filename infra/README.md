@@ -15,10 +15,12 @@ The Flyway image receives its JDBC URL and `laboratory_migrator` user as
 ordinary configuration. Its small entry adapter reads only the migrator
 credential from the mounted secret file and delegates directly to Flyway. The
 bootstrap credential remains on the preceding role-provisioning service. The
-released connection callback verifies the login and assumes the no-login
-`laboratory_owner` role through an explicit non-inheriting membership. Migration
-discovery, ordering, locking, transactions, history, validation, status, and
-replay remain Flyway-owned.
+role provisioner stores a target-database startup setting that selects the
+no-login `laboratory_owner` role through an explicit non-inheriting membership.
+The released connection callback verifies the authenticated login, effective
+owner identity, and exact catalog binding. Migration discovery, ordering,
+locking, transactions, history, validation, status, and replay remain
+Flyway-owned.
 
 Every Compose support image carries its version tag and immutable
 multi-architecture digest. The root `.dockerignore` keeps VCS metadata, local

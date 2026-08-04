@@ -27,3 +27,17 @@ membership_options="$(
         --command="select membership.admin_option::text || ':' || membership.inherit_option::text || ':' || membership.set_option::text from pg_catalog.pg_auth_members as membership join pg_catalog.pg_roles as granted_role on granted_role.oid = membership.roleid join pg_catalog.pg_roles as member_role on member_role.oid = membership.member where granted_role.rolname = 'laboratory_owner' and member_role.rolname = 'laboratory_migrator'"
 )"
 test "$membership_options" = "false:false:true"
+
+database_role_setting="$(
+    psql --no-psqlrc --tuples-only --no-align --set=ON_ERROR_STOP=1 \
+        --command="select configuration.value from pg_catalog.pg_db_role_setting as role_setting join pg_catalog.pg_roles as member_role on member_role.oid = role_setting.setrole join pg_catalog.pg_database as target_database on target_database.oid = role_setting.setdatabase cross join lateral pg_catalog.unnest(role_setting.setconfig) as configuration(value) where member_role.rolname = 'laboratory_migrator' and target_database.datname = pg_catalog.current_database() and configuration.value like 'role=%'"
+)"
+test "$database_role_setting" = "role=laboratory_owner"
+
+startup_identity="$(
+    PGPASSWORD="$migrator_password" psql --no-psqlrc \
+        --username=laboratory_migrator \
+        --tuples-only --no-align --set=ON_ERROR_STOP=1 \
+        --command="select session_user || ':' || current_user"
+)"
+test "$startup_identity" = "laboratory_migrator:laboratory_owner"

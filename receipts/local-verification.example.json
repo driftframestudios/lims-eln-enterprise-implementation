@@ -29,8 +29,8 @@
   ],
   "artifact_digests": [
     "sha256:a1a6601d0e5469b797b48a929ce4552d62666aab3f314df6a1e0fbedfc01341d",
-    "sha256:0ada7268fe0b4ea308e36a2ba56c5f9e80d6cda7916a34a5e1ddaab7e003332f",
-    "sha256:4c2cb27eeb848c63878da5d8d3512b8d6d5f3544ba4b1a22415038776965eaa9"
+    "sha256:4da38e773c815b0ae81faddc05e1a1e4f1e87db7f0ae9bceae01f0f8db8c0702",
+    "sha256:1b8f8fbd5cb365e08dfdfde4193850cbb85520b71d5aa9d32263f8766c67c6a4"
   ],
   "observed_at": "2026-08-04T12:00:00Z",
   "performer_id": "SYN-AUTOMATION-RUNNER",

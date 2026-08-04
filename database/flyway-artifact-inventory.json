@@ -11,7 +11,7 @@
     {
       "kind": "connection_callback",
       "path": "sql/afterConnect.sql",
-      "sha256": "37491dc9ccff2ed60bd6c928fd95ec6292404fb908cb38ed79d0b40e72d4f3ce"
+      "sha256": "a67d809067dedfdc4bb806475ef3721bd469a39cb3129d95c204e60d2f4ea348"
     },
     {
       "kind": "versioned_migration",
@@ -38,5 +38,5 @@
       "sha256": "84eaac39bcf5484745e1fc17418b17c0b08a90077a3b18a6011a3c34efefff1a"
     }
   ],
-  "aggregate_sha256": "sha256:883bd99a027aea3495514309c0b98205c6c7ecca825ffc3ff6b6728178a6db0a"
+  "aggregate_sha256": "sha256:ae77fdf109d6f2b51829e960f4b17f447ea86c5a05e64142c7703233c050d36a"
 }

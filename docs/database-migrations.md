@@ -24,12 +24,18 @@ then hashes the complete byte stream.
 - `mixed=false` keeps transaction-incompatible SQL on a separately reviewed
   path.
 
-Flyway 13 discovers `sql/afterConnect.sql` as a connection callback. The
-callback verifies `session_user = laboratory_migrator` and then executes
-`SET ROLE laboratory_owner`. The callback digest is part of the released
-Flyway manifest. This follows Flyway's
+Privileged provisioning applies `ALTER ROLE laboratory_migrator IN DATABASE
+<target> SET role TO laboratory_owner`. PostgreSQL applies that database-scoped
+default whenever the migrator starts a new target-database session. Every
+Flyway connection therefore begins with `session_user = laboratory_migrator`
+and `current_user = laboratory_owner`, including connections used to create or
+inspect Flyway history. Flyway 13 discovers `sql/afterConnect.sql` immediately
+after connection. This digest-bound callback verifies both identities and the
+exact `pg_db_role_setting` catalog entry. It performs read-only verification on
+the supported
 [connection callback](https://documentation.red-gate.com/flyway/reference/callback-events)
-model and keeps connection state on the supported v13 lifecycle surface.
+surface. PostgreSQL documents database-scoped login defaults under
+[`ALTER ROLE ... IN DATABASE`](https://www.postgresql.org/docs/17/sql-alterrole.html).
 
 The repository owns domain SQL: PostgreSQL primitives, constraints, lineage,
 row security, grants, triggers, and trusted routines. Vendor-owned LIMS/ELN
@@ -67,10 +73,12 @@ NOBYPASSRLS`. Its owner membership is `ADMIN FALSE, INHERIT FALSE, SET TRUE`,
 matching PostgreSQL's explicit
 [role-membership](https://www.postgresql.org/docs/17/role-membership.html)
 model. Target database and schema creation are reserved for
-`laboratory_owner`; the callback assumes that role, which owns Flyway history
-and domain objects and holds the creation privileges required by this chain.
-The provisioning step establishes the same public-creation boundary before the
-first migration runs.
+`laboratory_owner`; the database-scoped startup setting selects that role on
+each new migrator connection. Flyway history and domain objects consequently
+belong to the owner. `RESET ROLE` recovers the authenticated migrator's narrow
+privilege set and supports an explicit direct-DDL rejection proof. The
+provisioning step establishes the public-creation boundary before the first
+migration runs.
 
 The Compose migrator service receives only `postgres_migrator_password`. The
 bootstrap secret remains on the role-provisioning service. Application,
@@ -102,9 +110,11 @@ scenarios. It also proves:
   identity to one custody event;
 - V004 failure is transactional;
 - Flyway validation accepts the released checksums;
-- the migrator login has bounded role attributes and lacks direct schema DDL;
-- the callback creates Flyway history and domain relations as
-  `laboratory_owner`;
+- the migrator login has bounded role attributes and `RESET ROLE` returns to a
+  direct-DDL-rejecting privilege set;
+- every migrator session starts with the released authenticated/effective
+  identity pair and the callback verifies that pair plus its catalog binding;
+- Flyway history and domain relations are created as `laboratory_owner`;
 - target V003, head migration, `info`, validation, and no-op replay behave as
   one coherent release path.
 

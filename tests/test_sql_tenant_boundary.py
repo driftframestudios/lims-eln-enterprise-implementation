@@ -176,6 +176,10 @@ class SqlTenantStructureTests(unittest.TestCase):
             r"grant\s+laboratory_owner\s+to\s+laboratory_migrator\s+"
             r"with\s+admin\s+false,\s+inherit\s+false,\s+set\s+true",
         )
+        self.assertIn(
+            "alter role laboratory_migrator in database %i set role to laboratory_owner",
+            role_sql,
+        )
         self.assertIn("grant create on database %i to laboratory_owner", role_sql)
         self.assertIn("revoke create on database %i from public", role_sql)
         self.assertIn(
@@ -437,9 +441,26 @@ class SqlTenantStructureTests(unittest.TestCase):
         self.assertIn("PGUSER: laboratory_bootstrap", role_provisioner)
         self.assertIn("postgres_password", role_provisioner)
         self.assertIn("postgres_migrator_password", role_provisioner)
+        provisioner_script = (
+            ROOT / "infra" / "provision-migrator-identity.sh"
+        ).read_text(encoding="utf-8")
+        self.assertIn("pg_catalog.pg_db_role_setting", provisioner_script)
+        self.assertIn(
+            'test "$database_role_setting" = "role=laboratory_owner"',
+            provisioner_script,
+        )
+        self.assertIn(
+            'test "$startup_identity" = "laboratory_migrator:laboratory_owner"',
+            provisioner_script,
+        )
         migrator = compose.split("\n  database-migrator:", 1)[1]
         migrator = migrator.split("\n  database-role-bootstrap:", 1)[0]
         self.assertIn("FLYWAY_USER: laboratory_migrator", migrator)
+        self.assertIn(
+            "FLYWAY_URL: jdbc:postgresql://postgres:5432/laboratory",
+            migrator,
+        )
+        self.assertNotIn("options=-c%20role%3D", migrator)
         self.assertIn("postgres_migrator_password", migrator)
         self.assertNotIn("- postgres_password\n", migrator)
         images = re.findall(r"^\s+image:\s+(\S+)$", compose, flags=re.MULTILINE)

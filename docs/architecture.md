@@ -168,10 +168,13 @@ role provisioning remains a separate privileged deployment step. The Flyway
 runtime authenticates as `laboratory_migrator`, whose role attributes are
 `LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS`. A
 digest-bound `afterConnect.sql` callback verifies that session identity and
-uses its `SET TRUE, INHERIT FALSE, ADMIN FALSE` membership to assume the
-no-login `laboratory_owner` role. Database and schema creation authority lives
-on that owner role; the authenticated login receives connection authority and
-a distinct runtime credential.
+the effective identity. Privileged provisioning installs a target-database
+startup setting that selects the no-login `laboratory_owner` through its `SET
+TRUE, INHERIT FALSE, ADMIN FALSE` membership on every new connection. Database
+and schema creation authority lives on that owner role; the authenticated login
+receives connection authority and a distinct runtime credential. The callback
+also verifies the exact catalog binding, while `RESET ROLE` exposes the
+migrator's direct-DDL-rejecting privilege set.
 
 Migration V002 establishes finite temporal values, state coherence, the signed
 tenant authority, typed instrument measurements, custody history/CAS, and

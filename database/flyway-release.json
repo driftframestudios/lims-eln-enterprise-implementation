@@ -11,15 +11,15 @@
   "migration_head": "004",
   "authenticated_login": "laboratory_migrator",
   "migration_role": "laboratory_owner",
-  "role_assumption": "after_connect_callback_noinherit_membership",
+  "role_assumption": "database_scoped_startup_role_after_connect_verified_noinherit_membership",
   "connection_callback": {
     "path": "sql/afterConnect.sql",
-    "sha256": "37491dc9ccff2ed60bd6c928fd95ec6292404fb908cb38ed79d0b40e72d4f3ce"
+    "sha256": "a67d809067dedfdc4bb806475ef3721bd469a39cb3129d95c204e60d2f4ea348"
   },
   "artifact_inventory": {
     "path": "database/flyway-artifact-inventory.json",
-    "sha256": "4c2cb27eeb848c63878da5d8d3512b8d6d5f3544ba4b1a22415038776965eaa9",
-    "aggregate_sha256": "sha256:883bd99a027aea3495514309c0b98205c6c7ecca825ffc3ff6b6728178a6db0a"
+    "sha256": "1b8f8fbd5cb365e08dfdfde4193850cbb85520b71d5aa9d32263f8766c67c6a4",
+    "aggregate_sha256": "sha256:ae77fdf109d6f2b51829e960f4b17f447ea86c5a05e64142c7703233c050d36a"
   },
   "baseline_policy": "explicit_attested_baseline_only",
   "cluster_role_provisioning": "separate_privileged_deployment_step",

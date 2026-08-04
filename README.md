@@ -190,10 +190,11 @@ Community 13.0.0 owns migration discovery, ordering, locking, transactions,
 history, validation, information, target selection, and replay. Cluster roles
 remain a separate privileged deployment concern. Flyway authenticates as the
 least-privilege `laboratory_migrator` login. Its released `afterConnect.sql`
-callback verifies that session identity and explicitly assumes the no-login
-`laboratory_owner` role. The owner holds target database and schema creation
-authority; the login begins each connection with direct schema creation
-authority absent.
+callback verifies the authenticated session identity, effective owner identity,
+and database-scoped startup setting. Privileged provisioning configures each
+new target-database session to start as the no-login `laboratory_owner` role.
+The owner holds target database and schema creation authority; `RESET ROLE`
+returns the session to the narrowly privileged migrator identity.
 
 See the [migration and upgrade posture](docs/database-migrations.md) and the
 [data primitive corrective ledger](docs/data-primitive-corrective-ledger.md)

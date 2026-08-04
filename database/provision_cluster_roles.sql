@@ -58,6 +58,11 @@ grant laboratory_owner to laboratory_migrator
     with admin false, inherit false, set true;
 
 select pg_catalog.format(
+    'alter role laboratory_migrator in database %I set role to laboratory_owner',
+    pg_catalog.current_database()
+) \gexec
+
+select pg_catalog.format(
     'grant connect on database %I to laboratory_migrator',
     pg_catalog.current_database()
 ) \gexec

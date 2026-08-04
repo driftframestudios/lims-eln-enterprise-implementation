@@ -8,8 +8,9 @@
 - Keep cluster-role provisioning outside Flyway and resolve database credentials
   only through runtime secret boundaries.
 - Authenticate Flyway through a constrained, non-inheriting migrator login;
-  verify it in a digest-bound connection callback; and assume the no-login
-  schema owner through explicit `SET ROLE` membership.
+  select the no-login schema owner through a database-scoped startup setting;
+  and verify the authenticated identity, effective identity, and exact catalog
+  binding in a digest-bound connection callback.
 - Publish a digest inventory for the Flyway configuration, connection callback,
   and every migration; pin all Compose support images; and constrain the
   container build context and local-secret exclusions.

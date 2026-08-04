@@ -44,7 +44,7 @@ class DatabaseMigrationTests(unittest.TestCase):
         self.assertEqual(release["migration_role"], "laboratory_owner")
         self.assertEqual(
             release["role_assumption"],
-            "after_connect_callback_noinherit_membership",
+            "database_scoped_startup_role_after_connect_verified_noinherit_membership",
         )
         callback = release["connection_callback"]
         callback_path = ROOT / callback["path"]
@@ -100,7 +100,9 @@ class DatabaseMigrationTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("session_user <> 'laboratory_migrator'", callback)
-        self.assertIn("set role laboratory_owner;", callback.lower())
+        self.assertIn("current_user <> 'laboratory_owner'", callback)
+        self.assertIn("pg_catalog.pg_db_role_setting", callback)
+        self.assertIn("configuration.value = 'role=laboratory_owner'", callback)
 
     def test_versioned_sequence_is_complete_and_transaction_compatible(self) -> None:
         migrations = sorted((ROOT / "sql").glob("V*__*.sql"))

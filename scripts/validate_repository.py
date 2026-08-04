@@ -138,7 +138,7 @@ def validate_manifests() -> None:
         migration_release.get("authenticated_login") != "laboratory_migrator"
         or migration_release.get("migration_role") != "laboratory_owner"
         or migration_release.get("role_assumption")
-        != "after_connect_callback_noinherit_membership"
+        != "database_scoped_startup_role_after_connect_verified_noinherit_membership"
     ):
         raise AssertionError("Flyway release requires its bounded authority chain")
     callback = migration_release.get("connection_callback", {})
@@ -151,7 +151,9 @@ def validate_manifests() -> None:
     callback_sql = callback_path.read_text(encoding="utf-8").lower()
     if (
         "session_user <> 'laboratory_migrator'" not in callback_sql
-        or "set role laboratory_owner;" not in callback_sql
+        or "current_user <> 'laboratory_owner'" not in callback_sql
+        or "pg_catalog.pg_db_role_setting" not in callback_sql
+        or "configuration.value = 'role=laboratory_owner'" not in callback_sql
     ):
         raise AssertionError("Flyway callback requires the released login and owner role")
     inventory_reference = migration_release.get("artifact_inventory", {})

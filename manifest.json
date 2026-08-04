@@ -53,7 +53,7 @@
     "migration_product": "Flyway Community",
     "migration_product_version": "13.0.0",
     "migration_release": "database/flyway-release.json",
-    "migration_release_digest": "sha256:0ada7268fe0b4ea308e36a2ba56c5f9e80d6cda7916a34a5e1ddaab7e003332f",
+    "migration_release_digest": "sha256:4da38e773c815b0ae81faddc05e1a1e4f1e87db7f0ae9bceae01f0f8db8c0702",
     "migration_configuration": "flyway.conf",
     "migration_transaction_policy": "one_transaction_per_migration",
     "tenant_authority": "signed_short_lived_database_verified_context",

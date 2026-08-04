@@ -106,11 +106,18 @@ jobs:
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command="select membership.admin_option::text || ':' || membership.inherit_option::text || ':' || membership.set_option::text from pg_catalog.pg_auth_members as membership join pg_catalog.pg_roles as granted_role on granted_role.oid = membership.roleid join pg_catalog.pg_roles as member_role on member_role.oid = membership.member where granted_role.rolname = 'laboratory_owner' and member_role.rolname = 'laboratory_migrator'")" = "false:false:true"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select configuration.value from pg_catalog.pg_db_role_setting as role_setting join pg_catalog.pg_roles as member_role on member_role.oid = role_setting.setrole join pg_catalog.pg_database as target_database on target_database.oid = role_setting.setdatabase cross join lateral pg_catalog.unnest(role_setting.setconfig) as configuration(value) where member_role.rolname = 'laboratory_migrator' and target_database.datname = pg_catalog.current_database() and configuration.value like 'role=%'")" = "role=laboratory_owner"
+          test "$(PGPASSWORD=synthetic-ci-migrator-password psql \
+            postgresql://laboratory_migrator@127.0.0.1:5432/laboratory \
+            --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select session_user || ':' || current_user")" = "laboratory_migrator:laboratory_owner"
           set +e
           PGPASSWORD=synthetic-ci-migrator-password psql \
             postgresql://laboratory_migrator@127.0.0.1:5432/laboratory \
             --no-psqlrc --set ON_ERROR_STOP=1 \
-            --command="begin; create table public.synthetic_direct_migrator_ddl (proof integer); rollback" \
+            --command="reset role; begin; create table public.synthetic_direct_migrator_ddl (proof integer); rollback" \
             > direct-migrator-ddl.log 2>&1
           direct_ddl_status=$?
           set -e
@@ -242,6 +249,22 @@ jobs:
           psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
             --no-psqlrc --set ON_ERROR_STOP=1 \
             --command="alter role laboratory_migrator password 'synthetic-ci-migrator-password'"
+          verify_migrator_boundary() {
+            admin_dsn="$1"
+            migrator_dsn="$2"
+            test "$(psql "$admin_dsn" --no-psqlrc \
+              --tuples-only --no-align --set ON_ERROR_STOP=1 \
+              --command="select configuration.value from pg_catalog.pg_db_role_setting as role_setting join pg_catalog.pg_roles as member_role on member_role.oid = role_setting.setrole join pg_catalog.pg_database as target_database on target_database.oid = role_setting.setdatabase cross join lateral pg_catalog.unnest(role_setting.setconfig) as configuration(value) where member_role.rolname = 'laboratory_migrator' and target_database.datname = pg_catalog.current_database() and configuration.value like 'role=%'")" = "role=laboratory_owner"
+            test "$(PGPASSWORD=synthetic-ci-migrator-password psql "$migrator_dsn" \
+              --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
+              --command="select session_user || ':' || current_user")" = "laboratory_migrator:laboratory_owner"
+          }
+          verify_migrator_boundary \
+            "$LIMS_TEST_POSTGRES_ADMIN_DSN" \
+            postgresql://laboratory_migrator@127.0.0.1:5432/laboratory
+          verify_migrator_boundary \
+            postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            postgresql://laboratory_migrator@127.0.0.1:5433/laboratory
 
       - name: Apply historical migration head with Flyway target
         run: |
