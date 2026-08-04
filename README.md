@@ -22,13 +22,26 @@ The standard-library test suite exercises:
 
 - a typed bounded caller with task-scoped identity, tenant, capability,
   resource, request-budget, exact-approval, and replay boundaries;
-- registered read, idempotent narrow-write, and approval-gated broad-write
-  operations whose services retain effect control;
+- registered read, idempotent narrow-write, approval-gated broad-write, and
+  bounded golden-journey operations whose services retain effect control;
 - durable PostgreSQL receipt persistence and version-banded vendor SDK seams;
+- Flyway Community migration ordering, locking, transactions, history,
+  validation, status, target selection, and no-op replay;
+- database-verified, short-lived signed tenant assertions for every row policy;
 - tenant-bound, attributable, revision-checked specimen transitions;
 - exact replay and changed-content collision handling;
-- custody transfer with an atomic outbox plan;
-- byte-preserving instrument ingress and explainable quarantine;
+- custody compare-and-set transfer with append-only history, a schema-qualified
+  privileged routine, and an atomic full-payload outbox;
+- tenant-bound outbox claim, expired-lease reclaim, and exact confirmation with
+  database-principal attribution, rotating UUIDs, monotonic fencing, and
+  integer-second leases bounded to 15 minutes;
+- append-only delivery attempts, outcomes, tenant-unique transport receipts,
+  and separately attributable recovery release;
+- a shared 256-byte printable message identity bound across producer, claim,
+  completion, failure, and recovery paths;
+- byte-preserving instrument ingress with exact finite decimal quantities,
+  stored-scale coherence, complete inbox lineage, UCUM-coded units, and
+  explainable quarantine;
 - ambiguous vendor-write reconciliation through authoritative readback;
 - resumable migration, semantic reconciliation, rollback, restore, and data exit;
 - account-scoped Parameter Store configuration and Secrets Manager retrieval;
@@ -46,6 +59,15 @@ python3 scripts/validate_repository.py
 The command validates JSON contracts and manifests, confirms fixture posture,
 runs all tests, applies the negation-aware language gate, and emits a
 deterministic source digest.
+
+The ordinary local proof runs configured-database tests when their explicit
+synthetic DSNs and verification key are present. CI also provisions PostgreSQL
+17, provisions cluster roles separately, applies the Flyway chain, validates
+and inspects history, targets V003, proves transactional V004 rejection, replays
+the head, compares clean and upgraded schemas, and exercises unsigned and
+tampered tenant contexts, temporary-relation shadowing, custody CAS/replay,
+measurement lineage, tenant-scoped outbox identity, immutable outbox content,
+worker crash/reclaim, and stale-fence rejection.
 
 ## Evidence ladder
 
@@ -79,6 +101,9 @@ reviewer, artifacts, and decisions are recorded.
 - `contracts` — versioned machine-readable command and receipt contracts.
 - `fixtures/synthetic` — synthetic, stable examples for comparison.
 - `sql` — PostgreSQL persistence, inbox/outbox, evidence, and tenant controls.
+- `database` — pinned Flyway release and artifact inventory plus separate
+  cluster-role provisioning.
+- `flyway.conf` — reviewed Flyway safety and ordering controls.
 - `infra` — local production-shape services and an AWS recovery baseline.
 - `docs` — architecture, GitFlow-like delivery, qualification, and runbooks.
 - `receipts` — example manifests whose evidence mode is explicit.
@@ -101,6 +126,7 @@ The reference registry exposes:
 | `specimen.read` | `read` | `read` |
 | `specimen.review_flag.set` | `idempotent_narrow_write` | `narrow_write` |
 | `specimen.quarantine.bulk` | `approval_gated_broad_write` | `broad_write` |
+| `specimen.golden_journey.execute` | `idempotent_narrow_write` | `narrow_write` |
 
 The invocation ledger reserves a tenant and call identity before execution,
 replays an exact completed call, surfaces in-progress work, and routes
@@ -120,21 +146,75 @@ become automatic write retries.
 
 The production transaction contract calls for reservation, tenant-scoped
 effects, outcome, receipt publication, and an outbox in one service-owned
-transaction. The included adapters implement and test the durable invocation
-and receipt transitions independently. A deployment adapter still has to
-compose those transitions with its domain mutation and outbox on one
-connection, then prove the resulting crash points in a configured PostgreSQL
-encounter. Until that receipt lands, separate-transaction or external write
-uncertainty remains in `recovery_required` and receives no automatic write
-retry.
+transaction. `InMemoryAtomicExecutor` proves rollback behavior for lifecycle
+plus idempotency and custody plus outbox. `record_custody_transfer` supplies the
+durable custody CAS, append-only event, exact replay, and outbox transaction.
+Durable invocation and receipt adapters prove their PostgreSQL statements
+independently. A specimen-lifecycle deployment adapter still has to compose its
+aggregate, event, idempotency, and outbox transitions on one connection, then
+prove the resulting crash points in a configured PostgreSQL encounter.
+Separate-transaction or external-write uncertainty remains in
+`recovery_required` and receives reconciliation ownership.
 External vendor effects use a stable request identity, qualified SDK and API
 bands, response-identity checks, and authoritative readback for timeouts,
 cleanup ambiguity, or unexpected confirmation. Driver and SDK bands accept
 complete released `major.minor.patch` coordinates. Deployment qualification
 binds these seams to the service-owned transaction and recovery policy.
 
+The credential-free LabKey JSON API exemplar adds tenant-scoped selection,
+identity and revision confirmation, bounded read retry, rate-gate seams, and
+cursor pagination. Its transport receives runtime credentials from the narrow
+consumer boundary. A configured LabKey environment remains responsible for
+qualifying container paths, schemas, permissions, API behavior, and version
+coordinates against the [documented LabKey APIs](https://www.labkey.org/Documentation/wiki-page.view?name=viewApis).
+
 The released source coordinates and digests live in
 [`release/bounded-caller-bindings.json`](release/bounded-caller-bindings.json).
+
+## Database evolution
+
+V001 is the historical baseline. V002 adds the
+trusted tenant authority, finite temporal checks, exact measurement primitives,
+custody history and CAS, and immutable outbox semantics. V003 adds
+schema-qualified privileged execution and function-governed outbox lease CAS.
+V004 preserves V003, replaces calendar-relative caller input
+with 1 through 900 integer seconds, restricts initial-state authority, completes
+the transition matrix, and adds immutable attempt, outcome, acknowledgement, and
+recovery-release evidence. It also binds stored measurement scale, complete
+inbox lineage, and complete custody-event coordinates. Its provenance gate
+accepts initial ready rows with zero attempts and routes historical attempt or
+terminal state to explicit disposition before upgrade. V004 locks the affected
+relations before preflight and gives lock acquisition a 30-second budget;
+contention produces a transactional rollback for a scheduled retry. Flyway
+Community 13.0.0 owns migration discovery, ordering, locking, transactions,
+history, validation, information, target selection, and replay. Cluster roles
+remain a separate privileged deployment concern. Flyway authenticates as the
+least-privilege `laboratory_migrator` login. Its released `afterConnect.sql`
+callback verifies the authenticated session identity, effective owner identity,
+and database-scoped startup setting. Privileged provisioning configures each
+new target-database session to start as the no-login `laboratory_owner` role.
+The owner holds target database and schema creation authority; `RESET ROLE`
+selects the configured owner default, while `SET ROLE NONE` returns the session
+to the narrowly privileged migrator identity. The credential can deliberately
+select `laboratory_owner` through its released `SET TRUE` membership; secret
+delivery therefore remains scoped to the migration job.
+Migration 004 transfers outbox tables and trusted routines to the no-login
+`laboratory_outbox_authority`. PostgreSQL ownership transfer is enabled by one
+explicit `ADMIN FALSE, INHERIT FALSE, SET TRUE` membership from that role to
+`laboratory_owner`; the owner can select the role for transfer while routine
+sessions receive zero inherited outbox authority. V004 supplies and withdraws
+the new owner's schema-creation capability inside the migration transaction.
+Release inventory and hosted catalog proofs bind the edge, the resulting object
+owners, and the absence of that creation capability at head.
+Forced row-level security remains active during migration. A dedicated policy
+permits cross-tenant evolution only when a security-invoker verifier observes
+the complete catalog-backed migrator/owner coordinate. The ordinary tenant
+predicate becomes SQL `NULL` for that coordinate alone; runtime and trusted
+routine paths continue through signed tenant assertions.
+
+See the [migration and upgrade posture](docs/database-migrations.md) and the
+[data primitive corrective ledger](docs/data-primitive-corrective-ledger.md)
+for adoption, probability framing, remaining gaps, and evidence gates.
 
 ## Governance orientation
 
@@ -147,7 +227,7 @@ collaborators; they do not grant runtime authority.
 The earlier Machine Node is preserved as
 [`release/seed-lineage-machine-node-v0.2.json`](release/seed-lineage-machine-node-v0.2.json).
 It remains useful for historical comparison and is not the canonical governance
-Machine Node for release `0.3.0`.
+Machine Node for release `0.3.1`.
 
 ## Data and authority boundaries
 

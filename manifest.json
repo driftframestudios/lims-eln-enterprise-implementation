@@ -1,14 +1,14 @@
 {
   "schema_version": "2.0.0",
   "name": "lims-eln-enterprise-implementation",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "python": ">=3.12",
   "repository_role": "enterprise_implementation",
   "evidence_role": "actual_implementation",
   "fixture_policy": "synthetic_only",
   "validation_command": "python3 scripts/validate_repository.py",
   "control_plane": {
-    "governance_schema_release": "2.0.0",
+    "governance_schema_release": "2.0.1",
     "control_plane_profile": "0.3.0",
     "machine_node": "machine-node.json",
     "first_receipt": "first-receipt.json",
@@ -17,19 +17,21 @@
   },
   "contract_versions": {
     "specimen_command": "1.0.0",
-    "execution_receipt": "1.0.0",
+    "execution_receipt": "1.1.0",
     "provenance": "1.0.0",
     "runtime_setting_catalog": "1.0.0",
-    "bounded_caller_binding": "0.3.0",
+    "bounded_caller_binding": "0.3.1",
+    "database_flyway_release": "1.0.0",
     "open_receipt_ledger": "2.0.0"
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:f0e05a5ce3c4ae98b410d2a33b3722565263214c4efd5964997f9ce39c67733b",
+    "binding_digest": "sha256:e6590446725c47231817bc43a478851e739617f1870bf3a5d7c1e36e3e5bc87e",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",
-      "specimen.quarantine.bulk"
+      "specimen.quarantine.bulk",
+      "specimen.golden_journey.execute"
     ],
     "effect_classes": [
       "read",
@@ -43,6 +45,19 @@
     "resource_scope": "full_arn_partition_region_account",
     "cache": "bounded_process_memory_fail_closed_at_expiry",
     "credential_source": "workload_identity"
+  },
+  "database": {
+    "engine": "postgresql",
+    "qualified_major": 17,
+    "migration_head": "004",
+    "migration_product": "Flyway Community",
+    "migration_product_version": "13.0.0",
+    "migration_release": "database/flyway-release.json",
+    "migration_release_digest": "sha256:3010d543594ef98e5873e2753cd7531e5a94e0922698d4ad04ae55a811a1691c",
+    "migration_configuration": "flyway.conf",
+    "migration_transaction_policy": "one_transaction_per_migration",
+    "tenant_authority": "signed_short_lived_database_verified_context",
+    "outbox_canonicalization": "postgresql-jsonb-text-v1"
   },
   "receipt_families": [
     "configured_vendor_environments",

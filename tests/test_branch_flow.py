@@ -110,7 +110,7 @@ class BranchFlowTests(unittest.TestCase):
         self.assertEqual(check_branch_flow.DEPENDABOT_BRANCH_ECOSYSTEMS, configured)
         self.assertNotIn("pull-request-branch-name:", config)
         self.assertEqual(
-            1,
+            0,
             self.invoke(
                 base="main",
                 head="dependabot/pip/urllib3-3.0.0",
@@ -142,6 +142,7 @@ class BranchFlowTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("permissions:\n  contents: read", workflow)
         self.assertIn("pull_request_target:", workflow)
+        self.assertIn("\n  branch-policy:\n", workflow)
         self.assertIn("ref: ${{ github.event.pull_request.base.sha }}", workflow)
         self.assertIn("path: base-policy", workflow)
         self.assertIn("working-directory: base-policy", workflow)
@@ -158,18 +159,101 @@ class BranchFlowTests(unittest.TestCase):
         for path in (
             "/.github/dependabot.yml",
             "/.github/workflows/",
+            "/.gitignore",
+            "/.dockerignore",
             "/scripts/check_branch_flow.py",
+            "/scripts/validate_repository.py",
+            "/flyway.conf",
             "/tests/test_branch_flow.py",
+            "/tests/test_database_migrations.py",
+            "/tests/test_postgres_integration.py",
+            "/tests/test_sql_tenant_boundary.py",
             "/src/lims_eln_implementation/bounded_caller.py",
             "/src/lims_eln_implementation/bounded_examples.py",
             "/src/lims_eln_implementation/production_adapters.py",
             "/release/",
+            "/database/",
             "/machine-node.json",
             "/first-receipt.json",
             "/COORDINATION-HORIZON.json",
         ):
             with self.subTest(path=path):
                 self.assertIn(f"{path} @driftframestudios", owners)
+
+
+    def test_stable_implementation_context_fails_closed_on_matrix_result(self):
+        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("\n  implementation-validation:\n", workflow)
+        self.assertIn("if: ${{ always() }}", workflow)
+        self.assertIn('test "$VALIDATE_RESULT" = "success"', workflow)
+        self.assertIn('test "$POSTGRES_RESULT" = "success"', workflow)
+        self.assertRegex(
+            workflow,
+            r"image: postgres:17\.10-alpine@sha256:[a-f0-9]{64}",
+        )
+        self.assertRegex(
+            workflow,
+            r"FLYWAY_IMAGE: flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}",
+        )
+        self.assertIn("-target=003 migrate", workflow)
+        self.assertIn("run_flyway validate", workflow)
+        self.assertIn("run_flyway info", workflow)
+        self.assertIn("FLYWAY_USER: laboratory_migrator", workflow)
+        self.assertIn("true:false:false:false:false:false", workflow)
+        self.assertIn("false:false:true", workflow)
+        self.assertIn("granted_role.rolname = 'laboratory_outbox_authority'", workflow)
+        self.assertIn("member_role.rolname = 'laboratory_owner'", workflow)
+        self.assertIn("role=laboratory_owner", workflow)
+        self.assertIn(
+            "laboratory_migrator:laboratory_owner:laboratory_owner",
+            workflow,
+        )
+        self.assertIn("set role none; begin; create table", workflow.lower())
+        self.assertNotIn("options=-c%20role%3D", workflow)
+        self.assertIn("flyway_schema_history", workflow)
+        self.assertIn('= "laboratory_owner"', workflow)
+        self.assertIn('= "laboratory_outbox_authority"', workflow)
+        self.assertEqual(
+            workflow.count(
+                "pg_catalog.to_regprocedure("
+                "'public.claim_outbox_delivery(text,integer)')"
+            ),
+            3,
+        )
+        self.assertNotIn("pg_catalog.pg_get_function_identity_arguments", workflow)
+        self.assertIn("has_schema_privilege", workflow)
+        self.assertEqual(
+            workflow.count(
+                "has_column_privilege('laboratory_owner', "
+                "'public.transactional_outbox', 'payload', 'insert')"
+            ),
+            2,
+        )
+        self.assertEqual(
+            workflow.count(
+                "has_table_privilege('laboratory_outbox_authority', "
+                "'public.outbox_delivery_attempt', 'update')"
+            ),
+            2,
+        )
+        self.assertEqual(
+            workflow.count(
+                "has_table_privilege('laboratory_outbox_authority', "
+                "'public.outbox_delivery_attempt_outcome', 'update')"
+            ),
+            2,
+        )
+        self.assertEqual(
+            workflow.count(
+                "has_table_privilege('laboratory_outbox_authority', "
+                "'public.transactional_outbox', 'insert')"
+            ),
+            2,
+        )
+        self.assertIn("clean and upgraded schema convergence", workflow.lower())
+        self.assertNotIn("apply_database_migrations.py", workflow)
 
 
 if __name__ == "__main__":

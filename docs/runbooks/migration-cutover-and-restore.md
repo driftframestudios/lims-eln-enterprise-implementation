@@ -11,9 +11,11 @@
 
 ## Rehearsal
 
-1. Assume the approved migration workload role and its dedicated database role.
-   The role carries time-bounded `BYPASSRLS` authority, produces session audit
-   events, and remains separate from application and interactive identities.
+1. Assume the approved migration workload identity and its dedicated database
+   role. The repository role remains `NOBYPASSRLS`, receives a signed tenant
+   context for each partition, produces session audit events, and remains
+   separate from application and interactive identities. Schema DDL uses the
+   separately controlled bootstrap identity through the checksum-bound runner.
 2. Record source snapshot identity, tenant partitions, and counts.
 3. Export canonical records, revisions, relationships, audits, signatures, and
    artifacts with checksums.
@@ -34,17 +36,19 @@
 
 Ordinary application and worker roles remain subject to forced row-level
 security. Each database transaction begins by calling
-`PostgresTenantBinding.bind()`, which uses a parameterized,
-transaction-local `app.tenant_id` setting and verifies the returned value.
-Connections return to the pool after transaction completion.
+`PostgresTenantBinding.bind()`, which submits a parameterized, short-lived
+signed assertion. PostgreSQL verifies its exact fields, active private key,
+validity window, and signature, then returns the authorized tenant. Connections
+return to the pool after transaction completion.
 
-Cross-tenant migration and restore work uses the named migration path above.
-Its `BYPASSRLS` capability exists only on the dedicated database role and is
-reachable through the approved, time-bounded workload identity. The change
-record names the operator, reviewer, scope, source and target snapshots,
-tenants, start and expiry times, and recovery owner. Database and CloudTrail
-audit records become receipt artifacts. Application identities retain forced
-RLS as their constitutive posture throughout the rehearsal.
+Tenant-by-tenant migration and restore work uses the signed path above. A
+separately governed administrative extraction or restore identity can hold
+cross-tenant authority when the approved recovery procedure requires it. That
+identity sits outside ordinary runtime and has time-bounded workload access.
+The change record names the operator, reviewer, scope, source and target
+snapshots, tenants, start and expiry times, and recovery owner. Database and
+CloudTrail audit records become receipt artifacts. Application identities
+retain forced RLS as their constitutive posture throughout the rehearsal.
 
 ## Decision
 

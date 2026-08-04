@@ -1,16 +1,21 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "receipt_id": "RECEIPT-LOCAL-REFERENCE-001",
   "claim_id": "CLAIM-LOCAL-SYNTHETIC-PROOF-FLOOR",
+  "intended_use_id": "INTENDED-USE-SYNTHETIC-REFERENCE",
+  "release_claim_id": "RELEASE-CLAIM-IMPLEMENTATION-0.3.1",
   "evidence_mode": "observed",
   "assurance_stage": "verified",
   "environment": "local-synthetic-reference",
   "version_bindings": {
-    "repository": "0.3.0",
+    "repository": "0.3.1",
     "python": "3.12+",
     "fixture_profile": "synthetic-v1",
-    "governance_schema": "2.0.0",
-    "control_plane_profile": "0.3.0"
+    "governance_schema": "2.0.1",
+    "control_plane_profile": "0.3.0",
+    "postgresql": "17.10",
+    "database_migration_head": "004",
+    "tenant_authority": "signed_short_lived_database_verified_context"
   },
   "scenario_ids": [
     "SCN-LIFECYCLE-REPLAY",
@@ -23,9 +28,11 @@
     "SCN-BOUNDED-CALLER-FAILURE-TWINS"
   ],
   "artifact_digests": [
-    "sha256:f0e05a5ce3c4ae98b410d2a33b3722565263214c4efd5964997f9ce39c67733b"
+    "sha256:e6590446725c47231817bc43a478851e739617f1870bf3a5d7c1e36e3e5bc87e",
+    "sha256:3010d543594ef98e5873e2753cd7531e5a94e0922698d4ad04ae55a811a1691c",
+    "sha256:9105cc92e7e0d2c166e179411bfe5d2a2bd1f35150fd640ae157ac9ef5cbad07"
   ],
-  "observed_at": "2026-07-28T12:00:00Z",
+  "observed_at": "2026-08-04T12:00:00Z",
   "performer_id": "SYN-AUTOMATION-RUNNER",
   "reviewer_id": "SYN-INDEPENDENT-REVIEWER",
   "limitations": [

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from itertools import count
+import json
 import unittest
 
 from lims_eln_implementation.bounded_caller import (
@@ -42,6 +43,7 @@ from lims_eln_implementation.production_adapters import (
     VersionBand,
     VersionedVendorGatewayAdapter,
 )
+from lims_eln_implementation.security import SignedTenantContext
 
 NOW = datetime(2026, 7, 28, 12, 0, tzinfo=timezone.utc)
 TENANT = "SYN-TENANT-A"
@@ -49,6 +51,19 @@ ACTOR = "SYN-ACTOR-01"
 CALLER = "svc-ai-1"
 SPECIMEN_1 = "SYN-SPECIMEN-0001"
 SPECIMEN_2 = "SYN-SPECIMEN-0002"
+
+
+def tenant_context(tenant_id: str) -> SignedTenantContext:
+    issued_at = int(NOW.timestamp())
+    return SignedTenantContext(
+        tenant_id=tenant_id,
+        subject_id="SYN-SERVICE-IDENTITY-01",
+        key_id="synthetic-test-v1",
+        issued_at_epoch=issued_at,
+        expires_at_epoch=issued_at + 300,
+        nonce="SYNTHETIC-NONCE-0001",
+        signature_hex="a" * 64,
+    )
 
 
 class BoundedCallerHarness:
@@ -812,6 +827,7 @@ class ProductionReceiptAdapterTests(unittest.TestCase):
             driver_name="psycopg",
             driver_version="3.2.4",
             qualified_band=VersionBand("psycopg", "3.2.0", "3.3.0"),
+            tenant_context_provider=tenant_context,
         )
 
     def test_receipt_insert_binds_tenant_commits_and_releases_resources(self) -> None:
@@ -821,7 +837,7 @@ class ProductionReceiptAdapterTests(unittest.TestCase):
 
         self.assertEqual(connection.commits, 1)
         self.assertEqual(connection.rollbacks, 0)
-        self.assertEqual(cursor.executions[0][1], (TENANT,))
+        self.assertEqual(json.loads(cursor.executions[0][1][0])["tenant_id"], TENANT)
         self.assertIn("insert into bounded_call_receipt", cursor.executions[1][0])
         self.assertTrue(cursor.closed)
         self.assertTrue(connection.closed)
@@ -853,6 +869,7 @@ class ProductionReceiptAdapterTests(unittest.TestCase):
                 driver_name="psycopg",
                 driver_version="3.3.0",
                 qualified_band=VersionBand("psycopg", "3.2.0", "3.3.0"),
+                tenant_context_provider=tenant_context,
             )
 
     def test_version_band_requires_complete_released_coordinates(self) -> None:
@@ -895,6 +912,7 @@ class DurableInvocationAdapterTests(unittest.TestCase):
             driver_name="psycopg",
             driver_version="3.2.4",
             qualified_band=VersionBand("psycopg", "3.2.0", "3.3.0"),
+            tenant_context_provider=tenant_context,
             clock=lambda: NOW,
             lease_duration=timedelta(seconds=30),
             lease_token_factory=lambda: self.LEASE,

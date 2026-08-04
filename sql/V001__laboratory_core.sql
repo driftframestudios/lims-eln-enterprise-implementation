@@ -1,6 +1,12 @@
 -- TARGET: PostgreSQL holds tenant-scoped canonical state and append-only evidence.
 -- TARGET: optimistic revisions serialize lifecycle and custody writers.
 
+revoke create on schema public from public;
+grant usage on schema public to laboratory_app;
+grant usage on schema public to laboratory_outbox_worker;
+grant usage on schema public to laboratory_evidence_writer;
+grant usage on schema public to laboratory_migrator;
+
 create table tenant (
     tenant_id text primary key,
     display_name text not null,
@@ -91,10 +97,35 @@ create table transactional_outbox (
     aggregate_version bigint not null,
     payload jsonb not null,
     payload_sha256 text not null check (payload_sha256 ~ '^[a-f0-9]{64}$'),
+    delivery_state text not null default 'ready' check (
+        delivery_state in ('ready', 'leased', 'delivered', 'recovery_required')
+    ),
     delivery_attempts integer not null default 0 check (delivery_attempts >= 0),
     available_at_utc timestamptz not null default now(),
+    lease_owner text,
+    lease_token uuid,
+    fencing_token bigint not null default 0 check (fencing_token >= 0),
+    lease_expires_at_utc timestamptz,
+    last_error_code text,
     delivered_at_utc timestamptz,
-    primary key (tenant_id, message_id)
+    primary key (tenant_id, message_id),
+    check (
+        delivery_state <> 'leased'
+        or (
+            lease_owner is not null
+            and lease_token is not null
+            and lease_expires_at_utc is not null
+            and fencing_token >= 1
+        )
+    ),
+    check (
+        delivery_state <> 'delivered'
+        or delivered_at_utc is not null
+    ),
+    check (
+        delivery_state <> 'recovery_required'
+        or last_error_code is not null
+    )
 );
 
 create table vendor_projection (
@@ -232,8 +263,11 @@ create table migration_checkpoint (
 );
 
 create table evidence_receipt (
-    receipt_id text primary key,
+    tenant_id text not null references tenant(tenant_id),
+    receipt_id text not null,
     claim_id text not null,
+    intended_use_id text not null,
+    release_claim_id text not null,
     evidence_mode text not null check (
         evidence_mode in ('planned', 'simulated', 'observed')
     ),
@@ -248,21 +282,45 @@ create table evidence_receipt (
     reviewer_id text not null,
     limitations jsonb not null,
     observed_at_utc timestamptz not null,
+    primary key (tenant_id, receipt_id),
+    unique (tenant_id, receipt_id, intended_use_id, release_claim_id),
     check (performer_id <> reviewer_id)
 );
 
 create table acceptance_decision (
-    decision_id text primary key,
+    tenant_id text not null references tenant(tenant_id),
+    decision_id text not null,
     domain text not null check (domain in ('scientific', 'quality', 'regulatory')),
     approver_id text not null,
     accountable_role text not null,
     intended_use_id text not null,
+    release_claim_id text not null,
     decision text not null check (
         decision in ('approve', 'approve_with_conditions', 'return_for_evidence')
     ),
-    receipt_ids jsonb not null,
     residual_risk text not null,
-    decided_at_utc timestamptz not null
+    decided_at_utc timestamptz not null,
+    primary key (tenant_id, decision_id),
+    unique (tenant_id, decision_id, intended_use_id, release_claim_id)
+);
+
+create table acceptance_decision_receipt (
+    tenant_id text not null references tenant(tenant_id),
+    decision_id text not null,
+    receipt_id text not null,
+    intended_use_id text not null,
+    release_claim_id text not null,
+    primary key (tenant_id, decision_id, receipt_id),
+    foreign key (
+        tenant_id, decision_id, intended_use_id, release_claim_id
+    ) references acceptance_decision (
+        tenant_id, decision_id, intended_use_id, release_claim_id
+    ),
+    foreign key (
+        tenant_id, receipt_id, intended_use_id, release_claim_id
+    ) references evidence_receipt (
+        tenant_id, receipt_id, intended_use_id, release_claim_id
+    )
 );
 
 create index specimen_event_command_lookup
@@ -290,6 +348,9 @@ alter table vendor_projection enable row level security;
 alter table bounded_call_invocation enable row level security;
 alter table bounded_call_receipt enable row level security;
 alter table migration_checkpoint enable row level security;
+alter table evidence_receipt enable row level security;
+alter table acceptance_decision enable row level security;
+alter table acceptance_decision_receipt enable row level security;
 
 alter table tenant force row level security;
 alter table specimen force row level security;
@@ -302,6 +363,9 @@ alter table vendor_projection force row level security;
 alter table bounded_call_invocation force row level security;
 alter table bounded_call_receipt force row level security;
 alter table migration_checkpoint force row level security;
+alter table evidence_receipt force row level security;
+alter table acceptance_decision force row level security;
+alter table acceptance_decision_receipt force row level security;
 
 create policy tenant_tenant_policy on tenant
     using (tenant_id = current_setting('app.tenant_id', true))
@@ -336,16 +400,95 @@ create policy bounded_call_receipt_tenant_policy on bounded_call_receipt
 create policy migration_checkpoint_tenant_policy on migration_checkpoint
     using (tenant_id = current_setting('app.tenant_id', true))
     with check (tenant_id = current_setting('app.tenant_id', true));
+create policy evidence_receipt_tenant_policy on evidence_receipt
+    using (tenant_id = current_setting('app.tenant_id', true))
+    with check (tenant_id = current_setting('app.tenant_id', true));
+create policy acceptance_decision_tenant_policy on acceptance_decision
+    using (tenant_id = current_setting('app.tenant_id', true))
+    with check (tenant_id = current_setting('app.tenant_id', true));
+create policy acceptance_decision_receipt_tenant_policy
+on acceptance_decision_receipt
+    using (tenant_id = current_setting('app.tenant_id', true))
+    with check (tenant_id = current_setting('app.tenant_id', true));
 
-create function preserve_bounded_call_receipt()
+create function preserve_append_only_record()
 returns trigger
 language plpgsql
 as $$
 begin
-    raise exception 'bounded call receipts are append-only';
+    raise exception 'evidence records are append-only';
 end;
 $$;
 
 create trigger bounded_call_receipt_append_only
 before update or delete on bounded_call_receipt
-for each row execute function preserve_bounded_call_receipt();
+for each row execute function preserve_append_only_record();
+
+create trigger evidence_receipt_append_only
+before update or delete on evidence_receipt
+for each row execute function preserve_append_only_record();
+
+create trigger acceptance_decision_append_only
+before update or delete on acceptance_decision
+for each row execute function preserve_append_only_record();
+
+create trigger acceptance_decision_receipt_append_only
+before update or delete on acceptance_decision_receipt
+for each row execute function preserve_append_only_record();
+
+create trigger specimen_event_append_only
+before update or delete on specimen_event
+for each row execute function preserve_append_only_record();
+
+revoke all on all tables in schema public from public;
+revoke all on all sequences in schema public from public;
+
+grant select, insert, update on
+    tenant,
+    specimen,
+    idempotency_ledger,
+    custody_position,
+    instrument_inbox,
+    transactional_outbox,
+    vendor_projection,
+    bounded_call_invocation
+to laboratory_app;
+grant select, insert on
+    specimen_event,
+    bounded_call_receipt
+to laboratory_app;
+
+grant select, update on transactional_outbox to laboratory_outbox_worker;
+grant select, insert on bounded_call_receipt to laboratory_outbox_worker;
+
+grant select, insert on
+    evidence_receipt,
+    acceptance_decision,
+    acceptance_decision_receipt
+to laboratory_evidence_writer;
+
+grant select, insert, update on
+    tenant,
+    specimen,
+    specimen_event,
+    idempotency_ledger,
+    custody_position,
+    instrument_inbox,
+    vendor_projection,
+    migration_checkpoint
+to laboratory_migrator;
+
+alter table tenant owner to laboratory_owner;
+alter table specimen owner to laboratory_owner;
+alter table specimen_event owner to laboratory_owner;
+alter table idempotency_ledger owner to laboratory_owner;
+alter table custody_position owner to laboratory_owner;
+alter table instrument_inbox owner to laboratory_owner;
+alter table transactional_outbox owner to laboratory_owner;
+alter table vendor_projection owner to laboratory_owner;
+alter table bounded_call_invocation owner to laboratory_owner;
+alter table bounded_call_receipt owner to laboratory_owner;
+alter table migration_checkpoint owner to laboratory_owner;
+alter table evidence_receipt owner to laboratory_owner;
+alter table acceptance_decision owner to laboratory_owner;
+alter table acceptance_decision_receipt owner to laboratory_owner;

@@ -1,5 +1,70 @@
 # Changelog
 
+## Unreleased — principal data boundaries
+
+- Delegate PostgreSQL migration ordering, locking, transactions, history,
+  checksum validation, status, target selection, and replay to the
+  version-and-digest-pinned Flyway Community 13.0.0 image.
+- Keep cluster-role provisioning outside Flyway and resolve database credentials
+  only through runtime secret boundaries.
+- Authenticate Flyway through a constrained, non-inheriting migrator login;
+  select the no-login schema owner through a database-scoped startup setting;
+  and verify the authenticated identity, effective identity, and exact catalog
+  binding in a digest-bound connection callback.
+- Keep forced row-level security active during cross-tenant evolution and open
+  the maintenance path only for the catalog-verified bounded migration session.
+- Preserve the segregated outbox ownership boundary through a SET-only,
+  non-inheriting, non-admin owner-to-outbox-authority membership; bind the role
+  edge, transaction-bounded schema capability, and final table and routine
+  owners on clean and successor paths.
+- Publish a digest inventory for the Flyway configuration, connection callback,
+  cluster-role prerequisite, and every migration; pin all Compose support
+  images; and constrain the
+  container build context and local-secret exclusions.
+- Replace caller-selected tenant state with short-lived signed assertions which
+  PostgreSQL verifies against private key material.
+- Add finite temporal constraints, exact decimal instrument measurements,
+  UCUM-coded units, and raw-to-normalized lineage.
+- Add custody compare-and-set, tenant-scoped transfer replay, append-only event
+  history, schema-qualified privileged execution, and atomic full-payload outbox
+  insertion.
+- Bind outbox identity to tenant, verify payload digests at insertion, preserve
+  message content through delivery, and govern worker claim, expired-lease
+  reclaim, and confirmation through exact tenant/token/fence compare-and-set
+  functions with 1-through-900 integer-second lease authority.
+- Complete the outbox transition matrix, narrow initial-state insertion,
+  separate recovery release authority, and preserve append-only attempt,
+  outcome, transport-acknowledgement, and recovery evidence.
+- Align message identity bounds across producer and worker paths, and require a
+  locked initial-ready provenance boundary before attempt ledgers begin, with
+  bounded migration wait and statement budgets.
+- Bind measurement scale to the stored numeric value, bind complete inbox
+  lineage through one composite foreign key, make projected inbox facts
+  append-only, and bind custody positions to complete custody-event coordinates.
+- Reuse the PostgreSQL integration scenarios for Flyway target V003, transactional
+  V004 rejection, head migration, validation, information, no-op replay, and
+  clean-versus-upgrade schema convergence.
+- Add live, digest-pinned PostgreSQL 17 migration and adversarial data-boundary
+  proofs to CI.
+- Publish the data-primitive corrective ledger, plan probabilities, remaining
+  gaps, interstitials, and upgrade receipt requirements.
+
+## 0.3.1 — 2026-07-28
+
+- Route the golden specimen journey through the bounded caller.
+- Fail closed on in-progress lifecycle and vendor reservations.
+- Add rollback-capable atomic reference seams for state and evidence.
+- Add least-privilege PostgreSQL identities, tenant-scoped acceptance evidence,
+  and leased outbox recovery state.
+- Bind acceptance to one intended use and release claim.
+- Harden AWS response binding and runtime-value log redaction.
+- Add a credential-free LabKey JSON API exemplar with bounded reads and pagination.
+- Strengthen migration parity, package validation, and the stable CI aggregate.
+- Migrate orientation and evidence bindings to governance 2.0.1 and the corrected
+  canonical selected-future closure.
+- Make the stable implementation aggregate run on every outcome and fail when any
+  proof-matrix member differs from success.
+
 ## 0.3.0 — 2026-07-28
 
 - Added a typed bounded-caller boundary with task-scoped grants, tenant and

@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.1.0",
+  "receipt_id": "RECEIPT-HOSTED-POSTGRESQL-001",
+  "claim_id": "CLAIM-HOSTED-SYNTHETIC-DATABASE-BOUNDARIES",
+  "intended_use_id": "INTENDED-USE-SYNTHETIC-REFERENCE",
+  "release_claim_id": "RELEASE-CLAIM-IMPLEMENTATION-0.3.1",
+  "evidence_mode": "observed",
+  "assurance_stage": "verified",
+  "environment": "github-hosted-synthetic-postgresql",
+  "version_bindings": {
+    "repository": "0.3.1",
+    "repository_commit": "ef3320686842a2c7f1ab98c12479c3ed7c5709f5",
+    "workflow_run": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/actions/runs/30933020047",
+    "python": "3.12.13",
+    "postgresql": "17.10-alpine",
+    "database_migration_head": "004",
+    "tenant_authority": "signed_short_lived_database_verified_context"
+  },
+  "scenario_ids": [
+    "SCN-DB-MIGRATION-CHECKSUM-REPLAY",
+    "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",
+    "SCN-DB-MIGRATION-004-PROVENANCE-GATE",
+    "SCN-DB-SIGNED-TENANT-BOUNDARY",
+    "SCN-DB-TENANT-CONTEXT-TAMPER-EXPIRY",
+    "SCN-DB-CUSTODY-CAS-AND-ATOMIC-OUTBOX",
+    "SCN-DB-SECURITY-DEFINER-TEMP-SHADOW",
+    "SCN-DB-OUTBOX-CONTENT-IMMUTABILITY",
+    "SCN-DB-OUTBOX-FENCED-CLAIM-RECLAIM-STALE-CONFIRM",
+    "SCN-DB-OUTBOX-LEASE-DURATION-INTEGER-BOUND",
+    "SCN-DB-OUTBOX-MESSAGE-IDENTITY-LIVENESS",
+    "SCN-DB-OUTBOX-TRANSITION-AUTHORITY",
+    "SCN-DB-OUTBOX-ATTEMPT-ACK-RECOVERY-EVIDENCE",
+    "SCN-DB-OUTBOX-TRANSPORT-RECEIPT-UNIQUENESS",
+    "SCN-DB-SCIENTIFIC-QUANTITY-EXACTNESS",
+    "SCN-DB-VERIFICATION-KEY-CONFIDENTIALITY"
+  ],
+  "artifact_digests": [
+    "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd",
+    "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81"
+  ],
+  "observed_at": "2026-08-04T17:16:04Z",
+  "performer_id": "GITHUB-ACTIONS-HOSTED-RUNNER",
+  "reviewer_id": "SYN-INDEPENDENT-ADVERSARIAL-DATABASE-SUITE",
+  "limitations": [
+    "This historical receipt is superseded by the Flyway transition and remains evidence for the predecessor migration runner only.",
+    "This receipt records a synthetic hosted PostgreSQL proof and grants no production authorization.",
+    "Representative populated migration and restore rehearsal remains an independent successor receipt.",
+    "Production security and observability evidence remains an independent successor receipt.",
+    "Accountable Scientific, Quality, and Regulatory acceptance remains an independent successor receipt."
+  ]
+}

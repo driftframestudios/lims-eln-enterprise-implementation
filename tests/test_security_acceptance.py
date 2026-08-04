@@ -31,6 +31,8 @@ def receipt(
     return EvidenceReceipt(
         receipt_id=receipt_id,
         claim_id="CLAIM-INTENDED-USE-01",
+        intended_use_id="SYN-INTENDED-USE-01",
+        release_claim_id="SYN-RELEASE-CLAIM-01",
         evidence_mode=mode,
         assurance_stage=stage,
         environment="SYN-QUALIFICATION-ENV",
@@ -50,6 +52,7 @@ def decision(domain: AcceptanceDomain, receipt_id: str) -> AcceptanceDecision:
         role=f"{domain} accountable owner",
         decision="approve",
         intended_use_id="SYN-INTENDED-USE-01",
+        release_claim_id="SYN-RELEASE-CLAIM-01",
         receipt_ids=(receipt_id,),
         residual_risk="bounded and accepted for the stated synthetic intended use",
         decided_at=NOW,
@@ -97,6 +100,8 @@ class ReceiptTests(unittest.TestCase):
             EvidenceReceipt(
                 receipt_id="R-001",
                 claim_id="C-001",
+                intended_use_id="SYN-INTENDED-USE-01",
+                release_claim_id="SYN-RELEASE-CLAIM-01",
                 evidence_mode=EvidenceMode.OBSERVED,
                 assurance_stage=AssuranceStage.VERIFIED,
                 environment="SYN-ENV",
@@ -166,7 +171,78 @@ class AcceptanceTests(unittest.TestCase):
             frozenset({AcceptanceDomain.QUALITY, AcceptanceDomain.REGULATORY}),
         )
 
+    def test_mixed_intended_use_or_release_claim_keeps_board_pending(self) -> None:
+        receipts = [receipt(f"R-{index}") for index in range(1, 4)]
+        decisions = [
+            decision(AcceptanceDomain.SCIENTIFIC, "R-1"),
+            decision(AcceptanceDomain.QUALITY, "R-2"),
+            AcceptanceDecision(
+                domain=AcceptanceDomain.REGULATORY,
+                approver_id="SYN-REGULATORY-APPROVER",
+                role="regulatory accountable owner",
+                decision="approve",
+                intended_use_id="SYN-OTHER-INTENDED-USE",
+                release_claim_id="SYN-OTHER-RELEASE",
+                receipt_ids=("R-3",),
+                residual_risk="bounded for the alternate synthetic use",
+                decided_at=NOW,
+            ),
+        ]
+
+        status = AcceptanceBoard().evaluate(receipts, decisions)
+
+        self.assertFalse(status.ready)
+        self.assertIsNone(status.intended_use_id)
+        self.assertIsNone(status.release_claim_id)
+
+    def test_receipt_and_decision_capture_immutable_snapshots(self) -> None:
+        bindings = {"commit": "a" * 40}
+        scenarios = ["SCN-001"]
+        evidence = EvidenceReceipt(
+            receipt_id="R-SNAPSHOT",
+            claim_id="CLAIM-SNAPSHOT",
+            intended_use_id="SYN-INTENDED-USE-01",
+            release_claim_id="SYN-RELEASE-CLAIM-01",
+            evidence_mode=EvidenceMode.OBSERVED,
+            assurance_stage=AssuranceStage.VALIDATED,
+            environment="SYN-ENV",
+            version_bindings=bindings,
+            scenario_ids=scenarios,
+            artifact_digests=("sha256:" + "c" * 64,),
+            observed_at=NOW,
+            performer_id="SYN-PERFORMER",
+            reviewer_id="SYN-REVIEWER",
+        )
+        bindings["commit"] = "mutated"
+        scenarios[0] = "SCN-MUTATED"
+
+        self.assertEqual(evidence.version_bindings["commit"], "a" * 40)
+        self.assertEqual(evidence.scenario_ids, ("SCN-001",))
+        with self.assertRaises(TypeError):
+            evidence.version_bindings["commit"] = "changed"  # type: ignore[index]
+
+    def test_acceptance_domains_require_distinct_accountable_approvers(self) -> None:
+        receipts = [receipt(f"R-{index}") for index in range(1, 4)]
+        decisions = [
+            AcceptanceDecision(
+                domain=domain,
+                approver_id="SYN-SHARED-APPROVER",
+                role=f"{domain} accountable owner",
+                decision="approve",
+                intended_use_id="SYN-INTENDED-USE-01",
+                release_claim_id="SYN-RELEASE-CLAIM-01",
+                receipt_ids=(f"R-{index}",),
+                residual_risk="bounded for the synthetic intended use",
+                decided_at=NOW,
+            )
+            for index, domain in enumerate(AcceptanceBoard.REQUIRED, start=1)
+        ]
+
+        status = AcceptanceBoard().evaluate(receipts, decisions)
+
+        self.assertFalse(status.ready)
+        self.assertEqual(status.accepted_domains, frozenset())
+
 
 if __name__ == "__main__":
     unittest.main()
-

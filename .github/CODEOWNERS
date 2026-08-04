@@ -3,9 +3,17 @@
 /first-receipt.json @driftframestudios
 /COORDINATION-HORIZON.json @driftframestudios
 /manifest.json @driftframestudios
+/.gitignore @driftframestudios
+/.dockerignore @driftframestudios
+/database/ @driftframestudios
 /release/ @driftframestudios
 /scripts/check_branch_flow.py @driftframestudios
+/scripts/validate_repository.py @driftframestudios
+/flyway.conf @driftframestudios
 /tests/test_branch_flow.py @driftframestudios
+/tests/test_database_migrations.py @driftframestudios
+/tests/test_postgres_integration.py @driftframestudios
+/tests/test_sql_tenant_boundary.py @driftframestudios
 /src/lims_eln_implementation/bounded_caller.py @driftframestudios
 /src/lims_eln_implementation/bounded_examples.py @driftframestudios
 /src/lims_eln_implementation/production_adapters.py @driftframestudios

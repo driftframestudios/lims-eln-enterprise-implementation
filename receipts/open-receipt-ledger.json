@@ -4,7 +4,7 @@
   "pathway": "environment_observed_successors",
   "selected_future_closure": {
     "status": "closed_in_simulation",
-    "digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9",
+    "digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
     "environment_observed_closure": "separate_unasserted_state",
     "production_authorization_effect": "none"
   },

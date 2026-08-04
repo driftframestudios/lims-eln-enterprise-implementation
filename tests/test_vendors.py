@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from lims_eln_implementation.idempotency import ContentCollision
+from lims_eln_implementation.idempotency import ContentCollision, IdempotencyInProgress
 from lims_eln_implementation.observability import OperationalMetrics
 from lims_eln_implementation.ports import VendorRevisionConflict
 from lims_eln_implementation.vendors import (
@@ -52,8 +52,8 @@ class VendorProjectionTests(unittest.TestCase):
             1,
         )
         self.gateway.fault_mode = FaultMode.CLEAR
-        outcome = self.project()
-        self.assertEqual(outcome.revision, 1)
+        with self.assertRaisesRegex(IdempotencyInProgress, "authoritative readback"):
+            self.project()
 
     def test_exact_request_replay_reuses_outcome(self) -> None:
         first = self.project()
@@ -91,4 +91,3 @@ class VendorProjectionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
