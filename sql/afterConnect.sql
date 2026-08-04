@@ -10,6 +10,11 @@ begin
             errcode = '42501',
             message = 'Flyway requires the released laboratory_owner migration role';
     end if;
+    if pg_catalog.current_setting('role', true) <> 'laboratory_owner' then
+        raise exception using
+            errcode = '42501',
+            message = 'Flyway requires the released laboratory_owner role setting';
+    end if;
     if not exists (
         select 1
           from pg_catalog.pg_db_role_setting as role_setting

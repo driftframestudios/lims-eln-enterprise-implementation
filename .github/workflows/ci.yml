@@ -64,6 +64,7 @@ jobs:
       LIMS_TEST_POSTGRES_OUTBOX_DSN: postgresql://laboratory_outbox_worker:synthetic-ci-outbox-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_RECOVERY_DSN: postgresql://laboratory_outbox_recovery_operator:synthetic-ci-recovery-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_DSN: postgresql://laboratory_app:synthetic-ci-app-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_MIGRATOR_DSN: postgresql://laboratory_migrator:synthetic-ci-migrator-password@127.0.0.1:5432/laboratory
       LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
       FLYWAY_IMAGE: flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0
       FLYWAY_URL: jdbc:postgresql://127.0.0.1:5432/laboratory
@@ -112,12 +113,12 @@ jobs:
           test "$(PGPASSWORD=synthetic-ci-migrator-password psql \
             postgresql://laboratory_migrator@127.0.0.1:5432/laboratory \
             --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
-            --command="select session_user || ':' || current_user")" = "laboratory_migrator:laboratory_owner"
+            --command="select session_user || ':' || current_user || ':' || current_setting('role')")" = "laboratory_migrator:laboratory_owner:laboratory_owner"
           set +e
           PGPASSWORD=synthetic-ci-migrator-password psql \
             postgresql://laboratory_migrator@127.0.0.1:5432/laboratory \
             --no-psqlrc --set ON_ERROR_STOP=1 \
-            --command="reset role; begin; create table public.synthetic_direct_migrator_ddl (proof integer); rollback" \
+            --command="set role none; begin; create table public.synthetic_direct_migrator_ddl (proof integer); rollback" \
             > direct-migrator-ddl.log 2>&1
           direct_ddl_status=$?
           set -e
@@ -257,7 +258,7 @@ jobs:
               --command="select configuration.value from pg_catalog.pg_db_role_setting as role_setting join pg_catalog.pg_roles as member_role on member_role.oid = role_setting.setrole join pg_catalog.pg_database as target_database on target_database.oid = role_setting.setdatabase cross join lateral pg_catalog.unnest(role_setting.setconfig) as configuration(value) where member_role.rolname = 'laboratory_migrator' and target_database.datname = pg_catalog.current_database() and configuration.value like 'role=%'")" = "role=laboratory_owner"
             test "$(PGPASSWORD=synthetic-ci-migrator-password psql "$migrator_dsn" \
               --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
-              --command="select session_user || ':' || current_user")" = "laboratory_migrator:laboratory_owner"
+              --command="select session_user || ':' || current_user || ':' || current_setting('role')")" = "laboratory_migrator:laboratory_owner:laboratory_owner"
           }
           verify_migrator_boundary \
             "$LIMS_TEST_POSTGRES_ADMIN_DSN" \

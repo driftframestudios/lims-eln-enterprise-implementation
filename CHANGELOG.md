@@ -11,6 +11,8 @@
   select the no-login schema owner through a database-scoped startup setting;
   and verify the authenticated identity, effective identity, and exact catalog
   binding in a digest-bound connection callback.
+- Keep forced row-level security active during cross-tenant evolution and open
+  the maintenance path only for the catalog-verified bounded migration session.
 - Publish a digest inventory for the Flyway configuration, connection callback,
   and every migration; pin all Compose support images; and constrain the
   container build context and local-secret exclusions.

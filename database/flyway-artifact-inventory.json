@@ -11,7 +11,7 @@
     {
       "kind": "connection_callback",
       "path": "sql/afterConnect.sql",
-      "sha256": "a67d809067dedfdc4bb806475ef3721bd469a39cb3129d95c204e60d2f4ea348"
+      "sha256": "f178850b5b633a8f79b3703897a9a04371786e98d02bbd3ec205f7b535dff072"
     },
     {
       "kind": "versioned_migration",
@@ -23,7 +23,7 @@
       "kind": "versioned_migration",
       "version": "002",
       "path": "sql/V002__principal_data_boundaries.sql",
-      "sha256": "2d5f3778d1b3c557590b265f06821435effb1ea9e1e0675dda5e74f5b213ee64"
+      "sha256": "42e1279d7d44c3d31fe74d0d8b49a2a55676d39beb4235fb8d666ef2f0de7241"
     },
     {
       "kind": "versioned_migration",
@@ -35,8 +35,8 @@
       "kind": "versioned_migration",
       "version": "004",
       "path": "sql/V004__outbox_attempt_evidence_and_recovery.sql",
-      "sha256": "84eaac39bcf5484745e1fc17418b17c0b08a90077a3b18a6011a3c34efefff1a"
+      "sha256": "937250e1eac81a4e01f8764b61676fd782f87f3ee86fb9d7dbb295de8e9e119d"
     }
   ],
-  "aggregate_sha256": "sha256:ae77fdf109d6f2b51829e960f4b17f447ea86c5a05e64142c7703233c050d36a"
+  "aggregate_sha256": "sha256:0d8628133cecf5fac73bbf9c4bdfeaf6c6078299088270e9ea57f7f2b08cd05f"
 }

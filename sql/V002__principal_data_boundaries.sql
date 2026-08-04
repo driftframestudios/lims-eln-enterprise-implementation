@@ -61,6 +61,90 @@ alter function laboratory_security.constant_time_equal(bytea, bytea)
 revoke all on function laboratory_security.constant_time_equal(bytea, bytea)
     from public;
 
+create function laboratory_security.bounded_migration_session_active()
+returns boolean
+language sql
+stable
+security invoker
+set search_path = pg_catalog
+as $$
+select
+    session_user = 'laboratory_migrator'
+    and current_user = 'laboratory_owner'
+    and pg_catalog.current_setting('role', true) = 'laboratory_owner'
+    and exists (
+        select 1
+          from pg_catalog.pg_roles as login_role
+         where login_role.rolname = 'laboratory_migrator'
+           and login_role.rolcanlogin
+           and not login_role.rolsuper
+           and not login_role.rolcreatedb
+           and not login_role.rolcreaterole
+           and not login_role.rolinherit
+           and not login_role.rolreplication
+           and not login_role.rolbypassrls
+    )
+    and exists (
+        select 1
+          from pg_catalog.pg_roles as owner_role
+         where owner_role.rolname = 'laboratory_owner'
+           and not owner_role.rolcanlogin
+           and not owner_role.rolsuper
+           and not owner_role.rolcreatedb
+           and not owner_role.rolcreaterole
+           and not owner_role.rolinherit
+           and not owner_role.rolreplication
+           and not owner_role.rolbypassrls
+    )
+    and exists (
+        select 1
+          from pg_catalog.pg_auth_members as membership
+          join pg_catalog.pg_roles as granted_role
+            on granted_role.oid = membership.roleid
+          join pg_catalog.pg_roles as member_role
+            on member_role.oid = membership.member
+         where granted_role.rolname = 'laboratory_owner'
+           and member_role.rolname = 'laboratory_migrator'
+           and not membership.admin_option
+           and not membership.inherit_option
+           and membership.set_option
+    )
+    and (
+        select pg_catalog.count(*) = 1
+           and pg_catalog.bool_and(
+               configuration.value = 'role=laboratory_owner'
+           )
+          from pg_catalog.pg_db_role_setting as role_setting
+          join pg_catalog.pg_roles as member_role
+            on member_role.oid = role_setting.setrole
+          join pg_catalog.pg_database as target_database
+            on target_database.oid = role_setting.setdatabase
+         cross join lateral pg_catalog.unnest(role_setting.setconfig)
+            as configuration(value)
+         where member_role.rolname = 'laboratory_migrator'
+           and target_database.datname = pg_catalog.current_database()
+           and configuration.value like 'role=%'
+    )
+    and (
+        select pg_catalog.count(*) = 1
+           and pg_catalog.bool_and(
+               database_acl.privilege_type = 'CONNECT'
+               and not database_acl.is_grantable
+           )
+          from pg_catalog.pg_database as target_database
+         cross join lateral pg_catalog.aclexplode(
+             coalesce(
+                 target_database.datacl,
+                 pg_catalog.acldefault('d', target_database.datdba)
+             )
+         ) as database_acl
+          join pg_catalog.pg_roles as grantee_role
+            on grantee_role.oid = database_acl.grantee
+         where target_database.datname = pg_catalog.current_database()
+           and grantee_role.rolname = 'laboratory_migrator'
+    );
+$$;
+
 create function laboratory_security.authorized_tenant_id()
 returns text
 language plpgsql
@@ -85,6 +169,9 @@ declare
     signed_content text;
     expected_signature bytea;
 begin
+    if laboratory_security.bounded_migration_session_active() then
+        return null;
+    end if;
     context_text := current_setting('app.tenant_context', true);
     if context_text is null or context_text = '' then
         raise exception using
@@ -203,6 +290,8 @@ $$;
 
 revoke all on function laboratory_security.authorized_tenant_id() from public;
 revoke all on function laboratory_security.bind_tenant_context(jsonb) from public;
+revoke all on function laboratory_security.bounded_migration_session_active()
+    from public;
 grant execute on function laboratory_security.authorized_tenant_id() to
     laboratory_app,
     laboratory_outbox_worker,
@@ -272,6 +361,69 @@ create policy acceptance_decision_receipt_tenant_policy
 on acceptance_decision_receipt
     using (tenant_id = laboratory_security.authorized_tenant_id())
     with check (tenant_id = laboratory_security.authorized_tenant_id());
+
+create policy tenant_bounded_migration_policy on tenant
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy specimen_bounded_migration_policy on specimen
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy specimen_event_bounded_migration_policy on specimen_event
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy idempotency_ledger_bounded_migration_policy on idempotency_ledger
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy custody_position_bounded_migration_policy on custody_position
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy instrument_inbox_bounded_migration_policy on instrument_inbox
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy transactional_outbox_bounded_migration_policy
+on transactional_outbox
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy vendor_projection_bounded_migration_policy on vendor_projection
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy bounded_call_invocation_bounded_migration_policy
+on bounded_call_invocation
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy bounded_call_receipt_bounded_migration_policy
+on bounded_call_receipt
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy migration_checkpoint_bounded_migration_policy
+on migration_checkpoint
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy evidence_receipt_bounded_migration_policy on evidence_receipt
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy acceptance_decision_bounded_migration_policy
+on acceptance_decision
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy acceptance_decision_receipt_bounded_migration_policy
+on acceptance_decision_receipt
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
 
 alter table tenant
     add constraint tenant_created_at_finite check (isfinite(created_at_utc));
@@ -427,6 +579,10 @@ alter table custody_event force row level security;
 create policy custody_event_tenant_policy on custody_event
     using (tenant_id = laboratory_security.authorized_tenant_id())
     with check (tenant_id = laboratory_security.authorized_tenant_id());
+create policy custody_event_bounded_migration_policy on custody_event
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
 create trigger custody_event_append_only
 before update or delete on custody_event
 for each row execute function preserve_append_only_record();
@@ -479,6 +635,11 @@ alter table instrument_measurement force row level security;
 create policy instrument_measurement_tenant_policy on instrument_measurement
     using (tenant_id = laboratory_security.authorized_tenant_id())
     with check (tenant_id = laboratory_security.authorized_tenant_id());
+create policy instrument_measurement_bounded_migration_policy
+on instrument_measurement
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
 create trigger instrument_measurement_append_only
 before update or delete on instrument_measurement
 for each row execute function preserve_append_only_record();

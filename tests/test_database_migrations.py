@@ -101,6 +101,10 @@ class DatabaseMigrationTests(unittest.TestCase):
         )
         self.assertIn("session_user <> 'laboratory_migrator'", callback)
         self.assertIn("current_user <> 'laboratory_owner'", callback)
+        self.assertIn(
+            "current_setting('role', true) <> 'laboratory_owner'",
+            callback,
+        )
         self.assertIn("pg_catalog.pg_db_role_setting", callback)
         self.assertIn("configuration.value = 'role=laboratory_owner'", callback)
 

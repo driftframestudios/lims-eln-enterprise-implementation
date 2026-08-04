@@ -75,10 +75,29 @@ matching PostgreSQL's explicit
 model. Target database and schema creation are reserved for
 `laboratory_owner`; the database-scoped startup setting selects that role on
 each new migrator connection. Flyway history and domain objects consequently
-belong to the owner. `RESET ROLE` recovers the authenticated migrator's narrow
-privilege set and supports an explicit direct-DDL rejection proof. The
+belong to the owner. `RESET ROLE` selects the configured owner default. `SET
+ROLE NONE` recovers the authenticated migrator's
+narrow privilege set and supports an explicit direct-DDL rejection proof. The
+credential can deliberately select `laboratory_owner` through its released
+`SET TRUE` membership, so deployment delivers this secret only to the migration
+job. The
 provisioning step establishes the public-creation boundary before the first
 migration runs.
+
+Tenant relations retain `FORCE ROW LEVEL SECURITY` during schema and data
+evolution. A permissive policy for `laboratory_owner` opens cross-tenant
+maintenance only when
+`laboratory_security.bounded_migration_session_active()` verifies the complete
+migration coordinate: authenticated migrator, effective owner, both roles'
+least-privilege attributes, exact membership options, the database-scoped
+startup role, the live `role` setting, and one direct non-grantable `CONNECT`
+database ACL. For that exact coordinate, the ordinary tenant function returns
+SQL `NULL`, producing a total false tenant predicate while the maintenance
+policy admits the migration statement. Every other coordinate retains the
+explicit tenant-context exception. Runtime roles receive no execution grant on
+the verifier and continue through the signed tenant policy. The migration
+credential can perform cross-tenant evolution by design; its delivery boundary
+and the immutable Flyway artifact set constrain that authority.
 
 The Compose migrator service receives only `postgres_migrator_password`. The
 bootstrap secret remains on the role-provisioning service. Application,
@@ -110,10 +129,14 @@ scenarios. It also proves:
   identity to one custody event;
 - V004 failure is transactional;
 - Flyway validation accepts the released checksums;
-- the migrator login has bounded role attributes and `RESET ROLE` returns to a
+- the migrator login has bounded role attributes and `SET ROLE NONE` returns to a
   direct-DDL-rejecting privilege set;
 - every migrator session starts with the released authenticated/effective
   identity pair and the callback verifies that pair plus its catalog binding;
+- V002 cross-tenant backfills complete under forced RLS only through the
+  catalog-verified bounded migration policy;
+- application and direct-login migrator probes remain on the signed-tenant
+  path and fail closed without a verified tenant context;
 - Flyway history and domain relations are created as `laboratory_owner`;
 - target V003, head migration, `info`, validation, and no-op replay behave as
   one coherent release path.

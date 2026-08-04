@@ -194,7 +194,15 @@ callback verifies the authenticated session identity, effective owner identity,
 and database-scoped startup setting. Privileged provisioning configures each
 new target-database session to start as the no-login `laboratory_owner` role.
 The owner holds target database and schema creation authority; `RESET ROLE`
-returns the session to the narrowly privileged migrator identity.
+selects the configured owner default, while `SET ROLE NONE` returns the session
+to the narrowly privileged migrator identity. The credential can deliberately
+select `laboratory_owner` through its released `SET TRUE` membership; secret
+delivery therefore remains scoped to the migration job.
+Forced row-level security remains active during migration. A dedicated policy
+permits cross-tenant evolution only when a security-invoker verifier observes
+the complete catalog-backed migrator/owner coordinate. The ordinary tenant
+predicate becomes SQL `NULL` for that coordinate alone; runtime and trusted
+routine paths continue through signed tenant assertions.
 
 See the [migration and upgrade posture](docs/database-migrations.md) and the
 [data primitive corrective ledger](docs/data-primitive-corrective-ledger.md)

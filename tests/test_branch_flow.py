@@ -204,8 +204,11 @@ class BranchFlowTests(unittest.TestCase):
         self.assertIn("true:false:false:false:false:false", workflow)
         self.assertIn("false:false:true", workflow)
         self.assertIn("role=laboratory_owner", workflow)
-        self.assertIn("laboratory_migrator:laboratory_owner", workflow)
-        self.assertIn("reset role; begin; create table", workflow.lower())
+        self.assertIn(
+            "laboratory_migrator:laboratory_owner:laboratory_owner",
+            workflow,
+        )
+        self.assertIn("set role none; begin; create table", workflow.lower())
         self.assertNotIn("options=-c%20role%3D", workflow)
         self.assertIn("flyway_schema_history", workflow)
         self.assertIn('= "laboratory_owner"', workflow)

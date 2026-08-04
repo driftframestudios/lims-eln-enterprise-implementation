@@ -174,7 +174,20 @@ TRUE, INHERIT FALSE, ADMIN FALSE` membership on every new connection. Database
 and schema creation authority lives on that owner role; the authenticated login
 receives connection authority and a distinct runtime credential. The callback
 also verifies the exact catalog binding, while `RESET ROLE` exposes the
-migrator's direct-DDL-rejecting privilege set.
+configured owner default and `SET ROLE NONE` exposes the migrator's
+direct-DDL-rejecting privilege set. The credential can deliberately select the
+owner through its released membership and therefore enters only the migration
+workload boundary.
+
+Forced row-level security remains active during migration. Every tenant table
+has a second permissive policy scoped to `laboratory_owner` whose predicate
+verifies the complete catalog-backed migration session coordinate. The ordinary
+tenant predicate becomes SQL `NULL` only for that exact coordinate, avoiding an
+exception during cross-tenant maintenance. Application, worker, evidence,
+trusted `SECURITY DEFINER`, and direct migrator paths continue to require a
+signed tenant context. This keeps cross-tenant data evolution explicit while
+the migration secret, digest-bound SQL, and deployment stage form its authority
+boundary.
 
 Migration V002 establishes finite temporal values, state coherence, the signed
 tenant authority, typed instrument measurements, custody history/CAS, and

@@ -94,6 +94,56 @@ class SqlTenantStructureTests(unittest.TestCase):
         self.assertIn("current_setting('app.tenant_context', true)", migration)
         self.assertNotIn("current_setting('app.tenant_id'", migration)
 
+    def test_cross_tenant_migration_policy_requires_the_bounded_session(self) -> None:
+        migration = (ROOT / "sql" / "V002__principal_data_boundaries.sql").read_text(
+            encoding="utf-8"
+        ).lower()
+        function = "laboratory_security.bounded_migration_session_active()"
+        for required_fragment in (
+            "session_user = 'laboratory_migrator'",
+            "current_user = 'laboratory_owner'",
+            "current_setting('role', true) = 'laboratory_owner'",
+            "not login_role.rolsuper",
+            "not login_role.rolinherit",
+            "not login_role.rolbypassrls",
+            "not membership.admin_option",
+            "not membership.inherit_option",
+            "membership.set_option",
+            "configuration.value = 'role=laboratory_owner'",
+            "database_acl.privilege_type = 'connect'",
+            "not database_acl.is_grantable",
+        ):
+            with self.subTest(required_fragment=required_fragment):
+                self.assertIn(required_fragment, migration)
+        self.assertIn(
+            "if laboratory_security.bounded_migration_session_active() then\n"
+            "        return null;",
+            migration,
+        )
+        self.assertIn(
+            f"revoke all on function {function}\n    from public",
+            migration,
+        )
+        for table in TENANT_TABLES:
+            with self.subTest(table=table):
+                self.assertRegex(
+                    self.sql,
+                    rf"create\s+policy\s+\w+_bounded_migration_policy\s+"
+                    rf"on\s+(?:public\.)?{table}\s+for\s+all\s+"
+                    rf"to\s+laboratory_owner\s+using\s*\({re.escape(function)}\)\s+"
+                    rf"with\s+check\s*\({re.escape(function)}\)\s*;",
+                )
+        for table in (
+            "outbox_delivery_attempt",
+            "outbox_delivery_attempt_outcome",
+            "outbox_recovery_release",
+        ):
+            with self.subTest(table=table):
+                self.assertIn(
+                    f"create policy {table}_bounded_migration_policy",
+                    self.sql,
+                )
+
     def test_postgresql_regex_bounds_fit_the_engine_limit(self) -> None:
         upper_bounds = [
             int(value)
@@ -450,7 +500,8 @@ class SqlTenantStructureTests(unittest.TestCase):
             provisioner_script,
         )
         self.assertIn(
-            'test "$startup_identity" = "laboratory_migrator:laboratory_owner"',
+            'test "$startup_identity" = '
+            '"laboratory_migrator:laboratory_owner:laboratory_owner"',
             provisioner_script,
         )
         migrator = compose.split("\n  database-migrator:", 1)[1]

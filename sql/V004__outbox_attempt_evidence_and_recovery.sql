@@ -348,6 +348,22 @@ on public.outbox_recovery_release
     using (tenant_id = laboratory_security.authorized_tenant_id())
     with check (tenant_id = laboratory_security.authorized_tenant_id());
 
+create policy outbox_delivery_attempt_bounded_migration_policy
+on public.outbox_delivery_attempt
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy outbox_delivery_attempt_outcome_bounded_migration_policy
+on public.outbox_delivery_attempt_outcome
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+create policy outbox_recovery_release_bounded_migration_policy
+on public.outbox_recovery_release
+    for all to laboratory_owner
+    using (laboratory_security.bounded_migration_session_active())
+    with check (laboratory_security.bounded_migration_session_active());
+
 create trigger outbox_delivery_attempt_append_only
 before update or delete on public.outbox_delivery_attempt
 for each row execute function public.preserve_append_only_record();

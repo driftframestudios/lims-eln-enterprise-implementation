@@ -14,12 +14,12 @@
   "role_assumption": "database_scoped_startup_role_after_connect_verified_noinherit_membership",
   "connection_callback": {
     "path": "sql/afterConnect.sql",
-    "sha256": "a67d809067dedfdc4bb806475ef3721bd469a39cb3129d95c204e60d2f4ea348"
+    "sha256": "f178850b5b633a8f79b3703897a9a04371786e98d02bbd3ec205f7b535dff072"
   },
   "artifact_inventory": {
     "path": "database/flyway-artifact-inventory.json",
-    "sha256": "1b8f8fbd5cb365e08dfdfde4193850cbb85520b71d5aa9d32263f8766c67c6a4",
-    "aggregate_sha256": "sha256:ae77fdf109d6f2b51829e960f4b17f447ea86c5a05e64142c7703233c050d36a"
+    "sha256": "898d1d7904ffbd2d97c09e318954e45f5fec99f4122efd7e910f6cf3bc706dee",
+    "aggregate_sha256": "sha256:0d8628133cecf5fac73bbf9c4bdfeaf6c6078299088270e9ea57f7f2b08cd05f"
   },
   "baseline_policy": "explicit_attested_baseline_only",
   "cluster_role_provisioning": "separate_privileged_deployment_step",

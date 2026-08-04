@@ -3,8 +3,8 @@
   "repository_role": "enterprise_implementation",
   "repository_release": "0.3.1",
   "external_release": "implementation-v0.3.1",
-  "bounded_caller_binding_digest": "sha256:a1a6601d0e5469b797b48a929ce4552d62666aab3f314df6a1e0fbedfc01341d",
-  "database_flyway_release_digest": "sha256:4da38e773c815b0ae81faddc05e1a1e4f1e87db7f0ae9bceae01f0f8db8c0702",
+  "bounded_caller_binding_digest": "sha256:e3d56d6a07e59f8bcb28a6b50ecf819e05909be2d321c42e1ad7aabe6a4c00f9",
+  "database_flyway_release_digest": "sha256:520913b2494fd5df77b03c63d243086ad6c49ad5bab6139af5f230236fae8016",
   "open_receipt_ledger_digest": "sha256:f5ec4399b7ba43ce2bbc6260c0eb223c1fc8e405a9e5b13fd71ca806fd709421",
   "selected_future_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
   "first_receipt_contract": {

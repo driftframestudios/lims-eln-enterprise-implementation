@@ -38,6 +38,6 @@ startup_identity="$(
     PGPASSWORD="$migrator_password" psql --no-psqlrc \
         --username=laboratory_migrator \
         --tuples-only --no-align --set=ON_ERROR_STOP=1 \
-        --command="select session_user || ':' || current_user"
+        --command="select session_user || ':' || current_user || ':' || current_setting('role')"
 )"
-test "$startup_identity" = "laboratory_migrator:laboratory_owner"
+test "$startup_identity" = "laboratory_migrator:laboratory_owner:laboratory_owner"

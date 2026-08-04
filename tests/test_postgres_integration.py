@@ -19,6 +19,7 @@ ADMIN_DSN = os.environ.get("LIMS_TEST_POSTGRES_ADMIN_DSN")
 APP_DSN = os.environ.get("LIMS_TEST_POSTGRES_APP_DSN")
 OUTBOX_DSN = os.environ.get("LIMS_TEST_POSTGRES_OUTBOX_DSN")
 RECOVERY_DSN = os.environ.get("LIMS_TEST_POSTGRES_RECOVERY_DSN")
+MIGRATOR_DSN = os.environ.get("LIMS_TEST_POSTGRES_MIGRATOR_DSN")
 HMAC_KEY_HEX = os.environ.get("LIMS_TEST_TENANT_HMAC_HEX")
 UPGRADE_OUTBOX_DSN = os.environ.get("LIMS_TEST_POSTGRES_UPGRADE_OUTBOX_DSN")
 UPGRADE_RECOVERY_DSN = os.environ.get("LIMS_TEST_POSTGRES_UPGRADE_RECOVERY_DSN")
@@ -72,6 +73,7 @@ def signed_context(
     and APP_DSN
     and OUTBOX_DSN
     and RECOVERY_DSN
+    and MIGRATOR_DSN
     and HMAC_KEY_HEX
     and shutil.which("psql"),
     "configured PostgreSQL DSNs, synthetic HMAC key, and psql enable this proof",
@@ -235,6 +237,62 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         )
         self.assertNotEqual(completed.returncode, 0)
         self.assertIn("permission denied", completed.stderr.lower())
+
+    def test_bounded_migration_policy_is_scoped_to_the_migration_session(self) -> None:
+        assert APP_DSN is not None and MIGRATOR_DSN is not None
+        application_probe = self.run_sql(
+            APP_DSN,
+            "select laboratory_security.bounded_migration_session_active()",
+            check=False,
+        )
+        self.assertNotEqual(application_probe.returncode, 0)
+        self.assertIn("permission denied", application_probe.stderr.lower())
+
+        migration_identity = self.run_sql(
+            MIGRATOR_DSN,
+            "select session_user || ':' || current_user || ':' || "
+            "current_setting('role') || ':' || "
+            "laboratory_security.bounded_migration_session_active()::text",
+        ).stdout.strip()
+        self.assertEqual(
+            migration_identity,
+            "laboratory_migrator:laboratory_owner:laboratory_owner:true",
+        )
+        migration_visible_rows = int(
+            self.run_sql(
+                MIGRATOR_DSN,
+                "select count(*) from public.tenant",
+            ).stdout.strip()
+        )
+        self.assertGreaterEqual(migration_visible_rows, 3)
+
+        security_definer_probe = self.run_sql(
+            APP_DSN,
+            "select public.record_custody_transfer("
+            "'SYN-DENIED-SPECIMEN', 'SYN-DENIED-LOCATION', "
+            "'SYN-DENIED-CUSTODIAN', 0, 'SYN-DENIED-TRANSFER', "
+            "clock_timestamp())",
+            check=False,
+        )
+        self.assertNotEqual(security_definer_probe.returncode, 0)
+        self.assertIn("tenant context", security_definer_probe.stderr.lower())
+
+        direct_login_identity = self.run_sql(
+            MIGRATOR_DSN,
+            "set role none; select session_user || ':' || current_user || ':' || "
+            "current_setting('role')",
+        ).stdout.strip()
+        self.assertEqual(
+            direct_login_identity,
+            "laboratory_migrator:laboratory_migrator:none",
+        )
+        direct_login_read = self.run_sql(
+            MIGRATOR_DSN,
+            "set role none; select count(*) from public.tenant",
+            check=False,
+        )
+        self.assertNotEqual(direct_login_read.returncode, 0)
+        self.assertIn("tenant context", direct_login_read.stderr.lower())
 
     def test_scientific_quantity_retains_exact_scale_and_rejects_over_scale(self) -> None:
         assert APP_DSN is not None

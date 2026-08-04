@@ -152,6 +152,7 @@ def validate_manifests() -> None:
     if (
         "session_user <> 'laboratory_migrator'" not in callback_sql
         or "current_user <> 'laboratory_owner'" not in callback_sql
+        or "current_setting('role', true) <> 'laboratory_owner'" not in callback_sql
         or "pg_catalog.pg_db_role_setting" not in callback_sql
         or "configuration.value = 'role=laboratory_owner'" not in callback_sql
     ):
