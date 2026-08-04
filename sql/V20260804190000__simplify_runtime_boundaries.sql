@@ -151,14 +151,6 @@ revoke execute on function laboratory_security.authorized_tenant_id() from
     laboratory_evidence_writer;
 grant execute on function laboratory_security.authorized_tenant_id() to
     laboratory_app;
-revoke all privileges on all sequences in schema public from
-    laboratory_outbox_authority,
-    laboratory_outbox_recovery_operator,
-    laboratory_evidence_writer;
-revoke execute on all functions in schema public from
-    laboratory_outbox_authority,
-    laboratory_outbox_recovery_operator,
-    laboratory_evidence_writer;
 revoke usage on schema public from
     laboratory_outbox_authority,
     laboratory_outbox_recovery_operator,
@@ -168,7 +160,7 @@ revoke all on schema laboratory_security from
     laboratory_evidence_writer,
     laboratory_outbox_recovery_operator;
 
-revoke all on public.preserve_append_only_record() from public;
+revoke all on function public.preserve_append_only_record() from public;
 revoke update, delete on public.specimen_event from laboratory_app;
 revoke update, delete on public.custody_event from laboratory_app;
 revoke update, delete on public.instrument_inbox from laboratory_app;
