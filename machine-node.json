@@ -21,12 +21,12 @@
     {
       "contract_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
       "version": "0.3.1",
-      "digest": "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd"
+      "digest": "sha256:a1a6601d0e5469b797b48a929ce4552d62666aab3f314df6a1e0fbedfc01341d"
     },
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
       "version": "1.0.0",
-      "digest": "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81"
+      "digest": "sha256:964aaa32ad02467b5021f5939b47a8494ab5d120f22638a6e0011ea8915be6d8"
     },
     {
       "contract_id": "IMPLEMENTATION-OPEN-RECEIPTS-001",
@@ -77,7 +77,7 @@
   ],
   "invalidation_conditions": [
     "A bounded-caller source digest differs from the released binding manifest.",
-    "A database migration path, order, or checksum differs from the released migration manifest.",
+    "Flyway validation reports an applied-version, checksum, description, type, or local-resolution difference.",
     "A caller operation exceeds its identity, tenant, capability, resource, budget, approval, or replay boundary.",
     "A simulated receipt appears as environment-observed evidence or production authorization.",
     "A configured provider, driver, vendor SDK, or API moves outside its qualified version band.",

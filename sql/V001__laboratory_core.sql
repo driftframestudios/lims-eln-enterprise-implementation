@@ -1,17 +1,6 @@
 -- TARGET: PostgreSQL holds tenant-scoped canonical state and append-only evidence.
 -- TARGET: optimistic revisions serialize lifecycle and custody writers.
 
-create role laboratory_owner
-    nologin nosuperuser nocreatedb nocreaterole noinherit nobypassrls;
-create role laboratory_app
-    login nosuperuser nocreatedb nocreaterole noinherit nobypassrls;
-create role laboratory_outbox_worker
-    login nosuperuser nocreatedb nocreaterole noinherit nobypassrls;
-create role laboratory_evidence_writer
-    login nosuperuser nocreatedb nocreaterole noinherit nobypassrls;
-create role laboratory_migrator
-    login nosuperuser nocreatedb nocreaterole noinherit nobypassrls;
-
 revoke create on schema public from public;
 grant usage on schema public to laboratory_app;
 grant usage on schema public to laboratory_outbox_worker;

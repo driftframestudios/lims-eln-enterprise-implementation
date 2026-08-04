@@ -65,6 +65,10 @@ jobs:
       LIMS_TEST_POSTGRES_RECOVERY_DSN: postgresql://laboratory_outbox_recovery_operator:synthetic-ci-recovery-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_DSN: postgresql://laboratory_app:synthetic-ci-app-password@127.0.0.1:5432/laboratory
       LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      FLYWAY_IMAGE: flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0
+      FLYWAY_URL: jdbc:postgresql://127.0.0.1:5432/laboratory
+      FLYWAY_USER: laboratory_bootstrap
+      FLYWAY_PASSWORD: synthetic-ci-bootstrap-password
 
     steps:
       - name: Check out source
@@ -81,10 +85,28 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install --yes postgresql-client
 
-      - name: Apply checksum-bound migrations
+      - name: Provision cluster roles outside Flyway
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
+        run: >-
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN"
+          --no-psqlrc --set ON_ERROR_STOP=1
+          --file database/provision_cluster_roles.sql
+
+      - name: Apply, validate, inspect, and replay Flyway migrations
         run: |
-          python3 scripts/apply_database_migrations.py --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN"
-          python3 scripts/apply_database_migrations.py --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN"
+          run_flyway() {
+            docker run --rm --network host \
+              --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
+              --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
+              "$FLYWAY_IMAGE" \
+              -workingDirectory=/flyway/project \
+              -configFiles=/flyway/project/flyway.conf "$@"
+          }
+          run_flyway migrate
+          run_flyway validate
+          run_flyway info
+          run_flyway migrate
 
       - name: Configure synthetic workload identities and verification key
         env:
@@ -126,12 +148,29 @@ jobs:
           --health-interval 5s
           --health-timeout 3s
           --health-retries 20
+      postgres-clean:
+        image: postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+        env:
+          POSTGRES_DB: laboratory
+          POSTGRES_USER: laboratory_bootstrap
+          POSTGRES_PASSWORD: synthetic-ci-bootstrap-password
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U laboratory_bootstrap -d laboratory"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
     env:
       PYTHONPATH: src
       LIMS_TEST_POSTGRES_ADMIN_DSN: postgresql://laboratory_bootstrap:synthetic-ci-bootstrap-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_UPGRADE_OUTBOX_DSN: postgresql://laboratory_outbox_worker:synthetic-ci-outbox-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_UPGRADE_RECOVERY_DSN: postgresql://laboratory_outbox_recovery_operator:synthetic-ci-recovery-password@127.0.0.1:5432/laboratory
       LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      FLYWAY_IMAGE: flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0
+      FLYWAY_URL: jdbc:postgresql://127.0.0.1:5432/laboratory
+      FLYWAY_USER: laboratory_bootstrap
+      FLYWAY_PASSWORD: synthetic-ci-bootstrap-password
 
     steps:
       - name: Check out source
@@ -148,11 +187,26 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install --yes postgresql-client
 
-      - name: Apply historical migration head
+      - name: Provision cluster roles in upgrade and clean clusters
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
         run: |
-          python3 scripts/apply_database_migrations.py \
-            --manifest database/migration-manifest-through-003.json \
-            --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN"
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" \
+            --no-psqlrc --set ON_ERROR_STOP=1 \
+            --file database/provision_cluster_roles.sql
+          psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            --no-psqlrc --set ON_ERROR_STOP=1 \
+            --file database/provision_cluster_roles.sql
+
+      - name: Apply historical migration head with Flyway target
+        run: |
+          docker run --rm --network host \
+            --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
+            --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
+            "$FLYWAY_IMAGE" \
+            -workingDirectory=/flyway/project \
+            -configFiles=/flyway/project/flyway.conf \
+            -target=003 migrate
 
       - name: Seed representative pre-004 outbox states
         run: |
@@ -198,8 +252,12 @@ jobs:
       - name: Prove the provenance gate retains the historical head
         run: |
           set +e
-          python3 scripts/apply_database_migrations.py \
-            --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN" \
+          docker run --rm --network host \
+            --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
+            --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
+            "$FLYWAY_IMAGE" \
+            -workingDirectory=/flyway/project \
+            -configFiles=/flyway/project/flyway.conf migrate \
             > migration-004-rejection.log 2>&1
           migration_status=$?
           set -e
@@ -218,8 +276,8 @@ jobs:
           do $proof$
           begin
               if exists (
-                  select 1 from laboratory_migration.applied_migration
-                  where migration_id = '004'
+                  select 1 from public.flyway_schema_history
+                  where version::integer = 4 and success
               ) then
                   raise exception 'migration 004 was applied despite the provenance gate';
               end if;
@@ -238,13 +296,21 @@ jobs:
 
       - name: Apply successor and replay with ready-row preservation
         run: |
-          python3 scripts/apply_database_migrations.py \
-            --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN"
-          python3 scripts/apply_database_migrations.py \
-            --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN"
+          run_flyway() {
+            docker run --rm --network host \
+              --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
+              --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
+              "$FLYWAY_IMAGE" \
+              -workingDirectory=/flyway/project \
+              -configFiles=/flyway/project/flyway.conf "$@"
+          }
+          run_flyway migrate
+          run_flyway validate
+          run_flyway info
+          run_flyway migrate
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
-            --command 'select count(*) from laboratory_migration.applied_migration')" = "4"
+            --command 'select count(*) from public.flyway_schema_history where version is not null and success')" = "4"
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command "select count(*) from public.transactional_outbox where tenant_id = 'SYN-UPGRADE-TENANT' and delivery_state = 'ready' and delivery_attempts = 0 and fencing_token = 0")" = "2"
@@ -272,6 +338,25 @@ jobs:
           python3 -m unittest
           tests.test_postgres_integration.PostgresUpgradeBoundaryIntegrationTests
           -v
+
+      - name: Prove clean and upgraded schema convergence
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
+        run: |
+          docker run --rm --network host \
+            --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
+            --env FLYWAY_USER --env FLYWAY_PASSWORD \
+            --env FLYWAY_URL=jdbc:postgresql://127.0.0.1:5433/laboratory \
+            "$FLYWAY_IMAGE" \
+            -workingDirectory=/flyway/project \
+            -configFiles=/flyway/project/flyway.conf migrate
+          pg_dump "$LIMS_TEST_POSTGRES_ADMIN_DSN" \
+            --schema-only --no-owner --no-privileges \
+            | sed '/^\\restrict /d; /^\\unrestrict /d' > upgraded-schema.sql
+          pg_dump postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            --schema-only --no-owner --no-privileges \
+            | sed '/^\\restrict /d; /^\\unrestrict /d' > clean-schema.sql
+          diff --unified clean-schema.sql upgraded-schema.sql
 
   implementation-validation:
     name: implementation-validation

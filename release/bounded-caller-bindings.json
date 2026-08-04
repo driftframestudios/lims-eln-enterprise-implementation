@@ -36,24 +36,24 @@
       "responsibility": "credential-free configured LabKey JSON API exemplar with bounded pagination and failure taxonomy"
     },
     {
-      "path": "sql/001_laboratory_core.sql",
-      "sha256": "a7c9d79646aa5918123d790bba5b66cb89cc7b2a0dc81211ad926bb7579feb4b",
+      "path": "sql/V001__laboratory_core.sql",
+      "sha256": "d0a8a360debb70f5dfdfcb8834ae8558a285e3f852014b91d9c521a2bd9ec7e4",
       "responsibility": "tenant-scoped invocation leases, fencing state, recovery ownership, completed outcomes, receipts, and row-level security"
     },
     {
-      "path": "sql/002_principal_data_boundaries.sql",
+      "path": "sql/V002__principal_data_boundaries.sql",
       "sha256": "2d5f3778d1b3c557590b265f06821435effb1ea9e1e0675dda5e74f5b213ee64",
       "responsibility": "database-verified tenant authority, custody compare-and-set history, and immutable outbox content"
     },
     {
-      "path": "sql/003_trusted_routines_and_outbox_cas.sql",
+      "path": "sql/V003__trusted_routines_and_outbox_cas.sql",
       "sha256": "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
       "responsibility": "schema-qualified privileged custody execution plus tenant-bound outbox claim, reclaim, and confirmation fencing"
     },
     {
-      "path": "sql/004_outbox_attempt_evidence_and_recovery.sql",
-      "sha256": "a74621d56223bb5494165d1483ff6c7d3713327bdb1f19bba666d6461899dbd5",
-      "responsibility": "integer-second lease authority, complete outbox transition control, immutable attempt and outcome evidence, bounded transport receipts, and governed recovery release"
+      "path": "sql/V004__outbox_attempt_evidence_and_recovery.sql",
+      "sha256": "84eaac39bcf5484745e1fc17418b17c0b08a90077a3b18a6011a3c34efefff1a",
+      "responsibility": "coherent measurement scale, complete inbox and custody lineage, integer-second lease authority, complete outbox transition control, immutable attempt and outcome evidence, bounded transport receipts, and governed recovery release"
     }
   ],
   "operation_bindings": [

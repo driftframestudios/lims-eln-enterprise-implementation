@@ -259,12 +259,13 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
                 tenant_id, measurement_id, message_id, specimen_id,
                 analyte_code, quantity, source_precision, source_scale,
                 unit_code, unit_system, captured_at_utc,
-                raw_sha256, normalized_sha256
+                raw_sha256, normalized_sha256, source_disposition
             ) values (
                 :'tenant', :'measurement', :'message', :'specimen',
                 'DNA_CONCENTRATION', 12.123456789012345678, 20, 18,
                 'ng/uL', 'http://unitsofmeasure.org',
-                '2026-08-04T12:00:00Z', repeat('1', 64), repeat('2', 64)
+                '2026-08-04T12:00:00Z', repeat('1', 64), repeat('2', 64),
+                'accepted'
             );
             select quantity::text || ':' || source_scale::text
               from instrument_measurement
@@ -285,12 +286,13 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
                 tenant_id, measurement_id, message_id, specimen_id,
                 analyte_code, quantity, source_precision, source_scale,
                 unit_code, unit_system, captured_at_utc,
-                raw_sha256, normalized_sha256
+                raw_sha256, normalized_sha256, source_disposition
             ) values (
                 :'tenant', :'measurement', :'message', :'specimen',
                 'DNA_COPIES', 0.1234567890123456789, 20, 18,
                 '{copies}/uL', 'http://unitsofmeasure.org',
-                '2026-08-04T12:00:00Z', repeat('1', 64), repeat('3', 64)
+                '2026-08-04T12:00:00Z', repeat('1', 64), repeat('3', 64),
+                'accepted'
             );
             commit;
             """,
@@ -305,6 +307,83 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         )
         self.assertNotEqual(over_scale.returncode, 0)
         self.assertIn("instrument_measurement_quantity_check", over_scale.stderr)
+
+        for label, quantity, source_scale, raw_sha256, captured_at, disposition in (
+            (
+                "stored-scale",
+                "12.340",
+                "2",
+                "1" * 64,
+                "2026-08-04T12:00:00Z",
+                "accepted",
+            ),
+            (
+                "raw-object-lineage",
+                "12.34",
+                "2",
+                "9" * 64,
+                "2026-08-04T12:00:00Z",
+                "accepted",
+            ),
+            (
+                "capture-time-lineage",
+                "12.34",
+                "2",
+                "1" * 64,
+                "2026-08-04T12:00:01Z",
+                "accepted",
+            ),
+            (
+                "disposition-lineage",
+                "12.34",
+                "2",
+                "1" * 64,
+                "2026-08-04T12:00:00Z",
+                "replayed",
+            ),
+        ):
+            with self.subTest(label=label):
+                rejected = self.run_sql(
+                    APP_DSN,
+                    """
+                    begin;
+                    select laboratory_security.bind_tenant_context(:'context'::jsonb);
+                    insert into instrument_measurement (
+                        tenant_id, measurement_id, message_id, specimen_id,
+                        analyte_code, quantity, source_precision, source_scale,
+                        unit_code, unit_system, captured_at_utc,
+                        raw_sha256, normalized_sha256, source_disposition
+                    ) values (
+                        :'tenant', :'measurement', :'message', :'specimen',
+                        'DNA_LINEAGE_PROBE', :'quantity'::numeric, 8,
+                        :'source_scale'::smallint,
+                        'ng/uL', 'http://unitsofmeasure.org',
+                        :'captured_at'::timestamptz, :'raw_sha256',
+                        repeat('8', 64), :'disposition'
+                    );
+                    commit;
+                    """,
+                    variables={
+                        "context": signed_context(self.tenant_a),
+                        "measurement": "SYN-LIVE-LINEAGE-" + uuid4().hex,
+                        "message": message_id,
+                        "specimen": self.specimen,
+                        "tenant": self.tenant_a,
+                        "quantity": quantity,
+                        "source_scale": source_scale,
+                        "raw_sha256": raw_sha256,
+                        "captured_at": captured_at,
+                        "disposition": disposition,
+                    },
+                    check=False,
+                )
+                self.assertNotEqual(rejected.returncode, 0)
+                self.assertTrue(
+                    "instrument_measurement_source_scale_coherent"
+                    in rejected.stderr
+                    or "instrument_measurement_complete_inbox_lineage_fk"
+                    in rejected.stderr
+                )
 
     def test_custody_compare_and_set_history_replay_and_outbox_are_atomic(self) -> None:
         assert APP_DSN is not None
@@ -350,6 +429,32 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         )
         self.assertNotEqual(stale.returncode, 0)
         self.assertIn("custody revision", stale.stderr.lower())
+
+        shadow_transfer = "SYN-LIVE-SHADOW-BINDING-" + uuid4().hex
+        self.run_sql(
+            APP_DSN,
+            transfer_sql,
+            variables={
+                "context": context,
+                "specimen": self.shadow_specimen,
+                "transfer": shadow_transfer,
+            },
+        )
+        assert ADMIN_DSN is not None
+        incoherent_position = self.run_sql(
+            ADMIN_DSN,
+            "update public.custody_position "
+            "set last_transfer_id = :'shadow_transfer' "
+            "where tenant_id = :'tenant' and specimen_id = :'specimen'",
+            variables={
+                "shadow_transfer": shadow_transfer,
+                "tenant": self.tenant_a,
+                "specimen": self.specimen,
+            },
+            check=False,
+        )
+        self.assertNotEqual(incoherent_position.returncode, 0)
+        self.assertIn("custody_position_complete_event_fk", incoherent_position.stderr)
 
     def test_custody_security_definer_ignores_temp_relation_shadows(self) -> None:
         assert APP_DSN is not None

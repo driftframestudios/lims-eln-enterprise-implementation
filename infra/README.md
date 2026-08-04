@@ -4,11 +4,17 @@
 S3-compatible object storage, and an OpenTelemetry collector with protected
 attribute removal.
 
-The PostgreSQL path uses a one-shot migrator after database health succeeds.
-The migrator verifies the ordered SHA-256 manifest, applies pending migrations
-under a transaction-level advisory lock, records immutable history, then binds
-synthetic local role passwords and the tenant-verification key from mounted
-secret files. The application proof waits for successful migration completion.
+The PostgreSQL path first provisions and verifies cluster roles through a
+separate privileged step. A one-shot, digest-pinned Flyway Community 13.0.0
+container then applies versioned migrations, validates their checksums through
+Flyway history, and exits. A following secret-bound step configures synthetic
+local role passwords and the tenant-verification key. The application proof
+waits for all three stages to complete successfully.
+
+The Flyway image receives its JDBC URL and user as ordinary configuration. Its
+small entry adapter reads the bootstrap password from the mounted secret file
+and delegates directly to Flyway. Migration discovery, ordering, locking,
+transactions, history, validation, status, and replay remain Flyway-owned.
 
 `terraform/` supplies an AWS evidence and recovery baseline with:
 
@@ -29,9 +35,9 @@ regional design, policy-as-code, and accountable approval before deployment.
 
 Local secret files live at `infra/secrets/*.txt`, remain outside version
 control, and contain synthetic development credentials only. The required
-PostgreSQL files cover bootstrap, application, outbox, evidence, and migrator
-passwords plus a 32-byte tenant HMAC key encoded as 64 lowercase hexadecimal
-characters.
+PostgreSQL files cover bootstrap, application, outbox, recovery, evidence, and
+migrator passwords plus a 32-byte tenant HMAC key encoded as 64 lowercase
+hexadecimal characters.
 
 Secret versions enter Secrets Manager through the protected deployment or
 rotation workflow described in

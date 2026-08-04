@@ -1,12 +1,9 @@
-FROM postgres:17.10-alpine
+FROM flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0
 
-RUN apk add --no-cache python3
-
-WORKDIR /workspace
-COPY database ./database
+WORKDIR /flyway/project
+COPY flyway.conf ./flyway.conf
 COPY sql ./sql
-COPY scripts/apply_database_migrations.py ./scripts/apply_database_migrations.py
-COPY infra/postgres-init/010_application_password.sh ./infra/postgres-init/010_application_password.sh
+COPY infra/run-flyway-with-secret.sh /usr/local/bin/run-flyway-with-secret
 
-ENTRYPOINT ["/bin/sh", "-eu", "-c"]
-CMD ["export PGPASSWORD=\"$(cat /run/secrets/postgres_password)\"; python3 scripts/apply_database_migrations.py --dsn \"host=$PGHOST dbname=$POSTGRES_DB user=$POSTGRES_USER\"; infra/postgres-init/010_application_password.sh"]
+ENTRYPOINT ["/usr/local/bin/run-flyway-with-secret"]
+CMD ["migrate"]

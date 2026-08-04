@@ -25,7 +25,8 @@ The standard-library test suite exercises:
 - registered read, idempotent narrow-write, approval-gated broad-write, and
   bounded golden-journey operations whose services retain effect control;
 - durable PostgreSQL receipt persistence and version-banded vendor SDK seams;
-- checksum-bound PostgreSQL migrations with ordered applied history and drift detection;
+- Flyway Community migration ordering, locking, transactions, history,
+  validation, status, target selection, and no-op replay;
 - database-verified, short-lived signed tenant assertions for every row policy;
 - tenant-bound, attributable, revision-checked specimen transitions;
 - exact replay and changed-content collision handling;
@@ -39,7 +40,8 @@ The standard-library test suite exercises:
 - a shared 256-byte printable message identity bound across producer, claim,
   completion, failure, and recovery paths;
 - byte-preserving instrument ingress with exact finite decimal quantities,
-  UCUM-coded units, and explainable quarantine;
+  stored-scale coherence, complete inbox lineage, UCUM-coded units, and
+  explainable quarantine;
 - ambiguous vendor-write reconciliation through authoritative readback;
 - resumable migration, semantic reconciliation, rollback, restore, and data exit;
 - account-scoped Parameter Store configuration and Secrets Manager retrieval;
@@ -60,10 +62,12 @@ deterministic source digest.
 
 The ordinary local proof runs configured-database tests when their explicit
 synthetic DSNs and verification key are present. CI also provisions PostgreSQL
-17, applies the immutable migration chain, and exercises unsigned and tampered
-tenant contexts, temporary-relation shadowing, custody CAS/replay, tenant-scoped
-outbox identity, immutable outbox content, worker crash/reclaim, and stale-fence
-rejection.
+17, provisions cluster roles separately, applies the Flyway chain, validates
+and inspects history, targets V003, proves transactional V004 rejection, replays
+the head, compares clean and upgraded schemas, and exercises unsigned and
+tampered tenant contexts, temporary-relation shadowing, custody CAS/replay,
+measurement lineage, tenant-scoped outbox identity, immutable outbox content,
+worker crash/reclaim, and stale-fence rejection.
 
 ## Evidence ladder
 
@@ -97,7 +101,8 @@ reviewer, artifacts, and decisions are recorded.
 - `contracts` — versioned machine-readable command and receipt contracts.
 - `fixtures/synthetic` — synthetic, stable examples for comparison.
 - `sql` — PostgreSQL persistence, inbox/outbox, evidence, and tenant controls.
-- `database` — ordered migration manifest with immutable SHA-256 bindings.
+- `database` — pinned Flyway release metadata and separate cluster-role provisioning.
+- `flyway.conf` — reviewed Flyway safety and ordering controls.
 - `infra` — local production-shape services and an AWS recovery baseline.
 - `docs` — architecture, GitFlow-like delivery, qualification, and runbooks.
 - `receipts` — example manifests whose evidence mode is explicit.
@@ -167,21 +172,22 @@ The released source coordinates and digests live in
 
 ## Database evolution
 
-Migration 001 remains the immutable historical baseline. Migration 002 adds the
+V001 is the historical baseline. V002 adds the
 trusted tenant authority, finite temporal checks, exact measurement primitives,
-custody history and CAS, and immutable outbox semantics. Migration 003 adds
+custody history and CAS, and immutable outbox semantics. V003 adds
 schema-qualified privileged execution and function-governed outbox lease CAS.
-Migration 004 preserves migration 003, replaces calendar-relative caller input
+V004 preserves V003, replaces calendar-relative caller input
 with 1 through 900 integer seconds, restricts initial-state authority, completes
 the transition matrix, and adds immutable attempt, outcome, acknowledgement, and
-recovery-release evidence. Its provenance gate accepts only initial ready rows
-with zero attempts and routes historical attempt or terminal state to explicit
-disposition before upgrade. Migration 004 locks the outbox before evaluating
-that gate and gives lock acquisition a 30-second budget; contention produces a
-transactional rollback for a scheduled retry. The migration runner
-verifies every released checksum before database contact, serializes concurrent
-runners with a transaction-level advisory lock, and records an applied row only
-after its transaction succeeds.
+recovery-release evidence. It also binds stored measurement scale, complete
+inbox lineage, and complete custody-event coordinates. Its provenance gate
+accepts initial ready rows with zero attempts and routes historical attempt or
+terminal state to explicit disposition before upgrade. V004 locks the affected
+relations before preflight and gives lock acquisition a 30-second budget;
+contention produces a transactional rollback for a scheduled retry. Flyway
+Community 13.0.0 owns migration discovery, ordering, locking, transactions,
+history, validation, information, target selection, and replay. Cluster roles
+remain a separate privileged deployment concern.
 
 See the [migration and upgrade posture](docs/database-migrations.md) and the
 [data primitive corrective ledger](docs/data-primitive-corrective-ledger.md)

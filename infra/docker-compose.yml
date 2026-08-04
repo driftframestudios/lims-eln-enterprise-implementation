@@ -15,10 +15,8 @@ services:
       timeout: 3s
       retries: 20
 
-  database-migrator:
-    build:
-      context: ..
-      dockerfile: infra/migrator.Dockerfile
+  database-role-provisioner:
+    image: postgres:17.10-alpine
     depends_on:
       postgres:
         condition: service_healthy
@@ -28,18 +26,57 @@ services:
       POSTGRES_USER: laboratory_bootstrap
     secrets:
       - postgres_password
+    volumes:
+      - ../database/provision_cluster_roles.sql:/workspace/provision_cluster_roles.sql:ro
+    entrypoint: ["/bin/sh", "-eu", "-c"]
+    command:
+      - >-
+        export PGPASSWORD="$$(cat /run/secrets/postgres_password)";
+        exec psql --set=ON_ERROR_STOP=1
+        --file=/workspace/provision_cluster_roles.sql
+    restart: "no"
+
+  database-migrator:
+    build:
+      context: ..
+      dockerfile: infra/migrator.Dockerfile
+    depends_on:
+      database-role-provisioner:
+        condition: service_completed_successfully
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/laboratory
+      FLYWAY_USER: laboratory_bootstrap
+    secrets:
+      - postgres_password
+    restart: "no"
+
+  database-role-bootstrap:
+    image: postgres:17.10-alpine
+    depends_on:
+      database-migrator:
+        condition: service_completed_successfully
+    environment:
+      PGHOST: postgres
+      POSTGRES_DB: laboratory
+      POSTGRES_USER: laboratory_bootstrap
+    secrets:
+      - postgres_password
       - postgres_app_password
       - postgres_outbox_password
+      - postgres_recovery_password
       - postgres_evidence_password
       - postgres_migrator_password
       - postgres_tenant_hmac_key
+    volumes:
+      - ./postgres-init/010_application_password.sh:/usr/local/bin/configure-database-identities:ro
+    entrypoint: ["/usr/local/bin/configure-database-identities"]
     restart: "no"
 
   application-db-check:
     image: postgres:17.10-alpine
     profiles: ["proof"]
     depends_on:
-      database-migrator:
+      database-role-bootstrap:
         condition: service_completed_successfully
     environment:
       PGHOST: postgres
@@ -83,6 +120,8 @@ secrets:
     file: ./secrets/postgres_app_password.txt
   postgres_outbox_password:
     file: ./secrets/postgres_outbox_password.txt
+  postgres_recovery_password:
+    file: ./secrets/postgres_recovery_password.txt
   postgres_evidence_password:
     file: ./secrets/postgres_evidence_password.txt
   postgres_migrator_password:

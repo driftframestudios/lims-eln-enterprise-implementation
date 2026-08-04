@@ -6,7 +6,7 @@
 /database/ @driftframestudios
 /release/ @driftframestudios
 /scripts/check_branch_flow.py @driftframestudios
-/scripts/apply_database_migrations.py @driftframestudios
+/flyway.conf @driftframestudios
 /tests/test_branch_flow.py @driftframestudios
 /tests/test_database_migrations.py @driftframestudios
 /tests/test_postgres_integration.py @driftframestudios

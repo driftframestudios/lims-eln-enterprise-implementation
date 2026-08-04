@@ -5,10 +5,47 @@ set local lock_timeout = '30s';
 set local statement_timeout = '5min';
 set local idle_in_transaction_session_timeout = '5min';
 
-lock table public.transactional_outbox in access exclusive mode;
+lock table
+    public.custody_event,
+    public.custody_position,
+    public.instrument_inbox,
+    public.instrument_measurement,
+    public.transactional_outbox
+in access exclusive mode;
 
 do $migration_preflight$
 begin
+    if exists (
+        select 1
+          from public.instrument_measurement as measurement
+          join public.instrument_inbox as inbox
+            on inbox.tenant_id = measurement.tenant_id
+           and inbox.message_id = measurement.message_id
+         where measurement.source_scale is distinct from
+                   pg_catalog.scale(measurement.quantity)
+            or measurement.specimen_id is distinct from inbox.specimen_id
+            or measurement.raw_sha256 is distinct from inbox.raw_sha256
+            or measurement.captured_at_utc is distinct from inbox.captured_at_utc
+            or inbox.disposition not in ('accepted', 'replayed')
+    ) then
+        raise exception using
+            errcode = '23514',
+            message = 'migration 004 requires coherent measurement scale and inbox lineage';
+    end if;
+    if exists (
+        select 1
+          from public.custody_position as position
+          left join public.custody_event as event
+            on event.tenant_id = position.tenant_id
+           and event.specimen_id = position.specimen_id
+           and event.resulting_version = position.custody_version
+           and event.transfer_id = position.last_transfer_id
+         where event.transfer_id is null
+    ) then
+        raise exception using
+            errcode = '23503',
+            message = 'migration 004 requires custody positions bound to their complete event identity';
+    end if;
     if exists (
         select 1
           from public.transactional_outbox
@@ -40,10 +77,82 @@ begin
 end;
 $migration_preflight$;
 
-create role laboratory_outbox_authority
-    nologin nosuperuser nocreatedb nocreaterole noinherit nobypassrls;
-create role laboratory_outbox_recovery_operator
-    login nosuperuser nocreatedb nocreaterole noinherit nobypassrls;
+alter table public.instrument_inbox
+    add constraint instrument_inbox_measurement_lineage_key unique (
+        tenant_id,
+        message_id,
+        specimen_id,
+        raw_sha256,
+        captured_at_utc,
+        disposition
+    );
+
+alter table public.instrument_measurement
+    add column source_disposition text;
+
+update public.instrument_measurement as measurement
+   set source_disposition = inbox.disposition
+  from public.instrument_inbox as inbox
+ where inbox.tenant_id = measurement.tenant_id
+   and inbox.message_id = measurement.message_id;
+
+alter table public.instrument_measurement
+    alter column source_disposition set not null,
+    add constraint instrument_measurement_source_scale_coherent check (
+        source_scale = pg_catalog.scale(quantity)
+    ),
+    add constraint instrument_measurement_source_disposition_projectable check (
+        source_disposition in ('accepted', 'replayed')
+    ),
+    add constraint instrument_measurement_complete_inbox_lineage_fk
+        foreign key (
+            tenant_id,
+            message_id,
+            specimen_id,
+            raw_sha256,
+            captured_at_utc,
+            source_disposition
+        )
+        references public.instrument_inbox (
+            tenant_id,
+            message_id,
+            specimen_id,
+            raw_sha256,
+            captured_at_utc,
+            disposition
+        );
+
+create trigger instrument_inbox_append_only
+before update or delete on public.instrument_inbox
+for each row execute function public.preserve_append_only_record();
+
+revoke update on public.instrument_inbox from
+    laboratory_app,
+    laboratory_migrator;
+
+alter table public.custody_event
+    add constraint custody_event_position_binding_key unique (
+        tenant_id,
+        specimen_id,
+        resulting_version,
+        transfer_id
+    );
+
+alter table public.custody_position
+    drop constraint custody_position_last_transfer_fk,
+    add constraint custody_position_complete_event_fk
+        foreign key (
+            tenant_id,
+            specimen_id,
+            custody_version,
+            last_transfer_id
+        )
+        references public.custody_event (
+            tenant_id,
+            specimen_id,
+            resulting_version,
+            transfer_id
+        );
 
 grant usage on schema public to
     laboratory_outbox_authority,

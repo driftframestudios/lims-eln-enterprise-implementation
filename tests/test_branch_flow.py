@@ -160,7 +160,7 @@ class BranchFlowTests(unittest.TestCase):
             "/.github/dependabot.yml",
             "/.github/workflows/",
             "/scripts/check_branch_flow.py",
-            "/scripts/apply_database_migrations.py",
+            "/flyway.conf",
             "/tests/test_branch_flow.py",
             "/tests/test_database_migrations.py",
             "/tests/test_postgres_integration.py",
@@ -189,6 +189,15 @@ class BranchFlowTests(unittest.TestCase):
             workflow,
             r"image: postgres:17\.10-alpine@sha256:[a-f0-9]{64}",
         )
+        self.assertRegex(
+            workflow,
+            r"FLYWAY_IMAGE: flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}",
+        )
+        self.assertIn("-target=003 migrate", workflow)
+        self.assertIn("run_flyway validate", workflow)
+        self.assertIn("run_flyway info", workflow)
+        self.assertIn("clean and upgraded schema convergence", workflow.lower())
+        self.assertNotIn("apply_database_migrations.py", workflow)
 
 
 if __name__ == "__main__":

@@ -112,49 +112,72 @@ def validate_manifests() -> None:
         raise AssertionError("control plane requires profile 0.3.0")
 
     database = manifest.get("database", {})
-    migration_manifest_path = ROOT / database.get("migration_manifest", "")
-    migration_manifest = json.loads(
-        migration_manifest_path.read_text(encoding="utf-8")
+    migration_release_path = ROOT / database.get("migration_release", "")
+    migration_release = json.loads(
+        migration_release_path.read_text(encoding="utf-8")
     )
-    if migration_manifest.get("schema_version") != "1.0.0":
-        raise AssertionError("database migration manifest requires schema release 1.0.0")
-    if migration_manifest.get("database_engine") != "postgresql":
-        raise AssertionError("database migrations require PostgreSQL")
+    if migration_release.get("schema_version") != "1.0.0":
+        raise AssertionError("Flyway release requires schema release 1.0.0")
+    if migration_release.get("engine") != "postgresql":
+        raise AssertionError("Flyway release requires PostgreSQL")
     if (
-        migration_manifest.get("transaction_policy")
-        != "one_transaction_per_migration"
+        migration_release.get("migration_product") != "Flyway Community"
+        or migration_release.get("flyway_version") != "13.0.0"
     ):
-        raise AssertionError("database migrations require one transaction per migration")
-    runner_binding = migration_manifest.get("runner", {})
-    runner_path = ROOT / runner_binding.get("path", "")
-    if runner_binding.get("path") != "scripts/apply_database_migrations.py":
-        raise AssertionError("database migrations require the released runner path")
-    if sha256(runner_path.read_bytes()).hexdigest() != runner_binding.get("sha256"):
-        raise AssertionError("database migration runner differs from its binding")
-    migration_entries = migration_manifest.get("migrations", [])
-    migration_ids = [entry["id"] for entry in migration_entries]
-    if migration_ids != sorted(set(migration_ids)) or not migration_ids:
-        raise AssertionError("database migration ids require strict ordered uniqueness")
-    released_paths = {entry["path"] for entry in migration_entries}
-    discovered_paths = {
-        path.relative_to(ROOT).as_posix()
-        for path in (ROOT / "sql").glob("[0-9][0-9][0-9]_*.sql")
+        raise AssertionError("database migrations require Flyway Community 13.0.0")
+    if re.fullmatch(
+        r"flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}",
+        str(migration_release.get("container_image", "")),
+    ) is None:
+        raise AssertionError("Flyway container requires its released immutable digest")
+    if migration_release.get("credentials") != "runtime_environment_only":
+        raise AssertionError("Flyway credentials require runtime-only resolution")
+    if migration_release.get("baseline_policy") != "explicit_attested_baseline_only":
+        raise AssertionError("Flyway release requires explicit baseline attestation")
+
+    flyway_config_path = ROOT / database.get("migration_configuration", "")
+    flyway_config = dict(
+        line.split("=", 1)
+        for line in flyway_config_path.read_text(encoding="utf-8").splitlines()
+        if line and not line.startswith("#")
+    )
+    required_flyway_controls = {
+        "flyway.locations": "filesystem:sql",
+        "flyway.validateMigrationNaming": "true",
+        "flyway.validateOnMigrate": "true",
+        "flyway.outOfOrder": "false",
+        "flyway.cleanDisabled": "true",
+        "flyway.baselineOnMigrate": "false",
+        "flyway.group": "false",
+        "flyway.mixed": "false",
     }
-    if released_paths != discovered_paths:
-        raise AssertionError("database migration manifest requires every SQL migration")
-    for entry in migration_entries:
-        path = ROOT / entry["path"]
-        if sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
+    for setting, expected in required_flyway_controls.items():
+        if flyway_config.get(setting) != expected:
+            raise AssertionError(f"Flyway setting {setting} requires {expected}")
+
+    migrations = sorted((ROOT / "sql").glob("V[0-9][0-9][0-9]__*.sql"))
+    migration_ids = [path.name[1:4] for path in migrations]
+    if migration_ids != ["001", "002", "003", "004"]:
+        raise AssertionError("Flyway migrations require the released ordered sequence")
+    for migration in migrations:
+        sql = migration.read_text(encoding="utf-8")
+        if re.search(
+            r"^\s*(?:begin|commit|rollback)\s*;",
+            sql,
+            flags=re.IGNORECASE | re.MULTILINE,
+        ):
             raise AssertionError(
-                f"database migration checksum differs for {entry['path']}"
+                f"Flyway retains transaction ownership for {migration.name}"
             )
-        if entry.get("transactional") is not True:
+        if re.search(r"\bcreate\s+index\s+concurrently\b", sql, re.IGNORECASE):
             raise AssertionError(
-                f"database migration {entry['id']} requires transaction ownership"
+                f"Flyway migration {migration.name} requires transactional SQL"
             )
-    migration_manifest_digest = file_digest(migration_manifest_path)
-    if database.get("migration_manifest_digest") != migration_manifest_digest:
-        raise AssertionError("release manifest requires the migration manifest digest")
+    migration_release_digest = file_digest(migration_release_path)
+    if database.get("migration_release_digest") != migration_release_digest:
+        raise AssertionError("release manifest requires the Flyway release digest")
+    if migration_release.get("migration_head") != migration_ids[-1]:
+        raise AssertionError("Flyway release requires the current migration head")
     if database.get("migration_head") != migration_ids[-1]:
         raise AssertionError("release manifest requires the current migration head")
     if database.get("tenant_authority") != (
@@ -255,8 +278,8 @@ def validate_manifests() -> None:
         raise AssertionError("release role manifest requires enterprise_implementation")
     if release["bounded_caller_binding_digest"] != binding_digest:
         raise AssertionError("release role requires the bounded-caller binding digest")
-    if release.get("database_migration_manifest_digest") != migration_manifest_digest:
-        raise AssertionError("release role requires the database migration digest")
+    if release.get("database_flyway_release_digest") != migration_release_digest:
+        raise AssertionError("release role requires the Flyway release digest")
     if release["open_receipt_ledger_digest"] != ledger_digest:
         raise AssertionError("release role requires the open receipt ledger digest")
     if tuple(release["receipt_families"]) != CANONICAL_RECEIPT_FAMILIES:
@@ -278,7 +301,7 @@ def validate_manifests() -> None:
     }
     for contract_id, expected in (
         ("IMPLEMENTATION-BOUNDED-CALLER-001", binding_digest),
-        ("IMPLEMENTATION-DATABASE-MIGRATIONS-001", migration_manifest_digest),
+        ("IMPLEMENTATION-DATABASE-MIGRATIONS-001", migration_release_digest),
         ("IMPLEMENTATION-OPEN-RECEIPTS-001", ledger_digest),
     ):
         if contracts.get(contract_id) != expected:
@@ -315,9 +338,9 @@ def validate_manifests() -> None:
         raise AssertionError(
             "local verification receipt requires the bounded-caller binding digest"
         )
-    if migration_manifest_digest not in receipt["artifact_digests"]:
+    if migration_release_digest not in receipt["artifact_digests"]:
         raise AssertionError(
-            "local verification receipt requires the database migration digest"
+            "local verification receipt requires the Flyway release digest"
         )
     if receipt["version_bindings"].get("database_migration_head") != database.get(
         "migration_head"
@@ -356,13 +379,26 @@ def validate_manifests() -> None:
         raise AssertionError(
             "hosted PostgreSQL receipt requires its observed release coordinate"
         )
-    if binding_digest not in hosted_receipt["artifact_digests"]:
+    historical_binding_digest = (
+        "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd"
+    )
+    if historical_binding_digest not in hosted_receipt["artifact_digests"]:
         raise AssertionError(
-            "hosted PostgreSQL receipt requires the bounded-caller binding digest"
+            "historical hosted PostgreSQL receipt requires its observed binding digest"
         )
-    if migration_manifest_digest not in hosted_receipt["artifact_digests"]:
+    historical_migration_digest = (
+        "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81"
+    )
+    if historical_migration_digest not in hosted_receipt["artifact_digests"]:
         raise AssertionError(
-            "hosted PostgreSQL receipt requires the database migration digest"
+            "historical hosted PostgreSQL receipt requires its observed migration digest"
+        )
+    if not any(
+        "superseded by the Flyway transition" in limitation
+        for limitation in hosted_receipt["limitations"]
+    ):
+        raise AssertionError(
+            "historical hosted PostgreSQL receipt requires an explicit successor boundary"
         )
     required_database_scenarios = {
         "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",

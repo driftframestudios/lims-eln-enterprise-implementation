@@ -57,7 +57,7 @@ class SqlTenantStructureTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.sql = "\n".join(
             path.read_text(encoding="utf-8")
-            for path in sorted((ROOT / "sql").glob("[0-9][0-9][0-9]_*.sql"))
+            for path in sorted((ROOT / "sql").glob("V[0-9][0-9][0-9]__*.sql"))
         ).lower()
 
     def test_every_tenant_table_enables_and_forces_row_level_security(self) -> None:
@@ -85,7 +85,7 @@ class SqlTenantStructureTests(unittest.TestCase):
                 self.assertTrue(policies)
 
     def test_caller_controlled_tenant_setting_is_replaced_by_signed_context(self) -> None:
-        migration = (ROOT / "sql" / "002_principal_data_boundaries.sql").read_text(
+        migration = (ROOT / "sql" / "V002__principal_data_boundaries.sql").read_text(
             encoding="utf-8"
         ).lower()
         self.assertIn("laboratory_security.authorized_tenant_id()", migration)
@@ -151,19 +151,27 @@ class SqlTenantStructureTests(unittest.TestCase):
             self.assertIn(field, receipt.group(1))
 
     def test_workload_roles_are_non_superuser_and_bypassrls_is_disabled(self) -> None:
+        role_sql = (
+            ROOT / "database" / "provision_cluster_roles.sql"
+        ).read_text(encoding="utf-8").lower()
         for role in (
+            "laboratory_owner",
             "laboratory_app",
             "laboratory_outbox_worker",
+            "laboratory_outbox_authority",
+            "laboratory_outbox_recovery_operator",
             "laboratory_evidence_writer",
             "laboratory_migrator",
         ):
             with self.subTest(role=role):
-                self.assertRegex(
-                    self.sql,
-                    rf"create\s+role\s+{role}\s+"
-                    r"(?:login|nologin)\s+nosuperuser\s+nocreatedb\s+"
-                    r"nocreaterole\s+noinherit\s+nobypassrls\s*;",
-                )
+                self.assertIn(f"('{role}'::name", role_sql)
+        self.assertIn(
+            "nosuperuser nocreatedb nocreaterole noinherit noreplication nobypassrls",
+            role_sql,
+        )
+        self.assertIn("observed_role.rolsuper", role_sql)
+        self.assertIn("observed_role.rolbypassrls", role_sql)
+        self.assertNotRegex(self.sql, r"\bcreate\s+role\b")
         self.assertIn("revoke all on all tables in schema public from public", self.sql)
         self.assertNotRegex(
             self.sql,
@@ -191,7 +199,7 @@ class SqlTenantStructureTests(unittest.TestCase):
 
     def test_outbox_worker_mutations_use_tenant_bound_fenced_functions(self) -> None:
         migration = (
-            ROOT / "sql" / "004_outbox_attempt_evidence_and_recovery.sql"
+            ROOT / "sql" / "V004__outbox_attempt_evidence_and_recovery.sql"
         ).read_text(encoding="utf-8").lower()
         self.assertRegex(
             migration,
@@ -233,7 +241,7 @@ class SqlTenantStructureTests(unittest.TestCase):
 
     def test_migration_004_locks_outbox_before_provenance_preflight(self) -> None:
         migration = (
-            ROOT / "sql" / "004_outbox_attempt_evidence_and_recovery.sql"
+            ROOT / "sql" / "V004__outbox_attempt_evidence_and_recovery.sql"
         ).read_text(encoding="utf-8").lower()
         self.assertIn("set local lock_timeout = '30s';", migration)
         self.assertIn("set local statement_timeout = '5min';", migration)
@@ -241,10 +249,9 @@ class SqlTenantStructureTests(unittest.TestCase):
             "set local idle_in_transaction_session_timeout = '5min';",
             migration,
         )
-        lock_statement = (
-            "lock table public.transactional_outbox in access exclusive mode;"
-        )
+        lock_statement = "lock table\n    public.custody_event,"
         self.assertEqual(migration.count(lock_statement), 1)
+        self.assertIn("public.transactional_outbox\nin access exclusive mode;", migration)
         self.assertLess(
             migration.index(lock_statement),
             migration.index("do $migration_preflight$"),
@@ -252,7 +259,7 @@ class SqlTenantStructureTests(unittest.TestCase):
 
     def test_outbox_attempt_outcome_and_recovery_evidence_are_append_only(self) -> None:
         migration = (
-            ROOT / "sql" / "004_outbox_attempt_evidence_and_recovery.sql"
+            ROOT / "sql" / "V004__outbox_attempt_evidence_and_recovery.sql"
         ).read_text(encoding="utf-8").lower()
         for relation in (
             "outbox_delivery_attempt",
@@ -278,7 +285,7 @@ class SqlTenantStructureTests(unittest.TestCase):
 
     def test_outbox_transition_matrix_and_initial_authority_are_explicit(self) -> None:
         migration = (
-            ROOT / "sql" / "004_outbox_attempt_evidence_and_recovery.sql"
+            ROOT / "sql" / "V004__outbox_attempt_evidence_and_recovery.sql"
         ).read_text(encoding="utf-8").lower()
         for transition in (
             "old.delivery_state = 'ready' and new.delivery_state = 'leased'",
@@ -312,22 +319,55 @@ class SqlTenantStructureTests(unittest.TestCase):
         )
         self.assertNotIn("interval '1 day'", migration)
 
+    def test_measurement_scale_and_complete_inbox_lineage_are_database_bound(self) -> None:
+        migration = (
+            ROOT / "sql" / "V004__outbox_attempt_evidence_and_recovery.sql"
+        ).read_text(encoding="utf-8").lower()
+        self.assertIn("instrument_measurement_source_scale_coherent", migration)
+        self.assertIn("source_scale = pg_catalog.scale(quantity)", migration)
+        self.assertIn("instrument_measurement_complete_inbox_lineage_fk", migration)
+        for field in (
+            "tenant_id",
+            "message_id",
+            "specimen_id",
+            "raw_sha256",
+            "captured_at_utc",
+            "source_disposition",
+        ):
+            self.assertIn(field, migration)
+        self.assertIn("source_disposition in ('accepted', 'replayed')", migration)
+        self.assertIn("instrument_inbox_append_only", migration)
+        self.assertIn("revoke update on public.instrument_inbox", migration)
+
+    def test_custody_position_binds_the_complete_source_event_coordinate(self) -> None:
+        migration = (
+            ROOT / "sql" / "V004__outbox_attempt_evidence_and_recovery.sql"
+        ).read_text(encoding="utf-8").lower()
+        self.assertIn("custody_event_position_binding_key", migration)
+        self.assertIn("custody_position_complete_event_fk", migration)
+        self.assertIn(
+            "tenant_id,\n            specimen_id,\n            custody_version,\n            last_transfer_id",
+            migration,
+        )
+        self.assertIn(
+            "tenant_id,\n            specimen_id,\n            resulting_version,\n            transfer_id",
+            migration,
+        )
+
     def test_migration_003_remains_immutable_and_004_is_successor(self) -> None:
-        migration_003 = ROOT / "sql" / "003_trusted_routines_and_outbox_cas.sql"
+        migration_003 = ROOT / "sql" / "V003__trusted_routines_and_outbox_cas.sql"
         self.assertEqual(
             hashlib.sha256(migration_003.read_bytes()).hexdigest(),
             "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
         )
-        manifest = json.loads(
-            (ROOT / "database" / "migration-manifest.json").read_text(encoding="utf-8")
-        )
+        migrations = sorted((ROOT / "sql").glob("V*__*.sql"))
         self.assertEqual(
-            [entry["id"] for entry in manifest["migrations"]],
-            ["001", "002", "003", "004"],
+            [path.name.split("__", 1)[0] for path in migrations],
+            ["V001", "V002", "V003", "V004"],
         )
 
     def test_security_definer_data_objects_are_schema_qualified(self) -> None:
-        migration = (ROOT / "sql" / "003_trusted_routines_and_outbox_cas.sql").read_text(
+        migration = (ROOT / "sql" / "V003__trusted_routines_and_outbox_cas.sql").read_text(
             encoding="utf-8"
         ).lower()
         self.assertGreaterEqual(

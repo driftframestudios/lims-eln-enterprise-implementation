@@ -21,12 +21,12 @@
     "provenance": "1.0.0",
     "runtime_setting_catalog": "1.0.0",
     "bounded_caller_binding": "0.3.1",
-    "database_migration_manifest": "1.0.0",
+    "database_flyway_release": "1.0.0",
     "open_receipt_ledger": "2.0.0"
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd",
+    "binding_digest": "sha256:a1a6601d0e5469b797b48a929ce4552d62666aab3f314df6a1e0fbedfc01341d",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",
@@ -50,8 +50,11 @@
     "engine": "postgresql",
     "qualified_major": 17,
     "migration_head": "004",
-    "migration_manifest": "database/migration-manifest.json",
-    "migration_manifest_digest": "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81",
+    "migration_product": "Flyway Community",
+    "migration_product_version": "13.0.0",
+    "migration_release": "database/flyway-release.json",
+    "migration_release_digest": "sha256:964aaa32ad02467b5021f5939b47a8494ab5d120f22638a6e0011ea8915be6d8",
+    "migration_configuration": "flyway.conf",
     "migration_transaction_policy": "one_transaction_per_migration",
     "tenant_authority": "signed_short_lived_database_verified_context",
     "outbox_canonicalization": "postgresql-jsonb-text-v1"

@@ -157,28 +157,34 @@ runtime.
 
 ## Database evolution boundary
 
-The database begins from immutable migration 001 and advances through the
-SHA-256-bound sequence in `database/migration-manifest.json`. The dependency-free
-runner verifies all files, records applied identity/path/checksum/actor/time,
-and uses a transaction-level advisory lock so concurrent runners converge on
-one ordered result. A failed migration rolls back. An applied migration receives
-a successor forward repair.
+The database begins from versioned migration V001 and advances through Flyway
+Community 13.0.0. Flyway owns discovery, ordering, locking, one PostgreSQL
+transaction per migration, applied history, checksum validation, status, and
+no-op replay. `database/flyway-release.json` pins the open-source image by exact
+version and digest; `flyway.conf` keeps validation enabled, order strict, clean
+disabled, and automatic baseline adoption disabled. A failed migration rolls
+back. An applied migration receives a successor forward repair. Cluster-wide
+role provisioning remains a separate privileged deployment step.
 
-Migration 002 establishes finite temporal values, state coherence, the signed
+Migration V002 establishes finite temporal values, state coherence, the signed
 tenant authority, typed instrument measurements, custody history/CAS, and
-immutable outbox content. Migration 003 fixes privileged routine name resolution,
+immutable outbox content. Migration V003 fixes privileged routine name resolution,
 removes direct worker delivery mutation, and introduces fenced outbox lease
-functions plus transition guards. Migration 004 retains that released history
+functions plus transition guards. Migration V004 retains that released history
 and narrows the current API to 1 through 900 integer seconds. A dedicated
 no-login authority enforces the complete transition matrix; append-only tenant
 relations preserve each attempt, outcome, transport receipt, and recovery
 release. The producer and worker share one database-enforced, nonblank
-printable-ASCII message identity of at most 256 bytes. Migration 004 admits only
+printable-ASCII message identity of at most 256 bytes. Migration V004 admits only
 initial ready rows with zero attempts, so every accepted message begins durable
-attempt provenance under the new model. A transaction-scoped `ACCESS EXCLUSIVE`
-outbox lock precedes both provenance predicates; 30-second lock acquisition and
-five-minute statement and idle-in-transaction budgets make contention a clean,
-retryable rollback. A populated untracked baseline enters
+attempt provenance under the new model. It also binds measurement scale to the
+stored numeric, binds complete inbox lineage, and binds each custody position to
+one complete event coordinate. A deterministic transaction-scoped
+`ACCESS EXCLUSIVE` lock set precedes the preflight; 30-second lock acquisition
+and five-minute statement and idle-in-transaction budgets make contention a
+clean, retryable rollback. Source precision remains producer-observed metadata
+until retained source lexemes or canonical payload bytes support independent
+verification. A populated untracked baseline enters
 through a fresh-target restore and semantic comparison rehearsal rather than
 object-name inference. The complete adoption and evidence gates are documented in
 `docs/database-migrations.md`.

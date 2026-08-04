@@ -1,120 +1,86 @@
-"""Migration ordering, immutability, and transaction-runner proofs."""
+"""Flyway release, ordering, safety, and immutable-history proofs."""
 
 from __future__ import annotations
 
-import importlib.util
+import hashlib
 import json
 from pathlib import Path
-import sys
-import tempfile
+import re
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TOOL_PATH = ROOT / "scripts" / "apply_database_migrations.py"
-SPEC = importlib.util.spec_from_file_location("apply_database_migrations", TOOL_PATH)
-assert SPEC and SPEC.loader
-apply_database_migrations = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = apply_database_migrations
-SPEC.loader.exec_module(apply_database_migrations)
+CONFIG_PATH = ROOT / "flyway.conf"
+RELEASE_PATH = ROOT / "database" / "flyway-release.json"
+MIGRATION_NAME = re.compile(r"^V(?P<version>[0-9]{3})__[a-z0-9_]+\.sql$")
+TRANSACTION_CONTROL = re.compile(
+    r"^\s*(?:begin|commit|rollback)\s*;",
+    flags=re.IGNORECASE | re.MULTILINE,
+)
+
+
+def load_properties(path: Path) -> dict[str, str]:
+    properties: dict[str, str] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line and not line.startswith("#"):
+            key, value = line.split("=", 1)
+            properties[key] = value
+    return properties
 
 
 class DatabaseMigrationTests(unittest.TestCase):
-    def test_released_manifest_covers_every_sql_migration_with_valid_hashes(self) -> None:
-        migrations = apply_database_migrations.load_manifest()
-        self.assertEqual(
-            tuple(item.migration_id for item in migrations),
-            ("001", "002", "003", "004"),
+    def test_flyway_release_is_version_and_digest_pinned(self) -> None:
+        release = json.loads(RELEASE_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(release["migration_product"], "Flyway Community")
+        self.assertEqual(release["flyway_version"], "13.0.0")
+        self.assertRegex(
+            release["container_image"],
+            r"^flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}$",
         )
-        self.assertEqual(
-            {item.path for item in migrations},
-            set((ROOT / "sql").glob("[0-9][0-9][0-9]_*.sql")),
-        )
+        self.assertEqual(release["credentials"], "runtime_environment_only")
+        self.assertEqual(release["migration_head"], "004")
 
-    def test_historical_manifest_preserves_the_migration_003_upgrade_head(self) -> None:
-        migrations = apply_database_migrations.load_manifest(
-            ROOT / "database" / "migration-manifest-through-003.json"
-        )
+    def test_flyway_safety_controls_are_explicit(self) -> None:
+        config = load_properties(CONFIG_PATH)
+        self.assertEqual(config["flyway.locations"], "filesystem:sql")
+        self.assertEqual(config["flyway.validateMigrationNaming"], "true")
+        self.assertEqual(config["flyway.validateOnMigrate"], "true")
+        self.assertEqual(config["flyway.outOfOrder"], "false")
+        self.assertEqual(config["flyway.cleanDisabled"], "true")
+        self.assertEqual(config["flyway.baselineOnMigrate"], "false")
+        self.assertEqual(config["flyway.group"], "false")
+        self.assertEqual(config["flyway.mixed"], "false")
+
+    def test_versioned_sequence_is_complete_and_transaction_compatible(self) -> None:
+        migrations = sorted((ROOT / "sql").glob("V*__*.sql"))
         self.assertEqual(
-            tuple(item.migration_id for item in migrations),
-            ("001", "002", "003"),
+            [MIGRATION_NAME.fullmatch(path.name).group("version") for path in migrations],
+            ["001", "002", "003", "004"],
         )
+        for migration in migrations:
+            sql = migration.read_text(encoding="utf-8")
+            with self.subTest(migration=migration.name):
+                self.assertIsNone(TRANSACTION_CONTROL.search(sql))
+                self.assertNotRegex(sql.lower(), r"\bcreate\s+index\s+concurrently\b")
+
+    def test_migration_003_retains_its_published_bytes(self) -> None:
+        migration = ROOT / "sql" / "V003__trusted_routines_and_outbox_cas.sql"
         self.assertEqual(
-            migrations[-1].sha256_hex,
+            hashlib.sha256(migration.read_bytes()).hexdigest(),
             "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
         )
 
-    def test_runner_owns_lock_transaction_drift_guard_and_history_write(self) -> None:
-        migration = apply_database_migrations.load_manifest()[1]
-        rendered = apply_database_migrations.render_migration(migration)
-        self.assertIn("begin;", rendered)
-        self.assertIn("pg_advisory_xact_lock", rendered)
-        self.assertIn("differs from applied history", rendered)
-        self.assertIn("\\if :migration_already_applied", rendered)
-        self.assertIn("insert into laboratory_migration.applied_migration", rendered)
-        self.assertTrue(rendered.rstrip().endswith("commit;"))
-
-        bootstrap = apply_database_migrations.bootstrap_sql()
-        self.assertIn("preserve_applied_history", bootstrap)
-        self.assertIn("applied_migration_append_only", bootstrap)
-        self.assertIn("isfinite(applied_at_utc)", bootstrap)
-
-    def test_checksum_drift_fails_before_database_contact(self) -> None:
-        source_manifest = json.loads(
-            (ROOT / "database" / "migration-manifest.json").read_text(encoding="utf-8")
+    def test_repository_delegates_migration_history_and_locking_to_flyway(self) -> None:
+        self.assertFalse((ROOT / "scripts" / "apply_database_migrations.py").exists())
+        self.assertFalse((ROOT / "database" / "migration-manifest.json").exists())
+        self.assertFalse(
+            (ROOT / "database" / "migration-manifest-through-003.json").exists()
         )
-        with tempfile.TemporaryDirectory(prefix="migration-contract-") as temporary:
-            temporary_root = Path(temporary)
-            (temporary_root / "database").mkdir()
-            (temporary_root / "sql").mkdir()
-            (temporary_root / "scripts").mkdir()
-            (temporary_root / source_manifest["runner"]["path"]).write_bytes(
-                TOOL_PATH.read_bytes()
-            )
-            for entry in source_manifest["migrations"]:
-                source = ROOT / entry["path"]
-                target = temporary_root / entry["path"]
-                target.write_bytes(source.read_bytes())
-            (temporary_root / source_manifest["migrations"][0]["path"]).write_text(
-                "select 'drift';\n",
-                encoding="utf-8",
-            )
-            manifest_path = temporary_root / "database" / "migration-manifest.json"
-            manifest_path.write_text(
-                json.dumps(source_manifest),
-                encoding="utf-8",
-            )
-            with self.assertRaisesRegex(
-                apply_database_migrations.MigrationContractError,
-                "checksum differs",
-            ):
-                apply_database_migrations.load_manifest(manifest_path)
-
-            first_migration = source_manifest["migrations"][0]["path"]
-            (temporary_root / first_migration).write_bytes(
-                (ROOT / first_migration).read_bytes()
-            )
-            (temporary_root / source_manifest["runner"]["path"]).write_text(
-                "raise SystemExit('synthetic runner drift')\n",
-                encoding="utf-8",
-            )
-            with self.assertRaisesRegex(
-                apply_database_migrations.MigrationContractError,
-                "runner differs",
-            ):
-                apply_database_migrations.load_manifest(manifest_path)
-
-    def test_rendered_migration_has_one_runner_owned_transaction(self) -> None:
-        migration = apply_database_migrations.Migration(
-            migration_id="999",
-            path=ROOT / "sql" / "999_synthetic.sql",
-            relative_path="sql/999_synthetic.sql",
-            sha256_hex="a" * 64,
-            sql="select 1;",
+        published = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (*ROOT.glob("*.md"), *(ROOT / "docs").rglob("*.md"))
         )
-        rendered = apply_database_migrations.render_migration(migration)
-        self.assertEqual(rendered.lower().count("begin;"), 1)
-        self.assertEqual(rendered.lower().count("commit;"), 1)
+        self.assertNotIn("laboratory_migration.applied_migration", published)
 
 
 if __name__ == "__main__":

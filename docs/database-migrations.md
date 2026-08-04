@@ -1,150 +1,139 @@
-# PostgreSQL migration and upgrade posture
+# PostgreSQL evolution with Flyway Community
 
-## Released contract
+## Ownership boundary
 
-`database/migration-manifest.json` is the ordered source of truth. Each entry
-binds an identifier, repository path, SHA-256 checksum, and transaction mode.
-The same manifest binds the migration runner's own path and SHA-256 checksum.
-`scripts/apply_database_migrations.py` verifies the runner and entire sequence
-before it contacts PostgreSQL. It then:
+Flyway Community 13.0.0 owns migration discovery, ordering, locking, transaction
+boundaries, applied history, checksum validation, status, and replay behavior.
+`database/flyway-release.json` pins the exact open-source Alpine image by version
+and multi-architecture digest. `flyway.conf` keeps the operational controls in
+reviewable source:
 
-1. creates a private applied-history table;
-2. acquires one transaction-level advisory lock;
-3. compares any applied identifier with its released path and checksum;
-4. applies each pending file in one owned transaction; and
-5. records actor and database time only after the migration statements succeed.
+- versioned migrations follow `V###__description.sql`;
+- `validateOnMigrate=true` and `validateMigrationNaming=true` surface drift;
+- `outOfOrder=false` preserves released order;
+- `cleanDisabled=true` protects maintained environments;
+- `baselineOnMigrate=false` makes adoption an explicit, attested operation;
+- `group=false` gives each PostgreSQL-compatible migration its own transaction;
+- `mixed=false` keeps transaction-incompatible SQL on a separately reviewed
+  path.
 
-Applied versioned files retain their bytes. A correction is a new ordered
-migration. Repository validation treats checksum drift and unlisted SQL as
-release failures.
+The repository owns domain SQL: PostgreSQL primitives, constraints, lineage,
+row security, grants, triggers, and trusted routines. Vendor-owned LIMS/ELN
+schemas continue through their supported upgrade mechanisms. Cross-platform
+scientific data movement continues through vendor APIs, resumable transfer,
+semantic reconciliation, and accountable acceptance.
 
-Verify files locally:
+## Runtime invocation
+
+The repository stores zero deployable database credentials. A workload identity
+or secret delivery boundary supplies `FLYWAY_URL`, `FLYWAY_USER`, and
+`FLYWAY_PASSWORD`; hosted tests use conspicuously synthetic isolated values.
+The container invocation mounts the project read-only and uses the released
+configuration:
 
 ```sh
-python3 scripts/apply_database_migrations.py --verify-only
+docker run --rm --network host \
+  --volume "$PWD:/flyway/project:ro" \
+  --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
+  flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0 \
+  -workingDirectory=/flyway/project \
+  -configFiles=/flyway/project/flyway.conf migrate
 ```
 
-Apply to an explicitly selected database:
+Release automation follows `migrate`, `validate`, and `info`. A second
+`migrate` proves that the released head is a no-op. Flyway's
+`flyway_schema_history` table is the applied-history authority.
 
-```sh
-python3 scripts/apply_database_migrations.py --dsn "$LIMS_DATABASE_DSN"
-```
+Cluster roles live outside Flyway because they span databases. A privileged
+deployment step applies `database/provision_cluster_roles.sql`, verifies the
+released least-privilege attributes, and then gives Flyway a database-scoped
+schema-change identity. Password and verification-key material enter through
+the protected secret lifecycle after schema migration.
 
-The DSN comes from the runtime secret boundary. Shell history, command output,
-and repository files remain value-free. The local Compose path reads its
-bootstrap password and tenant-verification key from mounted secret files.
+## Fresh and successor paths
 
-## Fresh environment
+The clean path provisions cluster roles, applies V001 through V004, validates,
+inspects, and replays. The successor path provisions the same roles, runs
+`migrate -target=003`, seeds representative pre-V004 rows, and then runs the
+head migration.
 
-The migrator starts after PostgreSQL health succeeds. Application proof starts
-after the migrator exits successfully. Re-running the migrator verifies applied
-checksums and performs an exact no-op for each released migration.
+V004 deliberately rejects historical outbox terminal state that lacks the new
+attempt and outcome ledgers. The rejection leaves Flyway history at V003 and
+retains the historical row for an explicit export, attestation, conversion, or
+disposition. After that disposition, Flyway applies V004 and a replay reports
+zero pending work. A second clean database reaches the same schema; schema-only
+comparison proves clean-versus-upgrade convergence.
 
-CI exercises two independent paths. The fresh path applies migrations 001
-through 004 and replays the current manifest. The successor path applies the
-checksum-bound `database/migration-manifest-through-003.json`, then applies 004
-and replays the current manifest. This keeps the already-released migration 003
-bytes visible while proving the forward-repair path.
+The integration suite reuses the existing tenant, custody, quantity, and outbox
+scenarios. It also proves:
 
-The bootstrap identity owns schema change. Application, outbox, evidence, and
-migration workload roles remain `NOSUPERUSER NOBYPASSRLS`; ordinary runtime
-connections receive their own narrow grants.
+- a stored numeric scale equals `source_scale`;
+- a measurement binds message, specimen, raw digest, capture time, and accepted
+  or replayed inbox disposition as one foreign-key lineage coordinate;
+- inbox facts become append-only when measurement projection is active;
+- a custody position binds tenant, specimen, resulting version, and transfer
+  identity to one custody event;
+- V004 failure is transactional;
+- Flyway validation accepts the released checksums;
+- target V003, head migration, `info`, validation, and no-op replay behave as
+  one coherent release path.
 
-## Existing untracked baseline
+`source_precision` remains producer-observed metadata. The database can verify
+stored decimal scale after PostgreSQL parses the numeric value; exact source
+precision also depends on the retained source lexeme or a released canonical
+payload contract. ENV-INSTRUMENT-001 owns that configured-source verification.
 
-Object-name similarity is insufficient evidence that a populated database is
-exactly migration 001. The supported adoption path is comparative:
+## Existing database adoption
 
-1. retain a recoverable source snapshot and record its database/version/configuration coordinates;
-2. provision a fresh target and apply the complete released migration chain;
-3. migrate or restore representative data through resumable checkpoints;
+`baselineOnMigrate=false` keeps object-name similarity from becoming migration
+evidence. Adoption uses a comparative path:
+
+1. retain a recoverable source snapshot and record database, version, extension,
+   and configuration coordinates;
+2. provision a fresh target and apply the complete Flyway chain;
+3. move representative data through resumable checkpoints;
 4. reconcile identity, revision, JSON meaning, timestamps, quantities,
-   relationships, audit events, and artifact bytes;
-5. exercise rollback and restore timing; and
-6. cut over only after separate Engineering, Security, Operations, Scientific,
-   Quality, and Regulatory dispositions are recorded.
+   relationships, audit facts, and artifact bytes;
+5. rehearse rollback and clean restore against selected RTO and RPO; and
+6. record separate Engineering, Security, Operations, Scientific, Quality, and
+   Regulatory dispositions.
 
-An operator can choose an independently reviewed baseline-adoption mechanism
-in a successor migration tool. This reference requires deliberate
-reconciliation before an existing database can be marked as migration 001;
-partial and hand-edited schemas receive an explicit disposition.
+An existing schema receives an explicit baseline only after catalog and semantic
+attestation demonstrates equivalence to the selected version. The baseline
+command and its receipt belong to the environment deployment workflow. The
+repository keeps automatic baselining disabled.
 
-## Lock and availability posture
+## V004 availability and integrity posture
 
-Migration 002 introduces constraints, policies, tables, triggers, grants, and a
-backfill of outbox digests and existing custody positions. Migration 003 requires
-a drained outbox lease set before it records the invoking database principal,
-replaces direct worker updates with fenced functions, and replaces the privileged
-custody function with schema-qualified execution. Migration 004 retains those
-published bytes and requires an initial-ready provenance gate before it changes
-ownership, grants, routine signatures, state guards, and evidence relations.
-The stricter gate accepts only nonblank printable message identities
-of at most 256 bytes in initial `ready` state with zero attempts and fence.
-Historical attempt, delivery, or recovery state receives an explicit migration
-disposition before the successor can apply. The worker supplies 1 through
-900 integer seconds; the database constructs the interval, so calendar-relative
-month and day fields remain
-outside the caller-controlled lease boundary. Immutable attempt, outcome,
-transport-receipt, and recovery-release rows establish the transition evidence.
-Migration 004 sets a 30-second lock-wait budget and five-minute statement and
-idle-in-transaction budgets, then acquires `ACCESS EXCLUSIVE` on the outbox
-before evaluating either provenance predicate. Producers and workers pause for
-the bounded migration transaction after acquisition; a lock timeout rolls back
-the transaction and preserves the prior head for a deliberately scheduled
-retry. The adopting environment assigns a measured maintenance-window budget
-to the complete transaction because several `ALTER TABLE` forms can take strong
-locks. A populated-environment rehearsal records:
+V004 sets a 30-second lock-wait budget and five-minute statement and
+idle-in-transaction budgets. It acquires a deterministic `ACCESS EXCLUSIVE`
+lock set before its preflight across custody, inbox, measurement, and outbox
+relations. A timeout rolls back and preserves V003 for a scheduled retry.
 
-- row and byte counts per affected table;
-- constraint exception counts before the change;
-- ready, leased, delivered, and recovery-required outbox counts, with a zero
-  active-lease gate for migration 003 and an initial-ready/zero-attempt gate for
-  migration 004;
-- expected and observed lock modes and wait time;
-- total outbox write-pause duration against the selected maintenance-window
-  budget, including the retry disposition after a lock timeout;
-- transaction duration, WAL growth, replica lag, and storage headroom;
-- application compatibility before, during, and after the change;
-- rollback and clean-restore time; and
-- semantic and artifact parity after restore.
+Preflight admits measurements whose stored scale and complete inbox lineage are
+coherent, custody positions bound to one complete event coordinate, and outbox
+rows at the initial ready/zero-attempt boundary. It then establishes the
+database constraints, narrows mutation authority, and creates immutable outbox
+attempt, outcome, acknowledgement, and recovery evidence.
 
-Future high-volume changes use expand/validate/contract: add compatible nullable
-state, backfill in resumable bounded batches, attach or validate constraints,
-move readers and writers, observe, then retire the compatibility surface in a
-later release.
+High-volume successors use expand/validate/contract: add compatible state,
+backfill through resumable bounded batches, validate constraints, move readers
+and writers, observe, and retire compatibility in a later versioned migration.
+Flyway continues to own the mechanics; the program continues to own scientific
+meaning and release evidence.
 
-## Forward repair
-
-A failed transactional migration rolls back as one unit. Once a migration is
-recorded as applied, its bytes remain fixed. A newly discovered defect receives
-a successor forward-repair migration. Database restoration remains available
-for environment recovery and release rollback when the wider system decision
-requires it.
-
-## Tenant verification key lifecycle
-
-The database verifies short-lived tenant assertions with an HMAC key stored in
-the private `laboratory_security` schema. Runtime roles can execute verification
-and have zero direct key-table privilege. A configured issuer holds signing
-authority outside the application process.
-
-Production rotation uses a successor key identifier, overlapping validity,
-issuer switchover, expiry observation, and revocation of the predecessor. Key
-material belongs in AWS Secrets Manager with workload identity, narrow resource
-ARNs, audit events, and a separately rehearsed rotation path. The SQL table is a
-verification projection populated by the protected deployment control plane.
-
-## Receipt minimum
+## Promotion receipt minimum
 
 A database promotion receipt binds:
 
-- repository commit and migration-manifest digest;
-- PostgreSQL image or service version and extension versions;
-- source and target schema heads;
-- backup, restore, and comparison artifact digests;
-- adversarial tenant, custody, outbox, and quantity scenario results;
-- lock, duration, WAL, lag, and recovery observations;
-- performer and independent reviewer;
-- evidence mode, assurance stage, limitations, and residual risk; and
-- separate accountable decisions for Engineering, Security, Operations,
-  Scientific, Quality, and Regulatory concerns.
+- repository commit, Flyway release digest, Flyway version, container digest,
+  and migration head;
+- PostgreSQL version and extension versions;
+- `validate` and `info` results plus clean, target-V003, head, and no-op outcomes;
+- backup, restore, comparison, and reconciliation artifact digests;
+- adversarial tenant, custody, inbox-lineage, quantity, and outbox scenarios;
+- lock wait, execution duration, WAL, replica lag, and recovery observations;
+- performer, independent reviewer, evidence mode, limitations, and residual
+  risk; and
+- separate accountable Engineering, Security, Operations, Scientific, Quality,
+  and Regulatory decisions.

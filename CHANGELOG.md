@@ -2,8 +2,11 @@
 
 ## Unreleased — principal data boundaries
 
-- Add immutable, checksum-bound PostgreSQL migration history and an explicit
-  fresh-target upgrade posture.
+- Delegate PostgreSQL migration ordering, locking, transactions, history,
+  checksum validation, status, target selection, and replay to the
+  version-and-digest-pinned Flyway Community 13.0.0 image.
+- Keep cluster-role provisioning outside Flyway and resolve database credentials
+  only through runtime secret boundaries.
 - Replace caller-selected tenant state with short-lived signed assertions which
   PostgreSQL verifies against private key material.
 - Add finite temporal constraints, exact decimal instrument measurements,
@@ -21,6 +24,12 @@
 - Align message identity bounds across producer and worker paths, and require a
   locked initial-ready provenance boundary before attempt ledgers begin, with
   bounded migration wait and statement budgets.
+- Bind measurement scale to the stored numeric value, bind complete inbox
+  lineage through one composite foreign key, make projected inbox facts
+  append-only, and bind custody positions to complete custody-event coordinates.
+- Reuse the PostgreSQL integration scenarios for Flyway target V003, transactional
+  V004 rejection, head migration, validation, information, no-op replay, and
+  clean-versus-upgrade schema convergence.
 - Add live, digest-pinned PostgreSQL 17 migration and adversarial data-boundary
   proofs to CI.
 - Publish the data-primitive corrective ledger, plan probabilities, remaining

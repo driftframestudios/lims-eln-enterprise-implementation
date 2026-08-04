@@ -42,6 +42,7 @@
   "performer_id": "GITHUB-ACTIONS-HOSTED-RUNNER",
   "reviewer_id": "SYN-INDEPENDENT-ADVERSARIAL-DATABASE-SUITE",
   "limitations": [
+    "This historical receipt is superseded by the Flyway transition and remains evidence for the predecessor migration runner only.",
     "This receipt records a synthetic hosted PostgreSQL proof and grants no production authorization.",
     "Representative populated migration and restore rehearsal remains an independent successor receipt.",
     "Production security and observability evidence remains an independent successor receipt.",

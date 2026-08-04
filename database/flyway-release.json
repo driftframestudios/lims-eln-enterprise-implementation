@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "engine": "postgresql",
+  "migration_product": "Flyway Community",
+  "flyway_version": "13.0.0",
+  "container_image": "flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
+  "configuration": "flyway.conf",
+  "locations": [
+    "filesystem:sql"
+  ],
+  "migration_head": "004",
+  "baseline_policy": "explicit_attested_baseline_only",
+  "cluster_role_provisioning": "separate_privileged_deployment_step",
+  "credentials": "runtime_environment_only"
+}
