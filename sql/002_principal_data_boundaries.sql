@@ -611,13 +611,17 @@ declare
     payload_digest_value text;
 begin
     tenant_value := laboratory_security.authorized_tenant_id();
-    if specimen_value !~ '^[ -~]{1,256}$'
+    if specimen_value !~ '^[ -~]+$'
+       or char_length(specimen_value) > 256
        or btrim(specimen_value) = ''
-       or destination_value !~ '^[ -~]{1,256}$'
+       or destination_value !~ '^[ -~]+$'
+       or char_length(destination_value) > 256
        or btrim(destination_value) = ''
-       or custodian_value !~ '^[ -~]{1,256}$'
+       or custodian_value !~ '^[ -~]+$'
+       or char_length(custodian_value) > 256
        or btrim(custodian_value) = ''
-       or transfer_value !~ '^[ -~]{1,256}$'
+       or transfer_value !~ '^[ -~]+$'
+       or char_length(transfer_value) > 256
        or btrim(transfer_value) = ''
        or expected_version_value < 0 then
         raise exception using

@@ -16,7 +16,7 @@
     {
       "id": "002",
       "path": "sql/002_principal_data_boundaries.sql",
-      "sha256": "1191e71e35d220f3820bba4c1957a83b02f5bd53e5f85a2cb8911bf2242ff44d",
+      "sha256": "2d5f3778d1b3c557590b265f06821435effb1ea9e1e0675dda5e74f5b213ee64",
       "transactional": true
     }
   ]

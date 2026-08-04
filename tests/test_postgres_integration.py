@@ -270,8 +270,8 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         context = signed_context(self.tenant_a)
         changed = self.run_sql(
             ADMIN_DSN,
-            "begin; set local role laboratory_owner; "
-            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "begin; select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "set local role laboratory_owner; "
             "update transactional_outbox "
             "set payload = '{\"state\":\"changed\"}'::jsonb, "
             "payload_sha256 = encode(public.digest(convert_to("

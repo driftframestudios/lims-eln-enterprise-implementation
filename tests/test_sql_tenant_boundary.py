@@ -93,6 +93,14 @@ class SqlTenantStructureTests(unittest.TestCase):
         self.assertIn("current_setting('app.tenant_context', true)", migration)
         self.assertNotIn("current_setting('app.tenant_id'", migration)
 
+    def test_postgresql_regex_bounds_fit_the_engine_limit(self) -> None:
+        upper_bounds = [
+            int(value)
+            for value in re.findall(r"\{\d+,(\d+)\}", self.sql)
+        ]
+        self.assertTrue(upper_bounds)
+        self.assertTrue(all(value <= 255 for value in upper_bounds))
+
     def test_all_declared_tenant_id_tables_participate_in_boundary(self) -> None:
         table_definitions = re.findall(
             r"create\s+table\s+(\w+)\s*\((.*?)\);",
