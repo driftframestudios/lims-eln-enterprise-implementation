@@ -324,6 +324,47 @@ def validate_manifests() -> None:
     ):
         raise AssertionError("local verification receipt requires the migration head")
 
+    hosted_receipt = json.loads(
+        (ROOT / "receipts" / "hosted-postgresql-proof.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if set(hosted_receipt) != set(receipt):
+        raise AssertionError("hosted PostgreSQL receipt requires the released receipt shape")
+    if (
+        hosted_receipt.get("evidence_mode") != "observed"
+        or hosted_receipt.get("assurance_stage") != "verified"
+        or hosted_receipt.get("environment")
+        != "github-hosted-synthetic-postgresql"
+    ):
+        raise AssertionError(
+            "hosted PostgreSQL receipt requires observed synthetic verification"
+        )
+    hosted_bindings = hosted_receipt.get("version_bindings", {})
+    if (
+        hosted_bindings.get("repository") != manifest["version"]
+        or hosted_bindings.get("database_migration_head")
+        != database.get("migration_head")
+        or hosted_bindings.get("repository_commit")
+        != "16b97aa40a468a3afa45d5f2ec9053078218e193"
+        or hosted_bindings.get("workflow_run")
+        != (
+            "https://github.com/driftframestudios/"
+            "lims-eln-enterprise-implementation/actions/runs/30919242006"
+        )
+    ):
+        raise AssertionError(
+            "hosted PostgreSQL receipt requires its observed release coordinate"
+        )
+    if binding_digest not in hosted_receipt["artifact_digests"]:
+        raise AssertionError(
+            "hosted PostgreSQL receipt requires the bounded-caller binding digest"
+        )
+    if migration_manifest_digest not in hosted_receipt["artifact_digests"]:
+        raise AssertionError(
+            "hosted PostgreSQL receipt requires the database migration digest"
+        )
+
 
 def validate_synthetic_fixtures() -> None:
     fixture_paths = sorted((ROOT / "fixtures" / "synthetic").glob("*.json"))

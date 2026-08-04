@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.1.0",
+  "receipt_id": "RECEIPT-HOSTED-POSTGRESQL-001",
+  "claim_id": "CLAIM-HOSTED-SYNTHETIC-DATABASE-BOUNDARIES",
+  "intended_use_id": "INTENDED-USE-SYNTHETIC-REFERENCE",
+  "release_claim_id": "RELEASE-CLAIM-IMPLEMENTATION-0.3.1",
+  "evidence_mode": "observed",
+  "assurance_stage": "verified",
+  "environment": "github-hosted-synthetic-postgresql",
+  "version_bindings": {
+    "repository": "0.3.1",
+    "repository_commit": "16b97aa40a468a3afa45d5f2ec9053078218e193",
+    "workflow_run": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/actions/runs/30919242006",
+    "python": "3.12.13",
+    "postgresql": "17.10-alpine",
+    "database_migration_head": "002",
+    "tenant_authority": "signed_short_lived_database_verified_context"
+  },
+  "scenario_ids": [
+    "SCN-DB-MIGRATION-CHECKSUM-REPLAY",
+    "SCN-DB-SIGNED-TENANT-BOUNDARY",
+    "SCN-DB-TENANT-CONTEXT-TAMPER-EXPIRY",
+    "SCN-DB-CUSTODY-CAS-AND-ATOMIC-OUTBOX",
+    "SCN-DB-OUTBOX-CONTENT-IMMUTABILITY",
+    "SCN-DB-SCIENTIFIC-QUANTITY-EXACTNESS",
+    "SCN-DB-VERIFICATION-KEY-CONFIDENTIALITY"
+  ],
+  "artifact_digests": [
+    "sha256:b4afd14ac944fa951ed4b1bfa772af8e9bc71c0cedf9682ca9c533d26c444793",
+    "sha256:5868f82fd3357f234b579f3cbe0fde794cd9fa33bcfac04a1bba908ea40444ca"
+  ],
+  "observed_at": "2026-08-04T14:30:22Z",
+  "performer_id": "GITHUB-ACTIONS-HOSTED-RUNNER",
+  "reviewer_id": "SYN-INDEPENDENT-ADVERSARIAL-DATABASE-SUITE",
+  "limitations": [
+    "This receipt records a synthetic hosted PostgreSQL proof and grants no production authorization.",
+    "Representative populated migration and restore rehearsal remains an independent successor receipt.",
+    "Production security and observability evidence remains an independent successor receipt.",
+    "Accountable Scientific, Quality, and Regulatory acceptance remains an independent successor receipt."
+  ]
+}
