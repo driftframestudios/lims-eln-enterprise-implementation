@@ -18,6 +18,9 @@
 - Complete the outbox transition matrix, narrow initial-state insertion,
   separate recovery release authority, and preserve append-only attempt,
   outcome, transport-acknowledgement, and recovery evidence.
+- Align message identity bounds across producer and worker paths, and require a
+  locked initial-ready provenance boundary before attempt ledgers begin, with
+  bounded migration wait and statement budgets.
 - Add live, digest-pinned PostgreSQL 17 migration and adversarial data-boundary
   proofs to CI.
 - Publish the data-primitive corrective ledger, plan probabilities, remaining

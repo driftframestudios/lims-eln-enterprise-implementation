@@ -1,58 +1,41 @@
 -- TARGET: each outbox transition follows one released state-machine edge.
 -- TARGET: immutable attempt, outcome, and recovery facts reconstruct delivery.
 
+set local lock_timeout = '30s';
+set local statement_timeout = '5min';
+set local idle_in_transaction_session_timeout = '5min';
+
+lock table public.transactional_outbox in access exclusive mode;
+
 do $migration_preflight$
 begin
     if exists (
         select 1
           from public.transactional_outbox
-         where delivery_state = 'leased'
+         where message_id !~ '^[ -~]+$'
+            or pg_catalog.octet_length(message_id) > 256
+            or pg_catalog.btrim(message_id) = ''
     ) then
         raise exception using
-            errcode = '55000',
-            message = 'migration 004 requires a drained outbox lease set';
+            errcode = '23514',
+            message = 'migration 004 requires bounded outbox message identities';
     end if;
     if exists (
         select 1
           from public.transactional_outbox
-         where delivery_attempts::bigint <> fencing_token
-            or (
-                delivery_state = 'ready'
-                and (
-                    lease_owner is not null
-                    or lease_principal is not null
-                    or lease_token is not null
-                    or lease_expires_at_utc is not null
-                    or last_error_code is not null
-                    or delivered_at_utc is not null
-                )
-            )
-            or (
-                delivery_state = 'delivered'
-                and (
-                    lease_owner is not null
-                    or lease_principal is not null
-                    or lease_token is not null
-                    or lease_expires_at_utc is not null
-                    or last_error_code is not null
-                    or delivered_at_utc is null
-                )
-            )
-            or (
-                delivery_state = 'recovery_required'
-                and (
-                    lease_owner is not null
-                    or lease_principal is not null
-                    or lease_token is not null
-                    or lease_expires_at_utc is not null
-                    or last_error_code is null
-                    or delivered_at_utc is not null
-                )
-            )
+         where delivery_state <> 'ready'
+            or delivery_attempts <> 0
+            or fencing_token <> 0
+            or lease_owner is not null
+            or lease_principal is not null
+            or lease_token is not null
+            or lease_expires_at_utc is not null
+            or last_error_code is not null
+            or delivered_at_utc is not null
     ) then
         raise exception using
-            errcode = '23514',
-            message = 'migration 004 requires coherent outbox transition coordinates';
+            errcode = '55000',
+            message = 'migration 004 requires an initial ready outbox provenance boundary';
     end if;
 end;
 $migration_preflight$;
@@ -77,6 +60,11 @@ grant execute on function laboratory_security.bind_tenant_context(jsonb) to
 alter table public.transactional_outbox
     drop constraint outbox_delivery_state_coherent;
 alter table public.transactional_outbox
+    add constraint outbox_message_id_bounded check (
+        message_id ~ '^[ -~]+$'
+        and pg_catalog.octet_length(message_id) <= 256
+        and pg_catalog.btrim(message_id) <> ''
+    ),
     add constraint outbox_delivery_state_coherent check (
         delivery_attempts::bigint = fencing_token
         and (
@@ -221,7 +209,8 @@ create table public.outbox_recovery_release (
     available_at_utc timestamptz not null check (
         pg_catalog.isfinite(available_at_utc)
         and available_at_utc >= released_at_utc
-        and available_at_utc <= released_at_utc + interval '1 day'
+        and available_at_utc <= released_at_utc
+            + pg_catalog.make_interval(secs => 86400)
     ),
     primary key (tenant_id, message_id, attempt_number),
     foreign key (tenant_id, message_id, attempt_number, outcome_kind)

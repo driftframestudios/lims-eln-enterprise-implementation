@@ -127,7 +127,11 @@ jobs:
           --health-timeout 3s
           --health-retries 20
     env:
+      PYTHONPATH: src
       LIMS_TEST_POSTGRES_ADMIN_DSN: postgresql://laboratory_bootstrap:synthetic-ci-bootstrap-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_UPGRADE_OUTBOX_DSN: postgresql://laboratory_outbox_worker:synthetic-ci-outbox-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_UPGRADE_RECOVERY_DSN: postgresql://laboratory_outbox_recovery_operator:synthetic-ci-recovery-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
     steps:
       - name: Check out source
@@ -144,11 +148,96 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install --yes postgresql-client
 
-      - name: Apply historical head then successor and replay
+      - name: Apply historical migration head
         run: |
           python3 scripts/apply_database_migrations.py \
             --manifest database/migration-manifest-through-003.json \
             --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN"
+
+      - name: Seed representative pre-004 outbox states
+        run: |
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --set ON_ERROR_STOP=1 <<'SQL'
+          insert into public.tenant (tenant_id, display_name)
+          values ('SYN-UPGRADE-TENANT', 'Synthetic upgrade tenant');
+          insert into public.transactional_outbox (
+              tenant_id, message_id, topic, aggregate_id, aggregate_version,
+              payload, payload_sha256
+          ) values
+              (
+                  'SYN-UPGRADE-TENANT', 'SYN-UPGRADE-READY-CONFIRM',
+                  'synthetic.upgrade', 'SYN-UPGRADE-AGGREGATE', 1,
+                  '{"state":"ready"}'::jsonb,
+                  encode(public.digest(convert_to(
+                      '{"state":"ready"}'::jsonb::text, 'UTF8'
+                  ), 'sha256'), 'hex')
+              ),
+              (
+                  'SYN-UPGRADE-TENANT', 'SYN-UPGRADE-READY-RECOVERY',
+                  'synthetic.upgrade', 'SYN-UPGRADE-AGGREGATE', 2,
+                  '{"state":"ready"}'::jsonb,
+                  encode(public.digest(convert_to(
+                      '{"state":"ready"}'::jsonb::text, 'UTF8'
+                  ), 'sha256'), 'hex')
+              );
+          insert into public.transactional_outbox (
+              tenant_id, message_id, topic, aggregate_id, aggregate_version,
+              payload, payload_sha256, delivery_state, delivery_attempts,
+              fencing_token, delivered_at_utc
+          ) values (
+              'SYN-UPGRADE-TENANT', 'SYN-UPGRADE-HISTORICAL-DELIVERED',
+              'synthetic.upgrade', 'SYN-UPGRADE-AGGREGATE', 3,
+              '{"state":"delivered"}'::jsonb,
+              encode(public.digest(convert_to(
+                  '{"state":"delivered"}'::jsonb::text, 'UTF8'
+              ), 'sha256'), 'hex'),
+              'delivered', 1, 1, clock_timestamp()
+          );
+          SQL
+
+      - name: Prove the provenance gate retains the historical head
+        run: |
+          set +e
+          python3 scripts/apply_database_migrations.py \
+            --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN" \
+            > migration-004-rejection.log 2>&1
+          migration_status=$?
+          set -e
+          if [ "$migration_status" -eq 0 ]; then
+            echo "migration 004 provenance gate expected a historical-state disposition" >&2
+            exit 1
+          fi
+          if ! grep --fixed-strings --quiet \
+            "migration 004 requires an initial ready outbox provenance boundary" \
+            migration-004-rejection.log; then
+            sed -n '1,160p' migration-004-rejection.log >&2
+            exit 1
+          fi
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --set ON_ERROR_STOP=1 <<'SQL'
+          do $proof$
+          begin
+              if exists (
+                  select 1 from laboratory_migration.applied_migration
+                  where migration_id = '004'
+              ) then
+                  raise exception 'migration 004 was applied despite the provenance gate';
+              end if;
+              if not exists (
+                  select 1 from public.transactional_outbox
+                  where message_id = 'SYN-UPGRADE-HISTORICAL-DELIVERED'
+                    and delivery_state = 'delivered'
+              ) then
+                  raise exception 'historical terminal fixture must remain available for disposition';
+              end if;
+          end;
+          $proof$;
+          delete from public.transactional_outbox
+          where message_id = 'SYN-UPGRADE-HISTORICAL-DELIVERED';
+          SQL
+
+      - name: Apply successor and replay with ready-row preservation
+        run: |
           python3 scripts/apply_database_migrations.py \
             --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN"
           python3 scripts/apply_database_migrations.py \
@@ -156,6 +245,33 @@ jobs:
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command 'select count(*) from laboratory_migration.applied_migration')" = "4"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command "select count(*) from public.transactional_outbox where tenant_id = 'SYN-UPGRADE-TENANT' and delivery_state = 'ready' and delivery_attempts = 0 and fencing_token = 0")" = "2"
+
+      - name: Configure upgrade proof identities and verification key
+        run: |
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --set ON_ERROR_STOP=1 <<'SQL'
+          alter role laboratory_outbox_worker
+              password 'synthetic-ci-outbox-password';
+          alter role laboratory_outbox_recovery_operator
+              password 'synthetic-ci-recovery-password';
+          insert into laboratory_security.tenant_context_key (
+              key_id, secret_material, valid_from_utc, valid_until_utc
+          ) values (
+              'synthetic-ci-v1',
+              decode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'hex'),
+              '2025-01-01T00:00:00Z',
+              '2036-01-01T00:00:00Z'
+          );
+          SQL
+
+      - name: Prove upgraded ready rows gain complete delivery evidence
+        run: >-
+          python3 -m unittest
+          tests.test_postgres_integration.PostgresUpgradeBoundaryIntegrationTests
+          -v
 
   implementation-validation:
     name: implementation-validation

@@ -231,6 +231,25 @@ class SqlTenantStructureTests(unittest.TestCase):
         )
         self.assertNotIn("lease_duration_value interval", migration)
 
+    def test_migration_004_locks_outbox_before_provenance_preflight(self) -> None:
+        migration = (
+            ROOT / "sql" / "004_outbox_attempt_evidence_and_recovery.sql"
+        ).read_text(encoding="utf-8").lower()
+        self.assertIn("set local lock_timeout = '30s';", migration)
+        self.assertIn("set local statement_timeout = '5min';", migration)
+        self.assertIn(
+            "set local idle_in_transaction_session_timeout = '5min';",
+            migration,
+        )
+        lock_statement = (
+            "lock table public.transactional_outbox in access exclusive mode;"
+        )
+        self.assertEqual(migration.count(lock_statement), 1)
+        self.assertLess(
+            migration.index(lock_statement),
+            migration.index("do $migration_preflight$"),
+        )
+
     def test_outbox_attempt_outcome_and_recovery_evidence_are_append_only(self) -> None:
         migration = (
             ROOT / "sql" / "004_outbox_attempt_evidence_and_recovery.sql"
@@ -277,6 +296,21 @@ class SqlTenantStructureTests(unittest.TestCase):
             migration,
         )
         self.assertIn("grant insert (", migration)
+        self.assertIn("add constraint outbox_message_id_bounded", migration)
+        self.assertIn("octet_length(message_id) <= 256", migration)
+        self.assertIn(
+            "migration 004 requires bounded outbox message identities",
+            migration,
+        )
+        self.assertIn(
+            "migration 004 requires an initial ready outbox provenance boundary",
+            migration,
+        )
+        self.assertIn(
+            "pg_catalog.make_interval(secs => 86400)",
+            migration,
+        )
+        self.assertNotIn("interval '1 day'", migration)
 
     def test_migration_003_remains_immutable_and_004_is_successor(self) -> None:
         migration_003 = ROOT / "sql" / "003_trusted_routines_and_outbox_cas.sql"

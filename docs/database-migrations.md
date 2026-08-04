@@ -76,20 +76,33 @@ backfill of outbox digests and existing custody positions. Migration 003 require
 a drained outbox lease set before it records the invoking database principal,
 replaces direct worker updates with fenced functions, and replaces the privileged
 custody function with schema-qualified execution. Migration 004 retains those
-published bytes and requires another drained-lease, state-coherence gate before
-it changes ownership, grants, routine signatures, state guards, and evidence
-relations. The worker supplies 1 through 900 integer seconds; the database
-constructs the interval, so calendar-relative month and day fields remain
+published bytes and requires an initial-ready provenance gate before it changes
+ownership, grants, routine signatures, state guards, and evidence relations.
+The stricter gate accepts only nonblank printable message identities
+of at most 256 bytes in initial `ready` state with zero attempts and fence.
+Historical attempt, delivery, or recovery state receives an explicit migration
+disposition before the successor can apply. The worker supplies 1 through
+900 integer seconds; the database constructs the interval, so calendar-relative
+month and day fields remain
 outside the caller-controlled lease boundary. Immutable attempt, outcome,
 transport-receipt, and recovery-release rows establish the transition evidence.
-Several `ALTER TABLE`
-forms can take strong locks. A populated-environment rehearsal records:
+Migration 004 sets a 30-second lock-wait budget and five-minute statement and
+idle-in-transaction budgets, then acquires `ACCESS EXCLUSIVE` on the outbox
+before evaluating either provenance predicate. Producers and workers pause for
+the bounded migration transaction after acquisition; a lock timeout rolls back
+the transaction and preserves the prior head for a deliberately scheduled
+retry. The adopting environment assigns a measured maintenance-window budget
+to the complete transaction because several `ALTER TABLE` forms can take strong
+locks. A populated-environment rehearsal records:
 
 - row and byte counts per affected table;
 - constraint exception counts before the change;
 - ready, leased, delivered, and recovery-required outbox counts, with a zero
-  active-lease gate for migrations 003 and 004;
+  active-lease gate for migration 003 and an initial-ready/zero-attempt gate for
+  migration 004;
 - expected and observed lock modes and wait time;
+- total outbox write-pause duration against the selected maintenance-window
+  budget, including the retry disposition after a lock timeout;
 - transaction duration, WAL growth, replica lag, and storage headroom;
 - application compatibility before, during, and after the change;
 - rollback and clean-restore time; and

@@ -28,7 +28,7 @@
     {
       "id": "004",
       "path": "sql/004_outbox_attempt_evidence_and_recovery.sql",
-      "sha256": "c6342c450d844ddad01846eaed6958dd0210b155daecc65737929f5586b4cef0",
+      "sha256": "a74621d56223bb5494165d1483ff6c7d3713327bdb1f19bba666d6461899dbd5",
       "transactional": true
     }
   ]

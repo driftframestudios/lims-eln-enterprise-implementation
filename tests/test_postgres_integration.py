@@ -20,6 +20,9 @@ APP_DSN = os.environ.get("LIMS_TEST_POSTGRES_APP_DSN")
 OUTBOX_DSN = os.environ.get("LIMS_TEST_POSTGRES_OUTBOX_DSN")
 RECOVERY_DSN = os.environ.get("LIMS_TEST_POSTGRES_RECOVERY_DSN")
 HMAC_KEY_HEX = os.environ.get("LIMS_TEST_TENANT_HMAC_HEX")
+UPGRADE_OUTBOX_DSN = os.environ.get("LIMS_TEST_POSTGRES_UPGRADE_OUTBOX_DSN")
+UPGRADE_RECOVERY_DSN = os.environ.get("LIMS_TEST_POSTGRES_UPGRADE_RECOVERY_DSN")
+UPGRADE_TENANT = "SYN-UPGRADE-TENANT"
 
 
 def signed_context(
@@ -600,6 +603,81 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         self.assertNotEqual(over_limit.returncode, 0)
         self.assertIn("1..900 lease seconds", over_limit.stderr)
 
+    def test_outbox_message_identity_is_bounded_and_completable(self) -> None:
+        assert APP_DSN is not None
+        assert OUTBOX_DSN is not None
+        context = signed_context(self.outbox_tenant)
+        invalid_messages = (
+            "SYN-" + "A" * 253,
+            "SYN-UNICODE-\N{SNOWMAN}",
+        )
+        for message_id in invalid_messages:
+            with self.subTest(message_id=message_id[:24]):
+                rejected = self.run_sql(
+                    APP_DSN,
+                    "begin; "
+                    "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+                    "insert into public.transactional_outbox ("
+                    "tenant_id, message_id, topic, aggregate_id, aggregate_version, "
+                    "payload, payload_sha256) values ("
+                    ":'tenant', :'message', 'synthetic.identity', "
+                    "'SYN-AGGREGATE', 1, '{\"state\":\"ready\"}'::jsonb, "
+                    "encode(public.digest(convert_to("
+                    "'{\"state\":\"ready\"}'::jsonb::text, 'UTF8'), "
+                    "'sha256'), 'hex')); commit;",
+                    variables={
+                        "context": context,
+                        "tenant": self.outbox_tenant,
+                        "message": message_id,
+                    },
+                    check=False,
+                )
+                self.assertNotEqual(rejected.returncode, 0)
+                self.assertIn("outbox_message_id_bounded", rejected.stderr)
+
+        valid_message = "SYN-" + uuid4().hex + "B" * 220
+        self.assertEqual(len(valid_message), 256)
+        self.app_transaction(
+            context,
+            "insert into public.transactional_outbox ("
+            "tenant_id, message_id, topic, aggregate_id, aggregate_version, "
+            "payload, payload_sha256) values ('"
+            + self.outbox_tenant
+            + "', '"
+            + valid_message
+            + "', 'synthetic.identity', 'SYN-AGGREGATE', 1, "
+            "'{\"state\":\"ready\"}'::jsonb, "
+            "encode(public.digest(convert_to("
+            "'{\"state\":\"ready\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'))",
+        )
+        claimed = self.run_sql(
+            OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select message_id || '|' || lease_token::text || '|' || "
+            "fencing_token::text from public.claim_outbox_delivery("
+            "'SYN-WORKER-IDENTITY', 300); commit;",
+            variables={"context": context},
+        )
+        claimed_message, token_value, fence_value = self.last_output_row(claimed).split("|")
+        self.assertEqual(claimed_message, valid_message)
+        confirmed = self.run_sql(
+            OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select delivery_state from public.confirm_outbox_delivery("
+            ":'message', 'SYN-WORKER-IDENTITY', :'token'::uuid, :fence, "
+            "'SYN-BROKER', :'receipt'); commit;",
+            variables={
+                "context": context,
+                "message": valid_message,
+                "token": token_value,
+                "fence": fence_value,
+                "receipt": "SYN-IDENTITY-ACK-" + uuid4().hex,
+            },
+        )
+        self.assertEqual(self.last_output_row(confirmed), "delivered")
+
     def test_outbox_transport_receipt_is_unique_within_tenant(self) -> None:
         assert OUTBOX_DSN is not None
         context = signed_context(self.outbox_tenant)
@@ -938,6 +1016,170 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             "2|2|SYN-INCIDENT-0042:laboratory_outbox_recovery_operator|"
             "SYN-ACK-AFTER-RECOVERY",
         )
+
+
+@unittest.skipUnless(
+    UPGRADE_OUTBOX_DSN
+    and UPGRADE_RECOVERY_DSN
+    and HMAC_KEY_HEX
+    and shutil.which("psql"),
+    "configured upgrade DSNs, synthetic HMAC key, and psql enable this proof",
+)
+class PostgresUpgradeBoundaryIntegrationTests(unittest.TestCase):
+    @staticmethod
+    def run_sql(
+        dsn: str,
+        sql: str,
+        *,
+        variables: dict[str, str] | None = None,
+        check: bool = True,
+    ) -> subprocess.CompletedProcess[str]:
+        command = [
+            shutil.which("psql") or "psql",
+            dsn,
+            "--no-psqlrc",
+            "--no-align",
+            "--tuples-only",
+            "--quiet",
+            "--set",
+            "ON_ERROR_STOP=1",
+        ]
+        for name, value in sorted((variables or {}).items()):
+            command.extend(("--set", f"{name}={value}"))
+        return subprocess.run(
+            command,
+            input=sql,
+            check=check,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+
+    @staticmethod
+    def last_output_row(completed: subprocess.CompletedProcess[str]) -> str:
+        rows = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
+        if not rows:
+            raise AssertionError("PostgreSQL upgrade proof requires one result row")
+        return rows[-1]
+
+    def test_pre_004_ready_rows_enter_governed_delivery_with_complete_evidence(self) -> None:
+        assert UPGRADE_OUTBOX_DSN is not None
+        assert UPGRADE_RECOVERY_DSN is not None
+        context = signed_context(UPGRADE_TENANT)
+
+        confirmed_claim = self.run_sql(
+            UPGRADE_OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select message_id || '|' || lease_token::text || '|' || "
+            "fencing_token::text from public.claim_outbox_delivery("
+            "'SYN-UPGRADE-WORKER-CONFIRM', 300); commit;",
+            variables={"context": context},
+        )
+        message_value, token_value, fence_value = self.last_output_row(
+            confirmed_claim
+        ).split("|")
+        self.assertEqual(message_value, "SYN-UPGRADE-READY-CONFIRM")
+        confirmed = self.run_sql(
+            UPGRADE_OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select delivery_state from public.confirm_outbox_delivery("
+            ":'message', 'SYN-UPGRADE-WORKER-CONFIRM', :'token'::uuid, :fence, "
+            "'SYN-UPGRADE-BROKER', 'SYN-UPGRADE-ACK-CONFIRM'); commit;",
+            variables={
+                "context": context,
+                "message": message_value,
+                "token": token_value,
+                "fence": fence_value,
+            },
+        )
+        self.assertEqual(self.last_output_row(confirmed), "delivered")
+
+        recovery_claim = self.run_sql(
+            UPGRADE_OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select message_id || '|' || lease_token::text || '|' || "
+            "fencing_token::text from public.claim_outbox_delivery("
+            "'SYN-UPGRADE-WORKER-RECOVERY', 300); commit;",
+            variables={"context": context},
+        )
+        recovery_message, recovery_token, recovery_fence = self.last_output_row(
+            recovery_claim
+        ).split("|")
+        self.assertEqual(recovery_message, "SYN-UPGRADE-READY-RECOVERY")
+        failed = self.run_sql(
+            UPGRADE_OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select delivery_state from public.fail_outbox_delivery("
+            ":'message', 'SYN-UPGRADE-WORKER-RECOVERY', :'token'::uuid, :fence, "
+            "'SYN.UPGRADE.FAILURE'); commit;",
+            variables={
+                "context": context,
+                "message": recovery_message,
+                "token": recovery_token,
+                "fence": recovery_fence,
+            },
+        )
+        self.assertEqual(self.last_output_row(failed), "recovery_required")
+
+        released = self.run_sql(
+            UPGRADE_RECOVERY_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select delivery_state from public.release_outbox_recovery("
+            ":'message', :fence, 0, 'SYN-UPGRADE-RECOVERY-RELEASE'); commit;",
+            variables={
+                "context": context,
+                "message": recovery_message,
+                "fence": recovery_fence,
+            },
+        )
+        self.assertEqual(self.last_output_row(released), "ready")
+
+        second_claim = self.run_sql(
+            UPGRADE_OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select message_id || '|' || lease_token::text || '|' || "
+            "fencing_token::text from public.claim_outbox_delivery("
+            "'SYN-UPGRADE-WORKER-RECOVERED', 300); commit;",
+            variables={"context": context},
+        )
+        second_message, second_token, second_fence = self.last_output_row(
+            second_claim
+        ).split("|")
+        self.assertEqual(second_message, recovery_message)
+        recovered = self.run_sql(
+            UPGRADE_OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select delivery_state from public.confirm_outbox_delivery("
+            ":'message', 'SYN-UPGRADE-WORKER-RECOVERED', :'token'::uuid, :fence, "
+            "'SYN-UPGRADE-BROKER', 'SYN-UPGRADE-ACK-RECOVERED'); commit;",
+            variables={
+                "context": context,
+                "message": second_message,
+                "token": second_token,
+                "fence": second_fence,
+            },
+        )
+        self.assertEqual(self.last_output_row(recovered), "delivered")
+
+        evidence = self.run_sql(
+            UPGRADE_RECOVERY_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select (select count(*) from public.outbox_delivery_attempt)::text "
+            "|| '|' || "
+            "(select count(*) from public.outbox_delivery_attempt_outcome)::text "
+            "|| '|' || "
+            "(select count(*) from public.outbox_recovery_release)::text; commit;",
+            variables={"context": context},
+        )
+        self.assertEqual(self.last_output_row(evidence), "3|3|1")
 
 
 if __name__ == "__main__":

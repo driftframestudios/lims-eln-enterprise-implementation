@@ -36,6 +36,8 @@ The standard-library test suite exercises:
   integer-second leases bounded to 15 minutes;
 - append-only delivery attempts, outcomes, tenant-unique transport receipts,
   and separately attributable recovery release;
+- a shared 256-byte printable message identity bound across producer, claim,
+  completion, failure, and recovery paths;
 - byte-preserving instrument ingress with exact finite decimal quantities,
   UCUM-coded units, and explainable quarantine;
 - ambiguous vendor-write reconciliation through authoritative readback;
@@ -172,7 +174,11 @@ schema-qualified privileged execution and function-governed outbox lease CAS.
 Migration 004 preserves migration 003, replaces calendar-relative caller input
 with 1 through 900 integer seconds, restricts initial-state authority, completes
 the transition matrix, and adds immutable attempt, outcome, acknowledgement, and
-recovery-release evidence. The migration runner
+recovery-release evidence. Its provenance gate accepts only initial ready rows
+with zero attempts and routes historical attempt or terminal state to explicit
+disposition before upgrade. Migration 004 locks the outbox before evaluating
+that gate and gives lock acquisition a 30-second budget; contention produces a
+transactional rollback for a scheduled retry. The migration runner
 verifies every released checksum before database contact, serializes concurrent
 runners with a transaction-level advisory lock, and records an applied row only
 after its transaction succeeds.
