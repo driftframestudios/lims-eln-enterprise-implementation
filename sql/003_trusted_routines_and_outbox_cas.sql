@@ -398,13 +398,13 @@ begin
      where tenant_id = tenant_value
        and specimen_id = specimen_value
      for update;
-    if pg_catalog.coalesce(current_position.custody_version, 0)
+    if coalesce(current_position.custody_version, 0)
        <> expected_version_value then
         raise exception using
             errcode = '40001',
             message = pg_catalog.format(
                 'custody revision is %s; reload and plan from the stored revision',
-                pg_catalog.coalesce(current_position.custody_version, 0)
+                coalesce(current_position.custody_version, 0)
             );
     end if;
 

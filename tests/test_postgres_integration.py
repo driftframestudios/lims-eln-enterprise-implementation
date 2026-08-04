@@ -83,6 +83,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             "--no-psqlrc",
             "--no-align",
             "--tuples-only",
+            "--quiet",
             "--set",
             "ON_ERROR_STOP=1",
         ]

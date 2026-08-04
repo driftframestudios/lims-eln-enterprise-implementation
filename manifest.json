@@ -26,7 +26,7 @@
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:67425cbbad74068efda86af4f1f7102a12913cbf0c028d6cc88bfef307b77650",
+    "binding_digest": "sha256:cf6e62e64660fe9793427b5dfe5ceb9cc4fc21ca46fd611e7b484b16e8b28e3a",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",
@@ -51,7 +51,7 @@
     "qualified_major": 17,
     "migration_head": "003",
     "migration_manifest": "database/migration-manifest.json",
-    "migration_manifest_digest": "sha256:4a157b842fb721662c3724d106612c836a2c9d99abf209c4ec5bacdf0ba8eb3e",
+    "migration_manifest_digest": "sha256:96b4768df92196096d2279fdd7ce1d790c30f7392f4b495d5edbaf2ab01db424",
     "migration_transaction_policy": "one_transaction_per_migration",
     "tenant_authority": "signed_short_lived_database_verified_context",
     "outbox_canonicalization": "postgresql-jsonb-text-v1"
