@@ -14,7 +14,10 @@
 - Bind outbox identity to tenant, verify payload digests at insertion, preserve
   message content through delivery, and govern worker claim, expired-lease
   reclaim, and confirmation through exact tenant/token/fence compare-and-set
-  functions.
+  functions with 1-through-900 integer-second lease authority.
+- Complete the outbox transition matrix, narrow initial-state insertion,
+  separate recovery release authority, and preserve append-only attempt,
+  outcome, transport-acknowledgement, and recovery evidence.
 - Add live, digest-pinned PostgreSQL 17 migration and adversarial data-boundary
   proofs to CI.
 - Publish the data-primitive corrective ledger, plan probabilities, remaining

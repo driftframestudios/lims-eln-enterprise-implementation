@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "database_engine": "postgresql",
+  "transaction_policy": "one_transaction_per_migration",
+  "runner": {
+    "path": "scripts/apply_database_migrations.py",
+    "sha256": "173fc44aa4aced5c0cd0bd59932dce4d9305bd32636922f82a22b8fe89c7d0ad"
+  },
+  "migrations": [
+    {
+      "id": "001",
+      "path": "sql/001_laboratory_core.sql",
+      "sha256": "a7c9d79646aa5918123d790bba5b66cb89cc7b2a0dc81211ad926bb7579feb4b",
+      "transactional": true
+    },
+    {
+      "id": "002",
+      "path": "sql/002_principal_data_boundaries.sql",
+      "sha256": "2d5f3778d1b3c557590b265f06821435effb1ea9e1e0675dda5e74f5b213ee64",
+      "transactional": true
+    },
+    {
+      "id": "003",
+      "path": "sql/003_trusted_routines_and_outbox_cas.sql",
+      "sha256": "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
+      "transactional": true
+    }
+  ]
+}

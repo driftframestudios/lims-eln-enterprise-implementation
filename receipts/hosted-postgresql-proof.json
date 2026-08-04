@@ -13,23 +13,28 @@
     "workflow_run": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/actions/runs/30930674823",
     "python": "3.12.13",
     "postgresql": "17.10-alpine",
-    "database_migration_head": "003",
+    "database_migration_head": "004",
     "tenant_authority": "signed_short_lived_database_verified_context"
   },
   "scenario_ids": [
     "SCN-DB-MIGRATION-CHECKSUM-REPLAY",
+    "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",
     "SCN-DB-SIGNED-TENANT-BOUNDARY",
     "SCN-DB-TENANT-CONTEXT-TAMPER-EXPIRY",
     "SCN-DB-CUSTODY-CAS-AND-ATOMIC-OUTBOX",
     "SCN-DB-SECURITY-DEFINER-TEMP-SHADOW",
     "SCN-DB-OUTBOX-CONTENT-IMMUTABILITY",
     "SCN-DB-OUTBOX-FENCED-CLAIM-RECLAIM-STALE-CONFIRM",
+    "SCN-DB-OUTBOX-LEASE-DURATION-INTEGER-BOUND",
+    "SCN-DB-OUTBOX-TRANSITION-AUTHORITY",
+    "SCN-DB-OUTBOX-ATTEMPT-ACK-RECOVERY-EVIDENCE",
+    "SCN-DB-OUTBOX-TRANSPORT-RECEIPT-UNIQUENESS",
     "SCN-DB-SCIENTIFIC-QUANTITY-EXACTNESS",
     "SCN-DB-VERIFICATION-KEY-CONFIDENTIALITY"
   ],
   "artifact_digests": [
-    "sha256:cf6e62e64660fe9793427b5dfe5ceb9cc4fc21ca46fd611e7b484b16e8b28e3a",
-    "sha256:96b4768df92196096d2279fdd7ce1d790c30f7392f4b495d5edbaf2ab01db424"
+    "sha256:534bc28aa859a010998f2a06a2f06852a8a30ad662117bfb224c2d705c348d04",
+    "sha256:9106fc64d94e5fe8701950d651d855c31a6788bf53db34b46b1eec47698e4cda"
   ],
   "observed_at": "2026-08-04T16:46:20Z",
   "performer_id": "GITHUB-ACTIONS-HOSTED-RUNNER",

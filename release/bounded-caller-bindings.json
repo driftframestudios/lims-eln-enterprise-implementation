@@ -49,6 +49,11 @@
       "path": "sql/003_trusted_routines_and_outbox_cas.sql",
       "sha256": "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
       "responsibility": "schema-qualified privileged custody execution plus tenant-bound outbox claim, reclaim, and confirmation fencing"
+    },
+    {
+      "path": "sql/004_outbox_attempt_evidence_and_recovery.sql",
+      "sha256": "c6342c450d844ddad01846eaed6958dd0210b155daecc65737929f5586b4cef0",
+      "responsibility": "integer-second lease authority, complete outbox transition control, immutable attempt and outcome evidence, bounded transport receipts, and governed recovery release"
     }
   ],
   "operation_bindings": [

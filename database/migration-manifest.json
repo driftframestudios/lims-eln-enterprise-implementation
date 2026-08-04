@@ -24,6 +24,12 @@
       "path": "sql/003_trusted_routines_and_outbox_cas.sql",
       "sha256": "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
       "transactional": true
+    },
+    {
+      "id": "004",
+      "path": "sql/004_outbox_attempt_evidence_and_recovery.sql",
+      "sha256": "c6342c450d844ddad01846eaed6958dd0210b155daecc65737929f5586b4cef0",
+      "transactional": true
     }
   ]
 }

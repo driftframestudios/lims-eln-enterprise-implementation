@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 import json
 import os
@@ -189,22 +190,20 @@ class SqlTenantStructureTests(unittest.TestCase):
             self.assertIn(field, outbox.group(1))
 
     def test_outbox_worker_mutations_use_tenant_bound_fenced_functions(self) -> None:
-        migration = (ROOT / "sql" / "003_trusted_routines_and_outbox_cas.sql").read_text(
-            encoding="utf-8"
-        ).lower()
-        self.assertIn(
-            "revoke all privileges on public.transactional_outbox "
-            "from laboratory_outbox_worker",
+        migration = (
+            ROOT / "sql" / "004_outbox_attempt_evidence_and_recovery.sql"
+        ).read_text(encoding="utf-8").lower()
+        self.assertRegex(
             migration,
-        )
-        self.assertIn(
-            "grant select on public.transactional_outbox to laboratory_outbox_worker",
-            migration,
+            r"revoke\s+all\s+privileges\s+on\s+public\.transactional_outbox\s+"
+            r"from\s+laboratory_outbox_worker,\s+laboratory_outbox_recovery_operator",
         )
         for function_name in (
             "claim_outbox_delivery",
             "reclaim_outbox_delivery",
             "confirm_outbox_delivery",
+            "fail_outbox_delivery",
+            "release_outbox_recovery",
         ):
             with self.subTest(function=function_name):
                 self.assertIn(f"create function public.{function_name}", migration)
@@ -214,13 +213,84 @@ class SqlTenantStructureTests(unittest.TestCase):
                 )
         self.assertGreaterEqual(
             migration.count("laboratory_security.authorized_tenant_id()"),
-            4,
+            9,
         )
         self.assertIn("lease_principal = session_user", migration)
         self.assertIn("for update skip locked", migration)
         self.assertIn("delivery.fencing_token = expected_fencing_value", migration)
         self.assertIn("delivery.lease_token = lease_token_value", migration)
         self.assertIn("delivery.lease_expires_at_utc > pg_catalog.clock_timestamp()", migration)
+        self.assertIn("lease_duration_seconds_value integer", migration)
+        self.assertIn(
+            "lease_duration_seconds_value not between 1 and 900",
+            migration,
+        )
+        self.assertIn(
+            "pg_catalog.make_interval(secs => lease_duration_seconds_value)",
+            migration,
+        )
+        self.assertNotIn("lease_duration_value interval", migration)
+
+    def test_outbox_attempt_outcome_and_recovery_evidence_are_append_only(self) -> None:
+        migration = (
+            ROOT / "sql" / "004_outbox_attempt_evidence_and_recovery.sql"
+        ).read_text(encoding="utf-8").lower()
+        for relation in (
+            "outbox_delivery_attempt",
+            "outbox_delivery_attempt_outcome",
+            "outbox_recovery_release",
+        ):
+            with self.subTest(relation=relation):
+                self.assertIn(f"create table public.{relation}", migration)
+                self.assertIn(f"alter table public.{relation} force row level security", migration)
+                self.assertIn(f"{relation}_append_only", migration)
+        self.assertIn("transport_receipt ~ '^[ -~]+$'", migration)
+        self.assertIn("octet_length(transport_receipt) <= 512", migration)
+        self.assertIn("transport_system is not null", migration)
+        self.assertIn("transport_receipt is not null", migration)
+        self.assertIn("transport_acknowledged_at_utc is not null", migration)
+        self.assertIn("error_code is not null", migration)
+        self.assertIn(
+            "unique (tenant_id, transport_system, transport_receipt)",
+            migration,
+        )
+        self.assertIn("outcome_kind = 'delivery_confirmed'", migration)
+        self.assertIn("outcome_kind = 'recovery_required'", migration)
+
+    def test_outbox_transition_matrix_and_initial_authority_are_explicit(self) -> None:
+        migration = (
+            ROOT / "sql" / "004_outbox_attempt_evidence_and_recovery.sql"
+        ).read_text(encoding="utf-8").lower()
+        for transition in (
+            "old.delivery_state = 'ready' and new.delivery_state = 'leased'",
+            "old.delivery_state = 'leased' and new.delivery_state = 'leased'",
+            "old.delivery_state = 'leased' and new.delivery_state = 'delivered'",
+            "new.delivery_state = 'recovery_required'",
+            "new.delivery_state = 'ready'",
+        ):
+            with self.subTest(transition=transition):
+                self.assertIn(transition, migration)
+        self.assertIn("an outbox message begins in the ready state", migration)
+        self.assertIn("last_error_code is not null", migration)
+        self.assertIn(
+            "revoke all privileges on public.transactional_outbox from laboratory_app",
+            migration,
+        )
+        self.assertIn("grant insert (", migration)
+
+    def test_migration_003_remains_immutable_and_004_is_successor(self) -> None:
+        migration_003 = ROOT / "sql" / "003_trusted_routines_and_outbox_cas.sql"
+        self.assertEqual(
+            hashlib.sha256(migration_003.read_bytes()).hexdigest(),
+            "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
+        )
+        manifest = json.loads(
+            (ROOT / "database" / "migration-manifest.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            [entry["id"] for entry in manifest["migrations"]],
+            ["001", "002", "003", "004"],
+        )
 
     def test_security_definer_data_objects_are_schema_qualified(self) -> None:
         migration = (ROOT / "sql" / "003_trusted_routines_and_outbox_cas.sql").read_text(

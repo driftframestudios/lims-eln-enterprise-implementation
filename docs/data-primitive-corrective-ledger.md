@@ -23,7 +23,7 @@ receipt.
 | Plan | Shape | Estimated probability | Characteristic strength | Material gap |
 |---|---|---:|---|---|
 | A. Narrow primitive patch | Correct timestamp and quantity types in place; retain the original bootstrap path. | 0.46 | Small review surface. | Leaves schema history, authority, concurrency, and upgrade safety implicit. |
-| B. Migration-first vertical integrity | Freeze the baseline; add checksum-bound migrations, trusted tenant context, typed quantities, custody CAS/history, governed outbox leases, and live adversarial tests. | **0.82** | Connects each primitive to authority, transaction, recovery, and evidence. | Requires a representative upgrade rehearsal and operating ownership. |
+| B. Migration-first vertical integrity | Freeze the baseline; add checksum-bound migrations, trusted tenant context, typed quantities, custody CAS/history, governed outbox leases, and live adversarial tests. | **0.86** | Connects each primitive to authority, transaction, recovery, and evidence. | Requires a representative active-environment upgrade rehearsal and operating ownership. |
 | C. Mature migration product now | Adopt Flyway or Liquibase, import baseline history, and express every future change through the selected product. | 0.72 | Brings a broad operational ecosystem and familiar controls. | Product adoption can obscure the domain corrections during this tranche; baseline attestation still requires judgment. |
 | D. Shadow database and dual-read comparison | Build the corrected schema beside the current system, replay representative data, compare semantic digests, then cut over. | 0.68 | Produces powerful comparative evidence and a recoverable cutover. | Doubles operational surfaces and requires explicit conflict ownership. |
 | E. Full canonical-model decomposition | Replace broad JSON documents and free-form identifiers with domain tables, reference vocabularies, and temporal history in one program. | 0.57 | Maximizes relational expressiveness. | Broad simultaneous change raises migration, scientific-validation, and delivery risk. |
@@ -57,13 +57,16 @@ also have a typed relational representation.
 | DP-017 | A signed tenant assertion is a bearer capability which can be replayed during its short validity window. The nonce provides unique signed content and currently has no consumption ledger. | **Open with containment.** The 15-minute maximum lifetime, TLS, narrow issuer, private verification key, per-statement expiry check, and database audit boundary limit exposure. | SEC-CTX-002 decides whether configured risk calls for shorter lifetimes, channel binding, a replay ledger, or sender-constrained credentials. |
 | DP-018 | Tenant authorization and accountable actor attribution are separate concerns. The signed context carries a subject, while custody currently accepts a custodian identifier as domain input. | **Open with explicit ownership.** The bounded-caller layer verifies actor/delegation and persists attributable receipts; the database independently enforces tenant scope. | AUTH-ACTOR-001 will bind actor/delegation evidence to database mutations where the configured threat model requires database-level verification. |
 | DP-019 | `record_custody_transfer` executed with owner authority while its table and composite-type names were unqualified and `public` preceded the implicit temporary schema. A session-local relation could redirect privileged statements away from canonical custody evidence. | **Corrected.** Migration 003 replaces the function with explicit `public` qualification for every relation and composite type, explicit schema qualification for extension calls, and `pg_catalog, pg_temp` as its fixed search path. The same posture governs every new outbox `SECURITY DEFINER` routine. | A live application-role adversarial test creates three same-named temporary relations, executes a custody transfer, observes zero temporary rows, and verifies the canonical custody and outbox facts. Static checks retain the safe search path and qualified-object contract. |
+| DP-020 | The migration-003 outbox claim and reclaim routines accepted PostgreSQL `interval` values and compared them with `interval '15 minutes'`. Intervals preserve independent month, day, and time fields; a mixed-sign value such as `1 month -30 days + 1 second` can compare as a short duration while timestamp addition resolves to materially longer wall time on some calendar dates. This allowed a caller to evade the intended 15-minute lease ceiling. | **Corrected in immutable successor migration 004.** The privileged APIs accept integer seconds only, require the closed range 1 through 900, and construct expiry with `pg_catalog.make_interval(secs => ...)`. The released signature keeps calendar-relative fields outside caller control while migration 003 retains its published bytes. | A live PostgreSQL regression submits the mixed-unit interval through the retired signature and proves that interval dispatch has no callable surface; a companion case proves that 901 seconds is rejected. Fenced claim/reclaim proves accepted integer durations and current-coordinate completion. |
+| DP-021 | The migration-003 transition guard covered selected lease and delivery movements while leaving `ready` and `recovery_required` reachable through owner-shaped updates. Its recovery-state constraint accepted ambiguous lease-coordinate combinations. The application also retained table-level insert authority and could supply a coherent terminal state instead of allowing defaults to establish `ready`. | **Corrected in migration 004.** A dedicated no-login outbox authority owns state mutation. Application insert authority is column-scoped to message identity/content and intentional availability; defaults and an insert guard establish the initial state. The transition guard accepts exactly `ready → leased`, expired `leased → leased`, `leased → delivered`, `leased → recovery_required`, and evidence-backed `recovery_required → ready`. A worker records exact failure coordinates, while a separately attributable recovery operator records the bounded release decision. | Static checks enumerate the complete matrix and narrow grants. Live PostgreSQL rejects a forged terminal application insert, direct worker updates, owner-shaped `ready → recovery_required`, and recovery release without immutable evidence; legal failure and release complete through governed routines. Configured separation-of-duty membership and recovery operations remain part of ENV-OUTBOX-001. |
+| DP-022 | Reclaim replaced the current lease coordinate and confirmation cleared it, so parent-row state retained no durable reconstruction of every attempt. A successful confirmation also accepted no transport acknowledgement, leaving delivery status disconnected from broker evidence. | **Corrected in migration 004.** Tenant-scoped append-only attempt and outcome relations retain worker label, invoking principal, UUID, fence, open/expiry/close times, expiry or failure outcomes, and the bounded transport system and receipt. Recovery releases form a third immutable relation. Confirmation closes the exact current attempt and requires a tenant-unique transport acknowledgement; reclaim closes the expired attempt before opening its successor. | Live PostgreSQL proves two attempts survive reclaim, stale completion is rejected, append-only guards preserve prior evidence, one durable receipt closes the current attempt, duplicate tenant receipt replay fails, and failure/recovery/re-delivery remains reconstructable. Broker authenticity and configured retention/export qualification remain ENV-OUTBOX-001. |
 
 ## Recommended chain of action and interstitials
 
 1. **Freeze and bind.** Preserve migration 001 byte-for-byte and require the
    manifest checksum in repository validation. Interstitial: checksum drift or
    an unlisted SQL file returns the tranche to design.
-2. **Rehearse from empty.** Apply 001 through 003 through the runner on PostgreSQL
+2. **Rehearse from empty.** Apply 001 through 004 through the runner on PostgreSQL
    17, then rerun to prove exact no-op replay. Exercise the reference mechanism
    independently on PostgreSQL 16 and 18. Interstitial: inspect locks, duration,
    warnings, roles, extensions, applied-history rows, and release-mechanism
@@ -75,9 +78,9 @@ also have a typed relational representation.
    exception receives a named migration disposition and accountable owner.
 4. **Exercise adversaries.** Run tenant-forgery, temporary-relation shadowing,
    stale custody, outbox mutation, worker crash/reclaim, stale-fence completion,
-   malformed quantity, key revocation, concurrent runner, and crash-point
-   scenarios. Interstitial: update probability from the observed pass/fail and
-   severity distribution.
+   mixed-unit lease-duration bypass, malformed quantity, key revocation,
+   concurrent runner, and crash-point scenarios. Interstitial: update
+   probability from the observed pass/fail and severity distribution.
 5. **Qualify operations.** Observe backup, restore, forward-repair, key rotation,
    lease expiry, queue recovery, and monitoring in the configured environment.
    Interstitial: Operations and Security sign separate receipts.
@@ -122,6 +125,17 @@ with path-specific receipts.
   <https://www.postgresql.org/docs/17/release-17-10.html>.
 - PostgreSQL documents timezone-aware temporal storage and its special values:
   <https://www.postgresql.org/docs/current/datatype-datetime.html>.
+- PostgreSQL documents interval construction from independent month, day, and
+  time fields and the calendar-sensitive behavior of interval arithmetic:
+  <https://www.postgresql.org/docs/current/functions-datetime.html>.
+- PostgreSQL check constraints treat a null result as satisfied, while `NOT
+  NULL` expresses required presence. The state and outcome branches therefore
+  pair type-specific predicates with explicit presence constraints:
+  <https://www.postgresql.org/docs/current/ddl-constraints.html>.
+- PostgreSQL supports column-specific insertion privileges, which lets message
+  producers supply identity, content, and intentional availability while
+  database defaults retain initial delivery-state authority:
+  <https://www.postgresql.org/docs/current/ddl-priv.html>.
 - PostgreSQL documents exact `numeric` behavior, including special numeric
   values which require an explicit domain decision:
   <https://www.postgresql.org/docs/current/datatype-numeric.html>.

@@ -32,7 +32,10 @@ The standard-library test suite exercises:
 - custody compare-and-set transfer with append-only history, a schema-qualified
   privileged routine, and an atomic full-payload outbox;
 - tenant-bound outbox claim, expired-lease reclaim, and exact confirmation with
-  database-principal attribution, rotating UUIDs, and monotonic fencing;
+  database-principal attribution, rotating UUIDs, monotonic fencing, and
+  integer-second leases bounded to 15 minutes;
+- append-only delivery attempts, outcomes, tenant-unique transport receipts,
+  and separately attributable recovery release;
 - byte-preserving instrument ingress with exact finite decimal quantities,
   UCUM-coded units, and explainable quarantine;
 - ambiguous vendor-write reconciliation through authoritative readback;
@@ -166,7 +169,10 @@ Migration 001 remains the immutable historical baseline. Migration 002 adds the
 trusted tenant authority, finite temporal checks, exact measurement primitives,
 custody history and CAS, and immutable outbox semantics. Migration 003 adds
 schema-qualified privileged execution and function-governed outbox lease CAS.
-The migration runner
+Migration 004 preserves migration 003, replaces calendar-relative caller input
+with 1 through 900 integer seconds, restricts initial-state authority, completes
+the transition matrix, and adds immutable attempt, outcome, acknowledgement, and
+recovery-release evidence. The migration runner
 verifies every released checksum before database contact, serializes concurrent
 runners with a transaction-level advisory lock, and records an applied row only
 after its transaction succeeds.

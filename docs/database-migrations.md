@@ -40,6 +40,12 @@ The migrator starts after PostgreSQL health succeeds. Application proof starts
 after the migrator exits successfully. Re-running the migrator verifies applied
 checksums and performs an exact no-op for each released migration.
 
+CI exercises two independent paths. The fresh path applies migrations 001
+through 004 and replays the current manifest. The successor path applies the
+checksum-bound `database/migration-manifest-through-003.json`, then applies 004
+and replays the current manifest. This keeps the already-released migration 003
+bytes visible while proving the forward-repair path.
+
 The bootstrap identity owns schema change. Application, outbox, evidence, and
 migration workload roles remain `NOSUPERUSER NOBYPASSRLS`; ordinary runtime
 connections receive their own narrow grants.
@@ -69,13 +75,20 @@ Migration 002 introduces constraints, policies, tables, triggers, grants, and a
 backfill of outbox digests and existing custody positions. Migration 003 requires
 a drained outbox lease set before it records the invoking database principal,
 replaces direct worker updates with fenced functions, and replaces the privileged
-custody function with schema-qualified execution. Several `ALTER TABLE`
+custody function with schema-qualified execution. Migration 004 retains those
+published bytes and requires another drained-lease, state-coherence gate before
+it changes ownership, grants, routine signatures, state guards, and evidence
+relations. The worker supplies 1 through 900 integer seconds; the database
+constructs the interval, so calendar-relative month and day fields remain
+outside the caller-controlled lease boundary. Immutable attempt, outcome,
+transport-receipt, and recovery-release rows establish the transition evidence.
+Several `ALTER TABLE`
 forms can take strong locks. A populated-environment rehearsal records:
 
 - row and byte counts per affected table;
 - constraint exception counts before the change;
 - ready, leased, delivered, and recovery-required outbox counts, with a zero
-  active-lease gate for migration 003;
+  active-lease gate for migrations 003 and 004;
 - expected and observed lock modes and wait time;
 - transaction duration, WAL growth, replica lag, and storage headroom;
 - application compatibility before, during, and after the change;

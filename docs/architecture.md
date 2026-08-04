@@ -168,7 +168,11 @@ Migration 002 establishes finite temporal values, state coherence, the signed
 tenant authority, typed instrument measurements, custody history/CAS, and
 immutable outbox content. Migration 003 fixes privileged routine name resolution,
 removes direct worker delivery mutation, and introduces fenced outbox lease
-functions plus transition guards. A populated untracked baseline enters through a
-fresh-target restore and semantic comparison rehearsal rather than object-name
-inference. The complete adoption and evidence gates are documented in
+functions plus transition guards. Migration 004 retains that released history
+and narrows the current API to 1 through 900 integer seconds. A dedicated
+no-login authority enforces the complete transition matrix; append-only tenant
+relations preserve each attempt, outcome, transport receipt, and recovery
+release. A populated untracked baseline enters through a fresh-target restore
+and semantic comparison rehearsal rather than object-name inference. The
+complete adoption and evidence gates are documented in
 `docs/database-migrations.md`.

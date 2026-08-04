@@ -18,6 +18,7 @@ from lims_eln_implementation.security import tenant_context_signing_message
 ADMIN_DSN = os.environ.get("LIMS_TEST_POSTGRES_ADMIN_DSN")
 APP_DSN = os.environ.get("LIMS_TEST_POSTGRES_APP_DSN")
 OUTBOX_DSN = os.environ.get("LIMS_TEST_POSTGRES_OUTBOX_DSN")
+RECOVERY_DSN = os.environ.get("LIMS_TEST_POSTGRES_RECOVERY_DSN")
 HMAC_KEY_HEX = os.environ.get("LIMS_TEST_TENANT_HMAC_HEX")
 
 
@@ -64,7 +65,12 @@ def signed_context(
 
 
 @unittest.skipUnless(
-    ADMIN_DSN and APP_DSN and OUTBOX_DSN and HMAC_KEY_HEX and shutil.which("psql"),
+    ADMIN_DSN
+    and APP_DSN
+    and OUTBOX_DSN
+    and RECOVERY_DSN
+    and HMAC_KEY_HEX
+    and shutil.which("psql"),
     "configured PostgreSQL DSNs, synthetic HMAC key, and psql enable this proof",
 )
 class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
@@ -403,7 +409,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         changed = self.run_sql(
             ADMIN_DSN,
             "begin; select laboratory_security.bind_tenant_context(:'context'::jsonb); "
-            "set local role laboratory_owner; "
+            "set local role laboratory_outbox_authority; "
             "update transactional_outbox "
             "set payload = '{\"state\":\"changed\"}'::jsonb, "
             "payload_sha256 = encode(public.digest(convert_to("
@@ -457,7 +463,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             "lease_principal::text || '|' || lease_token::text || '|' || "
             "fencing_token::text "
             "from public.claim_outbox_delivery("
-            "'SYN-WORKER-A', interval '100 milliseconds'); commit;",
+            "'SYN-WORKER-A', 1); commit;",
             variables={"context": context},
         )
         claimed_fields = self.last_output_row(claimed).split("|")
@@ -466,7 +472,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         first_fence = int(claimed_fields[4])
         self.assertEqual(first_fence, 1)
 
-        time.sleep(0.2)
+        time.sleep(1.1)
         reclaimed = self.run_sql(
             OUTBOX_DSN,
             "begin; "
@@ -475,7 +481,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             "lease_principal::text || '|' || lease_token::text || '|' || "
             "fencing_token::text "
             "from public.reclaim_outbox_delivery("
-            ":'message', :fence, 'SYN-WORKER-B', interval '5 minutes'); commit;",
+            ":'message', :fence, 'SYN-WORKER-B', 300); commit;",
             variables={
                 "context": context,
                 "message": message_id,
@@ -497,7 +503,8 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             "begin; "
             "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
             "select delivery_state from public.confirm_outbox_delivery("
-            ":'message', 'SYN-WORKER-A', :'token'::uuid, :fence); commit;",
+            ":'message', 'SYN-WORKER-A', :'token'::uuid, :fence, "
+            "'SYN-BROKER', 'SYN-STALE-ACK'); commit;",
             variables={
                 "context": context,
                 "message": message_id,
@@ -516,7 +523,8 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             "select delivery_state || '|' || delivery_attempts::text || '|' || "
             "fencing_token::text || '|' || (delivered_at_utc is not null)::text "
             "from public.confirm_outbox_delivery("
-            ":'message', 'SYN-WORKER-B', :'token'::uuid, :fence); commit;",
+            ":'message', 'SYN-WORKER-B', :'token'::uuid, :fence, "
+            "'SYN-BROKER', 'SYN-ACK-SECOND-ATTEMPT'); commit;",
             variables={
                 "context": context,
                 "message": message_id,
@@ -525,6 +533,411 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             },
         )
         self.assertEqual(self.last_output_row(confirmed), "delivered|2|2|true")
+
+        attempt_evidence = self.run_sql(
+            OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select string_agg(attempt.attempt_number::text || ':' || "
+            "outcome.outcome_kind || ':' || "
+            "coalesce(outcome.transport_receipt, ''), ',' "
+            "order by attempt.attempt_number) "
+            "from public.outbox_delivery_attempt as attempt "
+            "join public.outbox_delivery_attempt_outcome as outcome "
+            "using (tenant_id, message_id, attempt_number) "
+            "where attempt.message_id = :'message'; commit;",
+            variables={"context": context, "message": message_id},
+        )
+        self.assertEqual(
+            self.last_output_row(attempt_evidence),
+            "1:lease_expired:,2:delivery_confirmed:SYN-ACK-SECOND-ATTEMPT",
+        )
+
+        immutable_attempt = self.run_sql(
+            ADMIN_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "set local role laboratory_outbox_authority; "
+            "update public.outbox_delivery_attempt "
+            "set worker_instance = 'SYN-REWRITTEN' "
+            "where tenant_id = :'tenant' and message_id = :'message' "
+            "and attempt_number = 1; commit;",
+            variables={
+                "context": context,
+                "tenant": self.outbox_tenant,
+                "message": message_id,
+            },
+            check=False,
+        )
+        self.assertNotEqual(immutable_attempt.returncode, 0)
+        self.assertIn("append-only", immutable_attempt.stderr.lower())
+
+    def test_outbox_lease_api_rejects_mixed_unit_interval_bypass(self) -> None:
+        assert OUTBOX_DSN is not None
+        context = signed_context(self.outbox_tenant)
+        bypass = self.run_sql(
+            OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select message_id from public.claim_outbox_delivery("
+            "'SYN-WORKER-INTERVAL', interval '1 month -30 days + 1 second'); "
+            "commit;",
+            variables={"context": context},
+            check=False,
+        )
+        self.assertNotEqual(bypass.returncode, 0)
+        self.assertIn("does not exist", bypass.stderr.lower())
+
+        over_limit = self.run_sql(
+            OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select message_id from public.claim_outbox_delivery("
+            "'SYN-WORKER-LONG', 901); commit;",
+            variables={"context": context},
+            check=False,
+        )
+        self.assertNotEqual(over_limit.returncode, 0)
+        self.assertIn("1..900 lease seconds", over_limit.stderr)
+
+    def test_outbox_transport_receipt_is_unique_within_tenant(self) -> None:
+        assert OUTBOX_DSN is not None
+        context = signed_context(self.outbox_tenant)
+        shared_receipt = "SYN-SHARED-ACK-" + uuid4().hex
+        leases: list[tuple[str, str, str]] = []
+        for sequence in (1, 2):
+            message_id = f"SYN-LIVE-RECEIPT-{sequence}-" + uuid4().hex
+            self.app_transaction(
+                context,
+                "insert into public.transactional_outbox ("
+                "tenant_id, message_id, topic, aggregate_id, aggregate_version, "
+                "payload, payload_sha256) values ('"
+                + self.outbox_tenant
+                + "', '"
+                + message_id
+                + "', 'synthetic.receipt', 'SYN-AGGREGATE', 1, "
+                "'{\"state\":\"ready\"}'::jsonb, "
+                "encode(public.digest(convert_to("
+                "'{\"state\":\"ready\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'))",
+            )
+            claimed = self.run_sql(
+                OUTBOX_DSN,
+                "begin; "
+                "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+                "select message_id || '|' || lease_token::text || '|' || "
+                "fencing_token::text from public.claim_outbox_delivery("
+                ":'worker', 300); commit;",
+                variables={
+                    "context": context,
+                    "worker": f"SYN-WORKER-RECEIPT-{sequence}",
+                },
+            )
+            message_value, token_value, fence_value = self.last_output_row(claimed).split("|")
+            self.assertEqual(message_value, message_id)
+            leases.append((message_value, token_value, fence_value))
+            if sequence == 1:
+                accepted = self.run_sql(
+                    OUTBOX_DSN,
+                    "begin; "
+                    "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+                    "select delivery_state from public.confirm_outbox_delivery("
+                    ":'message', :'worker', :'token'::uuid, :fence, "
+                    "'SYN-BROKER', :'receipt'); commit;",
+                    variables={
+                        "context": context,
+                        "message": message_value,
+                        "worker": f"SYN-WORKER-RECEIPT-{sequence}",
+                        "token": token_value,
+                        "fence": fence_value,
+                        "receipt": shared_receipt,
+                    },
+                )
+                self.assertEqual(self.last_output_row(accepted), "delivered")
+
+        second_message, second_token, second_fence = leases[1]
+        duplicate = self.run_sql(
+            OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select delivery_state from public.confirm_outbox_delivery("
+            ":'message', 'SYN-WORKER-RECEIPT-2', :'token'::uuid, :fence, "
+            "'SYN-BROKER', :'receipt'); commit;",
+            variables={
+                "context": context,
+                "message": second_message,
+                "token": second_token,
+                "fence": second_fence,
+                "receipt": shared_receipt,
+            },
+            check=False,
+        )
+        self.assertNotEqual(duplicate.returncode, 0)
+        self.assertIn("duplicate key", duplicate.stderr.lower())
+
+        completed = self.run_sql(
+            OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select delivery_state from public.confirm_outbox_delivery("
+            ":'message', 'SYN-WORKER-RECEIPT-2', :'token'::uuid, :fence, "
+            "'SYN-BROKER', :'receipt'); commit;",
+            variables={
+                "context": context,
+                "message": second_message,
+                "token": second_token,
+                "fence": second_fence,
+                "receipt": "SYN-DISTINCT-ACK-" + uuid4().hex,
+            },
+        )
+        self.assertEqual(self.last_output_row(completed), "delivered")
+
+    def test_outbox_initial_and_transition_authority_is_explicit(self) -> None:
+        assert APP_DSN is not None
+        assert ADMIN_DSN is not None
+        context = signed_context(self.outbox_tenant)
+        forged_message = "SYN-LIVE-FORGED-TERMINAL-" + uuid4().hex
+        forged_terminal = self.run_sql(
+            APP_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "insert into public.transactional_outbox ("
+            "tenant_id, message_id, topic, aggregate_id, aggregate_version, "
+            "payload, payload_sha256, delivery_state, delivery_attempts, "
+            "fencing_token, delivered_at_utc) values ("
+            ":'tenant', :'message', 'synthetic.forged', 'SYN-AGGREGATE', 1, "
+            "'{\"state\":\"forged\"}'::jsonb, "
+            "encode(public.digest(convert_to("
+            "'{\"state\":\"forged\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'), "
+            "'delivered', 1, 1, clock_timestamp()); commit;",
+            variables={
+                "context": context,
+                "tenant": self.outbox_tenant,
+                "message": forged_message,
+            },
+            check=False,
+        )
+        self.assertNotEqual(forged_terminal.returncode, 0)
+        self.assertIn("permission denied", forged_terminal.stderr.lower())
+
+        authority_null_state = self.run_sql(
+            ADMIN_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "set local role laboratory_outbox_authority; "
+            "insert into public.transactional_outbox ("
+            "tenant_id, message_id, topic, aggregate_id, aggregate_version, "
+            "payload, payload_sha256, delivery_state, delivery_attempts, "
+            "fencing_token, last_error_code) values ("
+            ":'tenant', :'message', 'synthetic.null-state', 'SYN-AGGREGATE', 1, "
+            "'{\"state\":\"recovery_required\"}'::jsonb, "
+            "encode(public.digest(convert_to("
+            "'{\"state\":\"recovery_required\"}'::jsonb::text, 'UTF8'), "
+            "'sha256'), 'hex'), 'recovery_required', 1, 1, null); commit;",
+            variables={
+                "context": context,
+                "tenant": self.outbox_tenant,
+                "message": "SYN-LIVE-NULL-STATE-" + uuid4().hex,
+            },
+            check=False,
+        )
+        self.assertNotEqual(authority_null_state.returncode, 0)
+        self.assertIn("begins in the ready state", authority_null_state.stderr.lower())
+
+        ready_message = "SYN-LIVE-ILLEGAL-TRANSITION-" + uuid4().hex
+        self.app_transaction(
+            context,
+            "insert into public.transactional_outbox ("
+            "tenant_id, message_id, topic, aggregate_id, aggregate_version, "
+            "payload, payload_sha256, available_at_utc) values ('"
+            + self.outbox_tenant
+            + "', '"
+            + ready_message
+            + "', 'synthetic.transition', 'SYN-AGGREGATE', 1, "
+            "'{\"state\":\"ready\"}'::jsonb, "
+            "encode(public.digest(convert_to("
+            "'{\"state\":\"ready\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'), "
+            "'2035-01-01T00:00:00Z')",
+        )
+        illegal_recovery = self.run_sql(
+            ADMIN_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "set local role laboratory_outbox_authority; "
+            "update public.transactional_outbox "
+            "set delivery_state = 'recovery_required', delivery_attempts = 1, "
+            "fencing_token = 1, last_error_code = 'SYN.FORGED' "
+            "where tenant_id = :'tenant' and message_id = :'message'; commit;",
+            variables={
+                "context": context,
+                "tenant": self.outbox_tenant,
+                "message": ready_message,
+            },
+            check=False,
+        )
+        self.assertNotEqual(illegal_recovery.returncode, 0)
+        self.assertIn("released state-machine edge", illegal_recovery.stderr.lower())
+
+    def test_outbox_failure_and_recovery_are_governed_and_reconstructable(self) -> None:
+        assert OUTBOX_DSN is not None
+        assert RECOVERY_DSN is not None
+        assert ADMIN_DSN is not None
+        message_id = "SYN-LIVE-RECOVERY-" + uuid4().hex
+        context = signed_context(self.outbox_tenant)
+        self.app_transaction(
+            context,
+            "insert into public.transactional_outbox ("
+            "tenant_id, message_id, topic, aggregate_id, aggregate_version, "
+            "payload, payload_sha256) values ('"
+            + self.outbox_tenant
+            + "', '"
+            + message_id
+            + "', 'synthetic.recovery', 'SYN-AGGREGATE', 1, "
+            "'{\"state\":\"ready\"}'::jsonb, "
+            "encode(public.digest(convert_to("
+            "'{\"state\":\"ready\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'))",
+        )
+
+        claimed = self.run_sql(
+            OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select message_id || '|' || lease_token::text || '|' || "
+            "fencing_token::text from public.claim_outbox_delivery("
+            "'SYN-WORKER-RECOVERY', 300); commit;",
+            variables={"context": context},
+        )
+        claimed_fields = self.last_output_row(claimed).split("|")
+        self.assertEqual(claimed_fields[0], message_id)
+        first_token = claimed_fields[1]
+        first_fence = claimed_fields[2]
+
+        authority_null_outcome = self.run_sql(
+            ADMIN_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "set local role laboratory_outbox_authority; "
+            "insert into public.outbox_delivery_attempt_outcome ("
+            "tenant_id, message_id, attempt_number, outcome_kind, closed_at_utc) "
+            "values (:'tenant', :'message', 1, 'delivery_confirmed', "
+            "clock_timestamp()); commit;",
+            variables={
+                "context": context,
+                "tenant": self.outbox_tenant,
+                "message": message_id,
+            },
+            check=False,
+        )
+        self.assertNotEqual(authority_null_outcome.returncode, 0)
+        self.assertIn(
+            "outbox_delivery_attempt_outcome_check",
+            authority_null_outcome.stderr,
+        )
+
+        failed = self.run_sql(
+            OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select delivery_state || '|' || last_error_code "
+            "from public.fail_outbox_delivery("
+            ":'message', 'SYN-WORKER-RECOVERY', :'token'::uuid, :fence, "
+            "'BROKER.UNAVAILABLE'); commit;",
+            variables={
+                "context": context,
+                "message": message_id,
+                "token": first_token,
+                "fence": first_fence,
+            },
+        )
+        self.assertEqual(
+            self.last_output_row(failed),
+            "recovery_required|BROKER.UNAVAILABLE",
+        )
+
+        arbitrary_ready = self.run_sql(
+            ADMIN_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "set local role laboratory_outbox_authority; "
+            "update public.transactional_outbox "
+            "set delivery_state = 'ready', last_error_code = null "
+            "where tenant_id = :'tenant' and message_id = :'message'; commit;",
+            variables={
+                "context": context,
+                "tenant": self.outbox_tenant,
+                "message": message_id,
+            },
+            check=False,
+        )
+        self.assertNotEqual(arbitrary_ready.returncode, 0)
+        self.assertIn("immutable release decision", arbitrary_ready.stderr.lower())
+
+        released = self.run_sql(
+            RECOVERY_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select delivery_state || '|' || (last_error_code is null)::text "
+            "from public.release_outbox_recovery("
+            ":'message', :fence, 0, 'SYN-INCIDENT-0042'); commit;",
+            variables={
+                "context": context,
+                "message": message_id,
+                "fence": first_fence,
+            },
+        )
+        self.assertEqual(self.last_output_row(released), "ready|true")
+
+        reclaimed = self.run_sql(
+            OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select message_id || '|' || lease_token::text || '|' || "
+            "fencing_token::text from public.claim_outbox_delivery("
+            "'SYN-WORKER-RECOVERED', 300); commit;",
+            variables={"context": context},
+        )
+        reclaimed_fields = self.last_output_row(reclaimed).split("|")
+        self.assertEqual(reclaimed_fields[0], message_id)
+        second_token = reclaimed_fields[1]
+        second_fence = reclaimed_fields[2]
+        self.assertEqual(int(second_fence), int(first_fence) + 1)
+
+        confirmed = self.run_sql(
+            OUTBOX_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select delivery_state from public.confirm_outbox_delivery("
+            ":'message', 'SYN-WORKER-RECOVERED', :'token'::uuid, :fence, "
+            "'SYN-BROKER', 'SYN-ACK-AFTER-RECOVERY'); commit;",
+            variables={
+                "context": context,
+                "message": message_id,
+                "token": second_token,
+                "fence": second_fence,
+            },
+        )
+        self.assertEqual(self.last_output_row(confirmed), "delivered")
+
+        evidence = self.run_sql(
+            RECOVERY_DSN,
+            "begin; "
+            "select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "select (select count(*) from public.outbox_delivery_attempt "
+            "where message_id = :'message')::text || '|' || "
+            "(select count(*) from public.outbox_delivery_attempt_outcome "
+            "where message_id = :'message')::text || '|' || "
+            "(select recovery_reference || ':' || released_by::text "
+            "from public.outbox_recovery_release "
+            "where message_id = :'message') || '|' || "
+            "(select transport_receipt from public.outbox_delivery_attempt_outcome "
+            "where message_id = :'message' "
+            "and outcome_kind = 'delivery_confirmed'); commit;",
+            variables={"context": context, "message": message_id},
+        )
+        self.assertEqual(
+            self.last_output_row(evidence),
+            "2|2|SYN-INCIDENT-0042:laboratory_outbox_recovery_operator|"
+            "SYN-ACK-AFTER-RECOVERY",
+        )
 
 
 if __name__ == "__main__":

@@ -62,6 +62,7 @@ jobs:
       LIMS_TEST_POSTGRES_ADMIN_DSN: postgresql://laboratory_bootstrap:synthetic-ci-bootstrap-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_APP_DSN: postgresql://laboratory_app:synthetic-ci-app-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_OUTBOX_DSN: postgresql://laboratory_outbox_worker:synthetic-ci-outbox-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_RECOVERY_DSN: postgresql://laboratory_outbox_recovery_operator:synthetic-ci-recovery-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_DSN: postgresql://laboratory_app:synthetic-ci-app-password@127.0.0.1:5432/laboratory
       LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
@@ -92,6 +93,8 @@ jobs:
           psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc --set ON_ERROR_STOP=1 <<'SQL'
           alter role laboratory_app password 'synthetic-ci-app-password';
           alter role laboratory_outbox_worker password 'synthetic-ci-outbox-password';
+          alter role laboratory_outbox_recovery_operator
+              password 'synthetic-ci-recovery-password';
           insert into laboratory_security.tenant_context_key (
               key_id, secret_material, valid_from_utc, valid_until_utc
           ) values (
@@ -105,10 +108,59 @@ jobs:
       - name: Prove live tenant, custody, and outbox invariants
         run: python3 -m unittest tests.test_postgres_integration -v
 
+  postgres-upgrade:
+    name: PostgreSQL 17 migration 003 to 004 upgrade and replay proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+        env:
+          POSTGRES_DB: laboratory
+          POSTGRES_USER: laboratory_bootstrap
+          POSTGRES_PASSWORD: synthetic-ci-bootstrap-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U laboratory_bootstrap -d laboratory"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      LIMS_TEST_POSTGRES_ADMIN_DSN: postgresql://laboratory_bootstrap:synthetic-ci-bootstrap-password@127.0.0.1:5432/laboratory
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Select Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+          cache: ""
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+
+      - name: Apply historical head then successor and replay
+        run: |
+          python3 scripts/apply_database_migrations.py \
+            --manifest database/migration-manifest-through-003.json \
+            --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN"
+          python3 scripts/apply_database_migrations.py \
+            --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN"
+          python3 scripts/apply_database_migrations.py \
+            --dsn "$LIMS_TEST_POSTGRES_ADMIN_DSN"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command 'select count(*) from laboratory_migration.applied_migration')" = "4"
+
   implementation-validation:
     name: implementation-validation
     if: ${{ always() }}
-    needs: [validate, postgres-invariants]
+    needs: [validate, postgres-invariants, postgres-upgrade]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
 
@@ -117,9 +169,11 @@ jobs:
         env:
           VALIDATE_RESULT: ${{ needs.validate.result }}
           POSTGRES_RESULT: ${{ needs.postgres-invariants.result }}
+          POSTGRES_UPGRADE_RESULT: ${{ needs.postgres-upgrade.result }}
         run: >-
           test "$VALIDATE_RESULT" = "success"
           && test "$POSTGRES_RESULT" = "success"
+          && test "$POSTGRES_UPGRADE_RESULT" = "success"
 
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1

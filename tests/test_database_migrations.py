@@ -24,11 +24,24 @@ class DatabaseMigrationTests(unittest.TestCase):
         migrations = apply_database_migrations.load_manifest()
         self.assertEqual(
             tuple(item.migration_id for item in migrations),
-            ("001", "002", "003"),
+            ("001", "002", "003", "004"),
         )
         self.assertEqual(
             {item.path for item in migrations},
             set((ROOT / "sql").glob("[0-9][0-9][0-9]_*.sql")),
+        )
+
+    def test_historical_manifest_preserves_the_migration_003_upgrade_head(self) -> None:
+        migrations = apply_database_migrations.load_manifest(
+            ROOT / "database" / "migration-manifest-through-003.json"
+        )
+        self.assertEqual(
+            tuple(item.migration_id for item in migrations),
+            ("001", "002", "003"),
+        )
+        self.assertEqual(
+            migrations[-1].sha256_hex,
+            "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
         )
 
     def test_runner_owns_lock_transaction_drift_guard_and_history_write(self) -> None:
