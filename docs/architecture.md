@@ -184,10 +184,11 @@ isolated `laboratory_outbox_authority`. The schema owner receives a single
 `ADMIN FALSE, INHERIT FALSE, SET TRUE` membership so it can perform PostgreSQL's
 required ownership transfer. Both roles remain `NOLOGIN NOBYPASSRLS`, and
 `INHERIT FALSE` keeps the transfer capability distinct from ambient runtime
-authority. V004 grants the destination role schema creation only across the
-ownership statements and revokes it before commit. Static and hosted catalog
-proofs verify the exact role edge, final table and routine owners, and absence
-of schema-creation privilege on clean and successor paths.
+authority. V004 settles object access controls and triggers under the migration
+owner, then transfers ownership while the destination role has its bounded
+schema capability and revokes that capability before commit. Static and hosted
+catalog proofs verify the ordering, exact role edge, final table and routine
+owners, and absence of schema-creation privilege on clean and successor paths.
 
 Forced row-level security remains active during migration. Every tenant table
 has a second permissive policy scoped to `laboratory_owner` whose predicate

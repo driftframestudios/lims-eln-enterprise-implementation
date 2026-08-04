@@ -52,7 +52,7 @@
     },
     {
       "path": "sql/V004__outbox_attempt_evidence_and_recovery.sql",
-      "sha256": "1919a40379f289007dea305c85fe034ec1744caf4a6122d1783072ad170ad5f1",
+      "sha256": "4e0da83006ae760dee97db1023fd857927f2ec35d638c37922f404492ede9ee4",
       "responsibility": "coherent measurement scale, complete inbox and custody lineage, integer-second lease authority, complete outbox transition control, immutable attempt and outcome evidence, bounded transport receipts, and governed recovery release"
     }
   ],

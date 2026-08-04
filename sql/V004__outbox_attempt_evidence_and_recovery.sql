@@ -374,13 +374,6 @@ create trigger outbox_recovery_release_append_only
 before update or delete on public.outbox_recovery_release
 for each row execute function public.preserve_append_only_record();
 
-grant create on schema public to laboratory_outbox_authority;
-
-alter table public.outbox_delivery_attempt owner to laboratory_outbox_authority;
-alter table public.outbox_delivery_attempt_outcome owner to laboratory_outbox_authority;
-alter table public.outbox_recovery_release owner to laboratory_outbox_authority;
-alter table public.transactional_outbox owner to laboratory_outbox_authority;
-
 revoke all privileges on public.transactional_outbox from laboratory_app;
 grant select on public.transactional_outbox to laboratory_app;
 grant insert (
@@ -604,8 +597,6 @@ begin
 end;
 $transition_guard$;
 
-alter function public.preserve_outbox_delivery_transition()
-    owner to laboratory_outbox_authority;
 revoke all on function public.preserve_outbox_delivery_transition() from public;
 
 create trigger transactional_outbox_delivery_transition
@@ -1133,19 +1124,6 @@ begin
 end;
 $release_recovery$;
 
-alter function public.claim_outbox_delivery(text, integer)
-    owner to laboratory_outbox_authority;
-alter function public.reclaim_outbox_delivery(text, bigint, text, integer)
-    owner to laboratory_outbox_authority;
-alter function public.confirm_outbox_delivery(text, text, uuid, bigint, text, text)
-    owner to laboratory_outbox_authority;
-alter function public.fail_outbox_delivery(text, text, uuid, bigint, text)
-    owner to laboratory_outbox_authority;
-alter function public.release_outbox_recovery(text, bigint, integer, text)
-    owner to laboratory_outbox_authority;
-
-revoke create on schema public from laboratory_outbox_authority;
-
 revoke all on function public.claim_outbox_delivery(text, integer) from public;
 revoke all on function public.reclaim_outbox_delivery(text, bigint, text, integer)
     from public;
@@ -1173,3 +1151,25 @@ grant execute on function public.fail_outbox_delivery(
 grant execute on function public.release_outbox_recovery(
     text, bigint, integer, text
 ) to laboratory_outbox_recovery_operator;
+
+grant create on schema public to laboratory_outbox_authority;
+
+alter table public.outbox_delivery_attempt owner to laboratory_outbox_authority;
+alter table public.outbox_delivery_attempt_outcome owner to laboratory_outbox_authority;
+alter table public.outbox_recovery_release owner to laboratory_outbox_authority;
+alter table public.transactional_outbox owner to laboratory_outbox_authority;
+
+alter function public.preserve_outbox_delivery_transition()
+    owner to laboratory_outbox_authority;
+alter function public.claim_outbox_delivery(text, integer)
+    owner to laboratory_outbox_authority;
+alter function public.reclaim_outbox_delivery(text, bigint, text, integer)
+    owner to laboratory_outbox_authority;
+alter function public.confirm_outbox_delivery(text, text, uuid, bigint, text, text)
+    owner to laboratory_outbox_authority;
+alter function public.fail_outbox_delivery(text, text, uuid, bigint, text)
+    owner to laboratory_outbox_authority;
+alter function public.release_outbox_recovery(text, bigint, integer, text)
+    owner to laboratory_outbox_authority;
+
+revoke create on schema public from laboratory_outbox_authority;

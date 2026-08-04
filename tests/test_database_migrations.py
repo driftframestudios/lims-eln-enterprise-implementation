@@ -162,9 +162,22 @@ class DatabaseMigrationTests(unittest.TestCase):
         function_transfer_index = migration.index(
             "alter function public.release_outbox_recovery(text, bigint, integer, text)"
         )
+        table_acl_index = migration.index(
+            "revoke all privileges on public.transactional_outbox "
+            "from laboratory_app;"
+        )
+        trigger_index = migration.index(
+            "create trigger transactional_outbox_delivery_transition"
+        )
+        function_acl_index = migration.index(
+            "grant execute on function public.release_outbox_recovery("
+        )
         revoke_index = migration.index(
             "revoke create on schema public from laboratory_outbox_authority;"
         )
+        self.assertLess(table_acl_index, trigger_index)
+        self.assertLess(trigger_index, grant_index)
+        self.assertLess(function_acl_index, grant_index)
         self.assertLess(grant_index, table_transfer_index)
         self.assertLess(table_transfer_index, function_transfer_index)
         self.assertLess(function_transfer_index, revoke_index)
