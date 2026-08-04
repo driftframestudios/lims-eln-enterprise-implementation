@@ -14,7 +14,6 @@
     "governance_schema": "2.0.1",
     "control_plane_profile": "0.3.0",
     "postgresql": "17.10",
-    "database_migration_head": "004",
     "tenant_authority": "signed_short_lived_database_verified_context"
   },
   "scenario_ids": [
@@ -29,8 +28,7 @@
   ],
   "artifact_digests": [
     "sha256:e6590446725c47231817bc43a478851e739617f1870bf3a5d7c1e36e3e5bc87e",
-    "sha256:3010d543594ef98e5873e2753cd7531e5a94e0922698d4ad04ae55a811a1691c",
-    "sha256:9105cc92e7e0d2c166e179411bfe5d2a2bd1f35150fd640ae157ac9ef5cbad07"
+    "sha256:8c19e5735c2635e2501f5e03084207a04fea4b53a878be45685e37e85d81989f"
   ],
   "observed_at": "2026-08-04T12:00:00Z",
   "performer_id": "SYN-AUTOMATION-RUNNER",

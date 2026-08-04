@@ -5,25 +5,41 @@
 Flyway Community 13.0.0 owns migration discovery, ordering, locking, transaction
 boundaries, applied history, checksum validation, status, and replay behavior.
 `database/flyway-release.json` pins the exact open-source Alpine image by version
-and multi-architecture digest. `database/flyway-artifact-inventory.json` binds
-the configuration, callback, cluster-role prerequisite, and every
-V001-through-V004 migration by individual SHA-256 plus an ordered aggregate
-SHA-256. The release manifest binds both the
-inventory file and aggregate, creating one independently reviewable release
-coordinate while Flyway continues to own applied history and mechanics.
-The aggregate canonicalization emits each inventory entry in listed order as
-UTF-8 `path`, one NUL byte, the lowercase hexadecimal SHA-256, and one LF byte,
-then hashes the complete byte stream.
+and multi-architecture digest. Flyway's schema history and `validate` command
+remain the checksum authority. The application release describes the migration
+policy and stays independent of the database deployment's currently applied
+version set.
 `flyway.conf` keeps the operational controls in reviewable source:
 
-- versioned migrations follow `V###__description.sql`;
+- the applied V001-through-V004 files retain their published names and bytes;
+- successor versioned migrations use UTC timestamps such as
+  `V20260804164600__add_specimen_alias.sql`;
 - `validateOnMigrate=true` and `validateMigrationNaming=true` surface drift;
-- `outOfOrder=false` preserves released order;
+- `outOfOrder=true` admits a late-arriving lower timestamp from parallel work;
 - `cleanDisabled=true` protects maintained environments;
 - `baselineOnMigrate=false` makes adoption an explicit, attested operation;
 - `group=false` gives each PostgreSQL-compatible migration its own transaction;
 - `mixed=false` keeps transaction-incompatible SQL on a separately reviewed
   path.
+
+Versioned migrations carry tables, columns, constraints, indexes, and data
+repairs forward. Repeatable `R__description.sql` migrations fit replaceable
+views, functions, and procedures whose definitions are idempotent. Flyway runs
+repeatables after pending versioned migrations whenever their checksum changes.
+
+Parallel changes remain independently deployable. Schema evolution uses
+expand, transition, and contract: a compatible expansion lands first, readers
+and writers move while both representations coexist, and a later timestamped
+migration removes the retired representation after observation. Out-of-order
+execution absorbs merge timing; this compatibility pattern keeps each migration
+safe in every reachable application state.
+
+CI creates ephemeral PostgreSQL databases, applies the resolved migration set,
+runs `validate`, replays `migrate`, and exercises a late timestamp arriving
+after a higher timestamp. The targeted V003-to-V004 rehearsal remains a
+business-data compatibility regression rather than a global sequencing rule.
+`repair` is reserved for a diagnosed recovery action in the deployment
+pipeline, using the same migration locations and a retained incident record.
 
 Privileged provisioning applies `ALTER ROLE laboratory_migrator IN DATABASE
 <target> SET role TO laboratory_owner`. PostgreSQL applies that database-scoped
@@ -62,8 +78,8 @@ docker run --rm --network host \
   -configFiles=/flyway/project/flyway.conf migrate
 ```
 
-Release automation follows `migrate`, `validate`, and `info`. A second
-`migrate` proves that the released head is a no-op. Flyway's
+Database deployment automation follows `migrate`, `validate`, and `info`. A
+second `migrate` proves that the resolved set is a no-op. Flyway's
 `flyway_schema_history` table is the applied-history authority.
 
 Cluster roles live outside Flyway because they span databases. A privileged

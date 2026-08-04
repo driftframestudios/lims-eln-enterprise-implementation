@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 import json
 import os
@@ -57,7 +56,7 @@ class SqlTenantStructureTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.sql = "\n".join(
             path.read_text(encoding="utf-8")
-            for path in sorted((ROOT / "sql").glob("V[0-9][0-9][0-9]__*.sql"))
+            for path in sorted((ROOT / "sql").glob("V*__*.sql"))
         ).lower()
 
     def test_every_tenant_table_enables_and_forces_row_level_security(self) -> None:
@@ -429,16 +428,16 @@ class SqlTenantStructureTests(unittest.TestCase):
             migration,
         )
 
-    def test_migration_003_remains_immutable_and_004_is_successor(self) -> None:
-        migration_003 = ROOT / "sql" / "V003__trusted_routines_and_outbox_cas.sql"
-        self.assertEqual(
-            hashlib.sha256(migration_003.read_bytes()).hexdigest(),
-            "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
-        )
+    def test_legacy_migrations_remain_the_stable_prefix(self) -> None:
         migrations = sorted((ROOT / "sql").glob("V*__*.sql"))
         self.assertEqual(
-            [path.name.split("__", 1)[0] for path in migrations],
-            ["V001", "V002", "V003", "V004"],
+            [path.name for path in migrations[:4]],
+            [
+                "V001__laboratory_core.sql",
+                "V002__principal_data_boundaries.sql",
+                "V003__trusted_routines_and_outbox_cas.sql",
+                "V004__outbox_attempt_evidence_and_recovery.sql",
+            ],
         )
 
     def test_security_definer_data_objects_are_schema_qualified(self) -> None:

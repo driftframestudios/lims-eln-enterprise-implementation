@@ -4,7 +4,7 @@
   "repository_release": "0.3.1",
   "external_release": "implementation-v0.3.1",
   "bounded_caller_binding_digest": "sha256:e6590446725c47231817bc43a478851e739617f1870bf3a5d7c1e36e3e5bc87e",
-  "database_flyway_release_digest": "sha256:3010d543594ef98e5873e2753cd7531e5a94e0922698d4ad04ae55a811a1691c",
+  "database_flyway_release_digest": "sha256:8c19e5735c2635e2501f5e03084207a04fea4b53a878be45685e37e85d81989f",
   "open_receipt_ledger_digest": "sha256:f5ec4399b7ba43ce2bbc6260c0eb223c1fc8e405a9e5b13fd71ca806fd709421",
   "selected_future_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
   "first_receipt_contract": {

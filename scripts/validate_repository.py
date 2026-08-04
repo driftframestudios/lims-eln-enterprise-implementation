@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import ast
+from datetime import datetime
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -57,6 +58,18 @@ CANONICAL_RECEIPT_FAMILIES = (
 )
 CANONICAL_SELECTED_FUTURE_CLOSURE_DIGEST = (
     "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb"
+)
+VERSIONED_MIGRATION_NAME = re.compile(
+    r"^V(?P<version>(?:[0-9]{3}|[0-9]{14}))__[a-z0-9]+(?:_[a-z0-9]+)*\.sql$"
+)
+REPEATABLE_MIGRATION_NAME = re.compile(
+    r"^R__[a-z0-9]+(?:_[a-z0-9]+)*\.sql$"
+)
+LEGACY_MIGRATION_NAMES = (
+    "V001__laboratory_core.sql",
+    "V002__principal_data_boundaries.sql",
+    "V003__trusted_routines_and_outbox_cas.sql",
+    "V004__outbox_attempt_evidence_and_recovery.sql",
 )
 
 
@@ -171,50 +184,18 @@ def validate_manifests() -> None:
         raise AssertionError(
             "Flyway release requires its cluster-role prerequisite digest"
         )
-    inventory_reference = migration_release.get("artifact_inventory", {})
-    inventory_path = ROOT / inventory_reference.get("path", "")
-    if (
-        inventory_reference.get("path")
-        != "database/flyway-artifact-inventory.json"
-        or inventory_reference.get("sha256")
-        != sha256(inventory_path.read_bytes()).hexdigest()
+    if migration_release.get("deployment_cadence") != (
+        "independent_from_application_releases"
     ):
-        raise AssertionError("Flyway release requires its artifact inventory digest")
-    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
-    expected_artifact_paths = [
-        "flyway.conf",
-        "sql/afterConnect.sql",
-        "database/provision_cluster_roles.sql",
-        "sql/V001__laboratory_core.sql",
-        "sql/V002__principal_data_boundaries.sql",
-        "sql/V003__trusted_routines_and_outbox_cas.sql",
-        "sql/V004__outbox_attempt_evidence_and_recovery.sql",
-    ]
-    if (
-        inventory.get("schema_version") != "1.0.0"
-        or inventory.get("canonicalization")
-        != "ordered-path-nul-sha256-lf-v1"
-        or [artifact.get("path") for artifact in inventory.get("artifacts", [])]
-        != expected_artifact_paths
-    ):
-        raise AssertionError("Flyway inventory requires the complete ordered artifact set")
-    for artifact in inventory["artifacts"]:
-        if artifact.get("sha256") != sha256(
-            (ROOT / artifact["path"]).read_bytes()
-        ).hexdigest():
-            raise AssertionError(
-                f"Flyway artifact digest differs for {artifact['path']}"
-            )
-    inventory_payload = "".join(
-        f"{artifact['path']}\0{artifact['sha256']}\n"
-        for artifact in inventory["artifacts"]
-    ).encode("utf-8")
-    inventory_aggregate = "sha256:" + sha256(inventory_payload).hexdigest()
-    if (
-        inventory.get("aggregate_sha256") != inventory_aggregate
-        or inventory_reference.get("aggregate_sha256") != inventory_aggregate
-    ):
-        raise AssertionError("Flyway inventory requires its aggregate binding")
+        raise AssertionError("database migrations require an independent cadence")
+    if migration_release.get("versioning") != {
+        "legacy_versions": "V001-through-V004",
+        "successor_format": "VyyyyMMddHHmmss__description.sql",
+        "clock": "UTC",
+    }:
+        raise AssertionError("Flyway successor migrations require UTC timestamp versions")
+    if "migration_head" in migration_release or "artifact_inventory" in migration_release:
+        raise AssertionError("Flyway history owns applied versions and checksums")
 
     flyway_config_path = ROOT / database.get("migration_configuration", "")
     flyway_config = dict(
@@ -226,7 +207,7 @@ def validate_manifests() -> None:
         "flyway.locations": "filesystem:sql",
         "flyway.validateMigrationNaming": "true",
         "flyway.validateOnMigrate": "true",
-        "flyway.outOfOrder": "false",
+        "flyway.outOfOrder": "true",
         "flyway.cleanDisabled": "true",
         "flyway.baselineOnMigrate": "false",
         "flyway.group": "false",
@@ -273,11 +254,47 @@ def validate_manifests() -> None:
     }.issubset(dockerignore):
         raise AssertionError("container context requires the released exclusion boundary")
 
-    migrations = sorted((ROOT / "sql").glob("V[0-9][0-9][0-9]__*.sql"))
-    migration_ids = [path.name[1:4] for path in migrations]
-    if migration_ids != ["001", "002", "003", "004"]:
-        raise AssertionError("Flyway migrations require the released ordered sequence")
-    for migration in migrations:
+    migrations: list[tuple[int, Path]] = []
+    for path in (ROOT / "sql").glob("V*__*.sql"):
+        match = VERSIONED_MIGRATION_NAME.fullmatch(path.name)
+        if match is None:
+            raise AssertionError(f"Flyway versioned migration name is invalid: {path.name}")
+        version = match.group("version")
+        if len(version) == 3:
+            if path.name not in LEGACY_MIGRATION_NAMES:
+                raise AssertionError(
+                    f"Flyway successor migration requires a UTC timestamp: {path.name}"
+                )
+        else:
+            try:
+                parsed = datetime.strptime(version, "%Y%m%d%H%M%S")
+            except ValueError as error:
+                raise AssertionError(
+                    f"Flyway migration timestamp is invalid: {path.name}"
+                ) from error
+            if parsed.strftime("%Y%m%d%H%M%S") != version:
+                raise AssertionError(f"Flyway migration timestamp is invalid: {path.name}")
+        migrations.append((int(version), path))
+    migrations.sort(key=lambda item: item[0])
+    if tuple(path.name for _, path in migrations[:4]) != LEGACY_MIGRATION_NAMES:
+        raise AssertionError("Flyway requires the immutable V001-through-V004 history")
+    if len({version for version, _ in migrations}) != len(migrations):
+        raise AssertionError("Flyway migration versions require unique coordinates")
+    repeatables = sorted((ROOT / "sql").glob("R__*.sql"))
+    for path in repeatables:
+        if REPEATABLE_MIGRATION_NAME.fullmatch(path.name) is None:
+            raise AssertionError(f"Flyway repeatable migration name is invalid: {path.name}")
+    discovered = {path.name for _, path in migrations} | {
+        path.name for path in repeatables
+    }
+    candidates = {
+        path.name
+        for path in (ROOT / "sql").glob("*.sql")
+        if path.name != "afterConnect.sql"
+    }
+    if discovered != candidates:
+        raise AssertionError("Flyway SQL requires a versioned or repeatable migration name")
+    for _, migration in migrations:
         sql = migration.read_text(encoding="utf-8")
         if re.search(
             r"^\s*(?:begin|commit|rollback)\s*;",
@@ -294,10 +311,12 @@ def validate_manifests() -> None:
     migration_release_digest = file_digest(migration_release_path)
     if database.get("migration_release_digest") != migration_release_digest:
         raise AssertionError("release manifest requires the Flyway release digest")
-    if migration_release.get("migration_head") != migration_ids[-1]:
-        raise AssertionError("Flyway release requires the current migration head")
-    if database.get("migration_head") != migration_ids[-1]:
-        raise AssertionError("release manifest requires the current migration head")
+    if database.get("migration_deployment_cadence") != (
+        "independent_from_application_releases"
+    ):
+        raise AssertionError("application and database releases require independent cadence")
+    if "migration_head" in database:
+        raise AssertionError("application releases remain independent of migration head")
     if database.get("tenant_authority") != (
         "signed_short_lived_database_verified_context"
     ):
@@ -460,15 +479,8 @@ def validate_manifests() -> None:
         raise AssertionError(
             "local verification receipt requires the Flyway release digest"
         )
-    inventory_digest = file_digest(inventory_path)
-    if inventory_digest not in receipt["artifact_digests"]:
-        raise AssertionError(
-            "local verification receipt requires the Flyway inventory digest"
-        )
-    if receipt["version_bindings"].get("database_migration_head") != database.get(
-        "migration_head"
-    ):
-        raise AssertionError("local verification receipt requires the migration head")
+    if "database_migration_head" in receipt["version_bindings"]:
+        raise AssertionError("local application receipts remain independent of migration head")
 
     hosted_receipt = json.loads(
         (ROOT / "receipts" / "hosted-postgresql-proof.json").read_text(
@@ -489,8 +501,6 @@ def validate_manifests() -> None:
     hosted_bindings = hosted_receipt.get("version_bindings", {})
     if (
         hosted_bindings.get("repository") != manifest["version"]
-        or hosted_bindings.get("database_migration_head")
-        != database.get("migration_head")
     ):
         raise AssertionError(
             "hosted PostgreSQL receipt requires its observed release coordinate"
@@ -528,7 +538,6 @@ def validate_manifests() -> None:
         current_digests = {
             binding_digest,
             migration_release_digest,
-            inventory_digest,
         }
         if (
             re.fullmatch(r"[a-f0-9]{40}", observed_commit) is None
@@ -547,7 +556,7 @@ def validate_manifests() -> None:
             )
         current_scenarios = {
             "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",
-            "SCN-DB-FLYWAY-ARTIFACT-INVENTORY",
+            "SCN-DB-FLYWAY-OUT-OF-ORDER",
             "SCN-DB-MIGRATION-CLEAN-UPGRADE-CONVERGENCE",
             "SCN-DB-MEASUREMENT-COMPLETE-LINEAGE",
             "SCN-DB-CUSTODY-COMPLETE-EVENT-BINDING",

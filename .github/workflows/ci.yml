@@ -86,6 +86,55 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install --yes postgresql-client
 
+      - name: Prove timestamped out-of-order migration discovery
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
+        run: |
+          psql postgresql://laboratory_bootstrap@127.0.0.1:5432/postgres \
+            --no-psqlrc --set ON_ERROR_STOP=1 \
+            --command="create database flyway_order_probe"
+          probe_dir="$RUNNER_TEMP/flyway-order-probe"
+          mkdir -p "$probe_dir"
+          printf '%s\n' \
+            'create table public.later_parallel_change (id bigint primary key);' \
+            > "$probe_dir/V20260804170000__later_parallel_change.sql"
+
+          run_probe() {
+            docker run --rm --network host \
+              --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
+              --volume "$probe_dir:/flyway/probe:ro" \
+              --env FLYWAY_URL=jdbc:postgresql://127.0.0.1:5432/flyway_order_probe \
+              --env FLYWAY_USER=laboratory_bootstrap \
+              --env FLYWAY_PASSWORD=synthetic-ci-bootstrap-password \
+              "$FLYWAY_IMAGE" \
+              -workingDirectory=/flyway/project \
+              -configFiles=/flyway/project/flyway.conf \
+              -locations=filesystem:/flyway/probe "$@"
+          }
+
+          run_probe migrate
+          printf '%s\n' \
+            'create table public.earlier_parallel_change (id bigint primary key);' \
+            > "$probe_dir/V20260804160000__earlier_parallel_change.sql"
+          run_probe migrate
+          run_probe validate
+          run_probe info
+
+          test "$(psql \
+            postgresql://laboratory_bootstrap@127.0.0.1:5432/flyway_order_probe \
+            --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select coalesce((
+              select installed_rank
+              from public.flyway_schema_history
+              where version = '20260804160000' and success
+            ) > (
+              select installed_rank
+              from public.flyway_schema_history
+              where version = '20260804170000' and success
+            ) and pg_catalog.to_regclass('public.earlier_parallel_change') is not null
+              and pg_catalog.to_regclass('public.later_parallel_change') is not null,
+              false)::text")" = "true"
+
       - name: Provision cluster roles outside Flyway
         env:
           PGPASSWORD: synthetic-ci-bootstrap-password
@@ -211,7 +260,7 @@ jobs:
         run: python3 -m unittest tests.test_postgres_integration -v
 
   postgres-upgrade:
-    name: PostgreSQL 17 migration 003 to 004 upgrade and replay proof
+    name: PostgreSQL 17 compatibility upgrade and replay proof
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
@@ -421,9 +470,6 @@ jobs:
           run_flyway validate
           run_flyway info
           run_flyway migrate
-          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
-            --tuples-only --no-align --set ON_ERROR_STOP=1 \
-            --command 'select count(*) from public.flyway_schema_history where version is not null and success')" = "4"
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command "select count(*) from public.transactional_outbox where tenant_id = 'SYN-UPGRADE-TENANT' and delivery_state = 'ready' and delivery_attempts = 0 and fencing_token = 0")" = "2"
