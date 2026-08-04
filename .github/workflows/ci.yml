@@ -211,7 +211,7 @@ jobs:
         run: python3 -m unittest tests.test_postgres_integration -v
 
   postgres-upgrade:
-    name: PostgreSQL 17 migration 003 to 004 upgrade and replay proof
+    name: PostgreSQL 17 migration 003 to current head upgrade and replay proof
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
@@ -423,7 +423,7 @@ jobs:
           run_flyway migrate
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
-            --command 'select count(*) from public.flyway_schema_history where version is not null and success')" = "4"
+            --command="select count(*)::text || ':' || max(version) from public.flyway_schema_history where version is not null and success")" = "5:005"
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command "select count(*) from public.transactional_outbox where tenant_id = 'SYN-UPGRADE-TENANT' and delivery_state = 'ready' and delivery_attempts = 0 and fencing_token = 0")" = "2"

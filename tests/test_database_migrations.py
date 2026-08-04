@@ -142,6 +142,18 @@ class DatabaseMigrationTests(unittest.TestCase):
                 self.assertIsNone(TRANSACTION_CONTROL.search(sql))
                 self.assertNotRegex(sql.lower(), r"\bcreate\s+index\s+concurrently\b")
 
+    def test_upgrade_replay_proof_targets_the_released_head(self) -> None:
+        migrations = sorted((ROOT / "sql").glob("V*__*.sql"))
+        versions = [
+            MIGRATION_NAME.fullmatch(path.name).group("version")
+            for path in migrations
+        ]
+        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("migration 003 to current head upgrade and replay proof", workflow)
+        self.assertIn(f'= "{len(versions)}:{versions[-1]}"', workflow)
+
     def test_migration_003_retains_its_published_bytes(self) -> None:
         migration = ROOT / "sql" / "V003__trusted_routines_and_outbox_cas.sql"
         self.assertEqual(
