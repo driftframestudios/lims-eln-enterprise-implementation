@@ -67,8 +67,8 @@ jobs:
       LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
       FLYWAY_IMAGE: flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0
       FLYWAY_URL: jdbc:postgresql://127.0.0.1:5432/laboratory
-      FLYWAY_USER: laboratory_bootstrap
-      FLYWAY_PASSWORD: synthetic-ci-bootstrap-password
+      FLYWAY_USER: laboratory_migrator
+      FLYWAY_PASSWORD: synthetic-ci-migrator-password
 
     steps:
       - name: Check out source
@@ -93,6 +93,34 @@ jobs:
           --no-psqlrc --set ON_ERROR_STOP=1
           --file database/provision_cluster_roles.sql
 
+      - name: Bind and verify the bounded Flyway login
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
+        run: |
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --set ON_ERROR_STOP=1 \
+            --command="alter role laboratory_migrator password 'synthetic-ci-migrator-password'"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select rolcanlogin::text || ':' || rolsuper::text || ':' || rolcreatedb::text || ':' || rolcreaterole::text || ':' || rolinherit::text || ':' || rolbypassrls::text from pg_catalog.pg_roles where rolname = 'laboratory_migrator'")" = "true:false:false:false:false:false"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select membership.admin_option::text || ':' || membership.inherit_option::text || ':' || membership.set_option::text from pg_catalog.pg_auth_members as membership join pg_catalog.pg_roles as granted_role on granted_role.oid = membership.roleid join pg_catalog.pg_roles as member_role on member_role.oid = membership.member where granted_role.rolname = 'laboratory_owner' and member_role.rolname = 'laboratory_migrator'")" = "false:false:true"
+          set +e
+          PGPASSWORD=synthetic-ci-migrator-password psql \
+            postgresql://laboratory_migrator@127.0.0.1:5432/laboratory \
+            --no-psqlrc --set ON_ERROR_STOP=1 \
+            --command="begin; create table public.synthetic_direct_migrator_ddl (proof integer); rollback" \
+            > direct-migrator-ddl.log 2>&1
+          direct_ddl_status=$?
+          set -e
+          if [ "$direct_ddl_status" -eq 0 ]; then
+            echo "laboratory_migrator acquired direct schema authority" >&2
+            exit 1
+          fi
+          grep --fixed-strings --quiet \
+            "permission denied for schema public" direct-migrator-ddl.log
+
       - name: Apply, validate, inspect, and replay Flyway migrations
         run: |
           run_flyway() {
@@ -107,6 +135,12 @@ jobs:
           run_flyway validate
           run_flyway info
           run_flyway migrate
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'flyway_schema_history'")" = "laboratory_owner"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'tenant'")" = "laboratory_owner"
 
       - name: Configure synthetic workload identities and verification key
         env:
@@ -169,8 +203,8 @@ jobs:
       LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
       FLYWAY_IMAGE: flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0
       FLYWAY_URL: jdbc:postgresql://127.0.0.1:5432/laboratory
-      FLYWAY_USER: laboratory_bootstrap
-      FLYWAY_PASSWORD: synthetic-ci-bootstrap-password
+      FLYWAY_USER: laboratory_migrator
+      FLYWAY_PASSWORD: synthetic-ci-migrator-password
 
     steps:
       - name: Check out source
@@ -197,6 +231,17 @@ jobs:
           psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
             --no-psqlrc --set ON_ERROR_STOP=1 \
             --file database/provision_cluster_roles.sql
+
+      - name: Bind the bounded Flyway login in both clusters
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
+        run: |
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --set ON_ERROR_STOP=1 \
+            --command="alter role laboratory_migrator password 'synthetic-ci-migrator-password'"
+          psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            --no-psqlrc --set ON_ERROR_STOP=1 \
+            --command="alter role laboratory_migrator password 'synthetic-ci-migrator-password'"
 
       - name: Apply historical migration head with Flyway target
         run: |

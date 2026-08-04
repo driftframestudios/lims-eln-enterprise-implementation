@@ -9,6 +9,18 @@
     "filesystem:sql"
   ],
   "migration_head": "004",
+  "authenticated_login": "laboratory_migrator",
+  "migration_role": "laboratory_owner",
+  "role_assumption": "after_connect_callback_noinherit_membership",
+  "connection_callback": {
+    "path": "sql/afterConnect.sql",
+    "sha256": "37491dc9ccff2ed60bd6c928fd95ec6292404fb908cb38ed79d0b40e72d4f3ce"
+  },
+  "artifact_inventory": {
+    "path": "database/flyway-artifact-inventory.json",
+    "sha256": "4c2cb27eeb848c63878da5d8d3512b8d6d5f3544ba4b1a22415038776965eaa9",
+    "aggregate_sha256": "sha256:883bd99a027aea3495514309c0b98205c6c7ecca825ffc3ff6b6728178a6db0a"
+  },
   "baseline_policy": "explicit_attested_baseline_only",
   "cluster_role_provisioning": "separate_privileged_deployment_step",
   "credentials": "runtime_environment_only"

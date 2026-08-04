@@ -12,6 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "flyway.conf"
 RELEASE_PATH = ROOT / "database" / "flyway-release.json"
+INVENTORY_PATH = ROOT / "database" / "flyway-artifact-inventory.json"
 MIGRATION_NAME = re.compile(r"^V(?P<version>[0-9]{3})__[a-z0-9_]+\.sql$")
 TRANSACTION_CONTROL = re.compile(
     r"^\s*(?:begin|commit|rollback)\s*;",
@@ -39,6 +40,49 @@ class DatabaseMigrationTests(unittest.TestCase):
         )
         self.assertEqual(release["credentials"], "runtime_environment_only")
         self.assertEqual(release["migration_head"], "004")
+        self.assertEqual(release["authenticated_login"], "laboratory_migrator")
+        self.assertEqual(release["migration_role"], "laboratory_owner")
+        self.assertEqual(
+            release["role_assumption"],
+            "after_connect_callback_noinherit_membership",
+        )
+        callback = release["connection_callback"]
+        callback_path = ROOT / callback["path"]
+        self.assertEqual(
+            hashlib.sha256(callback_path.read_bytes()).hexdigest(),
+            callback["sha256"],
+        )
+        inventory_reference = release["artifact_inventory"]
+        self.assertEqual(
+            inventory_reference["sha256"],
+            hashlib.sha256(INVENTORY_PATH.read_bytes()).hexdigest(),
+        )
+        inventory = json.loads(INVENTORY_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(inventory["canonicalization"], "ordered-path-nul-sha256-lf-v1")
+        self.assertEqual(
+            [artifact["path"] for artifact in inventory["artifacts"]],
+            [
+                "flyway.conf",
+                "sql/afterConnect.sql",
+                "sql/V001__laboratory_core.sql",
+                "sql/V002__principal_data_boundaries.sql",
+                "sql/V003__trusted_routines_and_outbox_cas.sql",
+                "sql/V004__outbox_attempt_evidence_and_recovery.sql",
+            ],
+        )
+        for artifact in inventory["artifacts"]:
+            with self.subTest(artifact=artifact["path"]):
+                self.assertEqual(
+                    hashlib.sha256((ROOT / artifact["path"]).read_bytes()).hexdigest(),
+                    artifact["sha256"],
+                )
+        aggregate_payload = "".join(
+            f"{artifact['path']}\0{artifact['sha256']}\n"
+            for artifact in inventory["artifacts"]
+        ).encode("utf-8")
+        aggregate = "sha256:" + hashlib.sha256(aggregate_payload).hexdigest()
+        self.assertEqual(inventory["aggregate_sha256"], aggregate)
+        self.assertEqual(inventory_reference["aggregate_sha256"], aggregate)
 
     def test_flyway_safety_controls_are_explicit(self) -> None:
         config = load_properties(CONFIG_PATH)
@@ -50,6 +94,13 @@ class DatabaseMigrationTests(unittest.TestCase):
         self.assertEqual(config["flyway.baselineOnMigrate"], "false")
         self.assertEqual(config["flyway.group"], "false")
         self.assertEqual(config["flyway.mixed"], "false")
+        self.assertNotIn("flyway.initSql", config)
+
+        callback = (ROOT / "sql" / "afterConnect.sql").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("session_user <> 'laboratory_migrator'", callback)
+        self.assertIn("set role laboratory_owner;", callback.lower())
 
     def test_versioned_sequence_is_complete_and_transaction_compatible(self) -> None:
         migrations = sorted((ROOT / "sql").glob("V*__*.sql"))

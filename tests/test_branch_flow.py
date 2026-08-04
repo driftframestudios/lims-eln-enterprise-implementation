@@ -159,11 +159,15 @@ class BranchFlowTests(unittest.TestCase):
         for path in (
             "/.github/dependabot.yml",
             "/.github/workflows/",
+            "/.gitignore",
+            "/.dockerignore",
             "/scripts/check_branch_flow.py",
+            "/scripts/validate_repository.py",
             "/flyway.conf",
             "/tests/test_branch_flow.py",
             "/tests/test_database_migrations.py",
             "/tests/test_postgres_integration.py",
+            "/tests/test_sql_tenant_boundary.py",
             "/src/lims_eln_implementation/bounded_caller.py",
             "/src/lims_eln_implementation/bounded_examples.py",
             "/src/lims_eln_implementation/production_adapters.py",
@@ -196,6 +200,11 @@ class BranchFlowTests(unittest.TestCase):
         self.assertIn("-target=003 migrate", workflow)
         self.assertIn("run_flyway validate", workflow)
         self.assertIn("run_flyway info", workflow)
+        self.assertIn("FLYWAY_USER: laboratory_migrator", workflow)
+        self.assertIn("true:false:false:false:false:false", workflow)
+        self.assertIn("false:false:true", workflow)
+        self.assertIn("flyway_schema_history", workflow)
+        self.assertIn('= "laboratory_owner"', workflow)
         self.assertIn("clean and upgraded schema convergence", workflow.lower())
         self.assertNotIn("apply_database_migrations.py", workflow)
 

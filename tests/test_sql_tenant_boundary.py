@@ -171,6 +171,19 @@ class SqlTenantStructureTests(unittest.TestCase):
         )
         self.assertIn("observed_role.rolsuper", role_sql)
         self.assertIn("observed_role.rolbypassrls", role_sql)
+        self.assertRegex(
+            role_sql,
+            r"grant\s+laboratory_owner\s+to\s+laboratory_migrator\s+"
+            r"with\s+admin\s+false,\s+inherit\s+false,\s+set\s+true",
+        )
+        self.assertIn("grant create on database %i to laboratory_owner", role_sql)
+        self.assertIn("revoke create on database %i from public", role_sql)
+        self.assertIn(
+            "revoke create on database %i from laboratory_migrator",
+            role_sql,
+        )
+        self.assertIn("revoke create on schema public from public", role_sql)
+        self.assertIn("revoke all on schema public from laboratory_migrator", role_sql)
         self.assertNotRegex(self.sql, r"\bcreate\s+role\b")
         self.assertIn("revoke all on all tables in schema public from public", self.sql)
         self.assertNotRegex(
@@ -419,6 +432,42 @@ class SqlTenantStructureTests(unittest.TestCase):
         self.assertIn("PGUSER: laboratory_app", compose)
         self.assertIn("postgres_app_password", compose)
         self.assertNotIn("POSTGRES_USER: laboratory\n", compose)
+        role_provisioner = compose.split("\n  database-role-provisioner:", 1)[1]
+        role_provisioner = role_provisioner.split("\n  database-migrator:", 1)[0]
+        self.assertIn("PGUSER: laboratory_bootstrap", role_provisioner)
+        self.assertIn("postgres_password", role_provisioner)
+        self.assertIn("postgres_migrator_password", role_provisioner)
+        migrator = compose.split("\n  database-migrator:", 1)[1]
+        migrator = migrator.split("\n  database-role-bootstrap:", 1)[0]
+        self.assertIn("FLYWAY_USER: laboratory_migrator", migrator)
+        self.assertIn("postgres_migrator_password", migrator)
+        self.assertNotIn("- postgres_password\n", migrator)
+        images = re.findall(r"^\s+image:\s+(\S+)$", compose, flags=re.MULTILINE)
+        self.assertGreaterEqual(len(images), 6)
+        for image in images:
+            with self.subTest(image=image):
+                self.assertRegex(image, r"@sha256:[a-f0-9]{64}$")
+
+    def test_secret_and_container_context_exclusions_are_explicit(self) -> None:
+        gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+        self.assertIn("infra/secrets/*", gitignore)
+        self.assertIn("infra/secrets/*.txt", gitignore)
+        self.assertIn("!infra/secrets/.gitignore", gitignore)
+
+        dockerignore = (ROOT / ".dockerignore").read_text(
+            encoding="utf-8"
+        ).splitlines()
+        for protected_path in (
+            ".git",
+            ".env",
+            ".env.*",
+            ".venv",
+            "**/__pycache__",
+            "infra/secrets",
+            "receipts/local",
+        ):
+            with self.subTest(protected_path=protected_path):
+                self.assertIn(protected_path, dockerignore)
 
 
 class PostgresTenantBindingTests(unittest.TestCase):

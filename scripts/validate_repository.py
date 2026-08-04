@@ -134,6 +134,69 @@ def validate_manifests() -> None:
         raise AssertionError("Flyway credentials require runtime-only resolution")
     if migration_release.get("baseline_policy") != "explicit_attested_baseline_only":
         raise AssertionError("Flyway release requires explicit baseline attestation")
+    if (
+        migration_release.get("authenticated_login") != "laboratory_migrator"
+        or migration_release.get("migration_role") != "laboratory_owner"
+        or migration_release.get("role_assumption")
+        != "after_connect_callback_noinherit_membership"
+    ):
+        raise AssertionError("Flyway release requires its bounded authority chain")
+    callback = migration_release.get("connection_callback", {})
+    callback_path = ROOT / callback.get("path", "")
+    if (
+        callback.get("path") != "sql/afterConnect.sql"
+        or callback.get("sha256") != sha256(callback_path.read_bytes()).hexdigest()
+    ):
+        raise AssertionError("Flyway release requires its connection callback digest")
+    callback_sql = callback_path.read_text(encoding="utf-8").lower()
+    if (
+        "session_user <> 'laboratory_migrator'" not in callback_sql
+        or "set role laboratory_owner;" not in callback_sql
+    ):
+        raise AssertionError("Flyway callback requires the released login and owner role")
+    inventory_reference = migration_release.get("artifact_inventory", {})
+    inventory_path = ROOT / inventory_reference.get("path", "")
+    if (
+        inventory_reference.get("path")
+        != "database/flyway-artifact-inventory.json"
+        or inventory_reference.get("sha256")
+        != sha256(inventory_path.read_bytes()).hexdigest()
+    ):
+        raise AssertionError("Flyway release requires its artifact inventory digest")
+    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    expected_artifact_paths = [
+        "flyway.conf",
+        "sql/afterConnect.sql",
+        "sql/V001__laboratory_core.sql",
+        "sql/V002__principal_data_boundaries.sql",
+        "sql/V003__trusted_routines_and_outbox_cas.sql",
+        "sql/V004__outbox_attempt_evidence_and_recovery.sql",
+    ]
+    if (
+        inventory.get("schema_version") != "1.0.0"
+        or inventory.get("canonicalization")
+        != "ordered-path-nul-sha256-lf-v1"
+        or [artifact.get("path") for artifact in inventory.get("artifacts", [])]
+        != expected_artifact_paths
+    ):
+        raise AssertionError("Flyway inventory requires the complete ordered artifact set")
+    for artifact in inventory["artifacts"]:
+        if artifact.get("sha256") != sha256(
+            (ROOT / artifact["path"]).read_bytes()
+        ).hexdigest():
+            raise AssertionError(
+                f"Flyway artifact digest differs for {artifact['path']}"
+            )
+    inventory_payload = "".join(
+        f"{artifact['path']}\0{artifact['sha256']}\n"
+        for artifact in inventory["artifacts"]
+    ).encode("utf-8")
+    inventory_aggregate = "sha256:" + sha256(inventory_payload).hexdigest()
+    if (
+        inventory.get("aggregate_sha256") != inventory_aggregate
+        or inventory_reference.get("aggregate_sha256") != inventory_aggregate
+    ):
+        raise AssertionError("Flyway inventory requires its aggregate binding")
 
     flyway_config_path = ROOT / database.get("migration_configuration", "")
     flyway_config = dict(
@@ -154,6 +217,43 @@ def validate_manifests() -> None:
     for setting, expected in required_flyway_controls.items():
         if flyway_config.get(setting) != expected:
             raise AssertionError(f"Flyway setting {setting} requires {expected}")
+    if "flyway.initSql" in flyway_config:
+        raise AssertionError("Flyway 13 connection state requires the callback surface")
+
+    compose = (ROOT / "infra" / "docker-compose.yml").read_text(encoding="utf-8")
+    migrator_service = compose.split("\n  database-migrator:", 1)[1]
+    migrator_service = migrator_service.split("\n  database-role-bootstrap:", 1)[0]
+    if (
+        "FLYWAY_USER: laboratory_migrator" not in migrator_service
+        or "postgres_migrator_password" not in migrator_service
+        or "- postgres_password\n" in migrator_service
+    ):
+        raise AssertionError("Flyway service requires its bounded runtime identity")
+    compose_images = re.findall(r"^\s+image:\s+(\S+)$", compose, re.MULTILINE)
+    if len(compose_images) < 6 or any(
+        re.search(r"@sha256:[a-f0-9]{64}$", image) is None
+        for image in compose_images
+    ):
+        raise AssertionError("Compose support images require immutable digests")
+
+    gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+    if not {
+        "infra/secrets/*",
+        "infra/secrets/*.txt",
+        "!infra/secrets/.gitignore",
+    }.issubset(gitignore):
+        raise AssertionError("repository exclusions require the local secret boundary")
+    dockerignore = (ROOT / ".dockerignore").read_text(encoding="utf-8").splitlines()
+    if not {
+        ".git",
+        ".env",
+        ".env.*",
+        ".venv",
+        "**/__pycache__",
+        "infra/secrets",
+        "receipts/local",
+    }.issubset(dockerignore):
+        raise AssertionError("container context requires the released exclusion boundary")
 
     migrations = sorted((ROOT / "sql").glob("V[0-9][0-9][0-9]__*.sql"))
     migration_ids = [path.name[1:4] for path in migrations]
@@ -342,6 +442,11 @@ def validate_manifests() -> None:
         raise AssertionError(
             "local verification receipt requires the Flyway release digest"
         )
+    inventory_digest = file_digest(inventory_path)
+    if inventory_digest not in receipt["artifact_digests"]:
+        raise AssertionError(
+            "local verification receipt requires the Flyway inventory digest"
+        )
     if receipt["version_bindings"].get("database_migration_head") != database.get(
         "migration_head"
     ):
@@ -368,38 +473,71 @@ def validate_manifests() -> None:
         hosted_bindings.get("repository") != manifest["version"]
         or hosted_bindings.get("database_migration_head")
         != database.get("migration_head")
-        or hosted_bindings.get("repository_commit")
-        != "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
-        or hosted_bindings.get("workflow_run")
-        != (
-            "https://github.com/driftframestudios/"
-            "lims-eln-enterprise-implementation/actions/runs/30933020047"
-        )
     ):
         raise AssertionError(
             "hosted PostgreSQL receipt requires its observed release coordinate"
         )
-    historical_binding_digest = (
-        "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd"
+    observed_commit = str(hosted_bindings.get("repository_commit", ""))
+    observed_run = str(hosted_bindings.get("workflow_run", ""))
+    historical_commit = "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
+    historical_run = (
+        "https://github.com/driftframestudios/"
+        "lims-eln-enterprise-implementation/actions/runs/30933020047"
     )
-    if historical_binding_digest not in hosted_receipt["artifact_digests"]:
-        raise AssertionError(
-            "historical hosted PostgreSQL receipt requires its observed binding digest"
+    if observed_commit == historical_commit:
+        historical_digests = {
+            "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd",
+            "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81",
+        }
+        if observed_run != historical_run or not historical_digests.issubset(
+            hosted_receipt["artifact_digests"]
+        ):
+            raise AssertionError(
+                "historical hosted PostgreSQL receipt requires its observed bindings"
+            )
+        if not any(
+            "superseded by the Flyway transition" in limitation
+            for limitation in hosted_receipt["limitations"]
+        ):
+            raise AssertionError(
+                "historical hosted PostgreSQL receipt requires its successor boundary"
+            )
+    else:
+        expected_run_pattern = (
+            r"^https://github\.com/driftframestudios/"
+            r"lims-eln-enterprise-implementation/actions/runs/[0-9]+$"
         )
-    historical_migration_digest = (
-        "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81"
-    )
-    if historical_migration_digest not in hosted_receipt["artifact_digests"]:
-        raise AssertionError(
-            "historical hosted PostgreSQL receipt requires its observed migration digest"
-        )
-    if not any(
-        "superseded by the Flyway transition" in limitation
-        for limitation in hosted_receipt["limitations"]
-    ):
-        raise AssertionError(
-            "historical hosted PostgreSQL receipt requires an explicit successor boundary"
-        )
+        current_digests = {
+            binding_digest,
+            migration_release_digest,
+            inventory_digest,
+        }
+        if (
+            re.fullmatch(r"[a-f0-9]{40}", observed_commit) is None
+            or re.fullmatch(expected_run_pattern, observed_run) is None
+            or not current_digests.issubset(hosted_receipt["artifact_digests"])
+            or hosted_bindings.get("flyway") != migration_release["flyway_version"]
+            or hosted_bindings.get("flyway_image")
+            != migration_release["container_image"]
+            or hosted_bindings.get("migration_authenticated_login")
+            != migration_release["authenticated_login"]
+            or hosted_bindings.get("migration_role")
+            != migration_release["migration_role"]
+        ):
+            raise AssertionError(
+                "current hosted PostgreSQL receipt requires Flyway release bindings"
+            )
+        current_scenarios = {
+            "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",
+            "SCN-DB-FLYWAY-ARTIFACT-INVENTORY",
+            "SCN-DB-MIGRATION-CLEAN-UPGRADE-CONVERGENCE",
+            "SCN-DB-MEASUREMENT-COMPLETE-LINEAGE",
+            "SCN-DB-CUSTODY-COMPLETE-EVENT-BINDING",
+        }
+        if not current_scenarios.issubset(hosted_receipt["scenario_ids"]):
+            raise AssertionError(
+                "current hosted PostgreSQL receipt requires successor scenarios"
+            )
     required_database_scenarios = {
         "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",
         "SCN-DB-SECURITY-DEFINER-TEMP-SHADOW",

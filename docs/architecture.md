@@ -164,7 +164,14 @@ no-op replay. `database/flyway-release.json` pins the open-source image by exact
 version and digest; `flyway.conf` keeps validation enabled, order strict, clean
 disabled, and automatic baseline adoption disabled. A failed migration rolls
 back. An applied migration receives a successor forward repair. Cluster-wide
-role provisioning remains a separate privileged deployment step.
+role provisioning remains a separate privileged deployment step. The Flyway
+runtime authenticates as `laboratory_migrator`, whose role attributes are
+`LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS`. A
+digest-bound `afterConnect.sql` callback verifies that session identity and
+uses its `SET TRUE, INHERIT FALSE, ADMIN FALSE` membership to assume the
+no-login `laboratory_owner` role. Database and schema creation authority lives
+on that owner role; the authenticated login receives connection authority and
+a distinct runtime credential.
 
 Migration V002 establishes finite temporal values, state coherence, the signed
 tenant authority, typed instrument measurements, custody history/CAS, and

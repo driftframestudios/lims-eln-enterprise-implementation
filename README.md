@@ -101,7 +101,8 @@ reviewer, artifacts, and decisions are recorded.
 - `contracts` — versioned machine-readable command and receipt contracts.
 - `fixtures/synthetic` — synthetic, stable examples for comparison.
 - `sql` — PostgreSQL persistence, inbox/outbox, evidence, and tenant controls.
-- `database` — pinned Flyway release metadata and separate cluster-role provisioning.
+- `database` — pinned Flyway release and artifact inventory plus separate
+  cluster-role provisioning.
 - `flyway.conf` — reviewed Flyway safety and ordering controls.
 - `infra` — local production-shape services and an AWS recovery baseline.
 - `docs` — architecture, GitFlow-like delivery, qualification, and runbooks.
@@ -187,7 +188,12 @@ relations before preflight and gives lock acquisition a 30-second budget;
 contention produces a transactional rollback for a scheduled retry. Flyway
 Community 13.0.0 owns migration discovery, ordering, locking, transactions,
 history, validation, information, target selection, and replay. Cluster roles
-remain a separate privileged deployment concern.
+remain a separate privileged deployment concern. Flyway authenticates as the
+least-privilege `laboratory_migrator` login. Its released `afterConnect.sql`
+callback verifies that session identity and explicitly assumes the no-login
+`laboratory_owner` role. The owner holds target database and schema creation
+authority; the login begins each connection with direct schema creation
+authority absent.
 
 See the [migration and upgrade posture](docs/database-migrations.md) and the
 [data primitive corrective ledger](docs/data-primitive-corrective-ledger.md)

@@ -53,3 +53,27 @@ begin
     end loop;
 end;
 $role_provisioning$;
+
+grant laboratory_owner to laboratory_migrator
+    with admin false, inherit false, set true;
+
+select pg_catalog.format(
+    'grant connect on database %I to laboratory_migrator',
+    pg_catalog.current_database()
+) \gexec
+select pg_catalog.format(
+    'grant create on database %I to laboratory_owner',
+    pg_catalog.current_database()
+) \gexec
+select pg_catalog.format(
+    'revoke create on database %I from public',
+    pg_catalog.current_database()
+) \gexec
+select pg_catalog.format(
+    'revoke create on database %I from laboratory_migrator',
+    pg_catalog.current_database()
+) \gexec
+
+revoke create on schema public from public;
+grant usage, create on schema public to laboratory_owner;
+revoke all on schema public from laboratory_migrator;

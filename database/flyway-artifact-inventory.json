@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_set": "postgresql-flyway-head-004",
+  "canonicalization": "ordered-path-nul-sha256-lf-v1",
+  "artifacts": [
+    {
+      "kind": "configuration",
+      "path": "flyway.conf",
+      "sha256": "d942bdda5d05b775efe91397a7caea3c0c9078aab0427b0c4b11457bf6141d0c"
+    },
+    {
+      "kind": "connection_callback",
+      "path": "sql/afterConnect.sql",
+      "sha256": "37491dc9ccff2ed60bd6c928fd95ec6292404fb908cb38ed79d0b40e72d4f3ce"
+    },
+    {
+      "kind": "versioned_migration",
+      "version": "001",
+      "path": "sql/V001__laboratory_core.sql",
+      "sha256": "d0a8a360debb70f5dfdfcb8834ae8558a285e3f852014b91d9c521a2bd9ec7e4"
+    },
+    {
+      "kind": "versioned_migration",
+      "version": "002",
+      "path": "sql/V002__principal_data_boundaries.sql",
+      "sha256": "2d5f3778d1b3c557590b265f06821435effb1ea9e1e0675dda5e74f5b213ee64"
+    },
+    {
+      "kind": "versioned_migration",
+      "version": "003",
+      "path": "sql/V003__trusted_routines_and_outbox_cas.sql",
+      "sha256": "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70"
+    },
+    {
+      "kind": "versioned_migration",
+      "version": "004",
+      "path": "sql/V004__outbox_attempt_evidence_and_recovery.sql",
+      "sha256": "84eaac39bcf5484745e1fc17418b17c0b08a90077a3b18a6011a3c34efefff1a"
+    }
+  ],
+  "aggregate_sha256": "sha256:883bd99a027aea3495514309c0b98205c6c7ecca825ffc3ff6b6728178a6db0a"
+}

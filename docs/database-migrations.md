@@ -5,8 +5,15 @@
 Flyway Community 13.0.0 owns migration discovery, ordering, locking, transaction
 boundaries, applied history, checksum validation, status, and replay behavior.
 `database/flyway-release.json` pins the exact open-source Alpine image by version
-and multi-architecture digest. `flyway.conf` keeps the operational controls in
-reviewable source:
+and multi-architecture digest. `database/flyway-artifact-inventory.json` binds
+the configuration, callback, and every V001-through-V004 migration by individual
+SHA-256 plus an ordered aggregate SHA-256. The release manifest binds both the
+inventory file and aggregate, creating one independently reviewable release
+coordinate while Flyway continues to own applied history and mechanics.
+The aggregate canonicalization emits each inventory entry in listed order as
+UTF-8 `path`, one NUL byte, the lowercase hexadecimal SHA-256, and one LF byte,
+then hashes the complete byte stream.
+`flyway.conf` keeps the operational controls in reviewable source:
 
 - versioned migrations follow `V###__description.sql`;
 - `validateOnMigrate=true` and `validateMigrationNaming=true` surface drift;
@@ -17,6 +24,13 @@ reviewable source:
 - `mixed=false` keeps transaction-incompatible SQL on a separately reviewed
   path.
 
+Flyway 13 discovers `sql/afterConnect.sql` as a connection callback. The
+callback verifies `session_user = laboratory_migrator` and then executes
+`SET ROLE laboratory_owner`. The callback digest is part of the released
+Flyway manifest. This follows Flyway's
+[connection callback](https://documentation.red-gate.com/flyway/reference/callback-events)
+model and keeps connection state on the supported v13 lifecycle surface.
+
 The repository owns domain SQL: PostgreSQL primitives, constraints, lineage,
 row security, grants, triggers, and trusted routines. Vendor-owned LIMS/ELN
 schemas continue through their supported upgrade mechanisms. Cross-platform
@@ -26,8 +40,9 @@ semantic reconciliation, and accountable acceptance.
 ## Runtime invocation
 
 The repository stores zero deployable database credentials. A workload identity
-or secret delivery boundary supplies `FLYWAY_URL`, `FLYWAY_USER`, and
-`FLYWAY_PASSWORD`; hosted tests use conspicuously synthetic isolated values.
+or secret delivery boundary supplies `FLYWAY_URL`, the released
+`laboratory_migrator` login, and its runtime credential; hosted tests use
+conspicuously synthetic isolated values.
 The container invocation mounts the project read-only and uses the released
 configuration:
 
@@ -46,9 +61,21 @@ Release automation follows `migrate`, `validate`, and `info`. A second
 
 Cluster roles live outside Flyway because they span databases. A privileged
 deployment step applies `database/provision_cluster_roles.sql`, verifies the
-released least-privilege attributes, and then gives Flyway a database-scoped
-schema-change identity. Password and verification-key material enter through
-the protected secret lifecycle after schema migration.
+released least-privilege attributes, and binds a distinct migrator credential.
+The migrator is `LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT
+NOBYPASSRLS`. Its owner membership is `ADMIN FALSE, INHERIT FALSE, SET TRUE`,
+matching PostgreSQL's explicit
+[role-membership](https://www.postgresql.org/docs/17/role-membership.html)
+model. Target database and schema creation are reserved for
+`laboratory_owner`; the callback assumes that role, which owns Flyway history
+and domain objects and holds the creation privileges required by this chain.
+The provisioning step establishes the same public-creation boundary before the
+first migration runs.
+
+The Compose migrator service receives only `postgres_migrator_password`. The
+bootstrap secret remains on the role-provisioning service. Application,
+outbox, evidence, and tenant-verification secrets enter their narrower
+post-migration configuration stage.
 
 ## Fresh and successor paths
 
@@ -75,6 +102,9 @@ scenarios. It also proves:
   identity to one custody event;
 - V004 failure is transactional;
 - Flyway validation accepts the released checksums;
+- the migrator login has bounded role attributes and lacks direct schema DDL;
+- the callback creates Flyway history and domain relations as
+  `laboratory_owner`;
 - target V003, head migration, `info`, validation, and no-op replay behave as
   one coherent release path.
 

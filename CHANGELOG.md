@@ -7,6 +7,12 @@
   version-and-digest-pinned Flyway Community 13.0.0 image.
 - Keep cluster-role provisioning outside Flyway and resolve database credentials
   only through runtime secret boundaries.
+- Authenticate Flyway through a constrained, non-inheriting migrator login;
+  verify it in a digest-bound connection callback; and assume the no-login
+  schema owner through explicit `SET ROLE` membership.
+- Publish a digest inventory for the Flyway configuration, connection callback,
+  and every migration; pin all Compose support images; and constrain the
+  container build context and local-secret exclusions.
 - Replace caller-selected tenant state with short-lived signed assertions which
   PostgreSQL verifies against private key material.
 - Add finite temporal constraints, exact decimal instrument measurements,

@@ -98,14 +98,21 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         ]
         for name, value in sorted((variables or {}).items()):
             command.extend(("--set", f"{name}={value}"))
-        return subprocess.run(
+        completed = subprocess.run(
             command,
             input=sql,
-            check=check,
+            check=False,
             capture_output=True,
             text=True,
             timeout=20,
         )
+        if check and completed.returncode != 0:
+            raise AssertionError(
+                "PostgreSQL proof statement failed\n"
+                f"stdout:\n{completed.stdout}\n"
+                f"stderr:\n{completed.stderr}"
+            )
+        return completed
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -430,17 +437,34 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         self.assertNotEqual(stale.returncode, 0)
         self.assertIn("custody revision", stale.stderr.lower())
 
+        binding_specimen = "SYN-LIVE-BINDING-SPECIMEN-" + uuid4().hex
         shadow_transfer = "SYN-LIVE-SHADOW-BINDING-" + uuid4().hex
+        assert ADMIN_DSN is not None
+        self.run_sql(
+            ADMIN_DSN,
+            """
+            insert into public.specimen (
+                tenant_id, specimen_id, lifecycle_state, aggregate_version,
+                canonical_document, canonical_sha256, updated_at_utc
+            ) values (
+                :'tenant', :'binding_specimen', 'registered', 1, '{}'::jsonb,
+                repeat('0', 64), pg_catalog.clock_timestamp()
+            )
+            """,
+            variables={
+                "tenant": self.tenant_a,
+                "binding_specimen": binding_specimen,
+            },
+        )
         self.run_sql(
             APP_DSN,
             transfer_sql,
             variables={
                 "context": context,
-                "specimen": self.shadow_specimen,
+                "specimen": binding_specimen,
                 "transfer": shadow_transfer,
             },
         )
-        assert ADMIN_DSN is not None
         incoherent_position = self.run_sql(
             ADMIN_DSN,
             "update public.custody_position "

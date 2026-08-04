@@ -6,7 +6,6 @@ PGPASSWORD="$(tr -d '\r\n' < /run/secrets/postgres_password)"
 outbox_password="$(tr -d '\r\n' < /run/secrets/postgres_outbox_password)"
 recovery_password="$(tr -d '\r\n' < /run/secrets/postgres_recovery_password)"
 evidence_password="$(tr -d '\r\n' < /run/secrets/postgres_evidence_password)"
-migrator_password="$(tr -d '\r\n' < /run/secrets/postgres_migrator_password)"
 tenant_hmac_key="$(tr -d '\r\n' < /run/secrets/postgres_tenant_hmac_key)"
 export PGPASSWORD
 
@@ -17,7 +16,6 @@ psql --set=ON_ERROR_STOP=1 \
     --set=outbox_password="$outbox_password" \
     --set=recovery_password="$recovery_password" \
     --set=evidence_password="$evidence_password" \
-    --set=migrator_password="$migrator_password" \
     --set=tenant_hmac_key="$tenant_hmac_key" <<'SQL'
 begin;
 select format('alter role laboratory_app password %L', :'application_password') \gexec
@@ -27,7 +25,6 @@ select format(
     :'recovery_password'
 ) \gexec
 select format('alter role laboratory_evidence_writer password %L', :'evidence_password') \gexec
-select format('alter role laboratory_migrator password %L', :'migrator_password') \gexec
 select count(*) as tenant_key_matches
   from laboratory_security.tenant_context_key
  where key_id = 'local-compose-v1'
