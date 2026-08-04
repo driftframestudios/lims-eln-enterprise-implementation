@@ -215,6 +215,14 @@ class BranchFlowTests(unittest.TestCase):
         self.assertIn("flyway_schema_history", workflow)
         self.assertIn('= "laboratory_owner"', workflow)
         self.assertIn('= "laboratory_outbox_authority"', workflow)
+        self.assertEqual(
+            workflow.count(
+                "pg_catalog.to_regprocedure("
+                "'public.claim_outbox_delivery(text,integer)')"
+            ),
+            3,
+        )
+        self.assertNotIn("pg_catalog.pg_get_function_identity_arguments", workflow)
         self.assertIn("has_schema_privilege", workflow)
         self.assertIn("clean and upgraded schema convergence", workflow.lower())
         self.assertNotIn("apply_database_migrations.py", workflow)

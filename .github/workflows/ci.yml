@@ -160,7 +160,7 @@ jobs:
             --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'transactional_outbox'")" = "laboratory_outbox_authority"
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
-            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner join pg_catalog.pg_namespace as routine_schema on routine_schema.oid = routine.pronamespace where routine_schema.nspname = 'public' and routine.proname = 'claim_outbox_delivery' and pg_catalog.pg_get_function_identity_arguments(routine.oid) = 'text, integer'")" = "laboratory_outbox_authority"
+            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner where routine.oid = pg_catalog.to_regprocedure('public.claim_outbox_delivery(text,integer)')")" = "laboratory_outbox_authority"
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command="select pg_catalog.has_schema_privilege('laboratory_outbox_authority', 'public', 'create')::text")" = "false"
@@ -409,7 +409,7 @@ jobs:
             --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'transactional_outbox'")" = "laboratory_outbox_authority"
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
-            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner join pg_catalog.pg_namespace as routine_schema on routine_schema.oid = routine.pronamespace where routine_schema.nspname = 'public' and routine.proname = 'claim_outbox_delivery' and pg_catalog.pg_get_function_identity_arguments(routine.oid) = 'text, integer'")" = "laboratory_outbox_authority"
+            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner where routine.oid = pg_catalog.to_regprocedure('public.claim_outbox_delivery(text,integer)')")" = "laboratory_outbox_authority"
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command="select pg_catalog.has_schema_privilege('laboratory_outbox_authority', 'public', 'create')::text")" = "false"
@@ -454,7 +454,7 @@ jobs:
             --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'transactional_outbox'")" = "laboratory_outbox_authority"
           test "$(psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
             --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
-            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner join pg_catalog.pg_namespace as routine_schema on routine_schema.oid = routine.pronamespace where routine_schema.nspname = 'public' and routine.proname = 'claim_outbox_delivery' and pg_catalog.pg_get_function_identity_arguments(routine.oid) = 'text, integer'")" = "laboratory_outbox_authority"
+            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner where routine.oid = pg_catalog.to_regprocedure('public.claim_outbox_delivery(text,integer)')")" = "laboratory_outbox_authority"
           test "$(psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
             --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command="select pg_catalog.has_schema_privilege('laboratory_outbox_authority', 'public', 'create')::text")" = "false"
