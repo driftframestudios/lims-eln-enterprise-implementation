@@ -9,9 +9,12 @@
 - Add finite temporal constraints, exact decimal instrument measurements,
   UCUM-coded units, and raw-to-normalized lineage.
 - Add custody compare-and-set, tenant-scoped transfer replay, append-only event
-  history, and atomic full-payload outbox insertion.
+  history, schema-qualified privileged execution, and atomic full-payload outbox
+  insertion.
 - Bind outbox identity to tenant, verify payload digests at insertion, preserve
-  message content through delivery, and narrow worker updates to delivery state.
+  message content through delivery, and govern worker claim, expired-lease
+  reclaim, and confirmation through exact tenant/token/fence compare-and-set
+  functions.
 - Add live, digest-pinned PostgreSQL 17 migration and adversarial data-boundary
   proofs to CI.
 - Publish the data-primitive corrective ledger, plan probabilities, remaining
