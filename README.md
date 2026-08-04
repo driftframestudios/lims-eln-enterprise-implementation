@@ -198,6 +198,12 @@ selects the configured owner default, while `SET ROLE NONE` returns the session
 to the narrowly privileged migrator identity. The credential can deliberately
 select `laboratory_owner` through its released `SET TRUE` membership; secret
 delivery therefore remains scoped to the migration job.
+Migration 004 transfers outbox tables and trusted routines to the no-login
+`laboratory_outbox_authority`. PostgreSQL ownership transfer is enabled by one
+explicit `ADMIN FALSE, INHERIT FALSE, SET TRUE` membership from that role to
+`laboratory_owner`; the owner can select the role for transfer while routine
+sessions receive zero inherited outbox authority. Release inventory and hosted
+catalog proofs bind both the edge and the resulting object owners.
 Forced row-level security remains active during migration. A dedicated policy
 permits cross-tenant evolution only when a security-invoker verifier observes
 the complete catalog-backed migrator/owner coordinate. The ordinary tenant

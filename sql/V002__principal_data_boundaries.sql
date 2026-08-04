@@ -109,6 +109,19 @@ select
            and not membership.inherit_option
            and membership.set_option
     )
+    and exists (
+        select 1
+          from pg_catalog.pg_auth_members as membership
+          join pg_catalog.pg_roles as granted_role
+            on granted_role.oid = membership.roleid
+          join pg_catalog.pg_roles as member_role
+            on member_role.oid = membership.member
+         where granted_role.rolname = 'laboratory_outbox_authority'
+           and member_role.rolname = 'laboratory_owner'
+           and not membership.admin_option
+           and not membership.inherit_option
+           and membership.set_option
+    )
     and (
         select pg_catalog.count(*) = 1
            and pg_catalog.bool_and(

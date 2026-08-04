@@ -11,7 +11,12 @@
     {
       "kind": "connection_callback",
       "path": "sql/afterConnect.sql",
-      "sha256": "f178850b5b633a8f79b3703897a9a04371786e98d02bbd3ec205f7b535dff072"
+      "sha256": "5bb2c9dbb8b4f8659c48ec329ee5d59b1ba6e94337b6509fd2d48b1180e047d9"
+    },
+    {
+      "kind": "cluster_role_provisioning",
+      "path": "database/provision_cluster_roles.sql",
+      "sha256": "766f22a42954e6c8093eedfd6c6b0089ba27944dd070399e4a2ffbe30196ebd4"
     },
     {
       "kind": "versioned_migration",
@@ -23,7 +28,7 @@
       "kind": "versioned_migration",
       "version": "002",
       "path": "sql/V002__principal_data_boundaries.sql",
-      "sha256": "42e1279d7d44c3d31fe74d0d8b49a2a55676d39beb4235fb8d666ef2f0de7241"
+      "sha256": "ed9f4f4f342eb133575c1e1920558427ae0044750c61885bee7d89d4ac8afe91"
     },
     {
       "kind": "versioned_migration",
@@ -38,5 +43,5 @@
       "sha256": "937250e1eac81a4e01f8764b61676fd782f87f3ee86fb9d7dbb295de8e9e119d"
     }
   ],
-  "aggregate_sha256": "sha256:0d8628133cecf5fac73bbf9c4bdfeaf6c6078299088270e9ea57f7f2b08cd05f"
+  "aggregate_sha256": "sha256:5d6139db7b53e740006205eed43580de5067c364cd73438465d24589a9f9c9a8"
 }

@@ -109,6 +109,9 @@ jobs:
             --command="select membership.admin_option::text || ':' || membership.inherit_option::text || ':' || membership.set_option::text from pg_catalog.pg_auth_members as membership join pg_catalog.pg_roles as granted_role on granted_role.oid = membership.roleid join pg_catalog.pg_roles as member_role on member_role.oid = membership.member where granted_role.rolname = 'laboratory_owner' and member_role.rolname = 'laboratory_migrator'")" = "false:false:true"
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select membership.admin_option::text || ':' || membership.inherit_option::text || ':' || membership.set_option::text from pg_catalog.pg_auth_members as membership join pg_catalog.pg_roles as granted_role on granted_role.oid = membership.roleid join pg_catalog.pg_roles as member_role on member_role.oid = membership.member where granted_role.rolname = 'laboratory_outbox_authority' and member_role.rolname = 'laboratory_owner'")" = "false:false:true"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command="select configuration.value from pg_catalog.pg_db_role_setting as role_setting join pg_catalog.pg_roles as member_role on member_role.oid = role_setting.setrole join pg_catalog.pg_database as target_database on target_database.oid = role_setting.setdatabase cross join lateral pg_catalog.unnest(role_setting.setconfig) as configuration(value) where member_role.rolname = 'laboratory_migrator' and target_database.datname = pg_catalog.current_database() and configuration.value like 'role=%'")" = "role=laboratory_owner"
           test "$(PGPASSWORD=synthetic-ci-migrator-password psql \
             postgresql://laboratory_migrator@127.0.0.1:5432/laboratory \
@@ -149,6 +152,12 @@ jobs:
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'tenant'")" = "laboratory_owner"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'transactional_outbox'")" = "laboratory_outbox_authority"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner join pg_catalog.pg_namespace as routine_schema on routine_schema.oid = routine.pronamespace where routine_schema.nspname = 'public' and routine.proname = 'claim_outbox_delivery' and pg_catalog.pg_get_function_identity_arguments(routine.oid) = 'text, integer'")" = "laboratory_outbox_authority"
 
       - name: Configure synthetic workload identities and verification key
         env:
@@ -256,6 +265,9 @@ jobs:
             test "$(psql "$admin_dsn" --no-psqlrc \
               --tuples-only --no-align --set ON_ERROR_STOP=1 \
               --command="select configuration.value from pg_catalog.pg_db_role_setting as role_setting join pg_catalog.pg_roles as member_role on member_role.oid = role_setting.setrole join pg_catalog.pg_database as target_database on target_database.oid = role_setting.setdatabase cross join lateral pg_catalog.unnest(role_setting.setconfig) as configuration(value) where member_role.rolname = 'laboratory_migrator' and target_database.datname = pg_catalog.current_database() and configuration.value like 'role=%'")" = "role=laboratory_owner"
+            test "$(psql "$admin_dsn" --no-psqlrc \
+              --tuples-only --no-align --set ON_ERROR_STOP=1 \
+              --command="select membership.admin_option::text || ':' || membership.inherit_option::text || ':' || membership.set_option::text from pg_catalog.pg_auth_members as membership join pg_catalog.pg_roles as granted_role on granted_role.oid = membership.roleid join pg_catalog.pg_roles as member_role on member_role.oid = membership.member where granted_role.rolname = 'laboratory_outbox_authority' and member_role.rolname = 'laboratory_owner'")" = "false:false:true"
             test "$(PGPASSWORD=synthetic-ci-migrator-password psql "$migrator_dsn" \
               --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
               --command="select session_user || ':' || current_user || ':' || current_setting('role')")" = "laboratory_migrator:laboratory_owner:laboratory_owner"
@@ -383,6 +395,12 @@ jobs:
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command "select count(*) from public.transactional_outbox where tenant_id = 'SYN-UPGRADE-TENANT' and delivery_state = 'ready' and delivery_attempts = 0 and fencing_token = 0")" = "2"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'transactional_outbox'")" = "laboratory_outbox_authority"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner join pg_catalog.pg_namespace as routine_schema on routine_schema.oid = routine.pronamespace where routine_schema.nspname = 'public' and routine.proname = 'claim_outbox_delivery' and pg_catalog.pg_get_function_identity_arguments(routine.oid) = 'text, integer'")" = "laboratory_outbox_authority"
 
       - name: Configure upgrade proof identities and verification key
         run: |
@@ -419,6 +437,12 @@ jobs:
             "$FLYWAY_IMAGE" \
             -workingDirectory=/flyway/project \
             -configFiles=/flyway/project/flyway.conf migrate
+          test "$(psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'transactional_outbox'")" = "laboratory_outbox_authority"
+          test "$(psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner join pg_catalog.pg_namespace as routine_schema on routine_schema.oid = routine.pronamespace where routine_schema.nspname = 'public' and routine.proname = 'claim_outbox_delivery' and pg_catalog.pg_get_function_identity_arguments(routine.oid) = 'text, integer'")" = "laboratory_outbox_authority"
           pg_dump "$LIMS_TEST_POSTGRES_ADMIN_DSN" \
             --schema-only --no-owner --no-privileges \
             | sed '/^\\restrict /d; /^\\unrestrict /d' > upgraded-schema.sql

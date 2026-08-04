@@ -22,6 +22,12 @@ owner identity, and exact catalog binding. Migration discovery, ordering,
 locking, transactions, history, validation, status, and replay remain
 Flyway-owned.
 
+The provisioner also gives `laboratory_owner` SET-only, non-inheriting,
+non-admin membership in the no-login `laboratory_outbox_authority`. This narrow
+edge supports V004 ownership transfer for outbox tables and trusted routines.
+Both roles retain `NOBYPASSRLS`; hosted catalog checks confirm the role graph
+and resulting object ownership before workload proofs begin.
+
 Every Compose support image carries its version tag and immutable
 multi-architecture digest. The root `.dockerignore` keeps VCS metadata, local
 environment files, caches, local receipts, key material, Terraform state, and

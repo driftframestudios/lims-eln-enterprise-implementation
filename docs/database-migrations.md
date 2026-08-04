@@ -6,8 +6,9 @@ Flyway Community 13.0.0 owns migration discovery, ordering, locking, transaction
 boundaries, applied history, checksum validation, status, and replay behavior.
 `database/flyway-release.json` pins the exact open-source Alpine image by version
 and multi-architecture digest. `database/flyway-artifact-inventory.json` binds
-the configuration, callback, and every V001-through-V004 migration by individual
-SHA-256 plus an ordered aggregate SHA-256. The release manifest binds both the
+the configuration, callback, cluster-role prerequisite, and every
+V001-through-V004 migration by individual SHA-256 plus an ordered aggregate
+SHA-256. The release manifest binds both the
 inventory file and aggregate, creating one independently reviewable release
 coordinate while Flyway continues to own applied history and mechanics.
 The aggregate canonicalization emits each inventory entry in listed order as
@@ -84,6 +85,15 @@ job. The
 provisioning step establishes the public-creation boundary before the first
 migration runs.
 
+Migration 004 deliberately transfers outbox tables and trusted routines from
+the general schema owner to the isolated `laboratory_outbox_authority` role.
+PostgreSQL requires the acting owner to hold `SET ROLE` authority for an
+ownership transfer. Provisioning therefore grants that no-login,
+`NOBYPASSRLS` role to `laboratory_owner` with `ADMIN FALSE, INHERIT FALSE, SET
+TRUE`. The owner gains a deliberate transfer operation while ordinary sessions
+gain zero inherited outbox authority. The connection callback, bounded-session
+verifier, artifact inventory, and hosted role graph all bind this exact edge.
+
 Tenant relations retain `FORCE ROW LEVEL SECURITY` during schema and data
 evolution. A permissive policy for `laboratory_owner` opens cross-tenant
 maintenance only when
@@ -138,6 +148,8 @@ scenarios. It also proves:
 - application and direct-login migrator probes remain on the signed-tenant
   path and fail closed without a verified tenant context;
 - Flyway history and domain relations are created as `laboratory_owner`;
+- outbox state tables and trusted transition routines finish under the
+  segregated `laboratory_outbox_authority` owner on clean and successor paths;
 - target V003, head migration, `info`, validation, and no-op replay behave as
   one coherent release path.
 

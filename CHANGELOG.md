@@ -13,8 +13,12 @@
   binding in a digest-bound connection callback.
 - Keep forced row-level security active during cross-tenant evolution and open
   the maintenance path only for the catalog-verified bounded migration session.
+- Preserve the segregated outbox ownership boundary through a SET-only,
+  non-inheriting, non-admin owner-to-outbox-authority membership; bind the role
+  edge and final table and routine owners on clean and successor paths.
 - Publish a digest inventory for the Flyway configuration, connection callback,
-  and every migration; pin all Compose support images; and constrain the
+  cluster-role prerequisite, and every migration; pin all Compose support
+  images; and constrain the
   container build context and local-secret exclusions.
 - Replace caller-selected tenant state with short-lived signed assertions which
   PostgreSQL verifies against private key material.

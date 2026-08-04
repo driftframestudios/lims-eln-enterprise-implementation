@@ -64,6 +64,7 @@ class DatabaseMigrationTests(unittest.TestCase):
             [
                 "flyway.conf",
                 "sql/afterConnect.sql",
+                "database/provision_cluster_roles.sql",
                 "sql/V001__laboratory_core.sql",
                 "sql/V002__principal_data_boundaries.sql",
                 "sql/V003__trusted_routines_and_outbox_cas.sql",
@@ -107,6 +108,26 @@ class DatabaseMigrationTests(unittest.TestCase):
         )
         self.assertIn("pg_catalog.pg_db_role_setting", callback)
         self.assertIn("configuration.value = 'role=laboratory_owner'", callback)
+        self.assertIn(
+            "granted_role.rolname = 'laboratory_outbox_authority'",
+            callback,
+        )
+        self.assertIn("member_role.rolname = 'laboratory_owner'", callback)
+        self.assertIn("not membership.admin_option", callback)
+        self.assertIn("not membership.inherit_option", callback)
+        self.assertIn("membership.set_option", callback)
+
+        release = json.loads(RELEASE_PATH.read_text(encoding="utf-8"))
+        provisioning = release["cluster_role_provisioning"]
+        provisioning_path = ROOT / provisioning["path"]
+        self.assertEqual(
+            provisioning["sha256"],
+            hashlib.sha256(provisioning_path.read_bytes()).hexdigest(),
+        )
+        self.assertEqual(
+            provisioning["execution"],
+            "separate_privileged_deployment_step",
+        )
 
     def test_versioned_sequence_is_complete_and_transaction_compatible(self) -> None:
         migrations = sorted((ROOT / "sql").glob("V*__*.sql"))

@@ -155,8 +155,22 @@ def validate_manifests() -> None:
         or "current_setting('role', true) <> 'laboratory_owner'" not in callback_sql
         or "pg_catalog.pg_db_role_setting" not in callback_sql
         or "configuration.value = 'role=laboratory_owner'" not in callback_sql
+        or "granted_role.rolname = 'laboratory_outbox_authority'" not in callback_sql
+        or "member_role.rolname = 'laboratory_owner'" not in callback_sql
     ):
         raise AssertionError("Flyway callback requires the released login and owner role")
+    provisioning = migration_release.get("cluster_role_provisioning", {})
+    provisioning_path = ROOT / provisioning.get("path", "")
+    if (
+        provisioning.get("path") != "database/provision_cluster_roles.sql"
+        or provisioning.get("execution")
+        != "separate_privileged_deployment_step"
+        or provisioning.get("sha256")
+        != sha256(provisioning_path.read_bytes()).hexdigest()
+    ):
+        raise AssertionError(
+            "Flyway release requires its cluster-role prerequisite digest"
+        )
     inventory_reference = migration_release.get("artifact_inventory", {})
     inventory_path = ROOT / inventory_reference.get("path", "")
     if (
@@ -170,6 +184,7 @@ def validate_manifests() -> None:
     expected_artifact_paths = [
         "flyway.conf",
         "sql/afterConnect.sql",
+        "database/provision_cluster_roles.sql",
         "sql/V001__laboratory_core.sql",
         "sql/V002__principal_data_boundaries.sql",
         "sql/V003__trusted_routines_and_outbox_cas.sql",

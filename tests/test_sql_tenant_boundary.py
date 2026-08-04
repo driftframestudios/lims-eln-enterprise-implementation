@@ -109,6 +109,8 @@ class SqlTenantStructureTests(unittest.TestCase):
             "not membership.admin_option",
             "not membership.inherit_option",
             "membership.set_option",
+            "granted_role.rolname = 'laboratory_outbox_authority'",
+            "member_role.rolname = 'laboratory_owner'",
             "configuration.value = 'role=laboratory_owner'",
             "database_acl.privilege_type = 'connect'",
             "not database_acl.is_grantable",
@@ -224,6 +226,11 @@ class SqlTenantStructureTests(unittest.TestCase):
         self.assertRegex(
             role_sql,
             r"grant\s+laboratory_owner\s+to\s+laboratory_migrator\s+"
+            r"with\s+admin\s+false,\s+inherit\s+false,\s+set\s+true",
+        )
+        self.assertRegex(
+            role_sql,
+            r"grant\s+laboratory_outbox_authority\s+to\s+laboratory_owner\s+"
             r"with\s+admin\s+false,\s+inherit\s+false,\s+set\s+true",
         )
         self.assertIn(

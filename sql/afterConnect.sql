@@ -32,5 +32,22 @@ begin
             errcode = '42501',
             message = 'Flyway requires the released database-scoped role setting';
     end if;
+    if not exists (
+        select 1
+          from pg_catalog.pg_auth_members as membership
+          join pg_catalog.pg_roles as granted_role
+            on granted_role.oid = membership.roleid
+          join pg_catalog.pg_roles as member_role
+            on member_role.oid = membership.member
+         where granted_role.rolname = 'laboratory_outbox_authority'
+           and member_role.rolname = 'laboratory_owner'
+           and not membership.admin_option
+           and not membership.inherit_option
+           and membership.set_option
+    ) then
+        raise exception using
+            errcode = '42501',
+            message = 'Flyway requires the released ownership-transfer membership';
+    end if;
 end;
 $flyway_connection_authority$;

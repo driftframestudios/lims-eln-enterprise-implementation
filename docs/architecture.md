@@ -179,6 +179,14 @@ direct-DDL-rejecting privilege set. The credential can deliberately select the
 owner through its released membership and therefore enters only the migration
 workload boundary.
 
+V004 moves outbox state relations and trusted transition routines to the
+isolated `laboratory_outbox_authority`. The schema owner receives a single
+`ADMIN FALSE, INHERIT FALSE, SET TRUE` membership so it can perform PostgreSQL's
+required ownership transfer. Both roles remain `NOLOGIN NOBYPASSRLS`, and
+`INHERIT FALSE` keeps the transfer capability distinct from ambient runtime
+authority. Static and hosted catalog proofs verify the exact role edge and the
+final table and routine owners on clean and successor paths.
+
 Forced row-level security remains active during migration. Every tenant table
 has a second permissive policy scoped to `laboratory_owner` whose predicate
 verifies the complete catalog-backed migration session coordinate. The ordinary

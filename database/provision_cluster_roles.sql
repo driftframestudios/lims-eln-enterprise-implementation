@@ -56,6 +56,8 @@ $role_provisioning$;
 
 grant laboratory_owner to laboratory_migrator
     with admin false, inherit false, set true;
+grant laboratory_outbox_authority to laboratory_owner
+    with admin false, inherit false, set true;
 
 select pg_catalog.format(
     'alter role laboratory_migrator in database %I set role to laboratory_owner',
