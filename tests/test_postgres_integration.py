@@ -87,9 +87,9 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         ]
         for name, value in sorted((variables or {}).items()):
             command.extend(("--set", f"{name}={value}"))
-        command.extend(("--command", sql))
         return subprocess.run(
             command,
+            input=sql,
             check=check,
             capture_output=True,
             text=True,
