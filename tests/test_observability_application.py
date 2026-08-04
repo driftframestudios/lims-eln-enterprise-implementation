@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import unittest
 
+from helpers import NOW
+
 from lims_eln_implementation.application import (
     build_reference_golden_specimen_application,
 )
-from lims_eln_implementation.bounded_caller import CallDenied
 from lims_eln_implementation.custody import CustodyService
 from lims_eln_implementation.instrument import InstrumentIngress
 from lims_eln_implementation.lifecycle import LifecycleService
@@ -16,8 +17,6 @@ from lims_eln_implementation.vendors import (
     InMemoryVendorGateway,
     VendorProjectionService,
 )
-
-from helpers import NOW
 
 
 class ObservabilityTests(unittest.TestCase):
@@ -47,10 +46,6 @@ class GoldenSpecimenTests(unittest.TestCase):
             custody=CustodyService(InMemoryOutbox()),
             ingress=InstrumentIngress(),
             projection=VendorProjectionService(gateway),
-            tenant_id="SYN-TENANT-A",
-            caller_id="svc-reference-workflow",
-            actor_ids=frozenset({"SYN-ACTOR-01"}),
-            clock=lambda: NOW,
         )
         outcome = application.process(
             call_id="SYN-GOLDEN-CALL-001",
@@ -58,46 +53,13 @@ class GoldenSpecimenTests(unittest.TestCase):
             specimen_id="SYN-SPECIMEN-0001",
             actor_id="SYN-ACTOR-01",
             occurred_at=NOW,
-            raw_instrument_json=(
-                b'{"analyte":"synthetic-dna","value":"12.5","unit":"ng/uL"}'
-            ),
+            raw_instrument_json=(b'{"analyte":"synthetic-dna","value":"12.5","unit":"ng/uL"}'),
             vendor_payload={"status": "under_review"},
         )
         self.assertEqual(outcome.aggregate.state, "accessioned")
         self.assertEqual(outcome.custody_location, "SYN-LAB-A/RECEIVING")
         self.assertTrue(outcome.projection.reconciled)
         self.assertEqual(len(outcome.instrument_digest), 64)
-        self.assertEqual(outcome.call_decision, "succeeded")
-        self.assertTrue(outcome.call_receipt_id)
-
-    def test_application_boundary_denies_actor_outside_issued_grant(self) -> None:
-        application = build_reference_golden_specimen_application(
-            lifecycle=LifecycleService(InMemorySpecimenRepository()),
-            custody=CustodyService(InMemoryOutbox()),
-            ingress=InstrumentIngress(),
-            projection=VendorProjectionService(
-                InMemoryVendorGateway("synthetic-labkey")
-            ),
-            tenant_id="SYN-TENANT-A",
-            caller_id="svc-reference-workflow",
-            actor_ids=frozenset({"SYN-ACTOR-01"}),
-            clock=lambda: NOW,
-        )
-
-        with self.assertRaises(CallDenied) as captured:
-            application.process(
-                call_id="SYN-GOLDEN-CALL-DENIED",
-                tenant_id="SYN-TENANT-A",
-                specimen_id="SYN-SPECIMEN-0002",
-                actor_id="SYN-ACTOR-OUTSIDE-GRANT",
-                occurred_at=NOW,
-                raw_instrument_json=(
-                    b'{"analyte":"synthetic-dna","value":"12.5","unit":"ng/uL"}'
-                ),
-                vendor_payload={"status": "under_review"},
-            )
-
-        self.assertEqual(captured.exception.reason_code, "actor_outside_grant")
 
 
 if __name__ == "__main__":

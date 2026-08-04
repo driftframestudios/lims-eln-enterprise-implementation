@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from hashlib import sha256
-import json
 from types import MappingProxyType
-from typing import Any, Mapping
+from typing import Any
 
 
 class DomainError(ValueError):
@@ -37,11 +38,12 @@ def require_aware_utc(value: datetime) -> datetime:
     """Return a timezone-aware UTC timestamp or explain the required replacement."""
     if value.tzinfo is None or value.utcoffset() is None:
         raise DomainError("timestamp requires an explicit timezone; supply an aware UTC value")
-    return value.astimezone(timezone.utc)
+    return value.astimezone(UTC)
 
 
 def canonical_json(value: Any) -> str:
     """Serialize a value into a stable comparison form."""
+
     def normalize(item: Any) -> Any:
         if isinstance(item, Mapping):
             if any(not isinstance(key, str) for key in item):
@@ -72,9 +74,7 @@ def canonical_digest(value: Any) -> str:
 def immutable_json(value: Any) -> Any:
     """Return a recursively immutable snapshot of already-normalized JSON."""
     if isinstance(value, Mapping):
-        return MappingProxyType(
-            {key: immutable_json(item) for key, item in value.items()}
-        )
+        return MappingProxyType({key: immutable_json(item) for key, item in value.items()})
     if isinstance(value, (list, tuple)):
         return tuple(immutable_json(item) for item in value)
     return value

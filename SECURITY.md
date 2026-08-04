@@ -1,26 +1,25 @@
 # Security
 
-Use the repository owner’s private security-reporting channel for vulnerability
-reports. Include the affected commit, scenario, material effect, and a safe
-reproduction using synthetic data.
+Use the repository owner's private security-reporting channel for vulnerability
+reports. Include the affected commit, material effect, and a safe reproduction
+using synthetic data.
 
-Repository tests use invented fixtures. Credentials stay in an approved secret
-manager; workflows receive short-lived identity credentials. Logs and receipts
-use allowlisted fields and replace protected values with `[REDACTED]`.
+Repository fixtures contain invented laboratory values. Runtime credentials
+belong in Secrets Manager, mounted secret files, or the selected deployment
+platform. Workflows use short-lived platform identity. Logs use allowlisted
+fields and replace protected values with `[REDACTED]`.
 
-AWS runtime configuration uses Parameter Store for non-sensitive settings and
-Secrets Manager for rotatable credentials. The reference Terraform places
-secret metadata and encryption controls in state while an approved rotation
-workflow supplies plaintext versions. Workloads receive AWS access through
-platform identity and exact-resource IAM policy. Full resource ARNs are checked
-against the expected partition, Region, and account before retrieval.
+AWS runtime settings use Parameter Store for non-sensitive configuration and
+Secrets Manager for rotatable credentials. Terraform creates exact-resource IAM
+policy and value-free secret metadata. AWS Powertools Parameters supplies
+retrieval and provider caching. Workloads receive AWS access through platform
+identity.
 
-The runtime cache is process-local, bounded, and time-limited. Expiry returns
-control to the provider and caller recovery policy. Structured resolution
-errors, safe value representations, and the logging guard expose metadata while
-replacing runtime values. See
-`docs/runbooks/aws-runtime-configuration-and-secret-rotation.md`.
+PostgreSQL row policies use a transaction-local tenant coordinate after the
+application authenticates and authorizes the request. The selected identity
+provider and application policy remain the authorization source.
 
-Adopting teams establish threat models, identity reviews, network policy,
-dependency governance, privacy review, retention, incident response, and
-configured-environment qualification.
+GitHub Rulesets, required checks, dependency updates, and platform secret
+scanning provide repository controls. Adopting teams add their threat model,
+network policy, privacy program, retention, incident response, and configured
+vendor assessment.

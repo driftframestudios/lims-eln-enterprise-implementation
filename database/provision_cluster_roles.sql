@@ -5,6 +5,9 @@ declare
     role_spec record;
     observed_role record;
 begin
+    -- Authority, recovery, and evidence identities support immutable V001-V004.
+    -- The successor migration removes their runtime capabilities. Connector
+    -- replication attributes remain a hosting-platform responsibility.
     for role_spec in
         select *
           from (values
@@ -12,8 +15,8 @@ begin
               ('laboratory_app'::name, true),
               ('laboratory_outbox_worker'::name, true),
               ('laboratory_outbox_authority'::name, false),
-              ('laboratory_outbox_recovery_operator'::name, true),
-              ('laboratory_evidence_writer'::name, true),
+              ('laboratory_outbox_recovery_operator'::name, false),
+              ('laboratory_evidence_writer'::name, false),
               ('laboratory_migrator'::name, true)
           ) as required_role(role_name, can_login)
     loop
@@ -36,8 +39,7 @@ begin
                 role_spec.role_name,
                 case when role_spec.can_login then 'login' else 'nologin' end
             );
-        elsif observed_role.rolcanlogin is distinct from role_spec.can_login
-           or observed_role.rolsuper
+        elsif observed_role.rolsuper
            or observed_role.rolcreatedb
            or observed_role.rolcreaterole
            or observed_role.rolinherit
@@ -49,6 +51,12 @@ begin
                     'cluster role %I requires the released least-privilege attributes',
                     role_spec.role_name
                 );
+        elsif observed_role.rolcanlogin is distinct from role_spec.can_login then
+            execute pg_catalog.format(
+                'alter role %I %s',
+                role_spec.role_name,
+                case when role_spec.can_login then 'login' else 'nologin' end
+            );
         end if;
     end loop;
 end;

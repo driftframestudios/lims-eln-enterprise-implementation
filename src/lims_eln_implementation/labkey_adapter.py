@@ -8,8 +8,9 @@ configuration; the repository carries no credential value.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping, Protocol
+from typing import Any, Protocol
 from urllib.parse import quote
 
 from .model import canonical_digest
@@ -119,9 +120,7 @@ class LabKeyJsonApiClient:
         self._require_success(response, operation="write")
         rows = response.document.get("rows")
         if not isinstance(rows, list) or len(rows) != 1:
-            raise AmbiguousVendorWrite(
-                "LabKey write response requires one attributable row"
-            )
+            raise AmbiguousVendorWrite("LabKey write response requires one attributable row")
         row = rows[0]
         if not isinstance(row, Mapping):
             raise AmbiguousVendorWrite("LabKey write row requires an object")
@@ -150,9 +149,7 @@ class LabKeyJsonApiClient:
         if not rows:
             return None
         if len(rows) != 1:
-            raise RuntimeError(
-                "LabKey external identity requires one tenant-scoped record"
-            )
+            raise RuntimeError("LabKey external identity requires one tenant-scoped record")
         return self._decode_row(rows[0], tenant_id=tenant_id)
 
     def list_records_page(
@@ -212,9 +209,7 @@ class LabKeyJsonApiClient:
             query=query,
         )
         if response.status_code in {429, 500, 502, 503, 504}:
-            raise RetryableVendorRead(
-                "LabKey read can retry within the configured bounded policy"
-            )
+            raise RetryableVendorRead("LabKey read can retry within the configured bounded policy")
         self._require_success(response, operation="read")
         return response
 
@@ -229,9 +224,7 @@ class LabKeyJsonApiClient:
     ) -> LabKeyHttpResponse:
         authorization = self._authorization_header()
         if not authorization or "\n" in authorization or "\r" in authorization:
-            raise PermissionError(
-                "LabKey authorization requires a safe runtime header value"
-            )
+            raise PermissionError("LabKey authorization requires a safe runtime header value")
         headers = {
             "Authorization": authorization,
             "Accept": "application/json",
@@ -239,10 +232,7 @@ class LabKeyJsonApiClient:
         }
         if request_id is not None:
             headers["X-Request-ID"] = request_id
-        path = (
-            f"/{quote(self._container_path, safe='/')}/query-"
-            f"{action}.api"
-        )
+        path = f"/{quote(self._container_path, safe='/')}/query-{action}.api"
         return self._transport.request(
             method=method,
             path=path,
@@ -259,20 +249,14 @@ class LabKeyJsonApiClient:
         operation: str,
     ) -> None:
         if response.status_code in {401, 403}:
-            raise PermissionError(
-                f"LabKey {operation} requires an authorized workload identity"
-            )
+            raise PermissionError(f"LabKey {operation} requires an authorized workload identity")
         if not 200 <= response.status_code < 300:
-            raise RuntimeError(
-                f"LabKey {operation} returned status {response.status_code}"
-            )
+            raise RuntimeError(f"LabKey {operation} returned status {response.status_code}")
 
     @staticmethod
     def _rows(response: LabKeyHttpResponse) -> list[Mapping[str, Any]]:
         rows = response.document.get("rows")
-        if not isinstance(rows, list) or not all(
-            isinstance(row, Mapping) for row in rows
-        ):
+        if not isinstance(rows, list) or not all(isinstance(row, Mapping) for row in rows):
             raise RuntimeError("LabKey response rows require an object list")
         return rows
 

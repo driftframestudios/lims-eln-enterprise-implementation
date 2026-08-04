@@ -1,23 +1,19 @@
 # Contributing
 
-Every change should strengthen a traceable claim.
+Changes should strengthen a material LIMS/ELN vendor-evaluation or data-integrity
+capability.
 
-1. Start from `develop` using `feature/<receipt-or-capability>`.
-2. Add or update a stable scenario, its failure twin, and its recovery behavior.
-3. Keep fixtures synthetic and tenant-scoped.
-4. Phrase comments and identifiers as desired-state attractors.
-5. Preserve explicit privacy and safety boundaries, paired with the replacement
-   behavior the system performs.
-6. Run `python3 scripts/validate_repository.py`.
-7. Open a pull request into `develop` with evidence and limitations.
+1. Describe the domain or integration behavior being changed.
+2. Reuse an established framework for migration, retry, event delivery,
+   telemetry, configuration, secrets, and repository policy.
+3. Add the smallest test that proves the observable behavior and its failure
+   twin.
+4. Keep fixtures synthetic and tenant-scoped.
+5. Use affirmative comments that state the desired behavior and recovery path.
+6. Run `make validate`, `make test`, and `make build`.
+7. Open a pull request with material effect, compatibility, verification, and
+   configured-environment gaps.
 
-Release candidates flow from `develop` to `release/<version>`, then to `main`.
-Production corrections flow from `main` through `hotfix/<receipt-id>` and return
-to both `main` and `develop`. Details live in `docs/branching-and-release.md`.
-
-Dependabot and Renovate maintenance pull requests follow the bot-bound branch
-policy in the branching guide. Their updates retain the same tests, review,
-release evidence, and merge-forward expectations as contributor changes.
-
-A merge approval confirms engineering review. Scientific, Quality, Regulatory,
-security, privacy, and production acceptance remain distinct, named decisions.
+GitFlow-like branch names remain a collaboration convention. GitHub Rulesets
+and required checks enforce protected-branch behavior at the hosting boundary.
+The repository contains no second branch-policy implementation.

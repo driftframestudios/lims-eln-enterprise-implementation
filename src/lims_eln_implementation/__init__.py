@@ -1,6 +1,6 @@
-"""Evidence-bearing LIMS/ELN reference implementation."""
+"""LIMS/ELN vendor-evaluation reference implementation."""
 
 from .model import Command, SpecimenAggregate, SpecimenState
 
 __all__ = ["Command", "SpecimenAggregate", "SpecimenState"]
-__version__ = "0.3.1"
+__version__ = "0.4.0"

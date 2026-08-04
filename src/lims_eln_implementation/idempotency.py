@@ -4,10 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Generic, TypeVar
-
-
-T = TypeVar("T")
 
 
 class IdempotencyError(ValueError):
@@ -29,19 +25,19 @@ class ReservationState(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class Reservation(Generic[T]):
+class Reservation[T]:
     state: ReservationState
     outcome: T | None = None
 
 
 @dataclass(slots=True)
-class _Entry(Generic[T]):
+class _Entry[T]:
     content_digest: str
     outcome: T | None = None
     committed: bool = False
 
 
-class IdempotencyLedger(Generic[T]):
+class IdempotencyLedger[T]:
     """In-memory contract mirroring a durable unique-key ledger."""
 
     def __init__(self) -> None:

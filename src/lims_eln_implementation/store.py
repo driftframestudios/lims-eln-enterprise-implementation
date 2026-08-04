@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+import json
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from hashlib import sha256
-import json
 from threading import RLock
-from typing import Any, Generic, Mapping, Protocol, TypeVar
+from typing import Any, Protocol
 
 from .model import (
     DomainError,
@@ -16,9 +16,6 @@ from .model import (
     canonical_json,
     immutable_json,
 )
-
-
-T = TypeVar("T")
 
 
 class TransactionParticipant(Protocol):
@@ -32,10 +29,10 @@ class TransactionParticipant(Protocol):
 class AtomicExecutor(Protocol):
     """One commit boundary shared by application state and its evidence."""
 
-    def execute(self, operation: Callable[[], T]) -> T: ...
+    def execute[T](self, operation: Callable[[], T]) -> T: ...
 
 
-class InMemoryAtomicExecutor(Generic[T]):
+class InMemoryAtomicExecutor:
     """Serial, rollback-capable conformance adapter for a database transaction.
 
     Deployment adapters implement ``AtomicExecutor`` with one database
@@ -48,18 +45,15 @@ class InMemoryAtomicExecutor(Generic[T]):
         self._participants = participants
         self._lock = RLock()
 
-    def execute(self, operation: Callable[[], T]) -> T:
+    def execute[T](self, operation: Callable[[], T]) -> T:
         with self._lock:
             snapshots = tuple(
-                participant.transaction_snapshot()
-                for participant in self._participants
+                participant.transaction_snapshot() for participant in self._participants
             )
             try:
                 return operation()
             except BaseException:
-                for participant, snapshot in reversed(
-                    tuple(zip(self._participants, snapshots))
-                ):
+                for participant, snapshot in reversed(tuple(zip(self._participants, snapshots))):
                     participant.transaction_restore(snapshot)
                 raise
 
@@ -174,6 +168,5 @@ class InMemoryOutbox:
             raise TypeError("outbox transaction snapshot requires a tuple")
         self.messages = list(snapshot)
         self._by_identity = {
-            (message.tenant_id, message.message_id): message
-            for message in self.messages
+            (message.tenant_id, message.message_id): message for message in self.messages
         }

@@ -20,7 +20,6 @@ from .model import (
 )
 from .store import AtomicExecutor, InMemoryAtomicExecutor, SpecimenRepository
 
-
 _EVENT_NAMESPACE = UUID("85f45b64-16d2-4e80-a90b-37a181443dd2")
 
 _TRANSITIONS: dict[tuple[SpecimenState, str], SpecimenState] = {
@@ -48,9 +47,7 @@ class LifecycleService:
                 and hasattr(participant, "transaction_restore")
                 for participant in (repository, self._idempotency)
             ):
-                raise ValueError(
-                    "durable lifecycle adapters require one shared atomic executor"
-                )
+                raise ValueError("durable lifecycle adapters require one shared atomic executor")
             atomic = InMemoryAtomicExecutor((repository, self._idempotency))  # type: ignore[arg-type]
         self._atomic = atomic
 
@@ -118,9 +115,7 @@ class LifecycleService:
             version=current.version + 1,
             attributes={**current.attributes, **dict(command.payload)},
         )
-        next_aggregate = self._append_event(
-            next_aggregate, command, f"specimen.{command.action}"
-        )
+        next_aggregate = self._append_event(next_aggregate, command, f"specimen.{command.action}")
         self._repository.save(next_aggregate, previous_version=current.version)
         self._idempotency.commit(command.tenant_id, command.command_id, next_aggregate)
         return next_aggregate

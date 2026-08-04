@@ -60,9 +60,6 @@ services:
       - postgres_password
       - postgres_app_password
       - postgres_outbox_password
-      - postgres_recovery_password
-      - postgres_evidence_password
-      - postgres_tenant_hmac_key
     volumes:
       - ./postgres-init/010_application_password.sh:/usr/local/bin/configure-database-identities:ro
     entrypoint: ["/usr/local/bin/configure-database-identities"]
@@ -116,14 +113,8 @@ secrets:
     file: ./secrets/postgres_app_password.txt
   postgres_outbox_password:
     file: ./secrets/postgres_outbox_password.txt
-  postgres_recovery_password:
-    file: ./secrets/postgres_recovery_password.txt
-  postgres_evidence_password:
-    file: ./secrets/postgres_evidence_password.txt
   postgres_migrator_password:
     file: ./secrets/postgres_migrator_password.txt
-  postgres_tenant_hmac_key:
-    file: ./secrets/postgres_tenant_hmac_key.txt
 
 volumes:
   postgres-data:

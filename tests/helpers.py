@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from lims_eln_implementation.model import Command
 
-
-NOW = datetime(2026, 7, 28, 12, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 7, 28, 12, 0, tzinfo=UTC)
 
 
 def command(
@@ -27,4 +26,3 @@ def command(
         payload=payload or {},
         reason_code=reason,
     )
-

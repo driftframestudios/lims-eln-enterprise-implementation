@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Mapping, Protocol
+from typing import Any, Protocol
 
 
 class WriteCertainty(StrEnum):
@@ -47,4 +48,3 @@ class VendorGateway(Protocol):
 
 class VendorRevisionConflict(RuntimeError):
     """The external record advanced beyond the caller's source revision."""
-

@@ -1,31 +1,18 @@
-# Runbook — security and observability exercise
+# Security and observability incident
 
-## Target state
+1. Open the organization's incident process and record the affected service,
+   tenant scope, time window, and data classes.
+2. Preserve relevant OpenTelemetry traces, metrics, logs, CloudTrail events,
+   database logs, and vendor request identifiers.
+3. Rotate affected Secrets Manager versions and workload credentials through
+   established platform procedures.
+4. Restrict affected integration traffic while preserving recoverable source
+   and outbox data.
+5. Compare canonical domain state with vendor readback and broker offsets.
+6. Reconcile ambiguous writes by stable request and external identity.
+7. Restore service through the deployment platform and observe SLO indicators.
+8. Retain the incident timeline and corrective work in the organization's
+   incident and change systems.
 
-Production-bound controls preserve tenant isolation, protected-data handling,
-auditability, and actionable service visibility during ordinary and stressed
-operation.
-
-## Exercise
-
-1. Establish approved synthetic canaries for protected-field discovery.
-2. Exercise cross-tenant access, revoked identity, expired break-glass access,
-   replayed events, and signature-role separation.
-3. Rotate a workload credential and observe continued authorized operation.
-4. Saturate an integration queue and observe backpressure, alerting, and recovery.
-5. Interrupt telemetry export and observe bounded buffering and collector recovery.
-6. Inject an application-level semantic failure that still returns transport success.
-7. Confirm dashboards expose good-event numerator, valid-event denominator,
-   window, target, and current value.
-8. Route the incident to the secondary responder and exercise laboratory
-   continuity while the primary responder is unavailable.
-9. Search logs, traces, metrics, and receipts for synthetic canaries.
-10. Replace discovered protected values, repair the emitting boundary, and
-    repeat the exercise until the canary search is clear.
-
-## Receipt
-
-Capture control IDs, environment and configuration digests, actors, timestamps,
-expected and observed signals, alert latency, recovery time, canary search,
-deviations, owners, reviewer, and retest trigger.
-
+Telemetry uses allowlisted fields and the repository's redactor. Protected
+payloads remain in approved operational stores.

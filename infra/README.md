@@ -1,68 +1,37 @@
 # Infrastructure reference
 
-`docker-compose.yml` supplies a production-shape local environment: PostgreSQL,
-S3-compatible object storage, and an OpenTelemetry collector with protected
-attribute removal.
+`docker-compose.yml` supplies PostgreSQL 17, S3-compatible object storage, and
+an OpenTelemetry Collector for local integration work.
 
-The PostgreSQL path first provisions and verifies cluster roles through a
-separate privileged step. A one-shot, digest-pinned Flyway Community 13.0.0
-container then applies versioned migrations, validates their checksums through
-Flyway history, and exits. A following secret-bound step configures synthetic
-local role passwords and the tenant-verification key. The application proof
-waits for all three stages to complete successfully.
+The PostgreSQL path:
 
-The Flyway image receives its JDBC URL and `laboratory_migrator` user as
-ordinary configuration. Its small entry adapter reads only the migrator
-credential from the mounted secret file and delegates directly to Flyway. The
-bootstrap credential remains on the preceding role-provisioning service. The
-role provisioner stores a target-database startup setting that selects the
-no-login `laboratory_owner` role through an explicit non-inheriting membership.
-It assigns the target `public` schema to that owner so migration-controlled
-grants have one attributable authority.
-The released connection callback verifies the authenticated login, effective
-owner identity, and exact catalog binding. Migration discovery, ordering,
-locking, transactions, history, validation, status, and replay remain
-Flyway-owned.
+1. provisions migration-compatible cluster roles;
+2. runs the pinned Flyway Community container with its dedicated migrator
+   secret;
+3. configures local application and Debezium connector passwords; and
+4. makes the application database check available through the `proof` profile.
 
-The provisioner also gives `laboratory_owner` SET-only, non-inheriting,
-non-admin membership in the no-login `laboratory_outbox_authority`. This narrow
-edge supports V004 ownership transfer for outbox tables and trusted routines.
-V004 brackets the ownership statements with a transaction-scoped schema
-creation grant and its revocation. Both roles retain `NOBYPASSRLS`; hosted
-catalog checks confirm the role graph, resulting object ownership, and absent
-schema-creation privilege before workload proofs begin.
+V001–V004 reference historical recovery and evidence roles, so fresh installs
+create those identities while applying immutable history. The timestamped
+successor migration removes their runtime tables and privileges. The active
+application uses `laboratory_app`. A configured Debezium deployment can use the
+read-only outbox identity plus the logical-replication privileges required by
+its PostgreSQL hosting platform.
 
-Every Compose support image carries its version tag and immutable
-multi-architecture digest. The root `.dockerignore` keeps VCS metadata, local
-environment files, caches, local receipts, key material, Terraform state, and
-`infra/secrets` outside the migrator build context.
+`debezium/outbox-event-router.properties` contains only Outbox Event Router
+column mapping and INSERT-only behavior. Connector database, Kafka, TLS, and
+schema-history credentials arrive from the deployment secret provider.
 
-`terraform/` supplies an AWS evidence and recovery baseline with:
+`terraform/` creates:
 
-- customer-managed encryption and rotation;
-- private, versioned object storage;
-- archival lifecycle and explicit retention;
-- a backup vault awaiting an environment-owned plan, selection, vault lock,
-  and restore schedule;
-- encrypted operational logs.
-- Parameter Store entries for non-sensitive runtime configuration;
-- Secrets Manager metadata with customer-managed encryption;
-- a value-free runtime catalog and exact-resource read policy.
+- Parameter Store values for non-sensitive runtime configuration;
+- Secrets Manager metadata for rotatable vendor credentials;
+- a customer-managed KMS key and alias; and
+- an IAM policy scoped to the exact generated resources.
 
-The Terraform is an architectural baseline rather than an active backup
-implementation. An adopting organization adds its
-network, identity federation, database topology, workload runtime, backup plan,
-regional design, policy-as-code, and accountable approval before deployment.
+Secret versions enter Secrets Manager through the deployment or rotation
+workflow. Terraform state and outputs remain value-free for secret contents.
 
-Local secret files live at `infra/secrets/*.txt`, remain outside version
-control through explicit root and directory-level ignore rules, and contain
-synthetic development credentials only. The required
-PostgreSQL files cover bootstrap, application, outbox, recovery, evidence, and
-migrator passwords plus a 32-byte tenant HMAC key encoded as 64 lowercase
-hexadecimal characters.
-
-Secret versions enter Secrets Manager through the protected deployment or
-rotation workflow described in
-`../docs/runbooks/aws-runtime-configuration-and-secret-rotation.md`. Terraform
-manages secret identity, recovery posture, encryption, and least-privilege
-retrieval policy while plaintext remains in the dedicated secret lifecycle.
+Local files under `infra/secrets/*.txt` are excluded from version control. The
+Compose profile expects bootstrap, migrator, application, outbox connector,
+object-store passwords. These files contain synthetic local values only.

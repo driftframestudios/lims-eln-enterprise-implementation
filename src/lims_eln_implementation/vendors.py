@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Mapping
+from typing import Any
 from uuid import UUID, uuid5
 
 from .idempotency import IdempotencyInProgress, IdempotencyLedger, ReservationState
@@ -17,7 +18,6 @@ from .ports import (
     WriteCertainty,
     WriteResult,
 )
-
 
 _TRACE_NAMESPACE = UUID("51570d34-c434-41b7-a3cf-5f6a577fe3d4")
 
@@ -144,9 +144,7 @@ class VendorProjectionService:
             authoritative = self._gateway.read(
                 tenant_id=tenant_id, external_identity=external_identity
             )
-            is_match = bool(
-                authoritative and authoritative.canonical_digest == payload_digest
-            )
+            is_match = bool(authoritative and authoritative.canonical_digest == payload_digest)
             self._metrics.reconciliation.observe(good=is_match)
             if not is_match:
                 self._metrics.vendor_projection.observe(good=False)

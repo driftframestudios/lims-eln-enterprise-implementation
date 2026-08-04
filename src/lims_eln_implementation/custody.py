@@ -134,9 +134,7 @@ class CustodyService:
                 and hasattr(participant, "transaction_restore")
                 for participant in (self._repository, outbox)
             ):
-                raise ValueError(
-                    "durable custody adapters require one shared atomic executor"
-                )
+                raise ValueError("durable custody adapters require one shared atomic executor")
             atomic = InMemoryAtomicExecutor((self._repository, outbox))  # type: ignore[arg-type]
         self._atomic = atomic
 

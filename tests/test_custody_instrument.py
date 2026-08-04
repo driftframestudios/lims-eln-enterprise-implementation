@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import unittest
 
+from helpers import NOW
+
 from lims_eln_implementation.custody import CustodyService
 from lims_eln_implementation.instrument import (
     IngressDisposition,
@@ -15,8 +17,6 @@ from lims_eln_implementation.store import (
     OutboxContentCollision,
     OutboxMessage,
 )
-
-from helpers import NOW
 
 
 class CustodyTests(unittest.TestCase):
@@ -102,9 +102,7 @@ class CustodyTests(unittest.TestCase):
                 transfer_id="SYN-TRANSFER-002",
                 occurred_at=NOW,
             )
-        self.assertEqual(
-            service.current("SYN-TENANT-A", "SYN-SPECIMEN-0001"), first
-        )
+        self.assertEqual(service.current("SYN-TENANT-A", "SYN-SPECIMEN-0001"), first)
 
     def test_outbox_failure_rolls_back_custody_position(self) -> None:
         class FailingOutbox(InMemoryOutbox):
@@ -197,9 +195,7 @@ class InstrumentIngressTests(unittest.TestCase):
         )
 
     def test_valid_message_preserves_raw_digest(self) -> None:
-        envelope = self.envelope(
-            b'{"analyte":"synthetic-dna","value":"12.5","unit":"ng/uL"}'
-        )
+        envelope = self.envelope(b'{"analyte":"synthetic-dna","value":"12.5","unit":"ng/uL"}')
         result = self.ingress.ingest(envelope)
         self.assertEqual(result.disposition, IngressDisposition.ACCEPTED)
         self.assertEqual(result.raw_sha256, envelope.raw_sha256)
@@ -214,18 +210,14 @@ class InstrumentIngressTests(unittest.TestCase):
         )
 
     def test_exact_replay_reuses_normalized_outcome(self) -> None:
-        envelope = self.envelope(
-            b'{"analyte":"synthetic-dna","value":"12.5","unit":"ng/uL"}'
-        )
+        envelope = self.envelope(b'{"analyte":"synthetic-dna","value":"12.5","unit":"ng/uL"}')
         first = self.ingress.ingest(envelope)
         replay = self.ingress.ingest(envelope)
         self.assertEqual(replay.disposition, IngressDisposition.REPLAYED)
         self.assertEqual(replay.normalized_digest, first.normalized_digest)
 
     def test_changed_bytes_on_message_identity_enter_quarantine(self) -> None:
-        self.ingress.ingest(
-            self.envelope(b'{"analyte":"A","value":"1","unit":"ng/uL"}')
-        )
+        self.ingress.ingest(self.envelope(b'{"analyte":"A","value":"1","unit":"ng/uL"}'))
         collision = self.ingress.ingest(
             self.envelope(b'{"analyte":"A","value":"2","unit":"ng/uL"}')
         )
@@ -234,9 +226,7 @@ class InstrumentIngressTests(unittest.TestCase):
         self.assertIn("new source message identity", collision.recovery)
 
     def test_unsupported_unit_routes_to_scientific_mapping(self) -> None:
-        result = self.ingress.ingest(
-            self.envelope(b'{"analyte":"A","value":"1","unit":"mystery"}')
-        )
+        result = self.ingress.ingest(self.envelope(b'{"analyte":"A","value":"1","unit":"mystery"}'))
         self.assertEqual(result.disposition, IngressDisposition.QUARANTINED)
         self.assertEqual(result.reason_code, "unsupported_unit")
         self.assertIn("scientific review", result.recovery)
@@ -255,9 +245,7 @@ class InstrumentIngressTests(unittest.TestCase):
         }
         for index, (label, raw) in enumerate(examples.items(), start=1):
             with self.subTest(label=label):
-                result = self.ingress.ingest(
-                    self.envelope(raw, message_id=f"SYN-STRICT-{index}")
-                )
+                result = self.ingress.ingest(self.envelope(raw, message_id=f"SYN-STRICT-{index}"))
                 self.assertEqual(result.disposition, IngressDisposition.QUARANTINED)
                 self.assertIsNone(result.normalized_digest)
 

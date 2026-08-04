@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from hashlib import sha256
-import json
+from typing import ClassVar
 
 from .model import canonical_digest, require_aware_utc
 
@@ -65,7 +66,7 @@ class InstrumentIngress:
 
     _MAX_PAYLOAD_BYTES = 1024 * 1024
     _RELEASED_FIELDS = frozenset({"analyte", "value", "unit"})
-    _UNIT_PROFILE = {
+    _UNIT_PROFILE: ClassVar[dict[str, tuple[str, str]]] = {
         "ng/uL": ("ng/uL", "http://unitsofmeasure.org"),
         "copies/uL": ("{copies}/uL", "http://unitsofmeasure.org"),
         "{copies}/uL": ("{copies}/uL", "http://unitsofmeasure.org"),

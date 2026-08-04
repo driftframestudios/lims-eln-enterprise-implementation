@@ -1,36 +1,16 @@
-## Claim and material effect
+## Material effect
 
-- Claim ID:
-- Population cartographies served:
-- Material effect:
+- LIMS/ELN domain or vendor-evaluation behavior:
+- Data or API compatibility:
+- Framework or managed service used:
 
-## Specification by example
+## Verification
 
-- Success scenario:
-- Boundary scenario:
-- Failure twin:
-- Recovery scenario:
-- Falsifying scenario:
+- Unit or integration tests:
+- PostgreSQL/Flyway impact:
+- Configured-environment follow-up:
 
-## Evidence
+## Scope
 
-- Validation command and result:
-- Fixture profile:
-- Environment and version bindings:
-- Receipt or artifact digests:
-- Limitations:
-
-## Enterprise boundaries
-
-- Scientific meaning:
-- Tenant, security, and privacy effect:
-- Migration and compatibility effect:
-- Operational signal, numerator, and denominator:
-- Scientific / Quality / Regulatory acceptance required:
-
-## GitFlow-like routing
-
-- [ ] Feature or experiment targets `develop`
-- [ ] Release or hotfix targets `main`
-- [ ] Release or hotfix return path to `develop` is planned
-
+- Existing behavior retained:
+- Prototype or bespoke machinery removed:

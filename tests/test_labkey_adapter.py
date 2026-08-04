@@ -74,18 +74,14 @@ class LabKeyAdapterTests(unittest.TestCase):
 
     def test_gateway_retries_safe_read_with_bounded_backoff(self) -> None:
         first = FakeTransport([LabKeyHttpResponse(503, {}, {})])
-        second = FakeTransport(
-            [LabKeyHttpResponse(200, {}, {"rows": [row("SYN-SPECIMEN-1")]})]
-        )
+        second = FakeTransport([LabKeyHttpResponse(200, {}, {"rows": [row("SYN-SPECIMEN-1")]})])
         transports = iter((first, second))
         delays: list[float] = []
         adapter = VersionedVendorGatewayAdapter(
             vendor_name="labkey",
             client_factory=lambda: self.client(next(transports)),
             sdk_name="labkey-json-api-reference",
-            qualified_sdk_band=VersionBand(
-                "labkey-json-api-reference", "0.3.1", "0.4.0"
-            ),
+            qualified_sdk_band=VersionBand("labkey-json-api-reference", "0.3.1", "0.4.0"),
             required_api_version="query-v1",
             retry_policy=RetryPolicy(
                 max_attempts=2,
@@ -135,9 +131,7 @@ class LabKeyAdapterTests(unittest.TestCase):
             vendor_name="labkey",
             client_factory=lambda: self.client(next(transports)),
             sdk_name="labkey-json-api-reference",
-            qualified_sdk_band=VersionBand(
-                "labkey-json-api-reference", "0.3.1", "0.4.0"
-            ),
+            qualified_sdk_band=VersionBand("labkey-json-api-reference", "0.3.1", "0.4.0"),
             required_api_version="query-v1",
             sleep=lambda _seconds: None,
         )

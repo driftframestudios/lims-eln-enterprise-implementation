@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import unittest
 
+from helpers import command
+
 from lims_eln_implementation.idempotency import (
     ContentCollision,
     IdempotencyInProgress,
@@ -15,8 +17,6 @@ from lims_eln_implementation.model import (
     TransitionRejected,
 )
 from lims_eln_implementation.store import InMemorySpecimenRepository
-
-from helpers import command
 
 
 class LifecycleTests(unittest.TestCase):
@@ -43,9 +43,7 @@ class LifecycleTests(unittest.TestCase):
     def test_changed_content_on_stable_command_identity_is_a_collision(self) -> None:
         self.service.register(command("cmd-001", "register", 0, payload={"type": "A"}))
         with self.assertRaises(ContentCollision):
-            self.service.register(
-                command("cmd-001", "register", 0, payload={"type": "B"})
-            )
+            self.service.register(command("cmd-001", "register", 0, payload={"type": "B"}))
 
     def test_command_snapshots_nested_payload_before_authorization(self) -> None:
         source = {"measurements": [{"value": "12.5"}]}
@@ -103,9 +101,7 @@ class LifecycleTests(unittest.TestCase):
 
     def test_stale_revision_prompts_reload(self) -> None:
         aggregate = self.service.register(command("cmd-001", "register", 0))
-        aggregate = self.service.transition(
-            command("cmd-002", "accession", aggregate.version)
-        )
+        aggregate = self.service.transition(command("cmd-002", "accession", aggregate.version))
         with self.assertRaisesRegex(RevisionConflict, "reload"):
             self.service.transition(command("cmd-stale", "start_processing", 1))
 

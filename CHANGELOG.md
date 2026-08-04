@@ -1,6 +1,23 @@
 # Changelog
 
-## Unreleased — principal data boundaries
+## 0.4.0 — framework-backed runtime simplification
+
+- Remove the bounded caller, modeled acceptance, execution receipts, custom
+  branch policy, repository validator, and in-memory migration simulator from
+  runtime.
+- Preserve Machine Nodes as documentation-only collaboration artifacts.
+- Keep immutable Flyway V001–V004 history and add a timestamped successor that
+  removes retired runtime tables and the signed HMAC tenant protocol.
+- Preserve one insert-only transactional outbox and delegate change capture,
+  routing, offsets, and connector recovery to Debezium Outbox Event Router.
+- Replace the custom AWS runtime resolver and cache with Pydantic references and
+  AWS Powertools Parameters.
+- Use Tenacity for safe vendor-read retry while preserving LabKey and
+  vendor-neutral integration seams.
+- Replace custom repository gates with standard Ruff, unittest, build, Flyway,
+  and GitHub Rulesets boundaries.
+
+## 0.3.1 — historical principal-data-boundary tranche
 
 - Delegate PostgreSQL migration ordering, locking, transactions, history,
   checksum validation, status, target selection, and replay to the

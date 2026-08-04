@@ -68,4 +68,3 @@ class OperationalMetrics:
             self.reconciliation.snapshot(),
             self.instrument_acceptance.snapshot(),
         )
-
