@@ -53,10 +53,11 @@ and effective role.
 
 Historical migrations reference outbox recovery and evidence roles, so fresh
 installs provision those compatibility identities while applying V001–V004.
-The current runtime grants them no application capability after the successor
-migration. Application traffic uses `laboratory_app`; Debezium uses a
-deployment-configured connector identity with the PostgreSQL logical-replication
-privileges required by the selected hosting platform.
+The successor removes their recovery behavior. V004's no-login outbox owner
+remains as historical ownership; application and connector behavior comes from
+explicit row policies and grants. Application traffic uses `laboratory_app`;
+Debezium uses `laboratory_outbox_worker`, with PostgreSQL logical-replication
+attributes supplied by the selected hosting platform.
 
 ## Existing database adoption
 

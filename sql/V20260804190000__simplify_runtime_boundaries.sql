@@ -68,9 +68,18 @@ grant insert (
 ) on public.transactional_outbox to laboratory_app;
 grant select on public.transactional_outbox to laboratory_outbox_worker;
 
-set local role laboratory_owner;
+-- V004 made the no-login compatibility role the table owner. Retain that
+-- historical ownership while replacing its recovery behavior with ordinary
+-- row policies and Debezium capture.
+alter policy transactional_outbox_bounded_migration_policy
+    on public.transactional_outbox
+    rename to transactional_outbox_owner_maintenance_policy;
+alter policy transactional_outbox_owner_maintenance_policy
+    on public.transactional_outbox using (true) with check (true);
+create policy outbox_connector_read_policy on public.transactional_outbox
+    for select to laboratory_outbox_worker using (true);
 
-reassign owned by laboratory_outbox_authority to laboratory_owner;
+set local role laboratory_owner;
 
 -- Forced RLS remains active for tenant tables. The schema owner receives the
 -- ordinary all-row access needed by Flyway without a custom session protocol.
@@ -101,11 +110,6 @@ alter policy instrument_inbox_bounded_migration_policy
     rename to instrument_inbox_owner_maintenance_policy;
 alter policy instrument_inbox_owner_maintenance_policy
     on public.instrument_inbox using (true) with check (true);
-alter policy transactional_outbox_bounded_migration_policy
-    on public.transactional_outbox
-    rename to transactional_outbox_owner_maintenance_policy;
-alter policy transactional_outbox_owner_maintenance_policy
-    on public.transactional_outbox using (true) with check (true);
 alter policy vendor_projection_bounded_migration_policy
     on public.vendor_projection
     rename to vendor_projection_owner_maintenance_policy;
@@ -120,11 +124,6 @@ alter policy instrument_measurement_bounded_migration_policy
     rename to instrument_measurement_owner_maintenance_policy;
 alter policy instrument_measurement_owner_maintenance_policy
     on public.instrument_measurement using (true) with check (true);
-
--- The Debezium connector reads committed events for every tenant. Its database
--- identity stays read-only; replication attributes are configured by hosting.
-create policy outbox_connector_read_policy on public.transactional_outbox
-    for select to laboratory_outbox_worker using (true);
 
 drop function if exists laboratory_security.bind_tenant_context(jsonb);
 
@@ -146,12 +145,12 @@ drop table if exists laboratory_security.tenant_context_key;
 drop function if exists laboratory_security.bounded_migration_session_active();
 
 revoke all on function laboratory_security.authorized_tenant_id() from public;
-grant execute on function laboratory_security.authorized_tenant_id() to
-    laboratory_app;
-revoke all privileges on all tables in schema public from
+revoke execute on function laboratory_security.authorized_tenant_id() from
     laboratory_outbox_authority,
     laboratory_outbox_recovery_operator,
     laboratory_evidence_writer;
+grant execute on function laboratory_security.authorized_tenant_id() to
+    laboratory_app;
 revoke all privileges on all sequences in schema public from
     laboratory_outbox_authority,
     laboratory_outbox_recovery_operator,

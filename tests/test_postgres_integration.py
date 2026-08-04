@@ -251,7 +251,7 @@ class PostgresIntegrationTests(unittest.TestCase):
         )
         self.assertEqual(
             posture.stdout.strip(),
-            "laboratory_owner:true:false:false",
+            "laboratory_outbox_authority:true:false:true",
         )
 
         simplified_security = self.run_sql(
