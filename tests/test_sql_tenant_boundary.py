@@ -429,16 +429,21 @@ class SqlTenantStructureTests(unittest.TestCase):
             migration,
         )
 
-    def test_migration_003_remains_immutable_and_004_is_successor(self) -> None:
+    def test_published_migrations_remain_immutable_and_005_is_successor(self) -> None:
         migration_003 = ROOT / "sql" / "V003__trusted_routines_and_outbox_cas.sql"
         self.assertEqual(
             hashlib.sha256(migration_003.read_bytes()).hexdigest(),
             "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
         )
+        migration_004 = ROOT / "sql" / "V004__outbox_attempt_evidence_and_recovery.sql"
+        self.assertEqual(
+            hashlib.sha256(migration_004.read_bytes()).hexdigest(),
+            "2cb392ab1d59ce8db7cf163da221c09e898f65358462819f81ab29b558386b36",
+        )
         migrations = sorted((ROOT / "sql").glob("V*__*.sql"))
         self.assertEqual(
             [path.name.split("__", 1)[0] for path in migrations],
-            ["V001", "V002", "V003", "V004"],
+            ["V001", "V002", "V003", "V004", "V005"],
         )
 
     def test_security_definer_data_objects_are_schema_qualified(self) -> None:

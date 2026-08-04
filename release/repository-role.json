@@ -1,11 +1,11 @@
 {
   "manifest_version": "2.0.0",
   "repository_role": "enterprise_implementation",
-  "repository_release": "0.3.1",
-  "external_release": "implementation-v0.3.1",
+  "repository_release": "0.3.2",
+  "external_release": "implementation-v0.3.2",
   "bounded_caller_binding_digest": "sha256:e6590446725c47231817bc43a478851e739617f1870bf3a5d7c1e36e3e5bc87e",
-  "database_flyway_release_digest": "sha256:3010d543594ef98e5873e2753cd7531e5a94e0922698d4ad04ae55a811a1691c",
-  "open_receipt_ledger_digest": "sha256:f5ec4399b7ba43ce2bbc6260c0eb223c1fc8e405a9e5b13fd71ca806fd709421",
+  "database_flyway_release_digest": "sha256:4ce51592487b4b3f42e8c6120a557546cf2dac4f1ab75486fd637d9c5b9463f7",
+  "open_receipt_ledger_digest": "sha256:1d42fc6ad3b9e966ce6612d766d592f12b84bd515f0af4c8f3f01fdd2dfd34ec",
   "selected_future_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
   "first_receipt_contract": {
     "path": "first-receipt.json",
@@ -25,6 +25,11 @@
   },
   "historical_external_releases": [
     {
+      "repository_release": "0.3.1",
+      "external_release": "implementation-v0.3.1",
+      "status": "preserved_historical_baseline"
+    },
+    {
       "repository_release": "0.2.0",
       "external_release": "implementation-v0.2.0",
       "status": "preserved_historical_baseline"
@@ -36,14 +41,15 @@
     }
   ],
   "contract_bindings": {
-    "governance_schema": "2.0.1",
+    "governance_schema": "2.0.2",
     "control_plane_profile": "0.3.0",
     "execution_receipt_schema": "1.1.0",
     "provenance_schema": "1.0.0",
     "runtime_setting_catalog_schema": "1.0.0",
     "bounded_caller_binding": "0.3.1",
     "database_flyway_release": "1.0.0",
-    "open_receipt_ledger": "2.0.0"
+    "open_receipt_ledger": "2.0.0",
+    "acceptance_decision_lineage": "1.0.0"
   },
   "receipt_families": [
     "configured_vendor_environments",

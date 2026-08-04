@@ -49,6 +49,8 @@ The standard-library test suite exercises:
 - allowlisted telemetry with recursive sensitive-value replacement;
 - service-level indicators with explicit numerator and denominator;
 - scientific, Quality, and Regulatory acceptance as separate accountable acts.
+- conditional acceptance that stays release-pending until an evidence-bound,
+  append-only successor decision closes the stated condition.
 
 Run the complete local proof:
 
@@ -63,8 +65,9 @@ deterministic source digest.
 The ordinary local proof runs configured-database tests when their explicit
 synthetic DSNs and verification key are present. CI also provisions PostgreSQL
 17, provisions cluster roles separately, applies the Flyway chain, validates
-and inspects history, targets V003, proves transactional V004 rejection, replays
-the head, compares clean and upgraded schemas, and exercises unsigned and
+and inspects history, targets V003, proves transactional V004 rejection, applies
+V005 acceptance lineage, replays the head, compares clean and upgraded schemas,
+and exercises unsigned and
 tampered tenant contexts, temporary-relation shadowing, custody CAS/replay,
 measurement lineage, tenant-scoped outbox identity, immutable outbox content,
 worker crash/reclaim, and stale-fence rejection.
@@ -167,6 +170,9 @@ cursor pagination. Its transport receives runtime credentials from the narrow
 consumer boundary. A configured LabKey environment remains responsible for
 qualifying container paths, schemas, permissions, API behavior, and version
 coordinates against the [documented LabKey APIs](https://www.labkey.org/Documentation/wiki-page.view?name=viewApis).
+LabKey is the executable vendor-adapter scope for this candidate. Sapio and
+Benchling remain separately versioned conformance targets whose configured
+adapters enter a later release with their own receipts.
 
 The released source coordinates and digests live in
 [`release/bounded-caller-bindings.json`](release/bounded-caller-bindings.json).
@@ -185,8 +191,12 @@ inbox lineage, and complete custody-event coordinates. Its provenance gate
 accepts initial ready rows with zero attempts and routes historical attempt or
 terminal state to explicit disposition before upgrade. V004 locks the affected
 relations before preflight and gives lock acquisition a 30-second budget;
-contention produces a transactional rollback for a scheduled retry. Flyway
-Community 13.0.0 owns migration discovery, ordering, locking, transactions,
+contention produces a transactional rollback for a scheduled retry. V005
+preserves V001 through V004 and adds condition, owner, due-instant, expiry, and
+single-successor lineage to append-only acceptance decisions. Conditional
+approval remains pending; a later observed approval carries the closure
+evidence and supersedes it. Flyway Community 13.0.0 owns migration discovery,
+ordering, locking, transactions,
 history, validation, information, target selection, and replay. Cluster roles
 remain a separate privileged deployment concern. Flyway authenticates as the
 least-privilege `laboratory_migrator` login. Its released `afterConnect.sql`
@@ -221,13 +231,13 @@ for adoption, probability framing, remaining gaps, and evidence gates.
 [`machine-node.json`](machine-node.json),
 [`first-receipt.json`](first-receipt.json), and
 [`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) implement Site Reading
-governance schema release `2.0.0` and Control Plane Profile `0.3.0`. They orient
+governance schema candidate `2.0.2` and Control Plane Profile `0.3.0`. They orient
 collaborators; they do not grant runtime authority.
 
 The earlier Machine Node is preserved as
 [`release/seed-lineage-machine-node-v0.2.json`](release/seed-lineage-machine-node-v0.2.json).
 It remains useful for historical comparison and is not the canonical governance
-Machine Node for release `0.3.1`.
+Machine Node for release `0.3.2`.
 
 ## Data and authority boundaries
 

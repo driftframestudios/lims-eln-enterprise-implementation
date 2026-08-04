@@ -1,14 +1,14 @@
 {
   "schema_version": "2.0.0",
   "name": "lims-eln-enterprise-implementation",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "python": ">=3.12",
   "repository_role": "enterprise_implementation",
   "evidence_role": "actual_implementation",
   "fixture_policy": "synthetic_only",
   "validation_command": "python3 scripts/validate_repository.py",
   "control_plane": {
-    "governance_schema_release": "2.0.1",
+    "governance_schema_release": "2.0.2",
     "control_plane_profile": "0.3.0",
     "machine_node": "machine-node.json",
     "first_receipt": "first-receipt.json",
@@ -22,7 +22,8 @@
     "runtime_setting_catalog": "1.0.0",
     "bounded_caller_binding": "0.3.1",
     "database_flyway_release": "1.0.0",
-    "open_receipt_ledger": "2.0.0"
+    "open_receipt_ledger": "2.0.0",
+    "acceptance_decision_lineage": "1.0.0"
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
@@ -49,15 +50,23 @@
   "database": {
     "engine": "postgresql",
     "qualified_major": 17,
-    "migration_head": "004",
+    "migration_head": "005",
     "migration_product": "Flyway Community",
     "migration_product_version": "13.0.0",
     "migration_release": "database/flyway-release.json",
-    "migration_release_digest": "sha256:3010d543594ef98e5873e2753cd7531e5a94e0922698d4ad04ae55a811a1691c",
+    "migration_release_digest": "sha256:4ce51592487b4b3f42e8c6120a557546cf2dac4f1ab75486fd637d9c5b9463f7",
     "migration_configuration": "flyway.conf",
     "migration_transaction_policy": "one_transaction_per_migration",
     "tenant_authority": "signed_short_lived_database_verified_context",
-    "outbox_canonicalization": "postgresql-jsonb-text-v1"
+    "outbox_canonicalization": "postgresql-jsonb-text-v1",
+    "compatibility_evidence": {
+      "active_qualified_major": 17,
+      "reference_pack_rehearsal_majors": [16, 18]
+    }
+  },
+  "vendor_scope": {
+    "executable_release_adapters": ["labkey"],
+    "successor_conformance_targets": ["sapio", "benchling"]
   },
   "receipt_families": [
     "configured_vendor_environments",

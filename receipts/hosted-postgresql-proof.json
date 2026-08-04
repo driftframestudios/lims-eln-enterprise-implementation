@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "receipt_id": "RECEIPT-HOSTED-POSTGRESQL-001",
+  "receipt_id": "RECEIPT-HOSTED-POSTGRESQL-0.3.1-002",
   "claim_id": "CLAIM-HOSTED-SYNTHETIC-DATABASE-BOUNDARIES",
   "intended_use_id": "INTENDED-USE-SYNTHETIC-REFERENCE",
   "release_claim_id": "RELEASE-CLAIM-IMPLEMENTATION-0.3.1",
@@ -9,15 +9,25 @@
   "environment": "github-hosted-synthetic-postgresql",
   "version_bindings": {
     "repository": "0.3.1",
-    "repository_commit": "ef3320686842a2c7f1ab98c12479c3ed7c5709f5",
-    "workflow_run": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/actions/runs/30933020047",
+    "repository_commit": "fc4b79dba989faeafff3f0fb871d292381fe2168",
+    "repository_merge_commit": "40e241dc7b4d7bb96e44d2b11cfa47df2e95921c",
+    "workflow_run": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/actions/runs/30943463435",
     "python": "3.12.13",
     "postgresql": "17.10-alpine",
     "database_migration_head": "004",
+    "flyway": "13.0.0",
+    "flyway_image": "flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
+    "migration_authenticated_login": "laboratory_migrator",
+    "migration_role": "laboratory_owner",
     "tenant_authority": "signed_short_lived_database_verified_context"
   },
   "scenario_ids": [
     "SCN-DB-MIGRATION-CHECKSUM-REPLAY",
+    "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",
+    "SCN-DB-FLYWAY-ARTIFACT-INVENTORY",
+    "SCN-DB-MIGRATION-CLEAN-UPGRADE-CONVERGENCE",
+    "SCN-DB-MEASUREMENT-COMPLETE-LINEAGE",
+    "SCN-DB-CUSTODY-COMPLETE-EVENT-BINDING",
     "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",
     "SCN-DB-MIGRATION-004-PROVENANCE-GATE",
     "SCN-DB-SIGNED-TENANT-BOUNDARY",
@@ -35,14 +45,16 @@
     "SCN-DB-VERIFICATION-KEY-CONFIDENTIALITY"
   ],
   "artifact_digests": [
-    "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd",
-    "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81"
+    "sha256:e6590446725c47231817bc43a478851e739617f1870bf3a5d7c1e36e3e5bc87e",
+    "sha256:3010d543594ef98e5873e2753cd7531e5a94e0922698d4ad04ae55a811a1691c",
+    "sha256:9105cc92e7e0d2c166e179411bfe5d2a2bd1f35150fd640ae157ac9ef5cbad07"
   ],
-  "observed_at": "2026-08-04T17:16:04Z",
+  "observed_at": "2026-08-04T19:30:08Z",
   "performer_id": "GITHUB-ACTIONS-HOSTED-RUNNER",
   "reviewer_id": "SYN-INDEPENDENT-ADVERSARIAL-DATABASE-SUITE",
   "limitations": [
-    "This historical receipt is superseded by the Flyway transition and remains evidence for the predecessor migration runner only.",
+    "This receipt binds the merged implementation 0.3.1 Flyway head and remains the released execution floor while implementation 0.3.2 is a candidate.",
+    "The workflow retained logs and job conclusions as evidence locators; it produced no separately archived artifact bundle.",
     "This receipt records a synthetic hosted PostgreSQL proof and grants no production authorization.",
     "Representative populated migration and restore rehearsal remains an independent successor receipt.",
     "Production security and observability evidence remains an independent successor receipt.",

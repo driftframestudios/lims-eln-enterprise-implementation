@@ -133,10 +133,10 @@ post-migration configuration stage.
 
 ## Fresh and successor paths
 
-The clean path provisions cluster roles, applies V001 through V004, validates,
+The clean path provisions cluster roles, applies V001 through V005, validates,
 inspects, and replays. The successor path provisions the same roles, runs
 `migrate -target=003`, seeds representative pre-V004 rows, and then runs the
-head migration.
+V004 and V005 successors.
 
 V004 deliberately rejects historical outbox terminal state that lacks the new
 attempt and outcome ledgers. The rejection leaves Flyway history at V003 and
@@ -169,6 +169,23 @@ scenarios. It also proves:
   segregated `laboratory_outbox_authority` owner on clean and successor paths;
 - target V003, head migration, `info`, validation, and no-op replay behave as
   one coherent release path.
+- V005 requires complete condition, owner, and due-instant data for conditional
+  decisions and admits one later direct successor with a later decision instant.
+
+## V005 accountable acceptance lineage
+
+V005 is a forward successor to the published V004 checksum. It records
+condition text, accountable owner, due instant, optional expiry, and the prior
+decision identity directly on the append-only acceptance record. The
+same-domain composite foreign key preserves tenant, intended-use, and
+release-claim coordinates. A unique direct-successor index creates one linear
+history, while a trigger requires the successor instant to follow its parent.
+
+The populated-upgrade preflight surfaces historical conditional decisions for
+accountable reissuance with complete condition data. This preserves their
+meaning and keeps the migration from inventing owners, deadlines, or closure
+evidence. `approve_with_conditions` remains release-pending; a later observed
+approval binds closure receipts and supersedes it.
 
 `source_precision` remains producer-observed metadata. The database can verify
 stored decimal scale after PostgreSQL parses the numeric value; exact source

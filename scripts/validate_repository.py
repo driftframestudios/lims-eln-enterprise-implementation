@@ -86,8 +86,8 @@ def validate_contracts() -> None:
 
 def validate_manifests() -> None:
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
-    if manifest["version"] != "0.3.1":
-        raise AssertionError("manifest requires repository release 0.3.1")
+    if manifest["version"] != "0.3.2":
+        raise AssertionError("manifest requires repository release 0.3.2")
     if manifest["repository_role"] != "enterprise_implementation":
         raise AssertionError(
             "manifest repository role requires enterprise_implementation"
@@ -106,8 +106,8 @@ def validate_manifests() -> None:
             "runtime configuration source requires Systems Manager Parameter Store"
         )
     control_plane = manifest.get("control_plane", {})
-    if control_plane.get("governance_schema_release") != "2.0.1":
-        raise AssertionError("control plane requires governance schema release 2.0.1")
+    if control_plane.get("governance_schema_release") != "2.0.2":
+        raise AssertionError("control plane requires governance schema release 2.0.2")
     if control_plane.get("control_plane_profile") != "0.3.0":
         raise AssertionError("control plane requires profile 0.3.0")
 
@@ -189,6 +189,7 @@ def validate_manifests() -> None:
         "sql/V002__principal_data_boundaries.sql",
         "sql/V003__trusted_routines_and_outbox_cas.sql",
         "sql/V004__outbox_attempt_evidence_and_recovery.sql",
+        "sql/V005__acceptance_decision_lineage.sql",
     ]
     if (
         inventory.get("schema_version") != "1.0.0"
@@ -275,7 +276,7 @@ def validate_manifests() -> None:
 
     migrations = sorted((ROOT / "sql").glob("V[0-9][0-9][0-9]__*.sql"))
     migration_ids = [path.name[1:4] for path in migrations]
-    if migration_ids != ["001", "002", "003", "004"]:
+    if migration_ids != ["001", "002", "003", "004", "005"]:
         raise AssertionError("Flyway migrations require the released ordered sequence")
     for migration in migrations:
         sql = migration.read_text(encoding="utf-8")
@@ -302,6 +303,21 @@ def validate_manifests() -> None:
         "signed_short_lived_database_verified_context"
     ):
         raise AssertionError("database requires the released tenant authority")
+    compatibility = database.get("compatibility_evidence", {})
+    if (
+        compatibility.get("active_qualified_major") != 17
+        or compatibility.get("reference_pack_rehearsal_majors") != [16, 18]
+    ):
+        raise AssertionError(
+            "database compatibility requires the active and reference evidence bands"
+        )
+    vendor_scope = manifest.get("vendor_scope", {})
+    if (
+        vendor_scope.get("executable_release_adapters") != ["labkey"]
+        or vendor_scope.get("successor_conformance_targets")
+        != ["sapio", "benchling"]
+    ):
+        raise AssertionError("vendor scope requires one executable release adapter")
 
     provenance = json.loads((ROOT / "provenance.json").read_text(encoding="utf-8"))
     seed = provenance["seed"]
@@ -317,7 +333,10 @@ def validate_manifests() -> None:
     horizon = json.loads(
         (ROOT / "COORDINATION-HORIZON.json").read_text(encoding="utf-8")
     )
-    if machine["schema_release"] != "2.0.1" or not machine["campaigns"]:
+    if (
+        machine["schema_release"] != control_plane["governance_schema_release"]
+        or not machine["campaigns"]
+    ):
         raise AssertionError(
             "canonical Machine Node requires governance schema v2 and campaigns"
         )
@@ -348,14 +367,14 @@ def validate_manifests() -> None:
 
     binding_path = ROOT / manifest["bounded_caller"]["binding_manifest"]
     binding = json.loads(binding_path.read_text(encoding="utf-8"))
-    if binding["binding_version"] != manifest["version"]:
-        raise AssertionError("bounded-caller binding requires the repository release")
     if (
-        binding["governance_schema_release"]
-        != control_plane["governance_schema_release"]
+        binding["binding_version"]
+        != manifest["contract_versions"]["bounded_caller_binding"]
     ):
+        raise AssertionError("bounded-caller binding requires its declared version")
+    if binding["governance_schema_release"] != "2.0.1":
         raise AssertionError(
-            "bounded-caller binding requires the selected governance schema release"
+            "bounded-caller binding requires its compatible governance schema"
         )
     for artifact in binding["source_artifacts"]:
         path = ROOT / artifact["path"]
@@ -385,13 +404,25 @@ def validate_manifests() -> None:
     }
     if families != set(CANONICAL_RECEIPT_FAMILIES):
         raise AssertionError("open receipt ledger requires four canonical families")
+    receipt_by_id = {item["id"]: item for item in ledger["receipts"]}
+    candidate_execution = receipt_by_id.get(
+        "RCP-OBSERVED-IMPLEMENTATION-0.3.2-CI-001"
+    )
+    if (
+        candidate_execution is None
+        or candidate_execution.get("status") != "awaiting_candidate_workflow"
+        or candidate_execution.get("evidence_mode") != "observed"
+    ):
+        raise AssertionError(
+            "candidate migration head requires an explicit hosted-execution receipt"
+        )
     ledger_digest = file_digest(ledger_path)
 
     release = json.loads(
         (ROOT / "release" / "repository-role.json").read_text(encoding="utf-8")
     )
     if release["repository_release"] != manifest["version"]:
-        raise AssertionError("release role manifest requires repository release 0.3.1")
+        raise AssertionError("release role manifest requires repository release 0.3.2")
     if release["repository_role"] != manifest["repository_role"]:
         raise AssertionError("release role manifest requires enterprise_implementation")
     if release["bounded_caller_binding_digest"] != binding_digest:
@@ -421,6 +452,10 @@ def validate_manifests() -> None:
         ("IMPLEMENTATION-BOUNDED-CALLER-001", binding_digest),
         ("IMPLEMENTATION-DATABASE-MIGRATIONS-001", migration_release_digest),
         ("IMPLEMENTATION-OPEN-RECEIPTS-001", ledger_digest),
+        (
+            "IMPLEMENTATION-ACCEPTANCE-LINEAGE-001",
+            file_digest(ROOT / "sql" / "V005__acceptance_decision_lineage.sql"),
+        ),
     ):
         if contracts.get(contract_id) != expected:
             raise AssertionError(f"Machine Node requires {contract_id} digest")
@@ -465,6 +500,17 @@ def validate_manifests() -> None:
         raise AssertionError(
             "local verification receipt requires the Flyway inventory digest"
         )
+    acceptance_lineage_digest = file_digest(
+        ROOT / "sql" / "V005__acceptance_decision_lineage.sql"
+    )
+    if (
+        acceptance_lineage_digest not in receipt["artifact_digests"]
+        or "SCN-ACCEPTANCE-CONDITION-SUPERSESSION-LINEAGE"
+        not in receipt["scenario_ids"]
+    ):
+        raise AssertionError(
+            "local verification receipt requires the acceptance-lineage proof"
+        )
     if receipt["version_bindings"].get("database_migration_head") != database.get(
         "migration_head"
     ):
@@ -487,75 +533,46 @@ def validate_manifests() -> None:
             "hosted PostgreSQL receipt requires observed synthetic verification"
         )
     hosted_bindings = hosted_receipt.get("version_bindings", {})
+    predecessor_digests = {
+        "sha256:e6590446725c47231817bc43a478851e739617f1870bf3a5d7c1e36e3e5bc87e",
+        "sha256:3010d543594ef98e5873e2753cd7531e5a94e0922698d4ad04ae55a811a1691c",
+        "sha256:9105cc92e7e0d2c166e179411bfe5d2a2bd1f35150fd640ae157ac9ef5cbad07",
+    }
     if (
-        hosted_bindings.get("repository") != manifest["version"]
-        or hosted_bindings.get("database_migration_head")
-        != database.get("migration_head")
+        hosted_bindings.get("repository") != "0.3.1"
+        or hosted_bindings.get("repository_commit")
+        != "fc4b79dba989faeafff3f0fb871d292381fe2168"
+        or hosted_bindings.get("repository_merge_commit")
+        != "40e241dc7b4d7bb96e44d2b11cfa47df2e95921c"
+        or hosted_bindings.get("workflow_run")
+        != (
+            "https://github.com/driftframestudios/"
+            "lims-eln-enterprise-implementation/actions/runs/30943463435"
+        )
+        or hosted_bindings.get("database_migration_head") != "004"
+        or hosted_bindings.get("flyway") != "13.0.0"
+        or hosted_bindings.get("flyway_image")
+        != migration_release["container_image"]
+        or hosted_bindings.get("migration_authenticated_login")
+        != migration_release["authenticated_login"]
+        or hosted_bindings.get("migration_role")
+        != migration_release["migration_role"]
+        or not predecessor_digests.issubset(hosted_receipt["artifact_digests"])
     ):
         raise AssertionError(
-            "hosted PostgreSQL receipt requires its observed release coordinate"
+            "hosted PostgreSQL receipt requires the merged 0.3.1 Flyway evidence"
         )
-    observed_commit = str(hosted_bindings.get("repository_commit", ""))
-    observed_run = str(hosted_bindings.get("workflow_run", ""))
-    historical_commit = "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
-    historical_run = (
-        "https://github.com/driftframestudios/"
-        "lims-eln-enterprise-implementation/actions/runs/30933020047"
-    )
-    if observed_commit == historical_commit:
-        historical_digests = {
-            "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd",
-            "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81",
-        }
-        if observed_run != historical_run or not historical_digests.issubset(
-            hosted_receipt["artifact_digests"]
-        ):
-            raise AssertionError(
-                "historical hosted PostgreSQL receipt requires its observed bindings"
-            )
-        if not any(
-            "superseded by the Flyway transition" in limitation
-            for limitation in hosted_receipt["limitations"]
-        ):
-            raise AssertionError(
-                "historical hosted PostgreSQL receipt requires its successor boundary"
-            )
-    else:
-        expected_run_pattern = (
-            r"^https://github\.com/driftframestudios/"
-            r"lims-eln-enterprise-implementation/actions/runs/[0-9]+$"
+    predecessor_scenarios = {
+        "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",
+        "SCN-DB-FLYWAY-ARTIFACT-INVENTORY",
+        "SCN-DB-MIGRATION-CLEAN-UPGRADE-CONVERGENCE",
+        "SCN-DB-MEASUREMENT-COMPLETE-LINEAGE",
+        "SCN-DB-CUSTODY-COMPLETE-EVENT-BINDING",
+    }
+    if not predecessor_scenarios.issubset(hosted_receipt["scenario_ids"]):
+        raise AssertionError(
+            "hosted PostgreSQL receipt requires the released successor scenarios"
         )
-        current_digests = {
-            binding_digest,
-            migration_release_digest,
-            inventory_digest,
-        }
-        if (
-            re.fullmatch(r"[a-f0-9]{40}", observed_commit) is None
-            or re.fullmatch(expected_run_pattern, observed_run) is None
-            or not current_digests.issubset(hosted_receipt["artifact_digests"])
-            or hosted_bindings.get("flyway") != migration_release["flyway_version"]
-            or hosted_bindings.get("flyway_image")
-            != migration_release["container_image"]
-            or hosted_bindings.get("migration_authenticated_login")
-            != migration_release["authenticated_login"]
-            or hosted_bindings.get("migration_role")
-            != migration_release["migration_role"]
-        ):
-            raise AssertionError(
-                "current hosted PostgreSQL receipt requires Flyway release bindings"
-            )
-        current_scenarios = {
-            "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",
-            "SCN-DB-FLYWAY-ARTIFACT-INVENTORY",
-            "SCN-DB-MIGRATION-CLEAN-UPGRADE-CONVERGENCE",
-            "SCN-DB-MEASUREMENT-COMPLETE-LINEAGE",
-            "SCN-DB-CUSTODY-COMPLETE-EVENT-BINDING",
-        }
-        if not current_scenarios.issubset(hosted_receipt["scenario_ids"]):
-            raise AssertionError(
-                "current hosted PostgreSQL receipt requires successor scenarios"
-            )
     required_database_scenarios = {
         "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",
         "SCN-DB-SECURITY-DEFINER-TEMP-SHADOW",

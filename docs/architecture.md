@@ -142,6 +142,14 @@ workload role receives zero direct write authority to these tables. A separate
 evidence-writer role uses append-only tables and the minimum statement set
 needed to record a receipt or decision.
 
+Acceptance decisions form an append-only lineage per tenant, intended use,
+release claim, and domain. `approve_with_conditions` records the condition,
+accountable owner, and due instant and remains release-pending. A later
+`approve` binds observed closure evidence and supersedes that decision. A later
+`return_for_evidence` can likewise supersede an approval. Expiry restores the
+domain to pending, and a unique direct-successor constraint keeps the current
+decision unambiguous.
+
 Tenant-scoped tables use forced row-level security and
 `laboratory_security.authorized_tenant_id()`. A trusted issuer supplies a
 short-lived HMAC assertion containing tenant, subject, key identity, validity
@@ -228,3 +236,7 @@ verification. A populated untracked baseline enters
 through a fresh-target restore and semantic comparison rehearsal rather than
 object-name inference. The complete adoption and evidence gates are documented in
 `docs/database-migrations.md`.
+
+Migration V005 preserves every published predecessor checksum and adds the
+database-enforced acceptance lineage, conditional-decision coherence, finite
+expiry, and later-decision ordering used by the Python acceptance board.

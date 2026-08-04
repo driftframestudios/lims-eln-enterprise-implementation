@@ -39,7 +39,7 @@ class DatabaseMigrationTests(unittest.TestCase):
             r"^flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}$",
         )
         self.assertEqual(release["credentials"], "runtime_environment_only")
-        self.assertEqual(release["migration_head"], "004")
+        self.assertEqual(release["migration_head"], "005")
         self.assertEqual(release["authenticated_login"], "laboratory_migrator")
         self.assertEqual(release["migration_role"], "laboratory_owner")
         self.assertEqual(
@@ -69,6 +69,7 @@ class DatabaseMigrationTests(unittest.TestCase):
                 "sql/V002__principal_data_boundaries.sql",
                 "sql/V003__trusted_routines_and_outbox_cas.sql",
                 "sql/V004__outbox_attempt_evidence_and_recovery.sql",
+                "sql/V005__acceptance_decision_lineage.sql",
             ],
         )
         for artifact in inventory["artifacts"]:
@@ -133,7 +134,7 @@ class DatabaseMigrationTests(unittest.TestCase):
         migrations = sorted((ROOT / "sql").glob("V*__*.sql"))
         self.assertEqual(
             [MIGRATION_NAME.fullmatch(path.name).group("version") for path in migrations],
-            ["001", "002", "003", "004"],
+            ["001", "002", "003", "004", "005"],
         )
         for migration in migrations:
             sql = migration.read_text(encoding="utf-8")
@@ -147,6 +148,25 @@ class DatabaseMigrationTests(unittest.TestCase):
             hashlib.sha256(migration.read_bytes()).hexdigest(),
             "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
         )
+
+    def test_migration_004_retains_its_published_bytes(self) -> None:
+        migration = ROOT / "sql" / "V004__outbox_attempt_evidence_and_recovery.sql"
+        self.assertEqual(
+            hashlib.sha256(migration.read_bytes()).hexdigest(),
+            "2cb392ab1d59ce8db7cf163da221c09e898f65358462819f81ab29b558386b36",
+        )
+
+    def test_acceptance_lineage_is_forward_only_and_accountable(self) -> None:
+        migration = (
+            ROOT / "sql" / "V005__acceptance_decision_lineage.sql"
+        ).read_text(encoding="utf-8").lower()
+        self.assertIn("acceptance_condition_backfill_required", migration)
+        self.assertIn("condition_owner_id", migration)
+        self.assertIn("condition_due_at_utc", migration)
+        self.assertIn("supersedes_decision_id", migration)
+        self.assertIn("acceptance_decision_one_direct_successor", migration)
+        self.assertIn("acceptance_decision_supersession_fk", migration)
+        self.assertIn("acceptance_decision_supersession_order", migration)
 
     def test_outbox_owner_transfer_schema_capability_is_transaction_bounded(self) -> None:
         migration = (

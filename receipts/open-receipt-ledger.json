@@ -1,6 +1,6 @@
 {
   "schema_version": "2.0.0",
-  "as_of": "2026-07-28",
+  "as_of": "2026-08-04",
   "pathway": "environment_observed_successors",
   "selected_future_closure": {
     "status": "closed_in_simulation",
@@ -15,8 +15,8 @@
       "evidence_mode": "observed",
       "assurance_stage": "specified",
       "status": "designed_but_unexercised",
-      "target_state": "Sapio, Benchling, and LabKey configured environments pass the shared conformance suite.",
-      "replacement_when_pending": "Keep adapter claims at locally verified and schedule environment-bound execution.",
+      "target_state": "The release-scoped LabKey adapter passes its configured-environment conformance suite; Sapio and Benchling enter scope through separately reviewed successor adapters and receipts.",
+      "replacement_when_pending": "Keep LabKey at repository-verified scope and keep Sapio and Benchling at contract-only scope while scheduling environment-bound execution.",
       "accountable_domains": ["engineering", "platform", "scientific-data", "quality"]
     },
     {
@@ -48,6 +48,17 @@
       "target_state": "Scientific, Quality, and Regulatory owners make separate, evidence-bound decisions.",
       "replacement_when_pending": "Keep the intended use in preauthorization and route evidence questions to the named owner.",
       "accountable_domains": ["scientific", "quality", "regulatory"]
+    },
+    {
+      "id": "RCP-OBSERVED-IMPLEMENTATION-0.3.2-CI-001",
+      "receipt_family": "candidate_database_execution",
+      "evidence_mode": "observed",
+      "assurance_stage": "specified",
+      "status": "awaiting_candidate_workflow",
+      "risk_severity": "high",
+      "target_state": "The immutable implementation 0.3.2 candidate applies Flyway V001 through V005 on PostgreSQL 17, upgrades a populated V004 predecessor, preserves catalog convergence, and exercises conditional-acceptance lineage.",
+      "replacement_when_pending": "Use the observed implementation 0.3.1 Flyway receipt as the released execution floor and keep migration head 005 at candidate authority.",
+      "accountable_domains": ["engineering", "data", "quality"]
     },
     {
       "id": "RCP-OBSERVED-CONTAINER-SUPPLY-CHAIN-001",

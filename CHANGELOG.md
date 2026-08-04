@@ -1,6 +1,17 @@
 # Changelog
 
-## Unreleased — principal data boundaries
+## Unreleased — 0.3.2 contract convergence
+
+- Preserve V001 through V004 and add V005 as the forward-only acceptance
+  decision-lineage successor.
+- Keep conditional approval release-pending until an evidence-bound approval
+  supersedes it; model condition ownership, due instants, expiry, returned
+  decisions, and one direct successor in Python and PostgreSQL.
+- Bind the successful merged 0.3.1 Flyway run as the released hosted execution
+  floor and track 0.3.2 hosted execution as an explicit candidate receipt.
+- Declare PostgreSQL 17 as the active qualified major, PostgreSQL 16 and 18 as
+  reference-pack rehearsal evidence, LabKey as release scope, and Sapio plus
+  Benchling as successor conformance targets.
 
 - Delegate PostgreSQL migration ordering, locking, transactions, history,
   checksum validation, status, target selection, and replay to the

@@ -450,6 +450,102 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
                     in rejected.stderr
                 )
 
+    def test_acceptance_condition_and_supersession_lineage_are_enforced(self) -> None:
+        assert ADMIN_DSN is not None
+        conditional_id = "SYN-DECISION-CONDITIONAL-" + uuid4().hex
+        approval_id = "SYN-DECISION-APPROVAL-" + uuid4().hex
+        self.run_sql(
+            ADMIN_DSN,
+            """
+            insert into public.acceptance_decision (
+                tenant_id, decision_id, domain, approver_id, accountable_role,
+                intended_use_id, release_claim_id, decision, residual_risk,
+                decided_at_utc, condition_summary, condition_owner_id,
+                condition_due_at_utc
+            ) values (
+                :'tenant', :'conditional_id', 'scientific',
+                'SYN-SCIENTIFIC-APPROVER', 'scientific accountable owner',
+                'SYN-INTENDED-USE-LINEAGE', 'SYN-RELEASE-CLAIM-LINEAGE',
+                'approve_with_conditions',
+                'bounded after observed condition closure',
+                '2026-08-04T12:00:00Z'::timestamptz,
+                'Complete assay-range reconciliation',
+                'SYN-CONDITION-OWNER',
+                '2026-08-11T12:00:00Z'::timestamptz
+            );
+            insert into public.acceptance_decision (
+                tenant_id, decision_id, domain, approver_id, accountable_role,
+                intended_use_id, release_claim_id, decision, residual_risk,
+                decided_at_utc, supersedes_decision_id
+            ) values (
+                :'tenant', :'approval_id', 'scientific',
+                'SYN-SCIENTIFIC-APPROVER', 'scientific accountable owner',
+                'SYN-INTENDED-USE-LINEAGE', 'SYN-RELEASE-CLAIM-LINEAGE',
+                'approve', 'condition closure is evidence-bound',
+                '2026-08-05T12:00:00Z'::timestamptz, :'conditional_id'
+            );
+            """,
+            variables={
+                "tenant": self.tenant_a,
+                "conditional_id": conditional_id,
+                "approval_id": approval_id,
+            },
+        )
+
+        incomplete_condition = self.run_sql(
+            ADMIN_DSN,
+            """
+            insert into public.acceptance_decision (
+                tenant_id, decision_id, domain, approver_id, accountable_role,
+                intended_use_id, release_claim_id, decision, residual_risk,
+                decided_at_utc
+            ) values (
+                :'tenant', :'decision_id', 'quality', 'SYN-QUALITY-APPROVER',
+                'quality accountable owner', 'SYN-INTENDED-USE-LINEAGE',
+                'SYN-RELEASE-CLAIM-LINEAGE', 'approve_with_conditions',
+                'condition data is required', clock_timestamp()
+            );
+            """,
+            variables={
+                "tenant": self.tenant_a,
+                "decision_id": "SYN-DECISION-INCOMPLETE-" + uuid4().hex,
+            },
+            check=False,
+        )
+        self.assertNotEqual(incomplete_condition.returncode, 0)
+        self.assertIn(
+            "acceptance_decision_condition_coherent",
+            incomplete_condition.stderr,
+        )
+
+        second_successor = self.run_sql(
+            ADMIN_DSN,
+            """
+            insert into public.acceptance_decision (
+                tenant_id, decision_id, domain, approver_id, accountable_role,
+                intended_use_id, release_claim_id, decision, residual_risk,
+                decided_at_utc, supersedes_decision_id
+            ) values (
+                :'tenant', :'decision_id', 'scientific',
+                'SYN-SCIENTIFIC-APPROVER', 'scientific accountable owner',
+                'SYN-INTENDED-USE-LINEAGE', 'SYN-RELEASE-CLAIM-LINEAGE',
+                'return_for_evidence', 'new evidence question surfaced',
+                '2026-08-06T12:00:00Z'::timestamptz, :'conditional_id'
+            );
+            """,
+            variables={
+                "tenant": self.tenant_a,
+                "decision_id": "SYN-DECISION-BRANCH-" + uuid4().hex,
+                "conditional_id": conditional_id,
+            },
+            check=False,
+        )
+        self.assertNotEqual(second_successor.returncode, 0)
+        self.assertIn(
+            "acceptance_decision_one_direct_successor",
+            second_successor.stderr,
+        )
+
     def test_custody_compare_and_set_history_replay_and_outbox_are_atomic(self) -> None:
         assert APP_DSN is not None
         context = signed_context(self.tenant_a)
