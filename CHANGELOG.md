@@ -15,7 +15,8 @@
   the maintenance path only for the catalog-verified bounded migration session.
 - Preserve the segregated outbox ownership boundary through a SET-only,
   non-inheriting, non-admin owner-to-outbox-authority membership; bind the role
-  edge and final table and routine owners on clean and successor paths.
+  edge, transaction-bounded schema capability, and final table and routine
+  owners on clean and successor paths.
 - Publish a digest inventory for the Flyway configuration, connection callback,
   cluster-role prerequisite, and every migration; pin all Compose support
   images; and constrain the

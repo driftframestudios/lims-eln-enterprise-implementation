@@ -215,6 +215,7 @@ class BranchFlowTests(unittest.TestCase):
         self.assertIn("flyway_schema_history", workflow)
         self.assertIn('= "laboratory_owner"', workflow)
         self.assertIn('= "laboratory_outbox_authority"', workflow)
+        self.assertIn("has_schema_privilege", workflow)
         self.assertIn("clean and upgraded schema convergence", workflow.lower())
         self.assertNotIn("apply_database_migrations.py", workflow)
 

@@ -171,7 +171,7 @@ digest-bound `afterConnect.sql` callback verifies that session identity and
 the effective identity. Privileged provisioning installs a target-database
 startup setting that selects the no-login `laboratory_owner` through its `SET
 TRUE, INHERIT FALSE, ADMIN FALSE` membership on every new connection. Database
-and schema creation authority lives on that owner role; the authenticated login
+and schema ownership live on that owner role; the authenticated login
 receives connection authority and a distinct runtime credential. The callback
 also verifies the exact catalog binding, while `RESET ROLE` exposes the
 configured owner default and `SET ROLE NONE` exposes the migrator's
@@ -184,8 +184,10 @@ isolated `laboratory_outbox_authority`. The schema owner receives a single
 `ADMIN FALSE, INHERIT FALSE, SET TRUE` membership so it can perform PostgreSQL's
 required ownership transfer. Both roles remain `NOLOGIN NOBYPASSRLS`, and
 `INHERIT FALSE` keeps the transfer capability distinct from ambient runtime
-authority. Static and hosted catalog proofs verify the exact role edge and the
-final table and routine owners on clean and successor paths.
+authority. V004 grants the destination role schema creation only across the
+ownership statements and revokes it before commit. Static and hosted catalog
+proofs verify the exact role edge, final table and routine owners, and absence
+of schema-creation privilege on clean and successor paths.
 
 Forced row-level security remains active during migration. Every tenant table
 has a second permissive policy scoped to `laboratory_owner` whose predicate

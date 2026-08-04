@@ -28,9 +28,9 @@
     "SCN-BOUNDED-CALLER-FAILURE-TWINS"
   ],
   "artifact_digests": [
-    "sha256:96cec446589faf805deb92e6db9ae11f3b27f8da1b34ebea0293e7a1279522b9",
-    "sha256:171b781ae6d53bb50df3ef36a47d547ac9da93fbdbca63b7d0bb1deceb2fe246",
-    "sha256:c60e89d8bae702e84dde6586418a3daa0896d923624a4fda3afedbf19718ca37"
+    "sha256:3cc6752ec58cf0653e13e43ba6b37ff630e894ca366cfd712d1036be410e3f3a",
+    "sha256:f21167d2102cda46c78b5515778277fc03f22422894230a2e3f945c121037fd9",
+    "sha256:042b31078803c09bcdf5b388079c4d65346d3e1fca1313b418f373e418d11afd"
   ],
   "observed_at": "2026-08-04T12:00:00Z",
   "performer_id": "SYN-AUTOMATION-RUNNER",

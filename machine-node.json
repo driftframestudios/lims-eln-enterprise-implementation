@@ -21,12 +21,12 @@
     {
       "contract_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
       "version": "0.3.1",
-      "digest": "sha256:96cec446589faf805deb92e6db9ae11f3b27f8da1b34ebea0293e7a1279522b9"
+      "digest": "sha256:3cc6752ec58cf0653e13e43ba6b37ff630e894ca366cfd712d1036be410e3f3a"
     },
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
       "version": "1.0.0",
-      "digest": "sha256:171b781ae6d53bb50df3ef36a47d547ac9da93fbdbca63b7d0bb1deceb2fe246"
+      "digest": "sha256:f21167d2102cda46c78b5515778277fc03f22422894230a2e3f945c121037fd9"
     },
     {
       "contract_id": "IMPLEMENTATION-OPEN-RECEIPTS-001",

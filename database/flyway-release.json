@@ -18,13 +18,13 @@
   },
   "artifact_inventory": {
     "path": "database/flyway-artifact-inventory.json",
-    "sha256": "c60e89d8bae702e84dde6586418a3daa0896d923624a4fda3afedbf19718ca37",
-    "aggregate_sha256": "sha256:5d6139db7b53e740006205eed43580de5067c364cd73438465d24589a9f9c9a8"
+    "sha256": "042b31078803c09bcdf5b388079c4d65346d3e1fca1313b418f373e418d11afd",
+    "aggregate_sha256": "sha256:3eb4abf086837fb5b9a1fbe7e0c03a716b5ef358cab98ff89b2c807fccdd0fe6"
   },
   "baseline_policy": "explicit_attested_baseline_only",
   "cluster_role_provisioning": {
     "path": "database/provision_cluster_roles.sql",
-    "sha256": "766f22a42954e6c8093eedfd6c6b0089ba27944dd070399e4a2ffbe30196ebd4",
+    "sha256": "0ebfb5ecf405130a28704322fb7140caad0b5dd25df6be07894d7aca55801584",
     "execution": "separate_privileged_deployment_step"
   },
   "credentials": "runtime_environment_only"

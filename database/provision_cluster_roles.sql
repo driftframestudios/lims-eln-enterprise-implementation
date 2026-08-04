@@ -81,6 +81,7 @@ select pg_catalog.format(
     pg_catalog.current_database()
 ) \gexec
 
+alter schema public owner to laboratory_owner;
 revoke create on schema public from public;
 grant usage, create on schema public to laboratory_owner;
 revoke all on schema public from laboratory_migrator;

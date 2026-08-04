@@ -17,6 +17,8 @@ credential from the mounted secret file and delegates directly to Flyway. The
 bootstrap credential remains on the preceding role-provisioning service. The
 role provisioner stores a target-database startup setting that selects the
 no-login `laboratory_owner` role through an explicit non-inheriting membership.
+It assigns the target `public` schema to that owner so migration-controlled
+grants have one attributable authority.
 The released connection callback verifies the authenticated login, effective
 owner identity, and exact catalog binding. Migration discovery, ordering,
 locking, transactions, history, validation, status, and replay remain
@@ -25,8 +27,10 @@ Flyway-owned.
 The provisioner also gives `laboratory_owner` SET-only, non-inheriting,
 non-admin membership in the no-login `laboratory_outbox_authority`. This narrow
 edge supports V004 ownership transfer for outbox tables and trusted routines.
-Both roles retain `NOBYPASSRLS`; hosted catalog checks confirm the role graph
-and resulting object ownership before workload proofs begin.
+V004 brackets the ownership statements with a transaction-scoped schema
+creation grant and its revocation. Both roles retain `NOBYPASSRLS`; hosted
+catalog checks confirm the role graph, resulting object ownership, and absent
+schema-creation privilege before workload proofs begin.
 
 Every Compose support image carries its version tag and immutable
 multi-architecture digest. The root `.dockerignore` keeps VCS metadata, local

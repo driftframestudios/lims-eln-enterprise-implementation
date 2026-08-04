@@ -244,6 +244,7 @@ class SqlTenantStructureTests(unittest.TestCase):
             role_sql,
         )
         self.assertIn("revoke create on schema public from public", role_sql)
+        self.assertIn("alter schema public owner to laboratory_owner", role_sql)
         self.assertIn("revoke all on schema public from laboratory_migrator", role_sql)
         self.assertNotRegex(self.sql, r"\bcreate\s+role\b")
         self.assertIn("revoke all on all tables in schema public from public", self.sql)

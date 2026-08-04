@@ -202,8 +202,10 @@ Migration 004 transfers outbox tables and trusted routines to the no-login
 `laboratory_outbox_authority`. PostgreSQL ownership transfer is enabled by one
 explicit `ADMIN FALSE, INHERIT FALSE, SET TRUE` membership from that role to
 `laboratory_owner`; the owner can select the role for transfer while routine
-sessions receive zero inherited outbox authority. Release inventory and hosted
-catalog proofs bind both the edge and the resulting object owners.
+sessions receive zero inherited outbox authority. V004 supplies and withdraws
+the new owner's schema-creation capability inside the migration transaction.
+Release inventory and hosted catalog proofs bind the edge, the resulting object
+owners, and the absence of that creation capability at head.
 Forced row-level security remains active during migration. A dedicated policy
 permits cross-tenant evolution only when a security-invoker verifier observes
 the complete catalog-backed migrator/owner coordinate. The ordinary tenant

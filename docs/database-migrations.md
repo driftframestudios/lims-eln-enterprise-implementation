@@ -85,14 +85,22 @@ job. The
 provisioning step establishes the public-creation boundary before the first
 migration runs.
 
+The privileged prerequisite makes `laboratory_owner` the owner of the target
+`public` schema. This gives the migration owner the grant authority required to
+open and close V004's schema capability inside one migration transaction.
+
 Migration 004 deliberately transfers outbox tables and trusted routines from
 the general schema owner to the isolated `laboratory_outbox_authority` role.
 PostgreSQL requires the acting owner to hold `SET ROLE` authority for an
 ownership transfer. Provisioning therefore grants that no-login,
 `NOBYPASSRLS` role to `laboratory_owner` with `ADMIN FALSE, INHERIT FALSE, SET
-TRUE`. The owner gains a deliberate transfer operation while ordinary sessions
-gain zero inherited outbox authority. The connection callback, bounded-session
-verifier, artifact inventory, and hosted role graph all bind this exact edge.
+TRUE`. V004 grants the new owner `CREATE` on `public` immediately before the
+ownership statements and revokes it after the final routine transfer inside
+the same Flyway-owned transaction. The owner gains a deliberate transfer
+operation while ordinary sessions gain zero inherited outbox authority and the
+new owner retains zero schema-creation capability at head. The connection
+callback, bounded-session verifier, artifact inventory, and hosted role graph
+all bind this exact edge.
 
 Tenant relations retain `FORCE ROW LEVEL SECURITY` during schema and data
 evolution. A permissive policy for `laboratory_owner` opens cross-tenant

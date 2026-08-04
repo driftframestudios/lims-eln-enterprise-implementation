@@ -148,6 +148,27 @@ class DatabaseMigrationTests(unittest.TestCase):
             "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
         )
 
+    def test_outbox_owner_transfer_schema_capability_is_transaction_bounded(self) -> None:
+        migration = (
+            ROOT / "sql" / "V004__outbox_attempt_evidence_and_recovery.sql"
+        ).read_text(encoding="utf-8").lower()
+        grant_index = migration.index(
+            "grant create on schema public to laboratory_outbox_authority;"
+        )
+        table_transfer_index = migration.index(
+            "alter table public.outbox_delivery_attempt "
+            "owner to laboratory_outbox_authority;"
+        )
+        function_transfer_index = migration.index(
+            "alter function public.release_outbox_recovery(text, bigint, integer, text)"
+        )
+        revoke_index = migration.index(
+            "revoke create on schema public from laboratory_outbox_authority;"
+        )
+        self.assertLess(grant_index, table_transfer_index)
+        self.assertLess(table_transfer_index, function_transfer_index)
+        self.assertLess(function_transfer_index, revoke_index)
+
     def test_repository_delegates_migration_history_and_locking_to_flyway(self) -> None:
         self.assertFalse((ROOT / "scripts" / "apply_database_migrations.py").exists())
         self.assertFalse((ROOT / "database" / "migration-manifest.json").exists())
