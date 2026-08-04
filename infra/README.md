@@ -4,6 +4,12 @@
 S3-compatible object storage, and an OpenTelemetry collector with protected
 attribute removal.
 
+The PostgreSQL path uses a one-shot migrator after database health succeeds.
+The migrator verifies the ordered SHA-256 manifest, applies pending migrations
+under a transaction-level advisory lock, records immutable history, then binds
+synthetic local role passwords and the tenant-verification key from mounted
+secret files. The application proof waits for successful migration completion.
+
 `terraform/` supplies an AWS evidence and recovery baseline with:
 
 - customer-managed encryption and rotation;
@@ -22,7 +28,10 @@ network, identity federation, database topology, workload runtime, backup plan,
 regional design, policy-as-code, and accountable approval before deployment.
 
 Local secret files live at `infra/secrets/*.txt`, remain outside version
-control, and contain synthetic development credentials only.
+control, and contain synthetic development credentials only. The required
+PostgreSQL files cover bootstrap, application, outbox, evidence, and migrator
+passwords plus a 32-byte tenant HMAC key encoded as 64 lowercase hexadecimal
+characters.
 
 Secret versions enter Secrets Manager through the protected deployment or
 rotation workflow described in

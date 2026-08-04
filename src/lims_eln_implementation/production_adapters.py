@@ -20,7 +20,7 @@ from .bounded_caller import (
 )
 from .model import canonical_json, require_aware_utc
 from .ports import ExternalRecord, VendorGateway, WriteCertainty, WriteResult
-from .security import PostgresTenantBinding
+from .security import PostgresTenantBinding, TenantContextProvider
 
 
 class AdapterVersionError(RuntimeError):
@@ -248,6 +248,7 @@ class DbApiInvocationLedger:
         driver_name: str,
         driver_version: str,
         qualified_band: VersionBand,
+        tenant_context_provider: TenantContextProvider,
         clock: Callable[[], datetime],
         lease_duration: timedelta = timedelta(seconds=30),
         lease_token_factory: Callable[[], str] = lambda: str(uuid4()),
@@ -262,6 +263,7 @@ class DbApiInvocationLedger:
         self.driver_name = driver_name
         self.driver_version = driver_version
         self._connection_factory = connection_factory
+        self._tenant_context_provider = tenant_context_provider
         self._clock = clock
         self._lease_duration = lease_duration
         self._lease_token_factory = lease_token_factory
@@ -281,7 +283,10 @@ class DbApiInvocationLedger:
         lease_token = self._lease_token_factory()
         lease_expires_at = evaluated_at + self._lease_duration
         with _transaction(self._connection_factory) as cursor:
-            PostgresTenantBinding(tenant_id).bind(cursor)
+            PostgresTenantBinding(self._tenant_context_provider(tenant_id)).bind(
+                cursor,
+                expected_tenant_id=tenant_id,
+            )
             cursor.execute(
                 self.INSERT,
                 (
@@ -405,7 +410,10 @@ class DbApiInvocationLedger:
     ) -> None:
         completed_at = require_aware_utc(self._clock())
         with _transaction(self._connection_factory) as cursor:
-            PostgresTenantBinding(tenant_id).bind(cursor)
+            PostgresTenantBinding(self._tenant_context_provider(tenant_id)).bind(
+                cursor,
+                expected_tenant_id=tenant_id,
+            )
             cursor.execute(
                 self.COMPLETE,
                 (
@@ -436,7 +444,10 @@ class DbApiInvocationLedger:
     ) -> None:
         released_at = require_aware_utc(self._clock())
         with _transaction(self._connection_factory) as cursor:
-            PostgresTenantBinding(tenant_id).bind(cursor)
+            PostgresTenantBinding(self._tenant_context_provider(tenant_id)).bind(
+                cursor,
+                expected_tenant_id=tenant_id,
+            )
             cursor.execute(
                 self.RELEASE,
                 (
@@ -466,7 +477,10 @@ class DbApiInvocationLedger:
         if not reason_code.strip():
             raise ValueError("recovery reason requires a stable code")
         with _transaction(self._connection_factory) as cursor:
-            PostgresTenantBinding(tenant_id).bind(cursor)
+            PostgresTenantBinding(self._tenant_context_provider(tenant_id)).bind(
+                cursor,
+                expected_tenant_id=tenant_id,
+            )
             cursor.execute(
                 self.MARK_RECOVERY,
                 (
@@ -509,6 +523,7 @@ class DbApiCallReceiptStore:
         driver_name: str,
         driver_version: str,
         qualified_band: VersionBand,
+        tenant_context_provider: TenantContextProvider,
     ) -> None:
         if driver_name != qualified_band.component:
             raise AdapterVersionError(
@@ -518,6 +533,7 @@ class DbApiCallReceiptStore:
         self.driver_name = driver_name
         self.driver_version = driver_version
         self._connection_factory = connection_factory
+        self._tenant_context_provider = tenant_context_provider
 
     def append(self, receipt: CallReceipt) -> None:
         connection = self._connection_factory()
@@ -525,7 +541,9 @@ class DbApiCallReceiptStore:
         primary_error: BaseException | None = None
         try:
             cursor = connection.cursor()
-            PostgresTenantBinding(receipt.tenant_id).bind(cursor)
+            PostgresTenantBinding(
+                self._tenant_context_provider(receipt.tenant_id)
+            ).bind(cursor, expected_tenant_id=receipt.tenant_id)
             cursor.execute(
                 self.INSERT,
                 (

@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RCP-IMPLEMENTATION-001",
   "machine_node_id": "NODE-LIMS-ELN-IMPLEMENTATION",
-  "as_of": "2026-07-28T19:30:00Z",
+  "as_of": "2026-08-04T12:00:00Z",
   "orientation_purpose": "Give a human or AI collaborator the minimum complete implementation state, authority boundary, evidence posture, invalidation conditions, and safe handoff needed to reproduce or extend this reference.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -11,7 +11,12 @@
     {
       "contract_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
       "version": "0.3.1",
-      "digest": "sha256:40a61c6fed1b0cc5346ec7b3ba42475ef3e6629aa5cf6221ddebb288ca01090f"
+      "digest": "sha256:ba84cd86a8cf2f1b1772222802f59b66591f4227951197d0f3b28273ac8f4957"
+    },
+    {
+      "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
+      "version": "1.0.0",
+      "digest": "sha256:42d3510504fc9aabf7dc02eda889e7b2935a4c5cf3e0a7921be63612039886e6"
     },
     {
       "contract_id": "IMPLEMENTATION-OPEN-RECEIPTS-001",
@@ -30,6 +35,12 @@
       "mode": "observed",
       "assurance_stage": "verified",
       "status": "active"
+    },
+    {
+      "claim": "The PostgreSQL schema advances through an ordered checksum-bound transaction history and exercises signed tenant, custody, quantity, and outbox invariants in a synthetic live database.",
+      "mode": "planned",
+      "assurance_stage": "specified",
+      "status": "awaiting_ci_execution"
     },
     {
       "claim": "All four substantive receipt families are closed inside the separately versioned selected future-reality simulation.",

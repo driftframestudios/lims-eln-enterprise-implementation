@@ -1,32 +1,46 @@
 services:
   postgres:
-    image: postgres:17.5-alpine
+    image: postgres:17.10-alpine
     environment:
       POSTGRES_DB: laboratory
       POSTGRES_USER: laboratory_bootstrap
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
     secrets:
       - postgres_password
-      - postgres_app_password
-      - postgres_outbox_password
-      - postgres_evidence_password
-      - postgres_migrator_password
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ../sql/001_laboratory_core.sql:/docker-entrypoint-initdb.d/001_laboratory_core.sql:ro
-      - ./postgres-init/010_application_password.sh:/docker-entrypoint-initdb.d/010_application_password.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U laboratory_bootstrap -d laboratory"]
       interval: 5s
       timeout: 3s
       retries: 20
 
-  application-db-check:
-    image: postgres:17.5-alpine
-    profiles: ["proof"]
+  database-migrator:
+    build:
+      context: ..
+      dockerfile: infra/migrator.Dockerfile
     depends_on:
       postgres:
         condition: service_healthy
+    environment:
+      PGHOST: postgres
+      POSTGRES_DB: laboratory
+      POSTGRES_USER: laboratory_bootstrap
+    secrets:
+      - postgres_password
+      - postgres_app_password
+      - postgres_outbox_password
+      - postgres_evidence_password
+      - postgres_migrator_password
+      - postgres_tenant_hmac_key
+    restart: "no"
+
+  application-db-check:
+    image: postgres:17.10-alpine
+    profiles: ["proof"]
+    depends_on:
+      database-migrator:
+        condition: service_completed_successfully
     environment:
       PGHOST: postgres
       PGDATABASE: laboratory
@@ -73,6 +87,8 @@ secrets:
     file: ./secrets/postgres_evidence_password.txt
   postgres_migrator_password:
     file: ./secrets/postgres_migrator_password.txt
+  postgres_tenant_hmac_key:
+    file: ./secrets/postgres_tenant_hmac_key.txt
 
 volumes:
   postgres-data:

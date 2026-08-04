@@ -25,10 +25,13 @@ The standard-library test suite exercises:
 - registered read, idempotent narrow-write, approval-gated broad-write, and
   bounded golden-journey operations whose services retain effect control;
 - durable PostgreSQL receipt persistence and version-banded vendor SDK seams;
+- checksum-bound PostgreSQL migrations with ordered applied history and drift detection;
+- database-verified, short-lived signed tenant assertions for every row policy;
 - tenant-bound, attributable, revision-checked specimen transitions;
 - exact replay and changed-content collision handling;
-- custody transfer with an atomic outbox plan;
-- byte-preserving instrument ingress and explainable quarantine;
+- custody compare-and-set transfer with append-only history and atomic full-payload outbox;
+- byte-preserving instrument ingress with exact finite decimal quantities,
+  UCUM-coded units, and explainable quarantine;
 - ambiguous vendor-write reconciliation through authoritative readback;
 - resumable migration, semantic reconciliation, rollback, restore, and data exit;
 - account-scoped Parameter Store configuration and Secrets Manager retrieval;
@@ -46,6 +49,12 @@ python3 scripts/validate_repository.py
 The command validates JSON contracts and manifests, confirms fixture posture,
 runs all tests, applies the negation-aware language gate, and emits a
 deterministic source digest.
+
+The ordinary local proof runs configured-database tests when their explicit
+synthetic DSNs and verification key are present. CI also provisions PostgreSQL
+17, applies the immutable migration chain, and exercises unsigned and tampered
+tenant contexts, custody CAS/replay, tenant-scoped outbox identity, and immutable
+outbox content.
 
 ## Evidence ladder
 
@@ -79,6 +88,7 @@ reviewer, artifacts, and decisions are recorded.
 - `contracts` — versioned machine-readable command and receipt contracts.
 - `fixtures/synthetic` — synthetic, stable examples for comparison.
 - `sql` — PostgreSQL persistence, inbox/outbox, evidence, and tenant controls.
+- `database` — ordered migration manifest with immutable SHA-256 bindings.
 - `infra` — local production-shape services and an AWS recovery baseline.
 - `docs` — architecture, GitFlow-like delivery, qualification, and runbooks.
 - `receipts` — example manifests whose evidence mode is explicit.
@@ -122,13 +132,14 @@ become automatic write retries.
 The production transaction contract calls for reservation, tenant-scoped
 effects, outcome, receipt publication, and an outbox in one service-owned
 transaction. `InMemoryAtomicExecutor` proves rollback behavior for lifecycle
-plus idempotency and custody plus outbox, while durable invocation and receipt
-adapters prove their PostgreSQL statements independently. A deployment adapter
-still has to compose those transitions with domain SQL and the outbox on one
-connection, then prove the resulting crash points in a configured PostgreSQL
-encounter. Until that receipt lands, separate-transaction or external-write
-uncertainty remains in `recovery_required` and receives no automatic write
-retry.
+plus idempotency and custody plus outbox. `record_custody_transfer` supplies the
+durable custody CAS, append-only event, exact replay, and outbox transaction.
+Durable invocation and receipt adapters prove their PostgreSQL statements
+independently. A specimen-lifecycle deployment adapter still has to compose its
+aggregate, event, idempotency, and outbox transitions on one connection, then
+prove the resulting crash points in a configured PostgreSQL encounter.
+Separate-transaction or external-write uncertainty remains in
+`recovery_required` and receives reconciliation ownership.
 External vendor effects use a stable request identity, qualified SDK and API
 bands, response-identity checks, and authoritative readback for timeouts,
 cleanup ambiguity, or unexpected confirmation. Driver and SDK bands accept
@@ -144,6 +155,19 @@ coordinates against the [documented LabKey APIs](https://www.labkey.org/Document
 
 The released source coordinates and digests live in
 [`release/bounded-caller-bindings.json`](release/bounded-caller-bindings.json).
+
+## Database evolution
+
+Migration 001 remains the immutable historical baseline. Migration 002 adds the
+trusted tenant authority, finite temporal checks, exact measurement primitives,
+custody history and CAS, and immutable outbox semantics. The migration runner
+verifies every released checksum before database contact, serializes concurrent
+runners with a transaction-level advisory lock, and records an applied row only
+after its transaction succeeds.
+
+See the [migration and upgrade posture](docs/database-migrations.md) and the
+[data primitive corrective ledger](docs/data-primitive-corrective-ledger.md)
+for adoption, probability framing, remaining gaps, and evidence gates.
 
 ## Governance orientation
 

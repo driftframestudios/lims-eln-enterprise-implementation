@@ -160,11 +160,15 @@ class BranchFlowTests(unittest.TestCase):
             "/.github/dependabot.yml",
             "/.github/workflows/",
             "/scripts/check_branch_flow.py",
+            "/scripts/apply_database_migrations.py",
             "/tests/test_branch_flow.py",
+            "/tests/test_database_migrations.py",
+            "/tests/test_postgres_integration.py",
             "/src/lims_eln_implementation/bounded_caller.py",
             "/src/lims_eln_implementation/bounded_examples.py",
             "/src/lims_eln_implementation/production_adapters.py",
             "/release/",
+            "/database/",
             "/machine-node.json",
             "/first-receipt.json",
             "/COORDINATION-HORIZON.json",
@@ -180,6 +184,7 @@ class BranchFlowTests(unittest.TestCase):
         self.assertIn("\n  implementation-validation:\n", workflow)
         self.assertIn("if: ${{ always() }}", workflow)
         self.assertIn('test "$VALIDATE_RESULT" = "success"', workflow)
+        self.assertIn('test "$POSTGRES_RESULT" = "success"', workflow)
 
 
 if __name__ == "__main__":

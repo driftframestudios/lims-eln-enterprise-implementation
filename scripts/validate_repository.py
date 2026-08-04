@@ -111,6 +111,57 @@ def validate_manifests() -> None:
     if control_plane.get("control_plane_profile") != "0.3.0":
         raise AssertionError("control plane requires profile 0.3.0")
 
+    database = manifest.get("database", {})
+    migration_manifest_path = ROOT / database.get("migration_manifest", "")
+    migration_manifest = json.loads(
+        migration_manifest_path.read_text(encoding="utf-8")
+    )
+    if migration_manifest.get("schema_version") != "1.0.0":
+        raise AssertionError("database migration manifest requires schema release 1.0.0")
+    if migration_manifest.get("database_engine") != "postgresql":
+        raise AssertionError("database migrations require PostgreSQL")
+    if (
+        migration_manifest.get("transaction_policy")
+        != "one_transaction_per_migration"
+    ):
+        raise AssertionError("database migrations require one transaction per migration")
+    runner_binding = migration_manifest.get("runner", {})
+    runner_path = ROOT / runner_binding.get("path", "")
+    if runner_binding.get("path") != "scripts/apply_database_migrations.py":
+        raise AssertionError("database migrations require the released runner path")
+    if sha256(runner_path.read_bytes()).hexdigest() != runner_binding.get("sha256"):
+        raise AssertionError("database migration runner differs from its binding")
+    migration_entries = migration_manifest.get("migrations", [])
+    migration_ids = [entry["id"] for entry in migration_entries]
+    if migration_ids != sorted(set(migration_ids)) or not migration_ids:
+        raise AssertionError("database migration ids require strict ordered uniqueness")
+    released_paths = {entry["path"] for entry in migration_entries}
+    discovered_paths = {
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / "sql").glob("[0-9][0-9][0-9]_*.sql")
+    }
+    if released_paths != discovered_paths:
+        raise AssertionError("database migration manifest requires every SQL migration")
+    for entry in migration_entries:
+        path = ROOT / entry["path"]
+        if sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
+            raise AssertionError(
+                f"database migration checksum differs for {entry['path']}"
+            )
+        if entry.get("transactional") is not True:
+            raise AssertionError(
+                f"database migration {entry['id']} requires transaction ownership"
+            )
+    migration_manifest_digest = file_digest(migration_manifest_path)
+    if database.get("migration_manifest_digest") != migration_manifest_digest:
+        raise AssertionError("release manifest requires the migration manifest digest")
+    if database.get("migration_head") != migration_ids[-1]:
+        raise AssertionError("release manifest requires the current migration head")
+    if database.get("tenant_authority") != (
+        "signed_short_lived_database_verified_context"
+    ):
+        raise AssertionError("database requires the released tenant authority")
+
     provenance = json.loads((ROOT / "provenance.json").read_text(encoding="utf-8"))
     seed = provenance["seed"]
     if seed["pull_request"] != 3:
@@ -204,6 +255,8 @@ def validate_manifests() -> None:
         raise AssertionError("release role manifest requires enterprise_implementation")
     if release["bounded_caller_binding_digest"] != binding_digest:
         raise AssertionError("release role requires the bounded-caller binding digest")
+    if release.get("database_migration_manifest_digest") != migration_manifest_digest:
+        raise AssertionError("release role requires the database migration digest")
     if release["open_receipt_ledger_digest"] != ledger_digest:
         raise AssertionError("release role requires the open receipt ledger digest")
     if tuple(release["receipt_families"]) != CANONICAL_RECEIPT_FAMILIES:
@@ -225,6 +278,7 @@ def validate_manifests() -> None:
     }
     for contract_id, expected in (
         ("IMPLEMENTATION-BOUNDED-CALLER-001", binding_digest),
+        ("IMPLEMENTATION-DATABASE-MIGRATIONS-001", migration_manifest_digest),
         ("IMPLEMENTATION-OPEN-RECEIPTS-001", ledger_digest),
     ):
         if contracts.get(contract_id) != expected:
@@ -261,6 +315,14 @@ def validate_manifests() -> None:
         raise AssertionError(
             "local verification receipt requires the bounded-caller binding digest"
         )
+    if migration_manifest_digest not in receipt["artifact_digests"]:
+        raise AssertionError(
+            "local verification receipt requires the database migration digest"
+        )
+    if receipt["version_bindings"].get("database_migration_head") != database.get(
+        "migration_head"
+    ):
+        raise AssertionError("local verification receipt requires the migration head")
 
 
 def validate_synthetic_fixtures() -> None:

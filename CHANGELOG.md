@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased — principal data boundaries
+
+- Add immutable, checksum-bound PostgreSQL migration history and an explicit
+  fresh-target upgrade posture.
+- Replace caller-selected tenant state with short-lived signed assertions which
+  PostgreSQL verifies against private key material.
+- Add finite temporal constraints, exact decimal instrument measurements,
+  UCUM-coded units, and raw-to-normalized lineage.
+- Add custody compare-and-set, tenant-scoped transfer replay, append-only event
+  history, and atomic full-payload outbox insertion.
+- Bind outbox identity to tenant, verify payload digests at insertion, preserve
+  message content through delivery, and narrow worker updates to delivery state.
+- Add live PostgreSQL 17 migration and adversarial data-boundary proofs to CI.
+- Publish the data-primitive corrective ledger, plan probabilities, remaining
+  gaps, interstitials, and upgrade receipt requirements.
+
 ## 0.3.1 — 2026-07-28
 
 - Route the golden specimen journey through the bounded caller.

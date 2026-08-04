@@ -17,8 +17,13 @@
     },
     {
       "path": "src/lims_eln_implementation/production_adapters.py",
-      "sha256": "d721c56bf44943e665d69ed6889b13feb74299e081be18727aac4a283e6d0c91",
-      "responsibility": "qualified durable invocation and receipt persistence plus version-banded vendor SDK integration seams"
+      "sha256": "a2a528075862d2c09f427776bedbddccc8975e6b008b9c47dec6eca988e9670e",
+      "responsibility": "qualified durable invocation and receipt persistence with database-verified signed tenant assertions plus version-banded vendor SDK integration seams"
+    },
+    {
+      "path": "src/lims_eln_implementation/security.py",
+      "sha256": "ae552059c9b7b9a92b64f4a0adbf67e6cf6d33e9d14559a893ada89d7578bd98",
+      "responsibility": "immutable short-lived signed tenant context and database binding contract"
     },
     {
       "path": "src/lims_eln_implementation/application.py",
@@ -34,6 +39,11 @@
       "path": "sql/001_laboratory_core.sql",
       "sha256": "a7c9d79646aa5918123d790bba5b66cb89cc7b2a0dc81211ad926bb7579feb4b",
       "responsibility": "tenant-scoped invocation leases, fencing state, recovery ownership, completed outcomes, receipts, and row-level security"
+    },
+    {
+      "path": "sql/002_principal_data_boundaries.sql",
+      "sha256": "1191e71e35d220f3820bba4c1957a83b02f5bd53e5f85a2cb8911bf2242ff44d",
+      "responsibility": "database-verified tenant authority, custody compare-and-set history, and immutable outbox content"
     }
   ],
   "operation_bindings": [

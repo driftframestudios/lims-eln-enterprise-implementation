@@ -9,6 +9,7 @@ from lims_eln_implementation.idempotency import (
 )
 from lims_eln_implementation.lifecycle import LifecycleService
 from lims_eln_implementation.model import (
+    DomainError,
     RevisionConflict,
     SpecimenState,
     TransitionRejected,
@@ -45,6 +46,20 @@ class LifecycleTests(unittest.TestCase):
             self.service.register(
                 command("cmd-001", "register", 0, payload={"type": "B"})
             )
+
+    def test_command_snapshots_nested_payload_before_authorization(self) -> None:
+        source = {"measurements": [{"value": "12.5"}]}
+        planned = command("cmd-snapshot", "register", 0, payload=source)
+        digest = planned.content_digest
+        source["measurements"][0]["value"] = "caller-mutated"
+        self.assertEqual(planned.content_digest, digest)
+        self.assertEqual(planned.payload["measurements"][0]["value"], "12.5")
+        with self.assertRaises(TypeError):
+            planned.payload["measurements"][0]["value"] = "later-mutation"
+
+    def test_command_requires_string_keyed_finite_json(self) -> None:
+        with self.assertRaisesRegex(DomainError, "string-keyed"):
+            command("cmd-key-shape", "register", 0, payload={1: "value"})
 
     def test_matching_in_progress_command_fails_closed(self) -> None:
         ledger: IdempotencyLedger = IdempotencyLedger()

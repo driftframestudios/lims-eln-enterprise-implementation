@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from enum import StrEnum
 from hashlib import sha256
 import json
+from types import MappingProxyType
 from typing import Any, Mapping
 
 
@@ -41,9 +42,18 @@ def require_aware_utc(value: datetime) -> datetime:
 
 def canonical_json(value: Any) -> str:
     """Serialize a value into a stable comparison form."""
+    def normalize(item: Any) -> Any:
+        if isinstance(item, Mapping):
+            if any(not isinstance(key, str) for key in item):
+                raise TypeError("JSON object keys require strings")
+            return {key: normalize(nested) for key, nested in item.items()}
+        if isinstance(item, (list, tuple)):
+            return [normalize(nested) for nested in item]
+        return item
+
     try:
         return json.dumps(
-            value,
+            normalize(value),
             sort_keys=True,
             separators=(",", ":"),
             ensure_ascii=True,
@@ -59,6 +69,17 @@ def canonical_digest(value: Any) -> str:
     return sha256(canonical_json(value).encode("utf-8")).hexdigest()
 
 
+def immutable_json(value: Any) -> Any:
+    """Return a recursively immutable snapshot of already-normalized JSON."""
+    if isinstance(value, Mapping):
+        return MappingProxyType(
+            {key: immutable_json(item) for key, item in value.items()}
+        )
+    if isinstance(value, (list, tuple)):
+        return tuple(immutable_json(item) for item in value)
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class Command:
     command_id: str
@@ -70,6 +91,8 @@ class Command:
     occurred_at: datetime
     payload: Mapping[str, Any] = field(default_factory=dict)
     reason_code: str | None = None
+    _payload_json: str = field(init=False, repr=False)
+    _content_digest: str = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         for name, value in (
@@ -83,22 +106,35 @@ class Command:
                 raise DomainError(f"{name} requires a non-empty value")
         if self.expected_version < 0:
             raise DomainError("expected_version requires zero or a positive integer")
-        require_aware_utc(self.occurred_at)
+        occurred_at = require_aware_utc(self.occurred_at)
+        if not isinstance(self.payload, Mapping):
+            raise DomainError("payload requires a JSON object")
+        payload_json = canonical_json(dict(self.payload))
+        payload_snapshot = json.loads(payload_json)
+        if not isinstance(payload_snapshot, dict):
+            raise DomainError("payload requires a JSON object")
+        object.__setattr__(self, "payload", immutable_json(payload_snapshot))
+        object.__setattr__(self, "_payload_json", payload_json)
+        object.__setattr__(
+            self,
+            "_content_digest",
+            canonical_digest(
+                {
+                    "tenant_id": self.tenant_id,
+                    "specimen_id": self.specimen_id,
+                    "actor_id": self.actor_id,
+                    "action": self.action,
+                    "expected_version": self.expected_version,
+                    "occurred_at": occurred_at.isoformat(),
+                    "payload": payload_snapshot,
+                    "reason_code": self.reason_code,
+                }
+            ),
+        )
 
     @property
     def content_digest(self) -> str:
-        return canonical_digest(
-            {
-                "tenant_id": self.tenant_id,
-                "specimen_id": self.specimen_id,
-                "actor_id": self.actor_id,
-                "action": self.action,
-                "expected_version": self.expected_version,
-                "occurred_at": require_aware_utc(self.occurred_at).isoformat(),
-                "payload": dict(self.payload),
-                "reason_code": self.reason_code,
-            }
-        )
+        return self._content_digest
 
 
 @dataclass(frozen=True, slots=True)

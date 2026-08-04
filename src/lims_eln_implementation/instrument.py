@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 from datetime import datetime
 from enum import StrEnum
 from hashlib import sha256
@@ -37,14 +38,38 @@ class IngressResult:
     disposition: IngressDisposition
     raw_sha256: str
     normalized_digest: str | None
+    normalized_document_json: str | None
     reason_code: str | None
     recovery: str
+
+
+class DuplicateJsonMember(ValueError):
+    """A JSON object repeated a member whose winning value would be ambiguous."""
+
+
+def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    document: dict[str, object] = {}
+    for key, value in pairs:
+        if key in document:
+            raise DuplicateJsonMember(key)
+        document[key] = value
+    return document
+
+
+def _reject_nonfinite_constant(value: str) -> object:
+    raise ValueError(f"JSON numeric constant {value!r} requires finite decimal content")
 
 
 class InstrumentIngress:
     """Accept exact replays and route ambiguous content to a reviewable queue."""
 
-    _SUPPORTED_UNITS = {"ng/uL", "copies/uL"}
+    _MAX_PAYLOAD_BYTES = 1024 * 1024
+    _RELEASED_FIELDS = frozenset({"analyte", "value", "unit"})
+    _UNIT_PROFILE = {
+        "ng/uL": ("ng/uL", "http://unitsofmeasure.org"),
+        "copies/uL": ("{copies}/uL", "http://unitsofmeasure.org"),
+        "{copies}/uL": ("{copies}/uL", "http://unitsofmeasure.org"),
+    }
 
     def __init__(self) -> None:
         self._ledger: dict[tuple[str, str], IngressResult] = {}
@@ -60,6 +85,7 @@ class InstrumentIngress:
                     disposition=IngressDisposition.REPLAYED,
                     raw_sha256=prior.raw_sha256,
                     normalized_digest=prior.normalized_digest,
+                    normalized_document_json=prior.normalized_document_json,
                     reason_code=prior.reason_code,
                     recovery=(
                         "reuse the original normalized outcome"
@@ -78,9 +104,21 @@ class InstrumentIngress:
                 "unsupported_media_type",
                 "transcode through the approved JSON instrument profile",
             )
+        if len(envelope.raw_bytes) > self._MAX_PAYLOAD_BYTES:
+            return self._quarantine(
+                envelope,
+                "payload_limit_exceeded",
+                "store the source artifact and submit one bounded measurement document",
+            )
         try:
-            payload = json.loads(envelope.raw_bytes)
-        except (UnicodeDecodeError, json.JSONDecodeError):
+            payload = json.loads(
+                envelope.raw_bytes,
+                parse_float=Decimal,
+                parse_int=Decimal,
+                parse_constant=_reject_nonfinite_constant,
+                object_pairs_hook=_unique_object,
+            )
+        except (UnicodeDecodeError, json.JSONDecodeError, DuplicateJsonMember, ValueError):
             return self._quarantine(
                 envelope,
                 "malformed_json",
@@ -92,34 +130,94 @@ class InstrumentIngress:
                 "invalid_document_shape",
                 "supply one JSON object through the approved instrument profile",
             )
-        required = {"analyte", "value", "unit"}
-        missing = sorted(required.difference(payload))
+        missing = sorted(self._RELEASED_FIELDS.difference(payload))
         if missing:
             return self._quarantine(
                 envelope,
                 "missing_required_fields",
                 f"supply the required fields: {', '.join(missing)}",
             )
-        if payload["unit"] not in self._SUPPORTED_UNITS:
+        additional = sorted(set(payload).difference(self._RELEASED_FIELDS))
+        if additional:
+            return self._quarantine(
+                envelope,
+                "unreleased_fields",
+                "map additional fields through a versioned instrument profile: "
+                + ", ".join(additional),
+            )
+        analyte = payload["analyte"]
+        if not isinstance(analyte, str) or not analyte.strip() or len(analyte) > 128:
+            return self._quarantine(
+                envelope,
+                "analyte_requires_mapping",
+                "supply a 1..128 character analyte code from the approved profile",
+            )
+        unit = payload["unit"]
+        if not isinstance(unit, str) or unit not in self._UNIT_PROFILE:
             return self._quarantine(
                 envelope,
                 "unsupported_unit",
                 "map the value through an approved unit conversion with scientific review",
             )
+        raw_value = payload["value"]
+        if isinstance(raw_value, bool) or not isinstance(raw_value, (str, Decimal)):
+            return self._quarantine(
+                envelope,
+                "quantity_requires_mapping",
+                "supply a finite decimal number or decimal string from the approved profile",
+            )
+        try:
+            quantity = Decimal(raw_value.strip()) if isinstance(raw_value, str) else raw_value
+        except (InvalidOperation, ValueError):
+            return self._quarantine(
+                envelope,
+                "quantity_requires_mapping",
+                "supply a finite decimal number or decimal string from the approved profile",
+            )
+        if not quantity.is_finite():
+            return self._quarantine(
+                envelope,
+                "quantity_requires_mapping",
+                "supply a finite decimal quantity from the approved profile",
+            )
+        quantity_tuple = quantity.as_tuple()
+        precision = len(quantity_tuple.digits)
+        scale = max(-quantity_tuple.exponent, 0)
+        integer_digits = max(precision + quantity_tuple.exponent, 0)
+        if precision > 38 or scale > 18 or integer_digits > 20:
+            return self._quarantine(
+                envelope,
+                "quantity_precision_exceeded",
+                "route the measurement through a reviewed profile with a wider decimal model",
+            )
+        unit_code, unit_system = self._UNIT_PROFILE[unit]
         normalized = {
             "tenant_id": envelope.tenant_id,
             "specimen_id": envelope.specimen_id,
             "instrument_id": envelope.instrument_id,
             "captured_at": require_aware_utc(envelope.captured_at).isoformat(),
-            "analyte": str(payload["analyte"]).strip().upper(),
-            "value": str(payload["value"]),
-            "unit": payload["unit"],
+            "analyte": analyte.strip().upper(),
+            "quantity": {
+                "decimal": format(quantity, "f"),
+                "precision": precision,
+                "scale": scale,
+                "unit_code": unit_code,
+                "unit_system": unit_system,
+            },
             "raw_sha256": envelope.raw_sha256,
         }
+        normalized_document_json = json.dumps(
+            normalized,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+            allow_nan=False,
+        )
         result = IngressResult(
             disposition=IngressDisposition.ACCEPTED,
             raw_sha256=envelope.raw_sha256,
             normalized_digest=canonical_digest(normalized),
+            normalized_document_json=normalized_document_json,
             reason_code=None,
             recovery="continue to scientific review",
         )
@@ -133,6 +231,7 @@ class InstrumentIngress:
             disposition=IngressDisposition.QUARANTINED,
             raw_sha256=envelope.raw_sha256,
             normalized_digest=None,
+            normalized_document_json=None,
             reason_code=reason_code,
             recovery=recovery,
         )

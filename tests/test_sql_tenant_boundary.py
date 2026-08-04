@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import os
 import re
 import shutil
@@ -9,7 +10,9 @@ import unittest
 
 from lims_eln_implementation.security import (
     PostgresTenantBinding,
+    SignedTenantContext,
     TenantSessionBindingError,
+    tenant_context_signing_message,
 )
 
 
@@ -20,7 +23,9 @@ TENANT_TABLES = {
     "specimen_event",
     "idempotency_ledger",
     "custody_position",
+    "custody_event",
     "instrument_inbox",
+    "instrument_measurement",
     "transactional_outbox",
     "vendor_projection",
     "migration_checkpoint",
@@ -40,7 +45,7 @@ class FakeCursor:
     def execute(self, operation: str, parameters: tuple[str]) -> None:
         self.execution = (operation, parameters)
         if self.observed is None:
-            self.observed = parameters
+            self.observed = (json.loads(parameters[0])["tenant_id"],)
 
     def fetchone(self) -> tuple[object, ...] | None:
         return self.observed
@@ -49,8 +54,9 @@ class FakeCursor:
 class SqlTenantStructureTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.sql = (ROOT / "sql" / "001_laboratory_core.sql").read_text(
-            encoding="utf-8"
+        cls.sql = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in sorted((ROOT / "sql").glob("[0-9][0-9][0-9]_*.sql"))
         ).lower()
 
     def test_every_tenant_table_enables_and_forces_row_level_security(self) -> None:
@@ -66,18 +72,26 @@ class SqlTenantStructureTests(unittest.TestCase):
                 )
 
     def test_every_tenant_table_has_read_and_write_tenant_predicates(self) -> None:
-        predicate = (
-            r"tenant_id\s*=\s*current_setting\('app\.tenant_id',\s*true\)"
-        )
+        predicate = r"tenant_id\s*=\s*laboratory_security\.authorized_tenant_id\(\)"
         for table in TENANT_TABLES:
             with self.subTest(table=table):
-                policy = re.search(
+                policies = re.findall(
                     rf"create\s+policy\s+\w+\s+on\s+{table}"
                     rf"\s+using\s*\(({predicate})\)"
                     rf"\s+with\s+check\s*\(({predicate})\)\s*;",
                     self.sql,
                 )
-                self.assertIsNotNone(policy)
+                self.assertTrue(policies)
+
+    def test_caller_controlled_tenant_setting_is_replaced_by_signed_context(self) -> None:
+        migration = (ROOT / "sql" / "002_principal_data_boundaries.sql").read_text(
+            encoding="utf-8"
+        ).lower()
+        self.assertIn("laboratory_security.authorized_tenant_id()", migration)
+        self.assertIn("public.hmac", migration)
+        self.assertIn("laboratory_security.constant_time_equal", migration)
+        self.assertIn("current_setting('app.tenant_context', true)", migration)
+        self.assertNotIn("current_setting('app.tenant_id'", migration)
 
     def test_all_declared_tenant_id_tables_participate_in_boundary(self) -> None:
         table_definitions = re.findall(
@@ -200,17 +214,24 @@ class SqlTenantStructureTests(unittest.TestCase):
 
 
 class PostgresTenantBindingTests(unittest.TestCase):
+    def context(self, tenant_id: str = "SYN-TENANT-A") -> SignedTenantContext:
+        return SignedTenantContext(
+            tenant_id=tenant_id,
+            subject_id="SYN-SERVICE-IDENTITY-01",
+            key_id="synthetic-test-v1",
+            issued_at_epoch=1_785_240_000,
+            expires_at_epoch=1_785_240_300,
+            nonce="SYNTHETIC-NONCE-0001",
+            signature_hex="a" * 64,
+        )
+
     def test_binding_uses_a_transaction_local_parameter_and_verifies_result(self) -> None:
         cursor = FakeCursor()
-        binding = PostgresTenantBinding("SYN-TENANT-A")
+        binding = PostgresTenantBinding(self.context())
         binding.bind(cursor)
-        self.assertEqual(
-            cursor.execution,
-            (
-                "select set_config('app.tenant_id', %s, true)",
-                ("SYN-TENANT-A",),
-            ),
-        )
+        assert cursor.execution is not None
+        self.assertEqual(cursor.execution[0], PostgresTenantBinding.STATEMENT)
+        self.assertEqual(json.loads(cursor.execution[1][0])["tenant_id"], "SYN-TENANT-A")
         self.assertNotIn("SYN-TENANT-A", PostgresTenantBinding.STATEMENT)
 
     def test_binding_returns_connection_to_recovery_on_identity_mismatch(self) -> None:
@@ -219,13 +240,47 @@ class PostgresTenantBindingTests(unittest.TestCase):
             TenantSessionBindingError,
             "fresh transaction",
         ):
-            PostgresTenantBinding("SYN-TENANT-A").bind(cursor)
+            PostgresTenantBinding(self.context()).bind(cursor)
 
-    def test_binding_requires_a_printable_bounded_identity(self) -> None:
+    def test_provider_context_must_match_the_requested_tenant(self) -> None:
+        cursor = FakeCursor()
+        with self.assertRaisesRegex(TenantSessionBindingError, "identity reconciliation"):
+            PostgresTenantBinding(self.context("SYN-TENANT-B")).bind(
+                cursor,
+                expected_tenant_id="SYN-TENANT-A",
+            )
+        self.assertIsNone(cursor.execution)
+
+    def test_context_requires_bounded_identity_lifetime_nonce_and_signature(self) -> None:
         with self.assertRaisesRegex(ValueError, "1..128"):
-            PostgresTenantBinding("")
-        with self.assertRaisesRegex(ValueError, "printable"):
-            PostgresTenantBinding("SYN-TENANT\nA")
+            self.context("")
+        with self.assertRaisesRegex(ValueError, "900 seconds"):
+            SignedTenantContext(
+                tenant_id="SYN-TENANT-A",
+                subject_id="SYN-SERVICE-IDENTITY-01",
+                key_id="synthetic-test-v1",
+                issued_at_epoch=1_785_240_000,
+                expires_at_epoch=1_785_241_000,
+                nonce="SYNTHETIC-NONCE-0001",
+                signature_hex="a" * 64,
+            )
+
+    def test_issuer_and_database_share_one_signing_byte_contract(self) -> None:
+        context = self.context()
+        self.assertEqual(
+            tenant_context_signing_message(
+                tenant_id=context.tenant_id,
+                subject_id=context.subject_id,
+                key_id=context.key_id,
+                issued_at_epoch=context.issued_at_epoch,
+                expires_at_epoch=context.expires_at_epoch,
+                nonce=context.nonce,
+            ),
+            (
+                "SYN-TENANT-A\nSYN-SERVICE-IDENTITY-01\nsynthetic-test-v1\n"
+                "1785240000\n1785240300\nSYNTHETIC-NONCE-0001"
+            ).encode("utf-8"),
+        )
 
 
 @unittest.skipUnless(

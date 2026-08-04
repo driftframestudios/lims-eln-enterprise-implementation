@@ -39,17 +39,26 @@ instrument bytes ──> durable inbox ──> canonical domain ──> scientif
     retain immutable construction snapshots.
 12. A write exception retains durable recovery ownership until authoritative
     reconciliation determines its material effect.
+13. A tenant assertion is short-lived, signed by a trusted issuer, and verified
+    inside PostgreSQL before a row policy returns state.
+14. Scientific quantities retain finite exact decimal value, source precision
+    and scale, a released unit code/system, and raw-to-normalized lineage.
+15. Applied schema migrations retain immutable identity, path, checksum, actor,
+    database time, transaction ownership, and serialized runner coordination.
 
 ## Transaction boundaries
 
 The production persistence contract places aggregate mutation, append-only
 domain event, idempotency commit, and outbox message in one database transaction.
 The in-memory atomic adapter proves rollback semantics for lifecycle plus
-idempotency and custody plus outbox. The PostgreSQL schema supplies outbox
-leases, fencing, and recovery state, while the durable invocation and receipt
-adapters prove their statements independently. The configured deployment still
-needs one connection-scoped composition and a worker that claims rows, records
-attempts, and routes exhausted work to reviewable recovery. Those two
+idempotency and custody plus outbox. PostgreSQL's `record_custody_transfer`
+function locks the current position, enforces expected-version CAS, appends one
+immutable custody event, updates the position, and inserts the full-payload
+outbox message in one transaction. The schema supplies outbox leases, fencing,
+and recovery state, while the durable invocation and receipt adapters prove
+their statements independently. The configured deployment still needs a
+connection-scoped specimen-lifecycle composition and a worker that claims rows,
+records attempts, and routes exhausted work to reviewable recovery. Those
 configured-environment receipts remain open.
 
 The bounded-caller invocation row uses a lease token and monotonically governed
@@ -126,8 +135,31 @@ workload role receives zero direct write authority to these tables. A separate
 evidence-writer role uses append-only tables and the minimum statement set
 needed to record a receipt or decision.
 
-Tenant-scoped tables use forced row-level security and a verified,
-transaction-local `app.tenant_id` setting. Application, outbox, evidence, and
-migration identities are distinct `NOSUPERUSER NOBYPASSRLS` roles. A separately
-approved break-glass administration identity belongs to the adopting
-environment and is intentionally absent from the ordinary repository runtime.
+Tenant-scoped tables use forced row-level security and
+`laboratory_security.authorized_tenant_id()`. A trusted issuer supplies a
+short-lived HMAC assertion containing tenant, subject, key identity, validity
+window, and nonce. PostgreSQL verifies its exact field set, lifetime, active
+private key, and signature before setting the transaction-local context. The
+legacy caller-set tenant GUC has zero policy authority.
+
+Application, outbox, evidence, and migration identities are distinct
+`NOSUPERUSER NOBYPASSRLS` roles. They can execute verification and have zero
+key-table access. A separately approved break-glass administration identity
+belongs to the adopting environment and sits outside the ordinary repository
+runtime.
+
+## Database evolution boundary
+
+The database begins from immutable migration 001 and advances through the
+SHA-256-bound sequence in `database/migration-manifest.json`. The dependency-free
+runner verifies all files, records applied identity/path/checksum/actor/time,
+and uses a transaction-level advisory lock so concurrent runners converge on
+one ordered result. A failed migration rolls back. An applied migration receives
+a successor forward repair.
+
+Migration 002 establishes finite temporal values, state coherence, the signed
+tenant authority, typed instrument measurements, custody history/CAS, and
+immutable outbox content. A populated untracked baseline enters through a
+fresh-target restore and semantic comparison rehearsal rather than object-name
+inference. The complete adoption and evidence gates are documented in
+`docs/database-migrations.md`.

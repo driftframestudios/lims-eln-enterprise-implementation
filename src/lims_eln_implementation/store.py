@@ -3,11 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from hashlib import sha256
+import json
 from threading import RLock
-from typing import Generic, Protocol, TypeVar
+from typing import Any, Generic, Mapping, Protocol, TypeVar
 
-from .model import RevisionConflict, SpecimenAggregate
+from .model import (
+    DomainError,
+    RevisionConflict,
+    SpecimenAggregate,
+    canonical_json,
+    immutable_json,
+)
 
 
 T = TypeVar("T")
@@ -96,17 +104,67 @@ class OutboxMessage:
     topic: str
     aggregate_id: str
     aggregate_version: int
-    payload_digest: str
+    payload: Mapping[str, Any] = field(repr=False)
+    payload_json: str = field(init=False)
+    payload_digest: str = field(init=False)
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("message_id", self.message_id),
+            ("tenant_id", self.tenant_id),
+            ("topic", self.topic),
+            ("aggregate_id", self.aggregate_id),
+        ):
+            if not value.strip() or len(value) > 256 or not value.isprintable():
+                raise DomainError(f"{name} requires 1..256 visible characters")
+        if self.aggregate_version < 1:
+            raise DomainError("aggregate_version requires a positive integer")
+        if not isinstance(self.payload, Mapping):
+            raise DomainError("outbox payload requires a JSON object")
+        payload_json = canonical_json(dict(self.payload))
+        payload_snapshot = json.loads(payload_json)
+        if not isinstance(payload_snapshot, dict):
+            raise DomainError("outbox payload requires a JSON object")
+        object.__setattr__(self, "payload", immutable_json(payload_snapshot))
+        object.__setattr__(self, "payload_json", payload_json)
+        object.__setattr__(
+            self,
+            "payload_digest",
+            sha256(payload_json.encode("utf-8")).hexdigest(),
+        )
+
+
+class OutboxContentCollision(DomainError):
+    """One tenant-scoped message identity already names different content."""
 
 
 class InMemoryOutbox:
     def __init__(self) -> None:
         self.messages: list[OutboxMessage] = []
+        self._by_identity: dict[tuple[str, str], OutboxMessage] = {}
 
     def append(self, message: OutboxMessage) -> None:
-        if any(item.message_id == message.message_id for item in self.messages):
+        identity = (message.tenant_id, message.message_id)
+        current = self._by_identity.get(identity)
+        if current is not None and (
+            current.topic,
+            current.aggregate_id,
+            current.aggregate_version,
+            current.payload_json,
+        ) == (
+            message.topic,
+            message.aggregate_id,
+            message.aggregate_version,
+            message.payload_json,
+        ):
             return
+        if current is not None:
+            raise OutboxContentCollision(
+                "outbox identity already binds to different content; "
+                "allocate a new tenant-scoped message identity"
+            )
         self.messages.append(message)
+        self._by_identity[identity] = message
 
     def transaction_snapshot(self) -> object:
         return tuple(self.messages)
@@ -115,3 +173,7 @@ class InMemoryOutbox:
         if not isinstance(snapshot, tuple):
             raise TypeError("outbox transaction snapshot requires a tuple")
         self.messages = list(snapshot)
+        self._by_identity = {
+            (message.tenant_id, message.message_id): message
+            for message in self.messages
+        }

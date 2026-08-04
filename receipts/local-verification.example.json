@@ -12,7 +12,10 @@
     "python": "3.12+",
     "fixture_profile": "synthetic-v1",
     "governance_schema": "2.0.1",
-    "control_plane_profile": "0.3.0"
+    "control_plane_profile": "0.3.0",
+    "postgresql": "17.10",
+    "database_migration_head": "002",
+    "tenant_authority": "signed_short_lived_database_verified_context"
   },
   "scenario_ids": [
     "SCN-LIFECYCLE-REPLAY",
@@ -25,9 +28,10 @@
     "SCN-BOUNDED-CALLER-FAILURE-TWINS"
   ],
   "artifact_digests": [
-    "sha256:40a61c6fed1b0cc5346ec7b3ba42475ef3e6629aa5cf6221ddebb288ca01090f"
+    "sha256:ba84cd86a8cf2f1b1772222802f59b66591f4227951197d0f3b28273ac8f4957",
+    "sha256:42d3510504fc9aabf7dc02eda889e7b2935a4c5cf3e0a7921be63612039886e6"
   ],
-  "observed_at": "2026-07-28T12:00:00Z",
+  "observed_at": "2026-08-04T12:00:00Z",
   "performer_id": "SYN-AUTOMATION-RUNNER",
   "reviewer_id": "SYN-INDEPENDENT-REVIEWER",
   "limitations": [
