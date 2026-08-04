@@ -346,11 +346,11 @@ def validate_manifests() -> None:
         or hosted_bindings.get("database_migration_head")
         != database.get("migration_head")
         or hosted_bindings.get("repository_commit")
-        != "16b97aa40a468a3afa45d5f2ec9053078218e193"
+        != "cfa9e55a5a422eafa57632991ce788fc5168bc57"
         or hosted_bindings.get("workflow_run")
         != (
             "https://github.com/driftframestudios/"
-            "lims-eln-enterprise-implementation/actions/runs/30919242006"
+            "lims-eln-enterprise-implementation/actions/runs/30930674823"
         )
     ):
         raise AssertionError(
@@ -363,6 +363,15 @@ def validate_manifests() -> None:
     if migration_manifest_digest not in hosted_receipt["artifact_digests"]:
         raise AssertionError(
             "hosted PostgreSQL receipt requires the database migration digest"
+        )
+    required_database_scenarios = {
+        "SCN-DB-SECURITY-DEFINER-TEMP-SHADOW",
+        "SCN-DB-OUTBOX-FENCED-CLAIM-RECLAIM-STALE-CONFIRM",
+    }
+    if not required_database_scenarios.issubset(hosted_receipt["scenario_ids"]):
+        raise AssertionError(
+            "hosted PostgreSQL receipt requires the privileged-routine and "
+            "fenced-worker scenarios"
         )
 
 

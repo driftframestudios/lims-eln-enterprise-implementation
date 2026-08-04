@@ -9,8 +9,8 @@
   "environment": "github-hosted-synthetic-postgresql",
   "version_bindings": {
     "repository": "0.3.1",
-    "repository_commit": "16b97aa40a468a3afa45d5f2ec9053078218e193",
-    "workflow_run": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/actions/runs/30919242006",
+    "repository_commit": "cfa9e55a5a422eafa57632991ce788fc5168bc57",
+    "workflow_run": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/actions/runs/30930674823",
     "python": "3.12.13",
     "postgresql": "17.10-alpine",
     "database_migration_head": "003",
@@ -21,7 +21,9 @@
     "SCN-DB-SIGNED-TENANT-BOUNDARY",
     "SCN-DB-TENANT-CONTEXT-TAMPER-EXPIRY",
     "SCN-DB-CUSTODY-CAS-AND-ATOMIC-OUTBOX",
+    "SCN-DB-SECURITY-DEFINER-TEMP-SHADOW",
     "SCN-DB-OUTBOX-CONTENT-IMMUTABILITY",
+    "SCN-DB-OUTBOX-FENCED-CLAIM-RECLAIM-STALE-CONFIRM",
     "SCN-DB-SCIENTIFIC-QUANTITY-EXACTNESS",
     "SCN-DB-VERIFICATION-KEY-CONFIDENTIALITY"
   ],
@@ -29,7 +31,7 @@
     "sha256:cf6e62e64660fe9793427b5dfe5ceb9cc4fc21ca46fd611e7b484b16e8b28e3a",
     "sha256:96b4768df92196096d2279fdd7ce1d790c30f7392f4b495d5edbaf2ab01db424"
   ],
-  "observed_at": "2026-08-04T14:30:22Z",
+  "observed_at": "2026-08-04T16:46:20Z",
   "performer_id": "GITHUB-ACTIONS-HOSTED-RUNNER",
   "reviewer_id": "SYN-INDEPENDENT-ADVERSARIAL-DATABASE-SUITE",
   "limitations": [
