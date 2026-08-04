@@ -204,6 +204,83 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         self.assertNotEqual(completed.returncode, 0)
         self.assertIn("permission denied", completed.stderr.lower())
 
+    def test_scientific_quantity_retains_exact_scale_and_rejects_over_scale(self) -> None:
+        assert APP_DSN is not None
+        message_id = "SYN-LIVE-MEASUREMENT-MESSAGE-" + uuid4().hex
+        measurement_id = "SYN-LIVE-MEASUREMENT-" + uuid4().hex
+        variables = {
+            "context": signed_context(self.tenant_a),
+            "measurement": measurement_id,
+            "message": message_id,
+            "specimen": self.specimen,
+            "tenant": self.tenant_a,
+        }
+        accepted = self.run_sql(
+            APP_DSN,
+            """
+            begin;
+            select laboratory_security.bind_tenant_context(:'context'::jsonb);
+            insert into instrument_inbox (
+                tenant_id, message_id, instrument_id, specimen_id,
+                raw_object_key, raw_sha256, captured_at_utc, disposition,
+                reason_code, recovery_instruction
+            ) values (
+                :'tenant', :'message', 'SYN-INSTRUMENT-01', :'specimen',
+                'synthetic/measurement.json', repeat('1', 64),
+                '2026-08-04T12:00:00Z', 'accepted', null,
+                'projection completed'
+            );
+            insert into instrument_measurement (
+                tenant_id, measurement_id, message_id, specimen_id,
+                analyte_code, quantity, source_precision, source_scale,
+                unit_code, unit_system, captured_at_utc,
+                raw_sha256, normalized_sha256
+            ) values (
+                :'tenant', :'measurement', :'message', :'specimen',
+                'DNA_CONCENTRATION', 12.123456789012345678, 20, 18,
+                'ng/uL', 'http://unitsofmeasure.org',
+                '2026-08-04T12:00:00Z', repeat('1', 64), repeat('2', 64)
+            );
+            select quantity::text || ':' || source_scale::text
+              from instrument_measurement
+             where tenant_id = :'tenant'
+               and measurement_id = :'measurement';
+            commit;
+            """,
+            variables=variables,
+        )
+        self.assertIn("12.123456789012345678:18", accepted.stdout)
+
+        over_scale = self.run_sql(
+            APP_DSN,
+            """
+            begin;
+            select laboratory_security.bind_tenant_context(:'context'::jsonb);
+            insert into instrument_measurement (
+                tenant_id, measurement_id, message_id, specimen_id,
+                analyte_code, quantity, source_precision, source_scale,
+                unit_code, unit_system, captured_at_utc,
+                raw_sha256, normalized_sha256
+            ) values (
+                :'tenant', :'measurement', :'message', :'specimen',
+                'DNA_COPIES', 0.1234567890123456789, 20, 18,
+                '{copies}/uL', 'http://unitsofmeasure.org',
+                '2026-08-04T12:00:00Z', repeat('1', 64), repeat('3', 64)
+            );
+            commit;
+            """,
+            variables={
+                "context": signed_context(self.tenant_a),
+                "measurement": "SYN-LIVE-OVER-SCALE-" + uuid4().hex,
+                "message": message_id,
+                "specimen": self.specimen,
+                "tenant": self.tenant_a,
+            },
+            check=False,
+        )
+        self.assertNotEqual(over_scale.returncode, 0)
+        self.assertIn("instrument_measurement_quantity_check", over_scale.stderr)
+
     def test_custody_compare_and_set_history_replay_and_outbox_are_atomic(self) -> None:
         assert APP_DSN is not None
         context = signed_context(self.tenant_a)
