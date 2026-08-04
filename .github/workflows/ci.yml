@@ -101,15 +101,17 @@ jobs:
 
           run_probe() {
             docker run --rm --network host \
-              --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
               --volume "$probe_dir:/flyway/probe:ro" \
               --env FLYWAY_URL=jdbc:postgresql://127.0.0.1:5432/flyway_order_probe \
               --env FLYWAY_USER=laboratory_bootstrap \
               --env FLYWAY_PASSWORD=synthetic-ci-bootstrap-password \
               "$FLYWAY_IMAGE" \
-              -workingDirectory=/flyway/project \
-              -configFiles=/flyway/project/flyway.conf \
-              -locations=filesystem:/flyway/probe "$@"
+              -locations=filesystem:/flyway/probe \
+              -outOfOrder=true \
+              -validateMigrationNaming=true \
+              -validateOnMigrate=true \
+              -cleanDisabled=true \
+              -baselineOnMigrate=false "$@"
           }
 
           run_probe migrate
