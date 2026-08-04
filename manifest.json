@@ -26,7 +26,7 @@
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:257cbf84638a6d8a6ac12038fc943a63ceb5c6899b32f5026216a77a81559572",
+    "binding_digest": "sha256:e6590446725c47231817bc43a478851e739617f1870bf3a5d7c1e36e3e5bc87e",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",
@@ -53,7 +53,7 @@
     "migration_product": "Flyway Community",
     "migration_product_version": "13.0.0",
     "migration_release": "database/flyway-release.json",
-    "migration_release_digest": "sha256:46ae6a2ec1ce464c67deae2a43cab50f2a2679a3e182da05b54c4cac15b95895",
+    "migration_release_digest": "sha256:3010d543594ef98e5873e2753cd7531e5a94e0922698d4ad04ae55a811a1691c",
     "migration_configuration": "flyway.conf",
     "migration_transaction_policy": "one_transaction_per_migration",
     "tenant_authority": "signed_short_lived_database_verified_context",

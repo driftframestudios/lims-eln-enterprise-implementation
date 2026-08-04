@@ -241,6 +241,13 @@ class BranchFlowTests(unittest.TestCase):
         self.assertEqual(
             workflow.count(
                 "has_table_privilege('laboratory_outbox_authority', "
+                "'public.outbox_delivery_attempt_outcome', 'update')"
+            ),
+            2,
+        )
+        self.assertEqual(
+            workflow.count(
+                "has_table_privilege('laboratory_outbox_authority', "
                 "'public.transactional_outbox', 'insert')"
             ),
             2,

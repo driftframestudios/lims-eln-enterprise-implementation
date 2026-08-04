@@ -1166,10 +1166,11 @@ revoke all privileges on public.transactional_outbox
 from laboratory_outbox_authority;
 grant select, insert, update on public.transactional_outbox
 to laboratory_outbox_authority;
-grant select, insert, update on public.outbox_delivery_attempt
+grant select, insert, update on
+    public.outbox_delivery_attempt,
+    public.outbox_delivery_attempt_outcome
 to laboratory_outbox_authority;
 grant select, insert on
-    public.outbox_delivery_attempt_outcome,
     public.outbox_recovery_release
 to laboratory_outbox_authority;
 

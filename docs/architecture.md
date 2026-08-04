@@ -188,12 +188,13 @@ authority. V004 settles caller access controls and triggers under the migration
 owner, then transfers ownership while the destination role has its bounded
 schema capability. The destination role clears ownership-transferred outbox
 privileges, then establishes the narrow DML used by its routines and guards,
-including attempt-table `UPDATE` so the append-only trigger governs
-attempted mutation, and the custody producer's column-level insert grant before
-the migration owner revokes that capability. Static and hosted catalog proofs
-verify the ordering, exact role edge, final table and routine owners, bounded
-DML surface, and absence of schema-creation privilege on clean and successor
-paths.
+including `UPDATE` on attempt and outcome so append-only triggers govern
+attempted mutation and PostgreSQL can lock an outcome while validating the
+recovery foreign key. It restores the custody producer's column-level insert
+grant before the migration owner revokes that capability. Static and hosted
+catalog proofs verify the ordering, exact role edge, final table and routine
+owners, bounded DML surface, and absence of schema-creation privilege on clean
+and successor paths.
 
 Forced row-level security remains active during migration. Every tenant table
 has a second permissive policy scoped to `laboratory_owner` whose predicate

@@ -99,9 +99,11 @@ owner still has authority, grants the destination owner `CREATE` on `public`,
 and transfers the objects. It then selects the destination role, clears the
 outbox privileges inherited with ownership, and establishes the rights
 exercised by its trusted routines and semantic guards: `SELECT`, `INSERT`, and
-`UPDATE` on the outbox and `SELECT` and `INSERT` on the evidence tables.
-`UPDATE` on the attempt table is deliberate so the append-only trigger governs
-attempted mutation. The destination role also restores the exact column-level
+`UPDATE` on the outbox, `SELECT` and `INSERT` on the evidence tables, and
+`UPDATE` on attempt and outcome. Attempt updates reach the append-only trigger;
+outcome updates support PostgreSQL's `FOR KEY SHARE` check when recovery facts
+reference outcomes, while the same trigger governs attempted mutation. The
+destination role also restores the exact column-level
 producer grant required by the custody routine. The migration owner is selected
 again before it revokes the temporary schema capability. The owner gains a
 deliberate transfer operation while ordinary sessions gain zero inherited
