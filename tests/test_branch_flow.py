@@ -185,6 +185,10 @@ class BranchFlowTests(unittest.TestCase):
         self.assertIn("if: ${{ always() }}", workflow)
         self.assertIn('test "$VALIDATE_RESULT" = "success"', workflow)
         self.assertIn('test "$POSTGRES_RESULT" = "success"', workflow)
+        self.assertRegex(
+            workflow,
+            r"image: postgres:17\.10-alpine@sha256:[a-f0-9]{64}",
+        )
 
 
 if __name__ == "__main__":
