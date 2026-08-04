@@ -58,6 +58,7 @@ jobs:
           --health-timeout 3s
           --health-retries 20
     env:
+      PYTHONPATH: src
       LIMS_TEST_POSTGRES_ADMIN_DSN: postgresql://laboratory_bootstrap:synthetic-ci-bootstrap-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_APP_DSN: postgresql://laboratory_app:synthetic-ci-app-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_DSN: postgresql://laboratory_app:synthetic-ci-app-password@127.0.0.1:5432/laboratory
