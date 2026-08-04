@@ -40,8 +40,8 @@
       "kind": "versioned_migration",
       "version": "004",
       "path": "sql/V004__outbox_attempt_evidence_and_recovery.sql",
-      "sha256": "4e0da83006ae760dee97db1023fd857927f2ec35d638c37922f404492ede9ee4"
+      "sha256": "6a78d9e74f20065b7d0dfecf3ff7e1dbedccee34980f43709765965a07c1a706"
     }
   ],
-  "aggregate_sha256": "sha256:51bc9d632546a436f02be9ee95109f108870d287fffa8a82a13276b7cb29d196"
+  "aggregate_sha256": "sha256:02d8088c1c952c7d9ba2cebf389d19eb08184989167b12d21c646e6e6784119b"
 }

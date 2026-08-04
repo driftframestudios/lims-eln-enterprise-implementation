@@ -172,6 +172,21 @@ class DatabaseMigrationTests(unittest.TestCase):
         function_acl_index = migration.index(
             "grant execute on function public.release_outbox_recovery("
         )
+        authority_role_index = migration.index(
+            "set local role laboratory_outbox_authority;"
+        )
+        authority_revoke_index = migration.index(
+            "revoke all privileges on public.transactional_outbox\n"
+            "from laboratory_outbox_authority;"
+        )
+        authority_dml_index = migration.index(
+            "grant select, insert, update on public.transactional_outbox\n"
+            "to laboratory_outbox_authority;"
+        )
+        owner_insert_index = migration.index(
+            ") on public.transactional_outbox to laboratory_owner;"
+        )
+        owner_role_index = migration.index("set local role laboratory_owner;")
         revoke_index = migration.index(
             "revoke create on schema public from laboratory_outbox_authority;"
         )
@@ -180,7 +195,16 @@ class DatabaseMigrationTests(unittest.TestCase):
         self.assertLess(function_acl_index, grant_index)
         self.assertLess(grant_index, table_transfer_index)
         self.assertLess(table_transfer_index, function_transfer_index)
-        self.assertLess(function_transfer_index, revoke_index)
+        self.assertLess(function_transfer_index, authority_role_index)
+        self.assertLess(authority_role_index, authority_revoke_index)
+        self.assertLess(authority_revoke_index, authority_dml_index)
+        self.assertLess(authority_dml_index, owner_insert_index)
+        self.assertLess(owner_insert_index, owner_role_index)
+        self.assertLess(owner_role_index, revoke_index)
+        self.assertNotIn(
+            "grant all privileges on public.transactional_outbox",
+            migration,
+        )
 
     def test_repository_delegates_migration_history_and_locking_to_flyway(self) -> None:
         self.assertFalse((ROOT / "scripts" / "apply_database_migrations.py").exists())

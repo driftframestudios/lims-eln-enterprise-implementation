@@ -224,6 +224,27 @@ class BranchFlowTests(unittest.TestCase):
         )
         self.assertNotIn("pg_catalog.pg_get_function_identity_arguments", workflow)
         self.assertIn("has_schema_privilege", workflow)
+        self.assertEqual(
+            workflow.count(
+                "has_column_privilege('laboratory_owner', "
+                "'public.transactional_outbox', 'payload', 'insert')"
+            ),
+            2,
+        )
+        self.assertEqual(
+            workflow.count(
+                "has_table_privilege('laboratory_outbox_authority', "
+                "'public.outbox_delivery_attempt', 'update')"
+            ),
+            2,
+        )
+        self.assertEqual(
+            workflow.count(
+                "has_table_privilege('laboratory_outbox_authority', "
+                "'public.transactional_outbox', 'insert')"
+            ),
+            2,
+        )
         self.assertIn("clean and upgraded schema convergence", workflow.lower())
         self.assertNotIn("apply_database_migrations.py", workflow)
 

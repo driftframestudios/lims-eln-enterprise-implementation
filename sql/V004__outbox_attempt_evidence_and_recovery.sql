@@ -387,18 +387,6 @@ grant insert (
     payload_canonicalization,
     available_at_utc
 ) on public.transactional_outbox to laboratory_app;
-grant insert (
-    tenant_id,
-    message_id,
-    topic,
-    aggregate_id,
-    aggregate_version,
-    payload,
-    payload_sha256,
-    payload_canonicalization,
-    available_at_utc
-) on public.transactional_outbox to laboratory_owner;
-
 revoke all privileges on public.transactional_outbox
     from laboratory_outbox_worker, laboratory_outbox_recovery_operator;
 grant select on public.transactional_outbox to
@@ -1171,5 +1159,32 @@ alter function public.fail_outbox_delivery(text, text, uuid, bigint, text)
     owner to laboratory_outbox_authority;
 alter function public.release_outbox_recovery(text, bigint, integer, text)
     owner to laboratory_outbox_authority;
+
+set local role laboratory_outbox_authority;
+
+revoke all privileges on public.transactional_outbox
+from laboratory_outbox_authority;
+grant select, insert, update on public.transactional_outbox
+to laboratory_outbox_authority;
+grant select, insert, update on public.outbox_delivery_attempt
+to laboratory_outbox_authority;
+grant select, insert on
+    public.outbox_delivery_attempt_outcome,
+    public.outbox_recovery_release
+to laboratory_outbox_authority;
+
+grant insert (
+    tenant_id,
+    message_id,
+    topic,
+    aggregate_id,
+    aggregate_version,
+    payload,
+    payload_sha256,
+    payload_canonicalization,
+    available_at_utc
+) on public.transactional_outbox to laboratory_owner;
+
+set local role laboratory_owner;
 
 revoke create on schema public from laboratory_outbox_authority;

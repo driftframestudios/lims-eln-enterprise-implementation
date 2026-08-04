@@ -94,15 +94,20 @@ the general schema owner to the isolated `laboratory_outbox_authority` role.
 PostgreSQL requires the acting owner to hold `SET ROLE` authority for an
 ownership transfer. Provisioning therefore grants that no-login,
 `NOBYPASSRLS` role to `laboratory_owner` with `ADMIN FALSE, INHERIT FALSE, SET
-TRUE`. V004 completes table and routine access-control statements while the
-migration owner still has authority, grants the destination owner `CREATE` on
-`public`, transfers the objects, and revokes that schema capability after the
-final routine transfer inside the same Flyway-owned transaction. The owner
-gains a deliberate transfer operation while ordinary sessions gain zero
-inherited outbox authority and the new owner retains zero schema-creation
-capability at head. Static ordering checks, the connection callback,
-bounded-session verifier, artifact inventory, and hosted role graph bind this
-exact edge.
+TRUE`. V004 completes caller ACLs and trigger definitions while the migration
+owner still has authority, grants the destination owner `CREATE` on `public`,
+and transfers the objects. It then selects the destination role, clears the
+outbox privileges inherited with ownership, and establishes the rights
+exercised by its trusted routines and semantic guards: `SELECT`, `INSERT`, and
+`UPDATE` on the outbox and `SELECT` and `INSERT` on the evidence tables.
+`UPDATE` on the attempt table is deliberate so the append-only trigger governs
+attempted mutation. The destination role also restores the exact column-level
+producer grant required by the custody routine. The migration owner is selected
+again before it revokes the temporary schema capability. The owner gains a
+deliberate transfer operation while ordinary sessions gain zero inherited
+outbox authority and the new owner retains zero schema-creation capability at
+head. Static ordering checks, the connection callback, bounded-session
+verifier, artifact inventory, and hosted role graph bind this exact edge.
 
 Tenant relations retain `FORCE ROW LEVEL SECURITY` during schema and data
 evolution. A permissive policy for `laboratory_owner` opens cross-tenant

@@ -164,6 +164,29 @@ jobs:
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command="select pg_catalog.has_schema_privilege('laboratory_outbox_authority', 'public', 'create')::text")" = "false"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select (
+              pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'update')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'insert')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'insert')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'insert')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'insert')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'delete')
+              and pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'payload', 'insert')
+              and not pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'delivery_state', 'insert')
+              and not pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'delivery_state', 'update')
+            )::text")" = "true"
 
       - name: Configure synthetic workload identities and verification key
         env:
@@ -413,6 +436,29 @@ jobs:
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command="select pg_catalog.has_schema_privilege('laboratory_outbox_authority', 'public', 'create')::text")" = "false"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select (
+              pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'update')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'insert')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'insert')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'insert')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'insert')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'delete')
+              and pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'payload', 'insert')
+              and not pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'delivery_state', 'insert')
+              and not pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'delivery_state', 'update')
+            )::text")" = "true"
 
       - name: Configure upgrade proof identities and verification key
         run: |
