@@ -346,11 +346,11 @@ def validate_manifests() -> None:
         or hosted_bindings.get("database_migration_head")
         != database.get("migration_head")
         or hosted_bindings.get("repository_commit")
-        != "cfa9e55a5a422eafa57632991ce788fc5168bc57"
+        != "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
         or hosted_bindings.get("workflow_run")
         != (
             "https://github.com/driftframestudios/"
-            "lims-eln-enterprise-implementation/actions/runs/30930674823"
+            "lims-eln-enterprise-implementation/actions/runs/30933020047"
         )
     ):
         raise AssertionError(
@@ -365,8 +365,13 @@ def validate_manifests() -> None:
             "hosted PostgreSQL receipt requires the database migration digest"
         )
     required_database_scenarios = {
+        "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",
         "SCN-DB-SECURITY-DEFINER-TEMP-SHADOW",
         "SCN-DB-OUTBOX-FENCED-CLAIM-RECLAIM-STALE-CONFIRM",
+        "SCN-DB-OUTBOX-LEASE-DURATION-INTEGER-BOUND",
+        "SCN-DB-OUTBOX-TRANSITION-AUTHORITY",
+        "SCN-DB-OUTBOX-ATTEMPT-ACK-RECOVERY-EVIDENCE",
+        "SCN-DB-OUTBOX-TRANSPORT-RECEIPT-UNIQUENESS",
     }
     if not required_database_scenarios.issubset(hosted_receipt["scenario_ids"]):
         raise AssertionError(
