@@ -26,6 +26,9 @@ PUBLISHED_SUFFIXES = {
     ".yaml",
     ".tf",
     ".toml",
+    ".html",
+    ".css",
+    ".js",
 }
 HOUSE_SYNTAX = ("::" + "the_author::", "::" + "fragment")
 HOUSE_DELIMITER = ";" + ";"
@@ -58,6 +61,24 @@ CANONICAL_RECEIPT_FAMILIES = (
 CANONICAL_SELECTED_FUTURE_CLOSURE_DIGEST = (
     "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb"
 )
+EXCLUDED_DIRECTORY_NAMES = {
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".terraform",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+}
+
+
+def is_generated_or_external(path: Path) -> bool:
+    return any(
+        part in EXCLUDED_DIRECTORY_NAMES or part.endswith(".egg-info")
+        for part in path.parts
+    )
 
 
 def file_digest(path: Path) -> str:
@@ -65,7 +86,9 @@ def file_digest(path: Path) -> str:
 
 
 def load_json_files() -> list[Path]:
-    paths = sorted(ROOT.rglob("*.json"))
+    paths = sorted(
+        path for path in ROOT.rglob("*.json") if not is_generated_or_external(path)
+    )
     for path in paths:
         with path.open(encoding="utf-8") as stream:
             json.load(stream)
@@ -189,6 +212,7 @@ def validate_manifests() -> None:
         "sql/V002__principal_data_boundaries.sql",
         "sql/V003__trusted_routines_and_outbox_cas.sql",
         "sql/V004__outbox_attempt_evidence_and_recovery.sql",
+        "sql/V005__golden_specimen_workbench.sql",
     ]
     if (
         inventory.get("schema_version") != "1.0.0"
@@ -275,7 +299,7 @@ def validate_manifests() -> None:
 
     migrations = sorted((ROOT / "sql").glob("V[0-9][0-9][0-9]__*.sql"))
     migration_ids = [path.name[1:4] for path in migrations]
-    if migration_ids != ["001", "002", "003", "004"]:
+    if migration_ids != ["001", "002", "003", "004", "005"]:
         raise AssertionError("Flyway migrations require the released ordered sequence")
     for migration in migrations:
         sql = migration.read_text(encoding="utf-8")
@@ -409,6 +433,45 @@ def validate_manifests() -> None:
         raise AssertionError(
             "release role requires the canonical selected-future closure"
         )
+    promotion_controls = release.get("promotion_controls", {})
+    if (
+        promotion_controls.get("current_state")
+        != "human_review_and_history_protection_with_empty_hosted_checks"
+        or promotion_controls.get("hosted_required_check_contexts") != []
+        or promotion_controls.get("protected_branches") != ["main", "develop"]
+        or promotion_controls.get("allowed_merge_methods")
+        != ["merge", "squash", "rebase"]
+    ):
+        raise AssertionError(
+            "current release controls require the empty hosted-check resting state"
+        )
+    if promotion_controls.get("human_review") != {
+        "required_approvals": 1,
+        "code_owner_review": True,
+        "dismiss_stale_reviews_on_push": True,
+        "extra_approval_for_unattributed_changes": True,
+        "last_push_approval": True,
+        "review_thread_resolution": True,
+    }:
+        raise AssertionError(
+            "current release controls require human and code-owner review"
+        )
+    if promotion_controls.get("history_protection") != {
+        "branch_deletion_guard": True,
+        "non_fast_forward_guard": True,
+        "main_release_signatures": True,
+    }:
+        raise AssertionError(
+            "current release controls require deletion, history, and signature guards"
+        )
+    if promotion_controls.get("future_hosted_check_activation") != {
+        "state": "separate_reviewed_change",
+        "requires_stable_context": True,
+        "requires_funded_execution_path": True,
+    }:
+        raise AssertionError(
+            "future hosted checks require a separate funded activation change"
+        )
 
     contracts = {
         item["contract_id"]: item["digest"] for item in machine["contracts"]
@@ -452,23 +515,36 @@ def validate_manifests() -> None:
         raise AssertionError(
             "local verification receipt requires the selected governance schema"
         )
-    if binding_digest not in receipt["artifact_digests"]:
-        raise AssertionError(
-            "local verification receipt requires the bounded-caller binding digest"
-        )
-    if migration_release_digest not in receipt["artifact_digests"]:
-        raise AssertionError(
-            "local verification receipt requires the Flyway release digest"
-        )
     inventory_digest = file_digest(inventory_path)
-    if inventory_digest not in receipt["artifact_digests"]:
-        raise AssertionError(
-            "local verification receipt requires the Flyway inventory digest"
-        )
-    if receipt["version_bindings"].get("database_migration_head") != database.get(
-        "migration_head"
-    ):
-        raise AssertionError("local verification receipt requires the migration head")
+    local_head = receipt["version_bindings"].get("database_migration_head")
+    if local_head == "004":
+        historical_local_digests = {
+            "sha256:e6590446725c47231817bc43a478851e739617f1870bf3a5d7c1e36e3e5bc87e",
+            "sha256:3010d543594ef98e5873e2753cd7531e5a94e0922698d4ad04ae55a811a1691c",
+            "sha256:9105cc92e7e0d2c166e179411bfe5d2a2bd1f35150fd640ae157ac9ef5cbad07",
+        }
+        if not historical_local_digests.issubset(receipt["artifact_digests"]):
+            raise AssertionError(
+                "historical local verification example requires its observed bindings"
+            )
+        if not any(
+            "predecessor migration head 004" in limitation
+            for limitation in receipt["limitations"]
+        ):
+            raise AssertionError(
+                "historical local verification example requires its successor boundary"
+            )
+    else:
+        if local_head != database.get("migration_head"):
+            raise AssertionError("local verification receipt requires the migration head")
+        if not {
+            binding_digest,
+            migration_release_digest,
+            inventory_digest,
+        }.issubset(receipt["artifact_digests"]):
+            raise AssertionError(
+                "current local verification receipt requires released artifact digests"
+            )
 
     hosted_receipt = json.loads(
         (ROOT / "receipts" / "hosted-postgresql-proof.json").read_text(
@@ -487,13 +563,9 @@ def validate_manifests() -> None:
             "hosted PostgreSQL receipt requires observed synthetic verification"
         )
     hosted_bindings = hosted_receipt.get("version_bindings", {})
-    if (
-        hosted_bindings.get("repository") != manifest["version"]
-        or hosted_bindings.get("database_migration_head")
-        != database.get("migration_head")
-    ):
+    if hosted_bindings.get("repository") != manifest["version"]:
         raise AssertionError(
-            "hosted PostgreSQL receipt requires its observed release coordinate"
+            "hosted PostgreSQL receipt requires its observed repository release"
         )
     observed_commit = str(hosted_bindings.get("repository_commit", ""))
     observed_run = str(hosted_bindings.get("workflow_run", ""))
@@ -507,8 +579,10 @@ def validate_manifests() -> None:
             "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd",
             "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81",
         }
-        if observed_run != historical_run or not historical_digests.issubset(
-            hosted_receipt["artifact_digests"]
+        if (
+            observed_run != historical_run
+            or hosted_bindings.get("database_migration_head") != "004"
+            or not historical_digests.issubset(hosted_receipt["artifact_digests"])
         ):
             raise AssertionError(
                 "historical hosted PostgreSQL receipt requires its observed bindings"
@@ -533,6 +607,8 @@ def validate_manifests() -> None:
         if (
             re.fullmatch(r"[a-f0-9]{40}", observed_commit) is None
             or re.fullmatch(expected_run_pattern, observed_run) is None
+            or hosted_bindings.get("database_migration_head")
+            != database.get("migration_head")
             or not current_digests.issubset(hosted_receipt["artifact_digests"])
             or hosted_bindings.get("flyway") != migration_release["flyway_version"]
             or hosted_bindings.get("flyway_image")
@@ -661,7 +737,7 @@ def validate_credential_hygiene() -> None:
     for path in sorted(ROOT.rglob("*")):
         if not path.is_file():
             continue
-        if any(part in {".git", "__pycache__", ".terraform"} for part in path.parts):
+        if is_generated_or_external(path):
             continue
         try:
             content = path.read_text(encoding="utf-8")
@@ -679,7 +755,7 @@ def validate_authored_language() -> None:
     for path in sorted(ROOT.rglob("*")):
         if not path.is_file() or path.suffix not in PUBLISHED_SUFFIXES:
             continue
-        if any(part in {".git", "__pycache__"} for part in path.parts):
+        if is_generated_or_external(path):
             continue
         content = path.read_text(encoding="utf-8")
         for token in HOUSE_SYNTAX:
@@ -702,7 +778,7 @@ def source_digest() -> str:
     for path in sorted(ROOT.rglob("*")):
         if not path.is_file() or path.suffix not in PUBLISHED_SUFFIXES:
             continue
-        if any(part in {"__pycache__", "receipts"} for part in path.parts):
+        if is_generated_or_external(path) or "receipts" in path.parts:
             continue
         digest.update(path.relative_to(ROOT).as_posix().encode("utf-8"))
         digest.update(b"\0")

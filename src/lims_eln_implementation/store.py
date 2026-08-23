@@ -67,6 +67,8 @@ class InMemoryAtomicExecutor(Generic[T]):
 class SpecimenRepository(Protocol):
     def get(self, tenant_id: str, specimen_id: str) -> SpecimenAggregate | None: ...
 
+    def list_for_tenant(self, tenant_id: str) -> tuple[SpecimenAggregate, ...]: ...
+
     def save(self, aggregate: SpecimenAggregate, previous_version: int | None) -> None: ...
 
 
@@ -76,6 +78,13 @@ class InMemorySpecimenRepository:
 
     def get(self, tenant_id: str, specimen_id: str) -> SpecimenAggregate | None:
         return self._items.get((tenant_id, specimen_id))
+
+    def list_for_tenant(self, tenant_id: str) -> tuple[SpecimenAggregate, ...]:
+        return tuple(
+            aggregate
+            for (item_tenant_id, _), aggregate in sorted(self._items.items())
+            if item_tenant_id == tenant_id
+        )
 
     def save(self, aggregate: SpecimenAggregate, previous_version: int | None) -> None:
         identity = (aggregate.tenant_id, aggregate.specimen_id)

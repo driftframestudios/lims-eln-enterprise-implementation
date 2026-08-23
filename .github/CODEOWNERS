@@ -23,6 +23,6 @@
 /sql/ @driftframestudios
 /infra/ @driftframestudios
 /receipts/ @driftframestudios
-/.github/dependabot.yml @driftframestudios
+/.github/dependabot.manual.yml @driftframestudios
 /.github/workflows/ @driftframestudios
 /.github/CODEOWNERS @driftframestudios

@@ -7,7 +7,7 @@ boundaries, applied history, checksum validation, status, and replay behavior.
 `database/flyway-release.json` pins the exact open-source Alpine image by version
 and multi-architecture digest. `database/flyway-artifact-inventory.json` binds
 the configuration, callback, cluster-role prerequisite, and every
-V001-through-V004 migration by individual SHA-256 plus an ordered aggregate
+V001-through-V005 migration by individual SHA-256 plus an ordered aggregate
 SHA-256. The release manifest binds both the
 inventory file and aggregate, creating one independently reviewable release
 coordinate while Flyway continues to own applied history and mechanics.
@@ -133,22 +133,27 @@ post-migration configuration stage.
 
 ## Fresh and successor paths
 
-The clean path provisions cluster roles, applies V001 through V004, validates,
+The clean path provisions cluster roles, applies V001 through V005, validates,
 inspects, and replays. The successor path provisions the same roles, runs
 `migrate -target=003`, seeds representative pre-V004 rows, and then runs the
-head migration.
+head migration. The head step applies V004 and V005 in order.
 
 V004 deliberately rejects historical outbox terminal state that lacks the new
 attempt and outcome ledgers. The rejection leaves Flyway history at V003 and
 retains the historical row for an explicit export, attestation, conversion, or
-disposition. After that disposition, Flyway applies V004 and a replay reports
-zero pending work. A second clean database reaches the same schema; schema-only
+disposition. After that disposition, Flyway applies V004 and V005 and a replay
+reports zero pending work. A second clean database reaches the same schema; schema-only
 comparison proves clean-versus-upgrade convergence.
 
 The integration suite reuses the existing tenant, custody, quantity, and outbox
 scenarios. It also proves:
 
 - a stored numeric scale equals `source_scale`;
+- every instrument inbox fact names an existing specimen;
+- a quarantine resolution binds its original and optional accepted replacement
+  to one tenant and specimen and remains append-only;
+- security-invoker workbench views reuse canonical custody, measurement, vendor,
+  review, and outbox state;
 - a measurement binds message, specimen, raw digest, capture time, and accepted
   or replayed inbox disposition as one foreign-key lineage coordinate;
 - inbox facts become append-only when measurement projection is active;

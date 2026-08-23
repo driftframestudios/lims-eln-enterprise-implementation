@@ -22,6 +22,9 @@ class IdempotencyInProgress(IdempotencyError):
     """A matching reservation already owns the right to execute."""
 
 
+ReservationInProgress = IdempotencyInProgress
+
+
 class ReservationState(StrEnum):
     ACQUIRED = "acquired"
     REPLAY = "replay"

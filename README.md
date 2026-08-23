@@ -18,7 +18,7 @@ repository and consumes versioned contracts rather than simulation code.
 
 ## What runs
 
-The standard-library test suite exercises:
+The focused test suite exercises:
 
 - a typed bounded caller with task-scoped identity, tenant, capability,
   resource, request-budget, exact-approval, and replay boundaries;
@@ -50,11 +50,40 @@ The standard-library test suite exercises:
 - service-level indicators with explicit numerator and denominator;
 - scientific, Quality, and Regulatory acceptance as separate accountable acts.
 
+The Golden Specimen Workbench adds a small FastAPI application and dashboard
+over the same domain services. One synthetic run makes lifecycle events,
+custody, raw-byte instrument provenance, the readable normalized result and its
+digest, and reconciled vendor projection visible together.
+
 Run the complete local proof:
 
 ```sh
 python3 scripts/validate_repository.py
 ```
+
+Run the workbench with Python 3.12 or newer:
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -e ".[test]"
+lims-eln-workbench
+```
+
+An adjacent constellation checkout can add the shared observation boundary
+from `lims-eln-program-specification` release `0.3.1` with
+`python -m pip install -e ../lims-eln-program-specification` before starting the
+workbench. The optional `contracts` dependency accepts compatible `0.3.x`
+successors beginning at `0.3.1`; the runtime keeps the current package and
+contract identities visible at the observation boundary.
+
+Open `http://127.0.0.1:8000/workbench`. The process-local adapter offers a
+fast synthetic encounter and resets on restart. Flyway successor migration
+[`sql/V005__golden_specimen_workbench.sql`](sql/V005__golden_specimen_workbench.sql)
+adds tenant-and-specimen-bound review resolution and workbench views over the
+canonical custody and measurement records. See the
+[workbench guide](docs/golden-specimen-workbench.md) for its evidence boundary
+and API surface.
 
 The command validates JSON contracts and manifests, confirms fixture posture,
 runs all tests, applies the negation-aware language gate, and emits a
@@ -63,8 +92,8 @@ deterministic source digest.
 The ordinary local proof runs configured-database tests when their explicit
 synthetic DSNs and verification key are present. CI also provisions PostgreSQL
 17, provisions cluster roles separately, applies the Flyway chain, validates
-and inspects history, targets V003, proves transactional V004 rejection, replays
-the head, compares clean and upgraded schemas, and exercises unsigned and
+and inspects history, targets V003, proves transactional V004 rejection, applies
+V004 and V005, replays the head, compares clean and upgraded schemas, and exercises unsigned and
 tampered tenant contexts, temporary-relation shadowing, custody CAS/replay,
 measurement lineage, tenant-scoped outbox identity, immutable outbox content,
 worker crash/reclaim, and stale-fence rejection.
@@ -98,6 +127,8 @@ reviewer, artifacts, and decisions are recorded.
 ## Repository map
 
 - `src/lims_eln_implementation` — canonical domain and application services.
+- `src/lims_eln_implementation/workbench` — functional dashboard, API, and
+  process-local composition root.
 - `contracts` — versioned machine-readable command and receipt contracts.
 - `fixtures/synthetic` — synthetic, stable examples for comparison.
 - `sql` — PostgreSQL persistence, inbox/outbox, evidence, and tenant controls.
@@ -186,6 +217,12 @@ accepts initial ready rows with zero attempts and routes historical attempt or
 terminal state to explicit disposition before upgrade. V004 locks the affected
 relations before preflight and gives lock acquisition a 30-second budget;
 contention produces a transactional rollback for a scheduled retry. Flyway
+V005 retains those canonical records, binds every inbox fact to its specimen,
+records append-only quarantine resolutions with exact replacement lineage, and
+offers security-invoker workbench projections. A bounded recording routine
+accepts only quarantined sources and accepted or replayed replacements from the
+same tenant and specimen.
+Flyway
 Community 13.0.0 owns migration discovery, ordering, locking, transactions,
 history, validation, information, target selection, and replay. Cluster roles
 remain a separate privileged deployment concern. Flyway authenticates as the
@@ -221,13 +258,14 @@ for adoption, probability framing, remaining gaps, and evidence gates.
 [`machine-node.json`](machine-node.json),
 [`first-receipt.json`](first-receipt.json), and
 [`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) implement Site Reading
-governance schema release `2.0.0` and Control Plane Profile `0.3.0`. They orient
-collaborators; they do not grant runtime authority.
+governance schema release `2.0.1` and Control Plane Profile `0.3.0`. They orient
+collaborators while bounded operations and accountable runtime roles retain
+effect authority.
 
 The earlier Machine Node is preserved as
 [`release/seed-lineage-machine-node-v0.2.json`](release/seed-lineage-machine-node-v0.2.json).
-It remains useful for historical comparison and is not the canonical governance
-Machine Node for release `0.3.1`.
+It remains useful for historical comparison; `machine-node.json` is the
+canonical governance Machine Node for release `0.3.1`.
 
 ## Data and authority boundaries
 

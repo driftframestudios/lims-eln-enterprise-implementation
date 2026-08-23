@@ -39,7 +39,7 @@ class DatabaseMigrationTests(unittest.TestCase):
             r"^flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}$",
         )
         self.assertEqual(release["credentials"], "runtime_environment_only")
-        self.assertEqual(release["migration_head"], "004")
+        self.assertEqual(release["migration_head"], "005")
         self.assertEqual(release["authenticated_login"], "laboratory_migrator")
         self.assertEqual(release["migration_role"], "laboratory_owner")
         self.assertEqual(
@@ -69,6 +69,7 @@ class DatabaseMigrationTests(unittest.TestCase):
                 "sql/V002__principal_data_boundaries.sql",
                 "sql/V003__trusted_routines_and_outbox_cas.sql",
                 "sql/V004__outbox_attempt_evidence_and_recovery.sql",
+                "sql/V005__golden_specimen_workbench.sql",
             ],
         )
         for artifact in inventory["artifacts"]:
@@ -133,7 +134,7 @@ class DatabaseMigrationTests(unittest.TestCase):
         migrations = sorted((ROOT / "sql").glob("V*__*.sql"))
         self.assertEqual(
             [MIGRATION_NAME.fullmatch(path.name).group("version") for path in migrations],
-            ["001", "002", "003", "004"],
+            ["001", "002", "003", "004", "005"],
         )
         for migration in migrations:
             sql = migration.read_text(encoding="utf-8")

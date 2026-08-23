@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="An inspectable specimen journey across lifecycle, custody, instrument, and vendor boundaries.">
+    <title>Golden Specimen Workbench</title>
+    <link rel="stylesheet" href="{{ url_for('workbench-static', path='/workbench.css') }}">
+    <script defer src="{{ url_for('workbench-static', path='/workbench.js') }}"></script>
+  </head>
+  <body data-default-tenant="{{ default_tenant }}" data-default-actor="{{ default_actor }}">
+    <a class="skip-link" href="#main-content">Skip to the workbench</a>
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">LIMS / ELN reference implementation</p>
+        <h1>Golden Specimen Workbench</h1>
+        <p class="lede">
+          Follow one synthetic specimen across attributable commands, custody,
+          instrument provenance, and reconciled vendor projection.
+        </p>
+      </div>
+      <div class="runtime" aria-label="Runtime posture">
+        <span class="signal" aria-hidden="true"></span>
+        <div>
+          <strong>Local evidence encounter</strong>
+          <span>Process-local state · synthetic fixtures</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="orientation" aria-labelledby="orientation-title">
+        <div>
+          <p class="section-label">Functional nucleus</p>
+          <h2 id="orientation-title">One journey, visible boundaries</h2>
+          <p>
+            The workbench keeps each operational seam legible. A successful run
+            produces lifecycle events, a custody position, a byte-derived instrument
+            digest, and an authoritative vendor readback in one inspectable view.
+          </p>
+        </div>
+        <ol class="flow" aria-label="Golden specimen flow">
+          <li><span>01</span> Register</li>
+          <li><span>02</span> Accession</li>
+          <li><span>03</span> Place</li>
+          <li><span>04</span> Ingest</li>
+          <li><span>05</span> Reconcile</li>
+        </ol>
+      </section>
+
+      <section class="workspace" aria-label="Workbench controls and results">
+        <form id="golden-run-form" class="run-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Run a specimen</p>
+              <h2>Start a synthetic journey</h2>
+            </div>
+            <span class="method">POST /api/workbench/golden-runs</span>
+          </div>
+
+          <div class="field-grid">
+            <label>
+              <span>Tenant</span>
+              <input id="tenant-id" name="tenant_id" value="{{ default_tenant }}" required maxlength="128">
+            </label>
+            <label>
+              <span>Specimen</span>
+              <input id="specimen-id" name="specimen_id" value="SYN-SPECIMEN-WORKBENCH-001" required maxlength="128">
+            </label>
+            <label>
+              <span>Run identity</span>
+              <input id="run-id" name="run_id" value="SYN-RUN-WORKBENCH-001" required maxlength="128">
+            </label>
+            <label>
+              <span>Accountable actor</span>
+              <input id="actor-id" name="actor_id" value="{{ default_actor }}" required maxlength="128">
+            </label>
+            <label>
+              <span>Scientific reviewer</span>
+              <input id="scientist-id" name="scientist_id" value="{{ default_scientist }}" required maxlength="128">
+            </label>
+            <label>
+              <span>Quality release actor</span>
+              <input id="quality-actor-id" name="quality_actor_id" value="{{ default_quality_actor }}" required maxlength="128">
+            </label>
+            <label>
+              <span>Occurred at (UTC)</span>
+              <input id="occurred-at" name="occurred_at" type="datetime-local" step="1" required>
+            </label>
+            <label>
+              <span>Analyte</span>
+              <input id="analyte" name="analyte" value="synthetic-dna" required maxlength="128">
+            </label>
+            <label>
+              <span>Observed value</span>
+              <input id="observed-value" name="observed_value" type="number" min="0" step="any" value="12.5" required>
+            </label>
+            <label>
+              <span>Unit</span>
+              <select id="unit" name="unit">
+                <option value="ng/uL">ng/uL</option>
+                <option value="copies/uL">copies/uL</option>
+              </select>
+            </label>
+            <label>
+              <span>Vendor status</span>
+              <select id="vendor-status" name="vendor_status">
+                <option value="under_review">Under review</option>
+                <option value="accessioned">Accessioned</option>
+              </select>
+            </label>
+            <label id="recovery-field" hidden>
+              <span>Original quarantined run</span>
+              <input id="recovery-of-run-id" name="recovery_of_run_id" maxlength="128">
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <div class="button-group">
+              <button type="submit">Run golden specimen</button>
+              <button id="resume-review" class="secondary-button" type="button" hidden>
+                Resume instrument review
+              </button>
+            </div>
+            <p id="run-status" role="status" aria-live="polite">
+              Ready for a bounded synthetic run.
+            </p>
+          </div>
+        </form>
+
+        <aside class="summary-panel" aria-labelledby="summary-title">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Tenant read model</p>
+              <h2 id="summary-title">Current shape</h2>
+            </div>
+            <button id="refresh-summary" class="quiet-button" type="button">Refresh</button>
+          </div>
+          <dl class="metrics">
+            <div><dt>Specimens</dt><dd id="specimen-count">0</dd></div>
+            <div><dt>Ingress receipts</dt><dd id="receipt-count">0</dd></div>
+            <div><dt>Review queue</dt><dd id="quarantine-count">0</dd></div>
+            <div><dt>Outbox</dt><dd id="outbox-count">0</dd></div>
+          </dl>
+          <div>
+            <h3>Lifecycle distribution</h3>
+            <ul id="lifecycle-counts" class="plain-list">
+              <li>Run a specimen to establish the first read model.</li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+
+      <section id="specimen-result" class="result-panel" aria-labelledby="result-title" aria-live="polite" tabindex="-1" hidden>
+        <div class="result-header">
+          <div>
+            <p class="section-label">Evidence view</p>
+            <h2 id="result-title">Specimen journey</h2>
+          </div>
+          <div id="result-state" class="state-badge"></div>
+        </div>
+        <div class="evidence-grid">
+          <article>
+            <h3>Lifecycle timeline</h3>
+            <ol id="event-timeline" class="timeline"></ol>
+          </article>
+          <article>
+            <h3>Boundary evidence</h3>
+            <dl id="boundary-evidence" class="evidence-list"></dl>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        This encounter creates engineering evidence with synthetic values.
+        Scientific, Quality, Regulatory, and production decisions retain their
+        named accountable owners.
+      </p>
+      <a href="/api/docs">OpenAPI reference</a>
+    </footer>
+  </body>
+</html>

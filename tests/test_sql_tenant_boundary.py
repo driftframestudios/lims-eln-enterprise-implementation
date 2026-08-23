@@ -27,7 +27,11 @@ TENANT_TABLES = {
     "custody_event",
     "instrument_inbox",
     "instrument_measurement",
+    "instrument_review_resolution",
     "transactional_outbox",
+    "outbox_delivery_attempt",
+    "outbox_delivery_attempt_outcome",
+    "outbox_recovery_release",
     "vendor_projection",
     "migration_checkpoint",
     "bounded_call_invocation",
@@ -65,11 +69,11 @@ class SqlTenantStructureTests(unittest.TestCase):
             with self.subTest(table=table):
                 self.assertRegex(
                     self.sql,
-                    rf"alter\s+table\s+{table}\s+enable\s+row\s+level\s+security\s*;",
+                    rf"alter\s+table\s+(?:public\.)?{table}\s+enable\s+row\s+level\s+security\s*;",
                 )
                 self.assertRegex(
                     self.sql,
-                    rf"alter\s+table\s+{table}\s+force\s+row\s+level\s+security\s*;",
+                    rf"alter\s+table\s+(?:public\.)?{table}\s+force\s+row\s+level\s+security\s*;",
                 )
 
     def test_every_tenant_table_has_read_and_write_tenant_predicates(self) -> None:
@@ -77,7 +81,7 @@ class SqlTenantStructureTests(unittest.TestCase):
         for table in TENANT_TABLES:
             with self.subTest(table=table):
                 policies = re.findall(
-                    rf"create\s+policy\s+\w+\s+on\s+{table}"
+                    rf"create\s+policy\s+\w+\s+on\s+(?:public\.)?{table}"
                     rf"\s+using\s*\(({predicate})\)"
                     rf"\s+with\s+check\s*\(({predicate})\)\s*;",
                     self.sql,
@@ -156,7 +160,7 @@ class SqlTenantStructureTests(unittest.TestCase):
 
     def test_all_declared_tenant_id_tables_participate_in_boundary(self) -> None:
         table_definitions = re.findall(
-            r"create\s+table\s+(\w+)\s*\((.*?)\);",
+            r"create\s+table\s+(?:public\.)?(\w+)\s*\((.*?)\);",
             self.sql,
             flags=re.DOTALL,
         )
@@ -429,7 +433,7 @@ class SqlTenantStructureTests(unittest.TestCase):
             migration,
         )
 
-    def test_migration_003_remains_immutable_and_004_is_successor(self) -> None:
+    def test_published_migrations_remain_immutable_and_005_is_successor(self) -> None:
         migration_003 = ROOT / "sql" / "V003__trusted_routines_and_outbox_cas.sql"
         self.assertEqual(
             hashlib.sha256(migration_003.read_bytes()).hexdigest(),
@@ -438,7 +442,56 @@ class SqlTenantStructureTests(unittest.TestCase):
         migrations = sorted((ROOT / "sql").glob("V*__*.sql"))
         self.assertEqual(
             [path.name.split("__", 1)[0] for path in migrations],
-            ["V001", "V002", "V003", "V004"],
+            ["V001", "V002", "V003", "V004", "V005"],
+        )
+
+    def test_workbench_reuses_canonical_measurement_and_custody_truth(self) -> None:
+        migration = (
+            ROOT / "sql" / "V005__golden_specimen_workbench.sql"
+        ).read_text(encoding="utf-8").lower()
+        self.assertNotIn("create table public.custody_event", migration)
+        self.assertNotIn("create table public.instrument_measurement", migration)
+        self.assertIn("create view public.normalized_observation", migration)
+        self.assertIn("from public.instrument_measurement as measurement", migration)
+        self.assertIn("with (security_invoker = true, security_barrier = true)", migration)
+
+    def test_workbench_resolution_binds_source_replacement_and_specimen(self) -> None:
+        migration = (
+            ROOT / "sql" / "V005__golden_specimen_workbench.sql"
+        ).read_text(encoding="utf-8").lower()
+        for fragment in (
+            "instrument_inbox_specimen_fk",
+            "instrument_inbox_review_lineage_key",
+            "quarantine_disposition = 'quarantined'",
+            "replacement_disposition in ('accepted', 'replayed')",
+            "replacement_message_id <> quarantine_message_id",
+            "instrument_review_resolution_append_only",
+            "laboratory_security.authorized_tenant_id()",
+            "laboratory_security.bounded_migration_session_active()",
+            "set search_path = pg_catalog, pg_temp",
+            "for key share",
+        ):
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, migration)
+        self.assertIn(
+            "replacement_inbox.specimen_id <> original_inbox.specimen_id",
+            migration,
+        )
+        self.assertNotIn("current_setting('app.tenant_id'", migration)
+
+    def test_workbench_view_definition_closes_temporary_outbox_authority(self) -> None:
+        migration = (
+            ROOT / "sql" / "V005__golden_specimen_workbench.sql"
+        ).read_text(encoding="utf-8").lower()
+        self.assertIn("set local role laboratory_outbox_authority", migration)
+        grant = "grant select on public.transactional_outbox to laboratory_owner"
+        revoke = "revoke select on public.transactional_outbox from laboratory_owner"
+        self.assertEqual(migration.count(grant), 1)
+        self.assertEqual(migration.count(revoke), 1)
+        self.assertLess(migration.index(grant), migration.index(revoke))
+        self.assertNotIn(
+            "grant select on public.transactional_outbox to laboratory_app",
+            migration,
         )
 
     def test_security_definer_data_objects_are_schema_qualified(self) -> None:
