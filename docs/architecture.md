@@ -228,3 +228,10 @@ verification. A populated untracked baseline enters
 through a fresh-target restore and semantic comparison rehearsal rather than
 object-name inference. The complete adoption and evidence gates are documented in
 `docs/database-migrations.md`.
+
+Migration V005 keeps `custody_event` and `instrument_measurement` as the single
+durable facts. It binds inbox rows to specimens, records append-only instrument
+review resolutions through signed tenant authority, and requires any accepted
+replacement to carry the same specimen identity. Security-invoker views provide
+the normalized-observation and workbench read shapes without duplicating
+canonical scientific values.

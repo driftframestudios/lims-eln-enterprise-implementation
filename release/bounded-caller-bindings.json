@@ -27,8 +27,8 @@
     },
     {
       "path": "src/lims_eln_implementation/application.py",
-      "sha256": "9ff71682dc9210ec5f1c9d432365445e3bd1525a26c90d866f43b6cd06c65e79",
-      "responsibility": "bounded public application entry point and registered golden specimen workflow"
+      "sha256": "6f812e14b35ef3223ef8769aa4421fff34862d37c6fb96a4dc626cd873df48ef",
+      "responsibility": "bounded public application entry point plus grant-bound initial and recovery golden specimen operations"
     },
     {
       "path": "src/lims_eln_implementation/labkey_adapter.py",
@@ -54,6 +54,11 @@
       "path": "sql/V004__outbox_attempt_evidence_and_recovery.sql",
       "sha256": "2cb392ab1d59ce8db7cf163da221c09e898f65358462819f81ab29b558386b36",
       "responsibility": "coherent measurement scale, complete inbox and custody lineage, integer-second lease authority, complete outbox transition control, immutable attempt and outcome evidence, bounded transport receipts, and governed recovery release"
+    },
+    {
+      "path": "sql/V005__golden_specimen_workbench.sql",
+      "sha256": "6366a6093992c6fa42770cb5e6706a9109cbbcf2c0828f14bfe8af9288e0ed6e",
+      "responsibility": "specimen-bound instrument inbox facts, tenant-and-specimen-bound review resolution, and canonical workbench projections"
     }
   ],
   "operation_bindings": [
@@ -77,6 +82,12 @@
     },
     {
       "operation_name": "specimen.golden_journey.execute",
+      "version": "2.0.0",
+      "implementation_effect_class": "idempotent_narrow_write",
+      "governance_effect_class": "narrow_write"
+    },
+    {
+      "operation_name": "specimen.golden_journey.recover_instrument",
       "version": "1.0.0",
       "implementation_effect_class": "idempotent_narrow_write",
       "governance_effect_class": "narrow_write"

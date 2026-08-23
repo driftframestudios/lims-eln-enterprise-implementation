@@ -450,6 +450,98 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
                     in rejected.stderr
                 )
 
+    def test_workbench_resolution_and_views_reuse_canonical_instrument_facts(self) -> None:
+        assert APP_DSN is not None
+        quarantine_message = "SYN-LIVE-QUARANTINE-" + uuid4().hex
+        replacement_message = "SYN-LIVE-REPLACEMENT-" + uuid4().hex
+        measurement_id = "SYN-LIVE-WORKBENCH-MEASUREMENT-" + uuid4().hex
+        resolution_id = "SYN-LIVE-RESOLUTION-" + uuid4().hex
+        completed = self.run_sql(
+            APP_DSN,
+            """
+            begin;
+            select laboratory_security.bind_tenant_context(:'context'::jsonb);
+            insert into public.instrument_inbox (
+                tenant_id, message_id, instrument_id, specimen_id,
+                raw_object_key, raw_sha256, captured_at_utc, disposition,
+                reason_code, recovery_instruction
+            ) values
+                (:'tenant', :'quarantine', 'SYN-INSTRUMENT-01', :'specimen',
+                 'synthetic/quarantine.json', repeat('3', 64),
+                 '2026-08-04T13:00:00Z', 'quarantined',
+                 'analyte_requires_mapping', 'supply an approved analyte code'),
+                (:'tenant', :'replacement', 'SYN-INSTRUMENT-01', :'specimen',
+                 'synthetic/replacement.json', repeat('4', 64),
+                 '2026-08-04T13:01:00Z', 'accepted', null,
+                 'continue to scientific review');
+            insert into public.instrument_measurement (
+                tenant_id, measurement_id, message_id, specimen_id,
+                analyte_code, quantity, source_precision, source_scale,
+                unit_code, unit_system, captured_at_utc, raw_sha256,
+                normalized_sha256, source_disposition
+            ) values (
+                :'tenant', :'measurement', :'replacement', :'specimen',
+                'SYNTHETIC-DNA', 12.50, 4, 2, 'ng/uL',
+                'http://unitsofmeasure.org', '2026-08-04T13:01:00Z',
+                repeat('4', 64), repeat('5', 64), 'accepted'
+            );
+            select (public.record_instrument_review_resolution(
+                :'quarantine', :'resolution', 'accepted_replacement',
+                :'replacement', 'SYN-QUALITY-01',
+                'replacement evidence passed scientific review',
+                '2026-08-04T13:02:00Z'
+            )).disposition;
+            select latest_observed_value_text || ':' ||
+                   open_instrument_review_count::text || ':' ||
+                   quarantine_history_count::text
+              from public.specimen_workbench_snapshot
+             where specimen_id = :'specimen';
+            commit;
+            """,
+            variables={
+                "context": signed_context(self.tenant_a),
+                "tenant": self.tenant_a,
+                "specimen": self.specimen,
+                "quarantine": quarantine_message,
+                "replacement": replacement_message,
+                "measurement": measurement_id,
+                "resolution": resolution_id,
+            },
+        )
+        self.assertIn("accepted_replacement", completed.stdout)
+        self.assertIn("12.50:0:1", completed.stdout)
+
+        assert ADMIN_DSN is not None
+        mutation = self.run_sql(
+            ADMIN_DSN,
+            "update public.instrument_review_resolution set rationale = 'changed' "
+            "where resolution_id = :'resolution'",
+            variables={"resolution": resolution_id},
+            check=False,
+        )
+        self.assertNotEqual(mutation.returncode, 0)
+        self.assertIn("append-only", mutation.stderr.lower())
+
+        missing_specimen = self.run_sql(
+            APP_DSN,
+            "begin; select laboratory_security.bind_tenant_context(:'context'::jsonb); "
+            "insert into public.instrument_inbox (tenant_id, message_id, "
+            "instrument_id, specimen_id, raw_object_key, raw_sha256, "
+            "captured_at_utc, disposition, reason_code, recovery_instruction) "
+            "values (:'tenant', :'message', 'SYN-INSTRUMENT-01', "
+            "'SYN-ABSENT-SPECIMEN', 'synthetic/absent.json', repeat('6', 64), "
+            "clock_timestamp(), 'quarantined', 'source_missing', "
+            "'register the specimen identity'); commit;",
+            variables={
+                "context": signed_context(self.tenant_a),
+                "tenant": self.tenant_a,
+                "message": "SYN-LIVE-MISSING-SPECIMEN-" + uuid4().hex,
+            },
+            check=False,
+        )
+        self.assertNotEqual(missing_specimen.returncode, 0)
+        self.assertIn("instrument_inbox_specimen_fk", missing_specimen.stderr)
+
     def test_custody_compare_and_set_history_replay_and_outbox_are_atomic(self) -> None:
         assert APP_DSN is not None
         context = signed_context(self.tenant_a)

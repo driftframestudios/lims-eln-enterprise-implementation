@@ -44,6 +44,10 @@
 - Reuse the PostgreSQL integration scenarios for Flyway target V003, transactional
   V004 rejection, head migration, validation, information, no-op replay, and
   clean-versus-upgrade schema convergence.
+- Add the bounded Golden Specimen Workbench with visible call receipts, distinct
+  grant-bound scientific and Quality actors, and a separate recovery operation.
+- Add V005 instrument-review resolution and security-invoker workbench views
+  over the canonical custody and measurement facts.
 - Add live, digest-pinned PostgreSQL 17 migration and adversarial data-boundary
   proofs to CI.
 - Publish the data-primitive corrective ledger, plan probabilities, remaining

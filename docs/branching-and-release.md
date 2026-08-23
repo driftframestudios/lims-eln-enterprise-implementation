@@ -15,9 +15,19 @@
 | `hotfix/<receipt-id>` | `main` | `main` and `develop` | Production correction with bounded evidence |
 | `experiment/<question>` | `develop` | `develop` when promoted, or archived tag | Time-boxed exploration with an explicit learning record |
 
-## Automated maintenance branches
+## Local proof and optional maintenance branches
 
-Automated dependency maintenance is admitted as its own governed flow:
+`python3 scripts/validate_repository.py` is the standing repository proof.
+GitHub Actions rests disabled in repository settings at a **$0** budget. The
+manual `implementation-proof` workflow becomes available only when a named
+human enables Actions, sets `ENABLE_GITHUB_ACTIONS=true`, selects
+`confirm_run`, and dispatches it. After the proof is read, set
+`ENABLE_GITHUB_ACTIONS=false` and disable Actions in repository settings to
+restore the resting state.
+
+Dependency scheduling rests in `.github/dependabot.manual.yml`. A reviewed
+rename to `.github/dependabot.yml` activates that schedule. When automation is
+active, maintenance branches retain their bounded coordinate contract:
 
 - Dependabot uses the complete
   `dependabot/github_actions/<dependency-update>` grammar and the
@@ -27,18 +37,12 @@ Automated dependency maintenance is admitted as its own governed flow:
 - Either flow targets `main` or `develop`; branch grammar, bot identity, and
   target must agree.
 
-Each maintenance pull request continues through the ordinary validation,
-review, and merge controls. GitHub Actions execute with read-only repository
-permission. Dependabot jobs use Dependabot-scoped secrets when an approved
-workflow requires a secret. Default-branch security updates are merged forward
-to `develop` so both long-lived branches retain the correction.
-
-The branch-policy workflow runs on pull-request metadata while checking out the
-target branch's immutable base commit into a dedicated path. Its checker,
-workflow, tests, dependency-automation configuration, bounded-caller sources,
-release manifests, and governance orientation surfaces all require code-owner
-review. Repository rulesets retain the required-check and fresh-approval
-enforcement around these repository-local controls.
+Each maintenance pull request continues through local validation, human review,
+and the ordinary merge controls. The repository-local branch checker remains a
+review aid. Its checker, tests, dependency-activation template, bounded-caller
+sources, release manifests, and governance orientation surfaces retain explicit
+ownership. Default-branch security updates are merged forward to `develop` so
+both long-lived branches retain the correction.
 
 ## Pull-request gates
 
@@ -74,11 +78,19 @@ its own signed decision record.
 
 Configure GitHub rulesets so that:
 
-- `main` and `develop` receive pull requests and required status checks;
+- `main` and `develop` receive pull requests while hosted required-check sets
+  remain empty in the $0 resting state;
 - `main` receives two fresh approvals, including a code owner;
 - `develop` receives one fresh approval;
 - release and hotfix merges preserve a linear, traceable history;
 - contract, fixture, migration, security, and expected-result changes receive
   an independent reviewer;
-- workflow permissions are read-only by default;
-- reusable workflows are pinned by immutable commit SHA.
+- any later manual workflow retains read-only permission, the repository-variable
+  gate, dispatch confirmation, and a bounded timeout;
+- any later reusable workflow is caller-owned and pinned by immutable commit SHA.
+
+The current release-role manifest records this resting posture as an empty list
+of hosted check contexts beside the retained human-review, code-owner,
+deletion, non-fast-forward, and main-signature protections. A hosted context
+becomes a separate future activation only after its name and funded execution
+path are reviewed.

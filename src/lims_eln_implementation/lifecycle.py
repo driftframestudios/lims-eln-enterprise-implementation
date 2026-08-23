@@ -54,6 +54,11 @@ class LifecycleService:
             atomic = InMemoryAtomicExecutor((repository, self._idempotency))  # type: ignore[arg-type]
         self._atomic = atomic
 
+    def get(self, tenant_id: str, specimen_id: str) -> SpecimenAggregate | None:
+        """Return the current tenant-scoped aggregate for a recovery decision."""
+
+        return self._repository.get(tenant_id, specimen_id)
+
     def register(self, command: Command) -> SpecimenAggregate:
         return self._atomic.execute(lambda: self._register(command))
 

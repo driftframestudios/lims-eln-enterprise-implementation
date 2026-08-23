@@ -212,6 +212,21 @@ class InstrumentIngressTests(unittest.TestCase):
             normalized["quantity"]["unit_system"],
             "http://unitsofmeasure.org",
         )
+        self.assertIsNotNone(result.normalized_observation)
+        assert result.normalized_observation is not None
+        self.assertEqual(
+            result.normalized_observation.to_document(),
+            {
+                "tenant_id": "SYN-TENANT-A",
+                "specimen_id": "SYN-SPECIMEN-0001",
+                "instrument_id": "SYN-INSTRUMENT-01",
+                "captured_at": NOW.isoformat(),
+                "analyte": "SYNTHETIC-DNA",
+                "value": "12.5",
+                "unit": "ng/uL",
+                "raw_sha256": envelope.raw_sha256,
+            },
+        )
 
     def test_exact_replay_reuses_normalized_outcome(self) -> None:
         envelope = self.envelope(
@@ -220,6 +235,7 @@ class InstrumentIngressTests(unittest.TestCase):
         first = self.ingress.ingest(envelope)
         replay = self.ingress.ingest(envelope)
         self.assertEqual(replay.disposition, IngressDisposition.REPLAYED)
+        self.assertEqual(replay.normalized_observation, first.normalized_observation)
         self.assertEqual(replay.normalized_digest, first.normalized_digest)
 
     def test_changed_bytes_on_message_identity_enter_quarantine(self) -> None:

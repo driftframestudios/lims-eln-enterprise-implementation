@@ -34,11 +34,38 @@ class InstrumentEnvelope:
 
 
 @dataclass(frozen=True, slots=True)
+class NormalizedObservation:
+    """Readable projection beside the released precision-bearing document."""
+
+    tenant_id: str
+    specimen_id: str
+    instrument_id: str
+    captured_at: datetime
+    analyte: str
+    value: str
+    unit: str
+    raw_sha256: str
+
+    def to_document(self) -> dict[str, str]:
+        return {
+            "tenant_id": self.tenant_id,
+            "specimen_id": self.specimen_id,
+            "instrument_id": self.instrument_id,
+            "captured_at": require_aware_utc(self.captured_at).isoformat(),
+            "analyte": self.analyte,
+            "value": self.value,
+            "unit": self.unit,
+            "raw_sha256": self.raw_sha256,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class IngressResult:
     disposition: IngressDisposition
     raw_sha256: str
     normalized_digest: str | None
     normalized_document_json: str | None
+    normalized_observation: NormalizedObservation | None
     reason_code: str | None
     recovery: str
 
@@ -86,6 +113,7 @@ class InstrumentIngress:
                     raw_sha256=prior.raw_sha256,
                     normalized_digest=prior.normalized_digest,
                     normalized_document_json=prior.normalized_document_json,
+                    normalized_observation=prior.normalized_observation,
                     reason_code=prior.reason_code,
                     recovery=(
                         "reuse the original normalized outcome"
@@ -218,11 +246,26 @@ class InstrumentIngress:
             raw_sha256=envelope.raw_sha256,
             normalized_digest=canonical_digest(normalized),
             normalized_document_json=normalized_document_json,
+            normalized_observation=NormalizedObservation(
+                tenant_id=envelope.tenant_id,
+                specimen_id=envelope.specimen_id,
+                instrument_id=envelope.instrument_id,
+                captured_at=envelope.captured_at,
+                analyte=analyte.strip().upper(),
+                value=format(quantity, "f"),
+                unit=unit_code,
+                raw_sha256=envelope.raw_sha256,
+            ),
             reason_code=None,
             recovery="continue to scientific review",
         )
         self._ledger[identity] = result
         return result
+
+    def result(self, tenant_id: str, message_id: str) -> IngressResult | None:
+        """Return the first recorded disposition for one source identity."""
+
+        return self._ledger.get((tenant_id, message_id))
 
     def _quarantine(
         self, envelope: InstrumentEnvelope, reason_code: str, recovery: str
@@ -232,6 +275,7 @@ class InstrumentIngress:
             raw_sha256=envelope.raw_sha256,
             normalized_digest=None,
             normalized_document_json=None,
+            normalized_observation=None,
             reason_code=reason_code,
             recovery=recovery,
         )

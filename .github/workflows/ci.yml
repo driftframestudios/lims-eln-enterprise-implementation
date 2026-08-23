@@ -1,11 +1,13 @@
 name: implementation-proof
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - develop
+  workflow_dispatch:
+    inputs:
+      confirm_run:
+        description: Confirm a human has allocated this remote proof
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -17,6 +19,7 @@ concurrency:
 jobs:
   validate:
     name: Python ${{ matrix.python-version }} proof
+    if: ${{ vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
@@ -37,10 +40,13 @@ jobs:
           cache: ""
 
       - name: Validate repository
-        run: python3 scripts/validate_repository.py
+        run: |
+          python3 -m pip install -e ".[test]"
+          python3 scripts/validate_repository.py
 
   postgres-invariants:
     name: PostgreSQL 17 migration and adversarial boundary proof
+    if: ${{ vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
@@ -211,7 +217,8 @@ jobs:
         run: python3 -m unittest tests.test_postgres_integration -v
 
   postgres-upgrade:
-    name: PostgreSQL 17 migration 003 to 004 upgrade and replay proof
+    name: PostgreSQL 17 migration 003 through 005 upgrade and replay proof
+    if: ${{ vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
@@ -423,7 +430,7 @@ jobs:
           run_flyway migrate
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
-            --command 'select count(*) from public.flyway_schema_history where version is not null and success')" = "4"
+            --command 'select count(*) from public.flyway_schema_history where version is not null and success')" = "5"
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command "select count(*) from public.transactional_outbox where tenant_id = 'SYN-UPGRADE-TENANT' and delivery_state = 'ready' and delivery_attempts = 0 and fencing_token = 0")" = "2"
@@ -514,7 +521,7 @@ jobs:
 
   implementation-validation:
     name: implementation-validation
-    if: ${{ always() }}
+    if: ${{ always() && vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
     needs: [validate, postgres-invariants, postgres-upgrade]
     runs-on: ubuntu-24.04
     timeout-minutes: 10

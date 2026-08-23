@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import redirect_stdout
 import importlib.util
 from io import StringIO
+import json
 from pathlib import Path
 import re
 import sys
@@ -18,6 +19,42 @@ assert SPEC and SPEC.loader
 check_branch_flow = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = check_branch_flow
 SPEC.loader.exec_module(check_branch_flow)
+
+
+def workflow_trigger_keys(workflow: str) -> set[str]:
+    """Read exact top-level event keys from the workflow."""
+    lines = workflow.splitlines()
+    start = lines.index("on:") + 1
+    triggers: set[str] = set()
+    for line in lines[start:]:
+        if line and not line.startswith(" "):
+            break
+        match = re.fullmatch(r"""  ["']?([A-Za-z0-9_-]+)["']?:.*""", line)
+        if match:
+            triggers.add(match.group(1))
+    return triggers
+
+
+def runner_job_blocks(workflow: str) -> dict[str, str]:
+    """Return each job block that allocates a runner."""
+    lines = workflow.splitlines()
+    start = lines.index("jobs:") + 1
+    job_starts = [
+        (index, match.group(1))
+        for index in range(start, len(lines))
+        if (match := re.fullmatch(r"  ([A-Za-z0-9_-]+):", lines[index]))
+    ]
+    blocks: dict[str, str] = {}
+    for position, (index, name) in enumerate(job_starts):
+        end = (
+            job_starts[position + 1][0]
+            if position + 1 < len(job_starts)
+            else len(lines)
+        )
+        block = "\n".join(lines[index:end])
+        if re.search(r"(?m)^    runs-on:", block):
+            blocks[name] = block
+    return blocks
 
 
 class BranchFlowTests(unittest.TestCase):
@@ -97,8 +134,11 @@ class BranchFlowTests(unittest.TestCase):
         self.assertEqual(1, result)
         self.assertIn("outside the branch naming contract", output)
 
-    def test_dependabot_config_and_grammar_share_ecosystems(self) -> None:
-        config = (ROOT / ".github" / "dependabot.yml").read_text(encoding="utf-8")
+    def test_dependabot_activation_template_and_grammar_share_ecosystems(self) -> None:
+        self.assertFalse((ROOT / ".github" / "dependabot.yml").exists())
+        config = (ROOT / ".github" / "dependabot.manual.yml").read_text(
+            encoding="utf-8"
+        )
         configured = {
             ecosystem.replace("-", "_")
             for ecosystem in re.findall(
@@ -136,28 +176,58 @@ class BranchFlowTests(unittest.TestCase):
         self.assertEqual(1, result)
         self.assertIn("release/, hotfix/", output)
 
-    def test_workflow_uses_base_controlled_policy_with_read_only_access(self) -> None:
-        workflow = (
-            ROOT / ".github" / "workflows" / "branch-policy.yml"
-        ).read_text(encoding="utf-8")
-        self.assertIn("permissions:\n  contents: read", workflow)
-        self.assertIn("pull_request_target:", workflow)
-        self.assertIn("\n  branch-policy:\n", workflow)
-        self.assertIn("ref: ${{ github.event.pull_request.base.sha }}", workflow)
-        self.assertIn("path: base-policy", workflow)
-        self.assertIn("working-directory: base-policy", workflow)
-        self.assertIn(
-            "PR_AUTHOR: ${{ github.event.pull_request.user.login }}",
-            workflow,
+    def test_workflow_is_manual_confirmed_and_read_only(self) -> None:
+        workflow_directory = ROOT / ".github" / "workflows"
+        workflow_paths = sorted(
+            [*workflow_directory.glob("*.yml"), *workflow_directory.glob("*.yaml")]
         )
-        self.assertIn('--author "$PR_AUTHOR"', workflow)
+        self.assertEqual(["ci.yml"], [path.name for path in workflow_paths])
+        self.assertFalse(
+            (ROOT / ".github" / "workflows" / "branch-policy.yml").exists()
+        )
+        workflow = workflow_paths[0].read_text(encoding="utf-8")
+        self.assertIn("permissions:\n  contents: read", workflow)
+        self.assertEqual({"workflow_dispatch"}, workflow_trigger_keys(workflow))
+        self.assertIn("type: boolean", workflow)
         self.assertIn("persist-credentials: false", workflow)
-        self.assertNotIn("\n  pull_request:\n", workflow)
+        jobs = runner_job_blocks(workflow)
+        self.assertEqual(
+            {
+                "validate",
+                "postgres-invariants",
+                "postgres-upgrade",
+                "implementation-validation",
+            },
+            set(jobs),
+        )
+        for name, block in jobs.items():
+            with self.subTest(job=name):
+                gate = re.search(r"(?m)^    if:\s*(.+)$", block)
+                self.assertIsNotNone(gate)
+                assert gate is not None
+                self.assertIn("vars.ENABLE_GITHUB_ACTIONS == 'true'", gate.group(1))
+                self.assertIn("inputs.confirm_run", gate.group(1))
+
+    def test_release_controls_keep_hosted_checks_empty(self) -> None:
+        release = json.loads(
+            (ROOT / "release" / "repository-role.json").read_text(encoding="utf-8")
+        )
+        controls = release["promotion_controls"]
+        self.assertEqual([], controls["hosted_required_check_contexts"])
+        self.assertEqual(2, controls["human_review"]["main_required_approvals"])
+        self.assertEqual(1, controls["human_review"]["develop_required_approvals"])
+        self.assertTrue(controls["human_review"]["code_owner_review"])
+        self.assertTrue(controls["history_protection"]["branch_deletion_guard"])
+        self.assertTrue(controls["history_protection"]["non_fast_forward_guard"])
+        self.assertEqual(
+            "separate_reviewed_change",
+            controls["future_hosted_check_activation"]["state"],
+        )
 
     def test_codeowners_cover_branch_and_authority_control_surfaces(self) -> None:
         owners = (ROOT / ".github" / "CODEOWNERS").read_text(encoding="utf-8")
         for path in (
-            "/.github/dependabot.yml",
+            "/.github/dependabot.manual.yml",
             "/.github/workflows/",
             "/.gitignore",
             "/.dockerignore",
@@ -186,7 +256,10 @@ class BranchFlowTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("\n  implementation-validation:\n", workflow)
-        self.assertIn("if: ${{ always() }}", workflow)
+        self.assertIn(
+            "if: ${{ always() && vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}",
+            workflow,
+        )
         self.assertIn('test "$VALIDATE_RESULT" = "success"', workflow)
         self.assertIn('test "$POSTGRES_RESULT" = "success"', workflow)
         self.assertRegex(
@@ -198,6 +271,7 @@ class BranchFlowTests(unittest.TestCase):
             r"FLYWAY_IMAGE: flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}",
         )
         self.assertIn("-target=003 migrate", workflow)
+        self.assertIn("migration 003 through 005", workflow.lower())
         self.assertIn("run_flyway validate", workflow)
         self.assertIn("run_flyway info", workflow)
         self.assertIn("FLYWAY_USER: laboratory_migrator", workflow)
