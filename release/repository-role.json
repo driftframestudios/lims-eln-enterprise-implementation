@@ -59,11 +59,15 @@
   "promotion_controls": {
     "current_state": "human_review_and_history_protection_with_empty_hosted_checks",
     "hosted_required_check_contexts": [],
+    "protected_branches": ["main", "develop"],
+    "allowed_merge_methods": ["merge", "squash", "rebase"],
     "human_review": {
-      "main_required_approvals": 2,
-      "develop_required_approvals": 1,
+      "required_approvals": 1,
       "code_owner_review": true,
-      "fresh_review_after_change": true
+      "dismiss_stale_reviews_on_push": true,
+      "extra_approval_for_unattributed_changes": true,
+      "last_push_approval": true,
+      "review_thread_resolution": true
     },
     "history_protection": {
       "branch_deletion_guard": true,

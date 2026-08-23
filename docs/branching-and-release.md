@@ -80,9 +80,13 @@ Configure GitHub rulesets so that:
 
 - `main` and `develop` receive pull requests while hosted required-check sets
   remain empty in the $0 resting state;
-- `main` receives two fresh approvals, including a code owner;
-- `develop` receives one fresh approval;
-- release and hotfix merges preserve a linear, traceable history;
+- each pull request receives one approval, including code-owner review where a
+  covered path changes;
+- changes without an attributed author receive the configured extra approval;
+- stale approvals are dismissed, the last push receives approval from another
+  contributor, and review threads reach resolution;
+- deletion and non-fast-forward protections preserve branch history;
+- merge, squash, and rebase merge methods remain available;
 - contract, fixture, migration, security, and expected-result changes receive
   an independent reviewer;
 - any later manual workflow retains read-only permission, the repository-variable

@@ -258,13 +258,14 @@ for adoption, probability framing, remaining gaps, and evidence gates.
 [`machine-node.json`](machine-node.json),
 [`first-receipt.json`](first-receipt.json), and
 [`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) implement Site Reading
-governance schema release `2.0.0` and Control Plane Profile `0.3.0`. They orient
-collaborators; they do not grant runtime authority.
+governance schema release `2.0.1` and Control Plane Profile `0.3.0`. They orient
+collaborators while bounded operations and accountable runtime roles retain
+effect authority.
 
 The earlier Machine Node is preserved as
 [`release/seed-lineage-machine-node-v0.2.json`](release/seed-lineage-machine-node-v0.2.json).
-It remains useful for historical comparison and is not the canonical governance
-Machine Node for release `0.3.1`.
+It remains useful for historical comparison; `machine-node.json` is the
+canonical governance Machine Node for release `0.3.1`.
 
 ## Data and authority boundaries
 

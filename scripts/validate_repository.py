@@ -438,15 +438,20 @@ def validate_manifests() -> None:
         promotion_controls.get("current_state")
         != "human_review_and_history_protection_with_empty_hosted_checks"
         or promotion_controls.get("hosted_required_check_contexts") != []
+        or promotion_controls.get("protected_branches") != ["main", "develop"]
+        or promotion_controls.get("allowed_merge_methods")
+        != ["merge", "squash", "rebase"]
     ):
         raise AssertionError(
             "current release controls require the empty hosted-check resting state"
         )
     if promotion_controls.get("human_review") != {
-        "main_required_approvals": 2,
-        "develop_required_approvals": 1,
+        "required_approvals": 1,
         "code_owner_review": True,
-        "fresh_review_after_change": True,
+        "dismiss_stale_reviews_on_push": True,
+        "extra_approval_for_unattributed_changes": True,
+        "last_push_approval": True,
+        "review_thread_resolution": True,
     }:
         raise AssertionError(
             "current release controls require human and code-owner review"

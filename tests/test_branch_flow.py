@@ -214,9 +214,20 @@ class BranchFlowTests(unittest.TestCase):
         )
         controls = release["promotion_controls"]
         self.assertEqual([], controls["hosted_required_check_contexts"])
-        self.assertEqual(2, controls["human_review"]["main_required_approvals"])
-        self.assertEqual(1, controls["human_review"]["develop_required_approvals"])
+        self.assertEqual(["main", "develop"], controls["protected_branches"])
+        self.assertEqual(
+            ["merge", "squash", "rebase"], controls["allowed_merge_methods"]
+        )
+        self.assertEqual(1, controls["human_review"]["required_approvals"])
         self.assertTrue(controls["human_review"]["code_owner_review"])
+        self.assertTrue(
+            controls["human_review"]["dismiss_stale_reviews_on_push"]
+        )
+        self.assertTrue(
+            controls["human_review"]["extra_approval_for_unattributed_changes"]
+        )
+        self.assertTrue(controls["human_review"]["last_push_approval"])
+        self.assertTrue(controls["human_review"]["review_thread_resolution"])
         self.assertTrue(controls["history_protection"]["branch_deletion_guard"])
         self.assertTrue(controls["history_protection"]["non_fast_forward_guard"])
         self.assertEqual(
