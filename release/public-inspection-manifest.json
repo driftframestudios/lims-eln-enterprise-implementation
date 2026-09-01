@@ -1,12 +1,12 @@
 {
   "artifact_groups": [
     {
-      "aggregate_sha256": "sha256:7457b1d985d3dad567284aa0cd9e33896d27612b92c0375ad7b65f47a2ebdeb9",
+      "aggregate_sha256": "sha256:36cb75cfb56b3d62aa27500b67b871114338de667c29af4cff3886177eedb92f",
       "artifacts": [
         {
           "path": "pyproject.toml",
-          "sha256": "sha256:24c6531e579b3802e2e55f56bbaa2bc09b3d1ba0f5a0117a61dd6584c81f4ef1",
-          "size_bytes": 1074
+          "sha256": "sha256:d8723567c3863d4ccab2c7735554bc9d620469f45194368d5c0f3629f283f143",
+          "size_bytes": 1098
         },
         {
           "path": "src/lims_eln_implementation/__init__.py",
@@ -339,7 +339,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:1fa01a91cd842947bbbbd01f470067245a64a916290483565a5bf224a12e2ba5",
+      "aggregate_sha256": "sha256:e0f088557fde7af6f06a8fd52728bc3c81a4f1b2bda92bd4cf0cddf6aa345a22",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -395,6 +395,11 @@
           "path": "tests/helpers.py",
           "sha256": "sha256:5af5bfbc71d9ee3ed180d8c73b1778c20cdbc9c863a13b55325a54cfe836f034",
           "size_bytes": 661
+        },
+        {
+          "path": "tests/test_attribution_boundary.py",
+          "sha256": "sha256:dd4264aca7d85637d100f32bcd81beb48c0879fe544a9808743c3aa1215d13ec",
+          "size_bytes": 2118
         },
         {
           "path": "tests/test_bounded_caller.py",
@@ -677,7 +682,7 @@
   "repository_release": "0.3.1",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:9a06e85d5f70a1cfc268d4f3831d364e3cd8067acbab41f6eeb3dcb707b19bde",
+    "aggregate_sha256": "sha256:5c093141ea7b5a577745a9bf36db8f55d931b220d7c059b000f75561466e6712",
     "kind": "content_addressed_artifact_inventory"
   }
 }
