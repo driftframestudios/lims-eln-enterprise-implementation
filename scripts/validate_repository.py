@@ -15,6 +15,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 sys.path.insert(0, str(SRC))
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tests"))
 
 PUBLISHED_SUFFIXES = {
@@ -108,6 +109,11 @@ def validate_contracts() -> None:
 
 
 def validate_manifests() -> None:
+    from scripts.build_public_inspection_manifest import (
+        MANIFEST_PATH as PUBLIC_INSPECTION_MANIFEST_PATH,
+        verify_manifest as verify_public_inspection_manifest,
+    )
+
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
     if manifest["version"] != "0.3.1":
         raise AssertionError("manifest requires repository release 0.3.1")
@@ -133,6 +139,25 @@ def validate_manifests() -> None:
         raise AssertionError("control plane requires governance schema release 2.0.1")
     if control_plane.get("control_plane_profile") != "0.3.0":
         raise AssertionError("control plane requires profile 0.3.0")
+
+    public_inspection = manifest.get("public_inspection", {})
+    if public_inspection.get("manifest") != PUBLIC_INSPECTION_MANIFEST_PATH.as_posix():
+        raise AssertionError(
+            "release manifest requires the public inspection manifest path"
+        )
+    inspection_manifest = verify_public_inspection_manifest(ROOT)
+    inspection_manifest_path = ROOT / PUBLIC_INSPECTION_MANIFEST_PATH
+    inspection_manifest_digest = file_digest(inspection_manifest_path)
+    if (
+        public_inspection.get("manifest_digest") != inspection_manifest_digest
+        or public_inspection.get("authority") != "repository_owned_candidate_bytes"
+        or public_inspection.get("cross_repository_coordinate_state")
+        != "awaiting_accepted_revisions"
+        or inspection_manifest.get("repository_release") != manifest["version"]
+    ):
+        raise AssertionError(
+            "release manifest requires the exact repository-owned inspection candidate"
+        )
 
     database = manifest.get("database", {})
     migration_release_path = ROOT / database.get("migration_release", "")
@@ -424,6 +449,13 @@ def validate_manifests() -> None:
         raise AssertionError("release role requires the Flyway release digest")
     if release["open_receipt_ledger_digest"] != ledger_digest:
         raise AssertionError("release role requires the open receipt ledger digest")
+    if (
+        release.get("public_inspection_manifest_digest")
+        != inspection_manifest_digest
+    ):
+        raise AssertionError(
+            "release role requires the public inspection manifest digest"
+        )
     if tuple(release["receipt_families"]) != CANONICAL_RECEIPT_FAMILIES:
         raise AssertionError("release role requires canonical receipt-family order")
     if (

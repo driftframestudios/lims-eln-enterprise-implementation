@@ -15,6 +15,12 @@
     "coordination_horizon": "COORDINATION-HORIZON.json",
     "historical_machine_node": "release/seed-lineage-machine-node-v0.2.json"
   },
+  "public_inspection": {
+    "manifest": "release/public-inspection-manifest.json",
+    "manifest_digest": "sha256:60dadac9b947e505593aeac468be6cfb65137ebc4fa72a8adcaf8cf28bdafc01",
+    "authority": "repository_owned_candidate_bytes",
+    "cross_repository_coordinate_state": "awaiting_accepted_revisions"
+  },
   "contract_versions": {
     "specimen_command": "1.0.0",
     "execution_receipt": "1.1.0",

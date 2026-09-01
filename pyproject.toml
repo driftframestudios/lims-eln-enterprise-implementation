@@ -9,7 +9,7 @@ description = "Synthetic, evidence-bearing reference implementation for a LIMS/E
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "Apache-2.0"}
-authors = [{name = "driftframestudios"}]
+authors = [{name = "Vikrant Varun Kudesia"}]
 dependencies = [
   "fastapi>=0.141,<1",
   "jinja2>=3.1.6,<4",

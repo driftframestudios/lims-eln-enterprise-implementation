@@ -5,6 +5,10 @@ Site Reading constellation. It provides a principal-level Python reference
 system for specimen lifecycle, custody, instrument ingress, vendor projection,
 migration, recovery, evidence, security, and operational acceptance.
 
+Repository authorship and maintenance provenance is recorded in
+[`AUTHORS`](AUTHORS). Git history and reviewed pull requests preserve change
+chronology and contribution credit.
+
 The repository begins from the public architectural provenance of
 `driftframestudios/prototype-exemplars` pull request
 [#3](https://github.com/driftframestudios/prototype-exemplars/pull/3):
@@ -88,6 +92,25 @@ and API surface.
 The command validates JSON contracts and manifests, confirms fixture posture,
 runs all tests, applies the negation-aware language gate, and emits a
 deterministic source digest.
+
+[`release/public-inspection-manifest.json`](release/public-inspection-manifest.json)
+gives a reviewer one deterministic inventory for the repository-owned 0.3.1
+candidate. It binds every FastAPI and domain source, Flyway V001 through V005,
+local contract and synthetic input, operational configuration, behavior proof,
+evidence record, and public orientation file by path, byte length, SHA-256
+digest, group digest, and one aggregate content identity. Verify the checked-in
+inventory directly:
+
+```sh
+python3 scripts/build_public_inspection_manifest.py --check
+```
+
+The candidate records the program-contract and governance coordinates as
+awaiting accepted revisions. Their receiving reviews establish those Git
+coordinates later. Configured-environment receipts retain their own system,
+time, performer, reviewer, artifact, assurance, and limitation fields. This
+keeps exact local bytes, cross-repository acceptance, and environment evidence
+as three independently inspectable facts.
 
 The ordinary local proof runs configured-database tests when their explicit
 synthetic DSNs and verification key are present. CI also provisions PostgreSQL
