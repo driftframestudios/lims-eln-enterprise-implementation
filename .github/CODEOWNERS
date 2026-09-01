@@ -8,6 +8,7 @@
 /database/ @driftframestudios
 /release/ @driftframestudios
 /scripts/check_branch_flow.py @driftframestudios
+/scripts/check_automation_contract.py @driftframestudios
 /scripts/build_public_inspection_manifest.py @driftframestudios
 /scripts/validate_repository.py @driftframestudios
 /flyway.conf @driftframestudios
@@ -25,6 +26,6 @@
 /sql/ @driftframestudios
 /infra/ @driftframestudios
 /receipts/ @driftframestudios
-/.github/dependabot.manual.yml @driftframestudios
+/.github/dependabot.yml @driftframestudios
 /.github/workflows/ @driftframestudios
 /.github/CODEOWNERS @driftframestudios

@@ -78,7 +78,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
             "Makefile",
             "scripts/*.py",
             "tests/*.py",
-            ".github/workflows/ci.yml",
+            ".github/workflows/*.yml",
         ),
     ),
     (
@@ -111,7 +111,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
             "infra/README.md",
             ".github/AUTOMATION.md",
             ".github/CODEOWNERS",
-            ".github/dependabot.manual.yml",
+            ".github/dependabot.yml",
             ".github/pull_request_template.md",
         ),
     ),

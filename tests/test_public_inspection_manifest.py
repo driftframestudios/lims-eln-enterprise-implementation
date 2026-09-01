@@ -74,10 +74,12 @@ class PublicInspectionManifestTests(unittest.TestCase):
                 "tests/test_postgres_integration.py",
                 "tests/test_shared_contract_binding.py",
                 "tests/test_workbench_service.py",
+                ".github/workflows/ci.yml",
+                ".github/workflows/pull-request.yml",
             }.issubset(groups["behavior_proofs"])
         )
         self.assertTrue(
-            {"AUTHORS", "README.md"}.issubset(
+            {"AUTHORS", "README.md", ".github/dependabot.yml"}.issubset(
                 groups["collaboration_and_orientation"]
             )
         )

@@ -3,8 +3,8 @@
 ## Long-lived branches
 
 - `main` contains released, receipt-bound versions.
-- `develop` integrates the next release and remains deployable to the shared
-  qualification environment.
+- `develop` is the lean integration branch for the next release and remains
+  deployable to the shared qualification environment.
 
 ## Short-lived branches
 
@@ -15,27 +15,28 @@
 | `hotfix/<receipt-id>` | `main` | `main` and `develop` | Production correction with bounded evidence |
 | `experiment/<question>` | `develop` | `develop` when promoted, or archived tag | Time-boxed exploration with an explicit learning record |
 
-## Local proof and optional maintenance branches
+## Local and hosted proof
 
 `python3 scripts/validate_repository.py` is the standing repository proof.
-GitHub Actions rests disabled in repository settings at a **$0** budget. The
-manual `implementation-proof` workflow becomes available only when a named
-human enables Actions, sets `ENABLE_GITHUB_ACTIONS=true`, selects
-`confirm_run`, and dispatches it. After the proof is read, set
-`ENABLE_GITHUB_ACTIONS=false` and disable Actions in repository settings to
-restore the resting state.
+The repository allocates 100–300 hosted runner minutes per month. One
+read-only, cancellable Python 3.12 proof accompanies pull requests into
+`develop` and `main`. The manually dispatched `implementation-proof` preserves
+the two-version and PostgreSQL evidence for a named receiver who sets
+`ENABLE_GITHUB_ACTIONS=true` and selects `confirm_run`.
 
-Dependency scheduling rests in `.github/dependabot.manual.yml`. A reviewed
-rename to `.github/dependabot.yml` activates that schedule. When automation is
-active, maintenance branches retain their bounded coordinate contract:
+`.github/dependabot.yml` supplies monthly version updates into `develop` with a
+two-open-pull-request limit for each configured ecosystem. Minor and patch
+updates share a reviewable group when available. Maintenance branches retain
+their bounded coordinate contract:
 
 - Dependabot uses the complete
-  `dependabot/github_actions/<dependency-update>` grammar and the
+  `dependabot/<ecosystem>/<dependency-update>` grammar and the
   `dependabot[bot]` pull-request identity.
 - Renovate uses the complete `renovate/<dependency-update>` grammar and the
   `renovate[bot]` pull-request identity.
-- Either flow targets `main` or `develop`; branch grammar, bot identity, and
-  target must agree.
+- Dependabot version updates target `develop`; default-branch security updates
+  retain their `main` route. Renovate retains its reviewed `main` or `develop`
+  target. Branch grammar, bot identity, and target agree.
 
 Each maintenance pull request continues through local validation, human review,
 and the ordinary merge controls. The repository-local branch checker remains a
@@ -96,10 +97,10 @@ its own signed decision record.
 
 ## Branch protection target
 
-Configure GitHub rulesets so that:
+Configure the GitHub ruleset for `main` so that:
 
-- `main` and `develop` receive pull requests while hosted required-check sets
-  remain empty in the $0 resting state;
+- `main` receives pull requests and the bounded pull-request proof after
+  repository settings activate it;
 - each pull request receives one approval, including code-owner review where a
   covered path changes;
 - changes without an attributed author receive the configured extra approval;
@@ -109,12 +110,17 @@ Configure GitHub rulesets so that:
 - merge, squash, and rebase merge methods remain available;
 - contract, fixture, migration, security, and expected-result changes receive
   an independent reviewer;
-- any later manual workflow retains read-only permission, the repository-variable
+- the manual full-proof workflow retains read-only permission, the repository-variable
   gate, dispatch confirmation, and a bounded timeout;
 - any later reusable workflow is caller-owned and pinned by immutable commit SHA.
 
-The current release-role manifest records this resting posture as an empty list
-of hosted check contexts beside the retained human-review, code-owner,
-deletion, non-fast-forward, and main-signature protections. A hosted context
-becomes a separate future activation only after its name and funded execution
-path are reviewed.
+The current release-role manifest keeps required hosted contexts empty while
+the source change and exact hosted check name await acceptance. It records the
+bounded source contract beside the retained human-review, code-owner, deletion,
+non-fast-forward, and main-signature protections. Repository settings receive
+the observed check name after the source lands.
+
+`develop` remains a lean integration branch. Pull requests into `develop` can
+still receive the bounded proof, while the `main` ruleset carries release
+protection. `release/<version>` remains a short-lived route from `develop` to
+`main` and back to `develop` after acceptance.
