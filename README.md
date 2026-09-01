@@ -5,6 +5,10 @@ Site Reading constellation. It provides a principal-level Python reference
 system for specimen lifecycle, custody, instrument ingress, vendor projection,
 migration, recovery, evidence, security, and operational acceptance.
 
+Repository authorship and maintenance provenance is recorded in
+[`AUTHORS`](AUTHORS). Git history and reviewed pull requests preserve change
+chronology and contribution credit.
+
 The repository begins from the public architectural provenance of
 `driftframestudios/prototype-exemplars` pull request
 [#3](https://github.com/driftframestudios/prototype-exemplars/pull/3):

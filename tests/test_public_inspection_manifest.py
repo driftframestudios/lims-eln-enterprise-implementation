@@ -13,6 +13,7 @@ from scripts.build_public_inspection_manifest import (
     InspectionManifestError,
     MANIFEST_PATH,
     verify_manifest,
+    write_manifest,
 )
 
 
@@ -75,6 +76,11 @@ class PublicInspectionManifestTests(unittest.TestCase):
                 "tests/test_workbench_service.py",
             }.issubset(groups["behavior_proofs"])
         )
+        self.assertTrue(
+            {"AUTHORS", "README.md"}.issubset(
+                groups["collaboration_and_orientation"]
+            )
+        )
 
         artifact_paths = set().union(*groups.values())
         self.assertTrue(set(manifest["manifest_carriers"]).isdisjoint(artifact_paths))
@@ -95,6 +101,53 @@ class PublicInspectionManifestTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 InspectionManifestError,
                 "inspection artifact bytes differ for .*workbench/service.py",
+            ):
+                verify_manifest(target)
+
+    def test_manifest_carrier_rejects_symbolic_link_substitution(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="inspection-carrier-") as directory:
+            target = Path(directory)
+            self.copy_inventory(target)
+            external = target / "external-manifest.json"
+            external.write_bytes((target / MANIFEST_PATH).read_bytes())
+            (target / MANIFEST_PATH).unlink()
+            (target / MANIFEST_PATH).symlink_to(external)
+
+            with self.assertRaisesRegex(
+                InspectionManifestError,
+                "regular repository-owned file",
+            ):
+                verify_manifest(target)
+
+    def test_manifest_write_rejects_symbolic_link_target(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="inspection-write-") as directory:
+            target = Path(directory)
+            self.copy_inventory(target)
+            external = target / "external-manifest.json"
+            external.write_bytes(b"outside remains unchanged\n")
+            (target / MANIFEST_PATH).unlink()
+            (target / MANIFEST_PATH).symlink_to(external)
+
+            with self.assertRaisesRegex(
+                InspectionManifestError,
+                "write target requires a regular repository-owned file",
+            ):
+                write_manifest(target)
+            self.assertEqual(b"outside remains unchanged\n", external.read_bytes())
+
+    def test_manifest_check_requires_canonical_bytes(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="inspection-canonical-") as directory:
+            target = Path(directory)
+            self.copy_inventory(target)
+            document = json.loads((target / MANIFEST_PATH).read_text(encoding="utf-8"))
+            (target / MANIFEST_PATH).write_text(
+                json.dumps(document, separators=(",", ":")),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                InspectionManifestError,
+                "canonical sorted, indented JSON form",
             ):
                 verify_manifest(target)
 

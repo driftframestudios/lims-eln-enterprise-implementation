@@ -6,7 +6,10 @@ from __future__ import annotations
 import argparse
 from hashlib import sha256
 import json
+import os
 from pathlib import Path, PurePosixPath
+import secrets
+import stat
 from typing import Any
 
 
@@ -93,6 +96,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
         "Public orientation, release guidance, ownership, provenance, and operational runbooks.",
         (
             "README.md",
+            "AUTHORS",
             "CHANGELOG.md",
             "CONTRIBUTING.md",
             "LICENSE",
@@ -284,21 +288,148 @@ def _difference(expected: dict[str, Any], actual: dict[str, Any]) -> str:
 
 
 def verify_manifest(root: Path = ROOT) -> dict[str, Any]:
-    manifest_path = root / MANIFEST_PATH
+    manifest_bytes = _read_manifest_bytes(root)
     try:
-        actual = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError) as error:
+        actual = json.loads(manifest_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise InspectionManifestError(
-            "inspection manifest requires a readable JSON document"
+            "inspection manifest requires one UTF-8 JSON document"
         ) from error
     expected = build_manifest(root)
     if actual != expected:
         raise InspectionManifestError(_difference(expected, actual))
+    if manifest_bytes != _serialize(expected).encode("utf-8"):
+        raise InspectionManifestError(
+            "inspection manifest bytes require the canonical sorted, indented JSON form"
+        )
     return actual
 
 
 def _serialize(manifest: dict[str, Any]) -> str:
     return json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+
+
+def _manifest_parent_fd(root: Path) -> tuple[Path, int]:
+    root_resolved = root.resolve(strict=True)
+    parent = root / MANIFEST_PATH.parent
+    if parent.is_symlink():
+        raise InspectionManifestError(
+            "inspection manifest parent stays within a regular repository directory"
+        )
+    try:
+        parent.resolve(strict=True).relative_to(root_resolved)
+    except (FileNotFoundError, ValueError) as error:
+        raise InspectionManifestError(
+            "inspection manifest parent stays within a regular repository directory"
+        ) from error
+    if not parent.is_dir():
+        raise InspectionManifestError(
+            "inspection manifest parent stays within a regular repository directory"
+        )
+
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        return parent, os.open(parent, flags)
+    except OSError as error:
+        raise InspectionManifestError(
+            "inspection manifest parent stays within a regular repository directory"
+        ) from error
+
+
+def _read_manifest_bytes(root: Path) -> bytes:
+    _, parent_fd = _manifest_parent_fd(root)
+    file_fd: int | None = None
+    try:
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            file_fd = os.open(MANIFEST_PATH.name, flags, dir_fd=parent_fd)
+        except OSError as error:
+            raise InspectionManifestError(
+                "inspection manifest requires a regular repository-owned file"
+            ) from error
+        if not stat.S_ISREG(os.fstat(file_fd).st_mode):
+            raise InspectionManifestError(
+                "inspection manifest requires a regular repository-owned file"
+            )
+        with os.fdopen(file_fd, "rb") as handle:
+            file_fd = None
+            return handle.read()
+    finally:
+        if file_fd is not None:
+            os.close(file_fd)
+        os.close(parent_fd)
+
+
+def write_manifest(root: Path = ROOT) -> Path:
+    payload = _serialize(build_manifest(root)).encode("utf-8")
+    parent, parent_fd = _manifest_parent_fd(root)
+    temporary_name = f".{MANIFEST_PATH.name}.{secrets.token_hex(8)}.tmp"
+    temporary_fd: int | None = None
+    temporary_exists = False
+    try:
+        try:
+            destination_stat = os.stat(
+                MANIFEST_PATH.name,
+                dir_fd=parent_fd,
+                follow_symlinks=False,
+            )
+        except FileNotFoundError:
+            destination_stat = None
+        if destination_stat is not None and not stat.S_ISREG(destination_stat.st_mode):
+            raise InspectionManifestError(
+                "inspection manifest write target requires a regular repository-owned file"
+            )
+
+        flags = (
+            os.O_WRONLY
+            | os.O_CREAT
+            | os.O_EXCL
+            | getattr(os, "O_NOFOLLOW", 0)
+        )
+        temporary_fd = os.open(
+            temporary_name,
+            flags,
+            0o644,
+            dir_fd=parent_fd,
+        )
+        temporary_exists = True
+        with os.fdopen(temporary_fd, "wb") as handle:
+            temporary_fd = None
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+
+        try:
+            destination_stat = os.stat(
+                MANIFEST_PATH.name,
+                dir_fd=parent_fd,
+                follow_symlinks=False,
+            )
+        except FileNotFoundError:
+            destination_stat = None
+        if destination_stat is not None and not stat.S_ISREG(destination_stat.st_mode):
+            raise InspectionManifestError(
+                "inspection manifest write target requires a regular repository-owned file"
+            )
+
+        os.replace(
+            temporary_name,
+            MANIFEST_PATH.name,
+            src_dir_fd=parent_fd,
+            dst_dir_fd=parent_fd,
+        )
+        temporary_exists = False
+        os.fsync(parent_fd)
+        return parent / MANIFEST_PATH.name
+    finally:
+        if temporary_fd is not None:
+            os.close(temporary_fd)
+        if temporary_exists:
+            try:
+                os.unlink(temporary_name, dir_fd=parent_fd)
+            except FileNotFoundError:
+                pass
+        os.close(parent_fd)
 
 
 def main() -> int:
@@ -311,8 +442,7 @@ def main() -> int:
     arguments = parser.parse_args()
 
     if arguments.write:
-        destination = ROOT / MANIFEST_PATH
-        destination.write_text(_serialize(build_manifest(ROOT)), encoding="utf-8")
+        destination = write_manifest(ROOT)
         print(f"wrote {destination.relative_to(ROOT)}")
     else:
         manifest = verify_manifest(ROOT)

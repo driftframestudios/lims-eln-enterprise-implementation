@@ -1,12 +1,12 @@
 {
   "artifact_groups": [
     {
-      "aggregate_sha256": "sha256:7d9f9022ce008a0f1959cc7b6cea50082e13c965e8797666f1766676870f89c0",
+      "aggregate_sha256": "sha256:7457b1d985d3dad567284aa0cd9e33896d27612b92c0375ad7b65f47a2ebdeb9",
       "artifacts": [
         {
           "path": "pyproject.toml",
-          "sha256": "sha256:3cd493d25d665a4d43ecc5474afe2cd04d6cee94c4a28be9a2b0d02eee2c5b8d",
-          "size_bytes": 1070
+          "sha256": "sha256:24c6531e579b3802e2e55f56bbaa2bc09b3d1ba0f5a0117a61dd6584c81f4ef1",
+          "size_bytes": 1074
         },
         {
           "path": "src/lims_eln_implementation/__init__.py",
@@ -339,7 +339,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:8368c1a3362a9812400c3f4528ac33ebaee650a12fcce019e630bdc0857e0ec8",
+      "aggregate_sha256": "sha256:49019a73dae8b8c9441e18334641ed9991ff41ef27b3c6b8d8c70ea4238ce1c1",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -358,8 +358,8 @@
         },
         {
           "path": "scripts/build_public_inspection_manifest.py",
-          "sha256": "sha256:2b5e3a5e0ae5b00d28c58b8e542bd86d684593c3eb7cea6f7abf47963a7e6238",
-          "size_bytes": 11364
+          "sha256": "sha256:7708b45248481d899e662f56568738ccca2ced91347d53ae6ce36500cf33b955",
+          "size_bytes": 15777
         },
         {
           "path": "scripts/check_branch_flow.py",
@@ -433,8 +433,8 @@
         },
         {
           "path": "tests/test_public_inspection_manifest.py",
-          "sha256": "sha256:4cd0489ae7dc88051f145b718c553885fb8d589c5c6bd8437012d3f457442586",
-          "size_bytes": 6384
+          "sha256": "sha256:0363a20ab9b09fbafe7c98046a3d93d767ce74bb95f04ae3c9490569f8c32944",
+          "size_bytes": 8645
         },
         {
           "path": "tests/test_runtime_configuration.py",
@@ -498,7 +498,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:c95551ee82435242a7ca5ebfc5a4bee99d7dd0f173b219135e8afb7feb349df7",
+      "aggregate_sha256": "sha256:73b897f3edad964e8e603215841ee44cf24e8a9f4e1b5843ce652f0943a73e0a",
       "artifacts": [
         {
           "path": ".github/AUTOMATION.md",
@@ -519,6 +519,11 @@
           "path": ".github/pull_request_template.md",
           "sha256": "sha256:ead93c0b44497a12957e7fc3366c33c1a3ff632609b417ef8530f9cc02926fa9",
           "size_bytes": 781
+        },
+        {
+          "path": "AUTHORS",
+          "sha256": "sha256:63c6673baa090ed6abbc83fa026794c27ac2de85c663bfd53cac7ba977ff9829",
+          "size_bytes": 470
         },
         {
           "path": "CHANGELOG.md",
@@ -547,8 +552,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:a77e88d06f2f9b9857f08f8b2ef290048b46db7bf283328cb94f4af6db1bbfcb",
-          "size_bytes": 17581
+          "sha256": "sha256:d04054aff1644cbd161d7a4362bf9652da9b7f0c87167f61054049ba724f2af9",
+          "size_bytes": 17759
         },
         {
           "path": "SECURITY.md",
@@ -662,7 +667,7 @@
   "repository_release": "0.3.1",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:b5c15de64d3ea6c59092b823c648d919cfd57b2bd22a667ed339e3221f4273b4",
+    "aggregate_sha256": "sha256:145751a4c4773eb0d9e40a0fb1302b2d32074a66a40e8b74aceb00d4a3a107e5",
     "kind": "content_addressed_artifact_inventory"
   }
 }
