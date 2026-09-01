@@ -2,6 +2,11 @@
 
 ## Unreleased — principal data boundaries
 
+- Add one read-only, cancellable Python 3.12 pull-request proof and a monthly,
+  bounded dependency-update stream into `develop`; retain the two-version and
+  PostgreSQL evidence as a confirmed manual proof. Parse those automation
+  sources through a dependency-free semantic contract and bind their effective
+  controls to the release manifest.
 - Delegate PostgreSQL migration ordering, locking, transactions, history,
   checksum validation, status, target selection, and replay to the
   version-and-digest-pinned Flyway Community 13.0.0 image.

@@ -109,6 +109,7 @@ def validate_contracts() -> None:
 
 
 def validate_manifests() -> None:
+    from scripts.check_automation_contract import validate_automation_contract
     from scripts.build_public_inspection_manifest import (
         MANIFEST_PATH as PUBLIC_INSPECTION_MANIFEST_PATH,
         verify_manifest as verify_public_inspection_manifest,
@@ -468,14 +469,14 @@ def validate_manifests() -> None:
     promotion_controls = release.get("promotion_controls", {})
     if (
         promotion_controls.get("current_state")
-        != "human_review_and_history_protection_with_empty_hosted_checks"
+        != "human_review_and_history_protection_with_hosted_source_ready"
         or promotion_controls.get("hosted_required_check_contexts") != []
-        or promotion_controls.get("protected_branches") != ["main", "develop"]
+        or promotion_controls.get("protected_branches") != ["main"]
         or promotion_controls.get("allowed_merge_methods")
         != ["merge", "squash", "rebase"]
     ):
         raise AssertionError(
-            "current release controls require the empty hosted-check resting state"
+            "release controls require review, history protection, and hosted source readiness"
         )
     if promotion_controls.get("human_review") != {
         "required_approvals": 1,
@@ -496,14 +497,38 @@ def validate_manifests() -> None:
         raise AssertionError(
             "current release controls require deletion, history, and signature guards"
         )
-    if promotion_controls.get("future_hosted_check_activation") != {
-        "state": "separate_reviewed_change",
+    if promotion_controls.get("hosted_check_activation") != {
+        "state": "source_ready_settings_pending",
         "requires_stable_context": True,
         "requires_funded_execution_path": True,
     }:
         raise AssertionError(
-            "future hosted checks require a separate funded activation change"
+            "hosted-check source requires a stable, funded settings receiver"
         )
+    if release.get("automation_controls") != {
+        "pull_request_workflow": ".github/workflows/pull-request.yml",
+        "pull_request_targets": ["develop", "main"],
+        "pull_request_runner": "ubuntu-24.04",
+        "pull_request_python": "3.12",
+        "pull_request_timeout_minutes": 10,
+        "pull_request_permissions": {"contents": "read"},
+        "pull_request_concurrency_cancellation": True,
+        "manual_full_proof_workflow": ".github/workflows/ci.yml",
+        "dependabot_configuration": ".github/dependabot.yml",
+        "dependabot_target": "develop",
+        "dependabot_interval": "monthly",
+        "dependabot_open_pull_requests_per_ecosystem": 2,
+        "dependabot_grouped_update_types": ["minor", "patch"],
+        "monthly_budget_minutes": {"minimum": 100, "maximum": 300},
+        "settings_state": "pending_source_acceptance_and_observed_check_name",
+    }:
+        raise AssertionError(
+            "release automation controls require the bounded hosted source contract"
+        )
+    validate_automation_contract(
+        ROOT,
+        declared_controls=release["automation_controls"],
+    )
 
     contracts = {
         item["contract_id"]: item["digest"] for item in machine["contracts"]

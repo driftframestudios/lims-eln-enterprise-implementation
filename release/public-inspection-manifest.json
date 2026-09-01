@@ -339,12 +339,17 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:49019a73dae8b8c9441e18334641ed9991ff41ef27b3c6b8d8c70ea4238ce1c1",
+      "aggregate_sha256": "sha256:1fa01a91cd842947bbbbd01f470067245a64a916290483565a5bf224a12e2ba5",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
           "sha256": "sha256:e79887407116e53350631a4e8453a1a6f69528420cfb12be1aca698b636b1204",
           "size_bytes": 32882
+        },
+        {
+          "path": ".github/workflows/pull-request.yml",
+          "sha256": "sha256:4469520f9a97d811e37914a182f4073473cbf5243b5244bbf2e54dbcf9c40857",
+          "size_bytes": 909
         },
         {
           "path": "Makefile",
@@ -358,8 +363,13 @@
         },
         {
           "path": "scripts/build_public_inspection_manifest.py",
-          "sha256": "sha256:7708b45248481d899e662f56568738ccca2ced91347d53ae6ce36500cf33b955",
-          "size_bytes": 15777
+          "sha256": "sha256:f8c747e823a011d7a6303c8173f560f8868c7744551c2fbc0591ee82c8d90db2",
+          "size_bytes": 15769
+        },
+        {
+          "path": "scripts/check_automation_contract.py",
+          "sha256": "sha256:487136d79549e2c650b05943aad2215687d89cd7126682e6fbea1d76462b301e",
+          "size_bytes": 17383
         },
         {
           "path": "scripts/check_branch_flow.py",
@@ -373,8 +383,8 @@
         },
         {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:e78fc67c705b8e3562e666eea58c9b068370cfbb0eedb70ee48ac8820c00c1b6",
-          "size_bytes": 36847
+          "sha256": "sha256:469d8359ecf6154eb734de6e2390a0eaa6bd4f1c5b5e8e831177bb5177e2d2e7",
+          "size_bytes": 38059
         },
         {
           "path": "tests/__init__.py",
@@ -393,8 +403,8 @@
         },
         {
           "path": "tests/test_branch_flow.py",
-          "sha256": "sha256:28ccdc37c535d8e0f0042c2f4e9802baa7171d37159d142541e3dc975c5491cc",
-          "size_bytes": 13629
+          "sha256": "sha256:de22f47c14bcf0283c281c09064755573f87d01a413754663d0e68e4fdfbff08",
+          "size_bytes": 24857
         },
         {
           "path": "tests/test_custody_instrument.py",
@@ -433,8 +443,8 @@
         },
         {
           "path": "tests/test_public_inspection_manifest.py",
-          "sha256": "sha256:0363a20ab9b09fbafe7c98046a3d93d767ce74bb95f04ae3c9490569f8c32944",
-          "size_bytes": 8645
+          "sha256": "sha256:f94c5b2d01b1d96a9e2265f912e72674a4d148cc69a84d14f7fb8a772bd9deb9",
+          "size_bytes": 8769
         },
         {
           "path": "tests/test_runtime_configuration.py",
@@ -498,22 +508,22 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:73b897f3edad964e8e603215841ee44cf24e8a9f4e1b5843ce652f0943a73e0a",
+      "aggregate_sha256": "sha256:d665e52c70b2086a2585991a83d46e41dd06508d9fdaf19d1ab11707033b6292",
       "artifacts": [
         {
           "path": ".github/AUTOMATION.md",
-          "sha256": "sha256:9e2235b1a390ee4f3879c4ecf54d6f40f82bc2efa9bad59866e70a20543c59e6",
-          "size_bytes": 1248
+          "sha256": "sha256:4e8ef716243dd54fde26fef92b33ae220561296d10888030d6d1c9fd29b7a6cd",
+          "size_bytes": 2059
         },
         {
           "path": ".github/CODEOWNERS",
-          "sha256": "sha256:b787902882325208b3a2cba69fb9ae0a5bd245eb9b1b421f609dc0080816f902",
-          "size_bytes": 1376
+          "sha256": "sha256:bfde22bca21e6236de9075b756dfd218450642f076ee1c84943cd49ed4a4cd27",
+          "size_bytes": 1426
         },
         {
-          "path": ".github/dependabot.manual.yml",
-          "sha256": "sha256:73c041b9a9dd748c7de71c14a6fdb5119545e2c585e5939c895c17ec08fbc175",
-          "size_bytes": 807
+          "path": ".github/dependabot.yml",
+          "sha256": "sha256:5f6ffe66c8713afbd7f612f3f7a8d61dc64648e51ebc889b3e844c89278bb76a",
+          "size_bytes": 1229
         },
         {
           "path": ".github/pull_request_template.md",
@@ -527,8 +537,8 @@
         },
         {
           "path": "CHANGELOG.md",
-          "sha256": "sha256:5e94aa1499375e5d5b0d4c66c147c12ce85868fb7d20577985266bc2209fd0e6",
-          "size_bytes": 8182
+          "sha256": "sha256:bbacbb9826b2c2883e010ee8beb96dcb42f043ff641e49f5c94b32ab58a35b56",
+          "size_bytes": 8528
         },
         {
           "path": "CONTRIBUTING.md",
@@ -567,8 +577,8 @@
         },
         {
           "path": "docs/branching-and-release.md",
-          "sha256": "sha256:85c467fa427c484919a9a3c9604458708f185cd9005cd0e3b68d7d635d682333",
-          "size_bytes": 5856
+          "sha256": "sha256:8a83ef79474b19a67ef9d981a42145d4db88d3f2e1e8e6519db7f218571c590b",
+          "size_bytes": 6303
         },
         {
           "path": "docs/data-primitive-corrective-ledger.md",
@@ -667,7 +677,7 @@
   "repository_release": "0.3.1",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:145751a4c4773eb0d9e40a0fb1302b2d32074a66a40e8b74aceb00d4a3a107e5",
+    "aggregate_sha256": "sha256:9a06e85d5f70a1cfc268d4f3831d364e3cd8067acbab41f6eeb3dcb707b19bde",
     "kind": "content_addressed_artifact_inventory"
   }
 }
