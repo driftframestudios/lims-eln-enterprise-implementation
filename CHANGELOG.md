@@ -50,6 +50,10 @@
   over the canonical custody and measurement facts.
 - Add live, digest-pinned PostgreSQL 17 migration and adversarial data-boundary
   proofs to CI.
+- Add a deterministic public-inspection manifest that binds repository-owned
+  runtime, Flyway, contract, synthetic-input, operational-configuration, proof,
+  evidence, and orientation bytes while accepted cross-repository revisions
+  retain their own promotion step.
 - Publish the data-primitive corrective ledger, plan probabilities, remaining
   gaps, interstitials, and upgrade receipt requirements.
 

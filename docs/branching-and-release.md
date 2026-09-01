@@ -44,6 +44,26 @@ sources, release manifests, and governance orientation surfaces retain explicit
 ownership. Default-branch security updates are merged forward to `develop` so
 both long-lived branches retain the correction.
 
+## Repository-owned candidate identity
+
+`release/public-inspection-manifest.json` records the exact repository bytes
+available for 0.3.1 review. Its ordered inventory covers runtime source, Flyway
+V001 through V005, local contracts and synthetic inputs, consequential behavior
+proofs, operational configuration, evidence records, and public orientation.
+The root and release-role manifests carry its SHA-256 digest. These two carriers
+remain outside the inventory so their reference to the inventory stays acyclic.
+
+Run `python3 scripts/build_public_inspection_manifest.py --check` to establish
+that every selected path, file size, file digest, group digest, and aggregate
+identity matches the working tree. A source change receives a regenerated
+inventory in the same reviewed change.
+
+The repository-owned candidate carries declared dependency bands. Accepted
+program and governance Git revisions enter during their own receiving reviews,
+and configured-system observations remain in evidence receipts with their
+environment and assurance boundaries. Release assembly can therefore examine
+each authority independently.
+
 ## Pull-request gates
 
 Every pull request carries:
