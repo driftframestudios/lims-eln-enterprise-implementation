@@ -39,6 +39,14 @@ emit and retrieve the versioned observation envelope:
 python -m pip install -e ../lims-eln-program-specification
 ```
 
+Release conformance uses the optional `contracts` extra, which resolves the
+reviewed Program 0.3.1 commit through the repository's configured Git
+credentials:
+
+```sh
+python -m pip install -e ".[test,contracts]"
+```
+
 The dashboard is available at `http://127.0.0.1:8000/workbench`. The OpenAPI
 description is available at `http://127.0.0.1:8000/api/docs`.
 
@@ -67,7 +75,8 @@ Workbench API calls carry `X-Tenant-ID`. The header and requested tenant form
 one exact identity. Raw instrument content travels as base64 so the service can
 hash the submitted bytes before normalization.
 
-When `lims-eln-program-specification` 0.3.x is installed, each successful run
+When the reviewed `lims-eln-program-specification` 0.3.1 package is installed,
+each successful run
 also validates and stores an `ObservationEnvelope` at contract revision 1.0.0.
 The envelope names the shared `SCN-GOLDEN-SPECIMEN-001` scenario, preserves the
 raw digest, and classifies the process-local encounter as simulated verified

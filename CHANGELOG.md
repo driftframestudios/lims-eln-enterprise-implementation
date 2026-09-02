@@ -2,6 +2,12 @@
 
 ## Unreleased — principal data boundaries
 
+- Pin the reviewed Program 0.3.1 package source and digest, exercise its complete
+  consumer contract in a clean Python 3.12 environment, and bind Governance
+  2.1.0 through its annotated tag object, commit, tree, and archive digest.
+- Advance the live Machine Node, First Receipt, Coordination Horizon, and
+  bounded-caller metadata to Governance schema release 2.1.0 while preserving
+  the earlier 2.0.1 local observation as historical evidence.
 - Add one read-only, cancellable Python 3.12 pull-request proof and a monthly,
   bounded dependency-update stream into `develop`; retain the two-version and
   PostgreSQL evidence as a confirmed manual proof. Parse those automation

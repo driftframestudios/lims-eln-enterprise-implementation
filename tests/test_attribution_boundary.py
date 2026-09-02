@@ -45,6 +45,7 @@ def _observed_personal_name_carriers(personal_name: str) -> set[str]:
             not path.is_file()
             or path.is_symlink()
             or any(part in IGNORED_PARTS for part in path.parts)
+            or any(part.endswith(".egg-info") for part in path.parts)
         ):
             continue
         try:

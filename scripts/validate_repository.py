@@ -114,6 +114,11 @@ def validate_manifests() -> None:
         MANIFEST_PATH as PUBLIC_INSPECTION_MANIFEST_PATH,
         verify_manifest as verify_public_inspection_manifest,
     )
+    from scripts.validate_received_contracts import (
+        COORDINATE_PATH as EXTERNAL_COORDINATE_PATH,
+        load_coordinates,
+        validate_declared_program_requirement,
+    )
 
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
     if manifest["version"] != "0.3.1":
@@ -136,8 +141,8 @@ def validate_manifests() -> None:
             "runtime configuration source requires Systems Manager Parameter Store"
         )
     control_plane = manifest.get("control_plane", {})
-    if control_plane.get("governance_schema_release") != "2.0.1":
-        raise AssertionError("control plane requires governance schema release 2.0.1")
+    if control_plane.get("governance_schema_release") != "2.1.0":
+        raise AssertionError("control plane requires governance schema release 2.1.0")
     if control_plane.get("control_plane_profile") != "0.3.0":
         raise AssertionError("control plane requires profile 0.3.0")
 
@@ -153,11 +158,31 @@ def validate_manifests() -> None:
         public_inspection.get("manifest_digest") != inspection_manifest_digest
         or public_inspection.get("authority") != "repository_owned_candidate_bytes"
         or public_inspection.get("cross_repository_coordinate_state")
-        != "awaiting_accepted_revisions"
+        != "accepted_and_consumer_observed"
         or inspection_manifest.get("repository_release") != manifest["version"]
     ):
         raise AssertionError(
             "release manifest requires the exact repository-owned inspection candidate"
+        )
+
+    coordinates = load_coordinates(ROOT)
+    validate_declared_program_requirement(ROOT, coordinates)
+    coordinate_path = ROOT / EXTERNAL_COORDINATE_PATH
+    coordinate_digest = file_digest(coordinate_path)
+    if manifest.get("external_contracts") != {
+        "coordinate_manifest": EXTERNAL_COORDINATE_PATH.as_posix(),
+        "coordinate_manifest_digest": coordinate_digest,
+        "coordinate_state": "accepted_and_consumer_observed",
+    }:
+        raise AssertionError(
+            "release manifest requires the accepted external contract coordinates"
+        )
+    if (
+        coordinates["governance"]["schema_release"]
+        != control_plane["governance_schema_release"]
+    ):
+        raise AssertionError(
+            "external Governance coordinate requires the selected schema release"
         )
 
     database = manifest.get("database", {})
@@ -367,9 +392,16 @@ def validate_manifests() -> None:
     horizon = json.loads(
         (ROOT / "COORDINATION-HORIZON.json").read_text(encoding="utf-8")
     )
-    if machine["schema_release"] != "2.0.1" or not machine["campaigns"]:
+    if machine["schema_release"] != "2.1.0" or not machine["campaigns"]:
         raise AssertionError(
             "canonical Machine Node requires governance schema v2 and campaigns"
+        )
+    if any(
+        campaign.get("marking_schema_version") != machine["schema_release"]
+        for campaign in machine["campaigns"]
+    ):
+        raise AssertionError(
+            "canonical Machine Node campaigns require one governance schema release"
         )
     if machine["repository_role"] != manifest["repository_role"]:
         raise AssertionError(
@@ -381,6 +413,14 @@ def validate_manifests() -> None:
         raise AssertionError("Machine Node requires the released Coordination Horizon")
     if first_receipt["coordination_horizon_id"] != horizon["horizon_id"]:
         raise AssertionError("first receipt requires the released Coordination Horizon")
+    if (
+        machine.get("metadata", {}).get("schema_version") != "2.1.0"
+        or first_receipt.get("metadata", {}).get("schema_version") != "2.1.0"
+        or horizon.get("metadata", {}).get("schema_version") != "2.1.0"
+    ):
+        raise AssertionError(
+            "orientation metadata requires governance schema release 2.1.0"
+        )
 
     historical_machine = json.loads(
         (
@@ -457,6 +497,17 @@ def validate_manifests() -> None:
         raise AssertionError(
             "release role requires the public inspection manifest digest"
         )
+    if release.get("external_contract_coordinate_digest") != coordinate_digest:
+        raise AssertionError(
+            "release role requires the external contract coordinate digest"
+        )
+    if release.get("contract_bindings", {}).get("governance_release") != "2.1.0":
+        raise AssertionError("release role requires Governance release 2.1.0")
+    if (
+        release.get("contract_bindings", {}).get("program_contract_package")
+        != "0.3.1"
+    ):
+        raise AssertionError("release role requires Program contract package 0.3.1")
     if tuple(release["receipt_families"]) != CANONICAL_RECEIPT_FAMILIES:
         raise AssertionError("release role requires canonical receipt-family order")
     if (
@@ -565,16 +616,13 @@ def validate_manifests() -> None:
     )
     if receipt["version_bindings"]["repository"] != manifest["version"]:
         raise AssertionError("local verification receipt requires the repository release")
-    if (
-        receipt["version_bindings"]["governance_schema"]
-        != control_plane["governance_schema_release"]
-    ):
-        raise AssertionError(
-            "local verification receipt requires the selected governance schema"
-        )
     inventory_digest = file_digest(inventory_path)
     local_head = receipt["version_bindings"].get("database_migration_head")
     if local_head == "004":
+        if receipt["version_bindings"].get("governance_schema") != "2.0.1":
+            raise AssertionError(
+                "historical local verification example requires Governance 2.0.1"
+            )
         historical_local_digests = {
             "sha256:e6590446725c47231817bc43a478851e739617f1870bf3a5d7c1e36e3e5bc87e",
             "sha256:3010d543594ef98e5873e2753cd7531e5a94e0922698d4ad04ae55a811a1691c",
@@ -592,6 +640,13 @@ def validate_manifests() -> None:
                 "historical local verification example requires its successor boundary"
             )
     else:
+        if (
+            receipt["version_bindings"].get("governance_schema")
+            != control_plane["governance_schema_release"]
+        ):
+            raise AssertionError(
+                "current local verification receipt requires the selected governance schema"
+            )
         if local_head != database.get("migration_head"):
             raise AssertionError("local verification receipt requires the migration head")
         if not {

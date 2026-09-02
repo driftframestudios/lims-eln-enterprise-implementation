@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-contracts = ["lims-eln-program-specification>=0.3.1,<0.4"]
+contracts = ["lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@4d06eeb7f96910311fbcb7f51547c978b6a07290"]
 postgres = ["psycopg[binary]>=3.3,<4"]
 test = ["httpx2>=2.12,<3"]
 

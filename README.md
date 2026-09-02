@@ -74,12 +74,12 @@ python -m pip install -e ".[test]"
 lims-eln-workbench
 ```
 
-An adjacent constellation checkout can add the shared observation boundary
-from `lims-eln-program-specification` release `0.3.1` with
+An adjacent checkout can add the shared observation boundary from
+`lims-eln-program-specification` release `0.3.1` with
 `python -m pip install -e ../lims-eln-program-specification` before starting the
-workbench. The optional `contracts` dependency accepts compatible `0.3.x`
-successors beginning at `0.3.1`; the runtime keeps the current package and
-contract identities visible at the observation boundary.
+workbench. The optional `contracts` dependency pins the reviewed Program source
+commit exactly. The runtime keeps the package and contract identities visible
+at the observation boundary.
 
 Open `http://127.0.0.1:8000/workbench`. The process-local adapter offers a
 fast synthetic encounter and resets on restart. Flyway successor migration
@@ -105,12 +105,26 @@ inventory directly:
 python3 scripts/build_public_inspection_manifest.py --check
 ```
 
-The candidate records the program-contract and governance coordinates as
-awaiting accepted revisions. Their receiving reviews establish those Git
-coordinates later. Configured-environment receipts retain their own system,
-time, performer, reviewer, artifact, assurance, and limitation fields. This
-keeps exact local bytes, cross-repository acceptance, and environment evidence
-as three independently inspectable facts.
+[`release/external-contract-coordinates.json`](release/external-contract-coordinates.json)
+binds the accepted Program package commit and scoped source digest together
+with the accepted Governance 2.1.0 tag object, commit, tree, and archive digest.
+The Program consumer observation uses a clean Python 3.12 environment, reads
+the installed distribution's PEP 610 record, and exercises the released
+catalog, scenario, example observations, and schemas. Reproduce that receiving
+proof from adjacent accepted checkouts after installing the `contracts` extra:
+
+```sh
+python3 scripts/validate_received_contracts.py \
+  --require-installed-program \
+  --program-source ../lims-eln-program-specification \
+  --governance-source ../site-reading-governance
+```
+
+The ordinary hosted pull-request proof remains self-contained and
+credential-free. Configured-environment receipts retain their own system, time,
+performer, reviewer, artifact, assurance, and limitation fields. Exact local
+bytes, cross-repository acceptance, and environment evidence therefore remain
+independently inspectable facts.
 
 The ordinary local proof runs configured-database tests when their explicit
 synthetic DSNs and verification key are present. CI also provisions PostgreSQL
@@ -281,7 +295,7 @@ for adoption, probability framing, remaining gaps, and evidence gates.
 [`machine-node.json`](machine-node.json),
 [`first-receipt.json`](first-receipt.json), and
 [`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) implement Site Reading
-governance schema release `2.0.1` and Control Plane Profile `0.3.0`. They orient
+governance schema release `2.1.0` and Control Plane Profile `0.3.0`. They orient
 collaborators while bounded operations and accountable runtime roles retain
 effect authority.
 
