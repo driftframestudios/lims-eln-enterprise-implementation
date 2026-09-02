@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0.0",
   "name": "lims-eln-enterprise-implementation",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "python": ">=3.12",
   "repository_role": "enterprise_implementation",
   "evidence_role": "actual_implementation",
@@ -17,13 +17,13 @@
   },
   "public_inspection": {
     "manifest": "release/public-inspection-manifest.json",
-    "manifest_digest": "sha256:2a40025efc308ecb0ad1abc5c57406d3a3f0a23d1c6c993f9575ab3eb6fc566a",
-    "authority": "repository_owned_inspection_bytes",
+    "manifest_digest": "sha256:73a062069301c694df26196a7384184d7229089885d97279cb989244ca7435c8",
+    "authority": "repository_owned_candidate_bytes",
     "cross_repository_coordinate_state": "accepted_and_consumer_observed"
   },
   "external_contracts": {
     "coordinate_manifest": "release/external-contract-coordinates.json",
-    "coordinate_manifest_digest": "sha256:e89eb61e8cf04b27c1bd7b84c7c600d0866fb813a7e6761fe7a0e865a11cc077",
+    "coordinate_manifest_digest": "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1",
     "coordinate_state": "accepted_and_consumer_observed"
   },
   "contract_versions": {
@@ -31,13 +31,13 @@
     "execution_receipt": "1.1.0",
     "provenance": "1.0.0",
     "runtime_setting_catalog": "1.0.0",
-    "bounded_caller_binding": "0.3.1",
+    "bounded_caller_binding": "0.3.2",
     "database_flyway_release": "1.0.0",
     "open_receipt_ledger": "2.0.0"
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea",
+    "binding_digest": "sha256:d141061bf028fdd63cc879ab455b0a68853d369da98edbeb17421a35714ed796",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",

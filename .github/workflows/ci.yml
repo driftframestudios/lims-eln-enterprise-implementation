@@ -560,4 +560,4 @@ jobs:
       - name: Build and import-check dependency-free package archive
         run: >-
           python3 scripts/build_package_archive.py
-          /tmp/lims_eln_enterprise_implementation-0.3.1-py3-none-any.whl
+          /tmp/lims_eln_enterprise_implementation-0.3.2-py3-none-any.whl

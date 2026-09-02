@@ -59,7 +59,7 @@ def build_observation(
         scenario_digest=contracts.GOLDEN_SPECIMEN_SCENARIO_DIGEST,
         source=contracts.EvidenceSource(
             environment_id="WORKBENCH-SYNTHETIC",
-            implementation_commit="lims-eln-enterprise-implementation@0.3.1",
+            implementation_commit="lims-eln-enterprise-implementation@0.3.2",
             configuration_digest=contracts.canonical_sha256(
                 observation_detail["configuration"]
             ),

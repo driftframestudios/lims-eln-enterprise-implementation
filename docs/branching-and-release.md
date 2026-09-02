@@ -48,31 +48,36 @@ both long-lived branches retain the correction.
 ## Repository-owned inspection identity
 
 `release/public-inspection-manifest.json` records the exact repository bytes
-available for 0.3.1 inspection. Its ordered inventory covers runtime source,
+available for review as the 0.3.2 closure-coordinate candidate. Its ordered inventory covers runtime source,
 Flyway V001 through V005, local contracts and synthetic inputs, consequential
 behavior proofs, operational configuration, evidence records, and public
-orientation. The root and release-role manifests carry its SHA-256 digest.
-These two carriers remain outside the inventory so their reference to the
-inventory stays acyclic.
+orientation. The root manifest, release-role manifest, and promotion-candidate
+receipt carry its SHA-256 digest. These carriers remain outside the inventory
+so their reference to the inventory stays acyclic.
 
 Run `python3 scripts/build_public_inspection_manifest.py --check` to establish
 that every selected path, file size, file digest, group digest, and aggregate
 identity matches the working tree. A source change receives a regenerated
 inventory in the same reviewed change.
 
-The signed annotated `v0.3.1` tag identifies the accepted source release.
+The signed annotated `v0.3.1` tag identifies the prior accepted source release.
 A later evidence commit carries
 [`receipts/promotion-receipt.json`](../receipts/promotion-receipt.json), which
 records the tag object, accepted commit and tree, tagged archive SHA-256,
 hosted checks, merge and tag signature results, and where human approval was
 recorded alongside GitHub's review state. This ordering lets the receipt
-observe an already immutable release. The repository-owned
-inspection state also carries the accepted Program and Governance Git
+observe an already immutable release. The
+[`receipts/promotion-candidate.json`](../receipts/promotion-candidate.json)
+surface separately binds the review-ready 0.3.2 inventory, accepted
+selected-future closure, and remaining promotion observations. The
+repository-owned inspection state also carries the accepted Program and Governance Git
 coordinates through
 [`release/external-contract-coordinates.json`](../release/external-contract-coordinates.json).
 The Program binding includes its exact package source digest and clean Python
 3.12 consumer observation. The Governance binding includes its annotated tag
-object, commit, tree, and archive digest. Configured-system observations remain
+object, commit, tree, and archive digest. The Simulation and Comparative
+bindings identify the two signed sources that reproduce the canonical
+selected-future closure. Configured-system observations remain
 in evidence receipts with their environment and assurance boundaries, so
 release assembly can examine each authority independently.
 

@@ -101,16 +101,19 @@ runs all tests, applies the negation-aware language gate, and emits a
 deterministic source digest.
 
 [`release/public-inspection-manifest.json`](release/public-inspection-manifest.json)
-gives a reviewer one deterministic inventory for the repository-owned 0.3.1
-inspection state. It binds every FastAPI and domain source, Flyway V001 through
+gives a reviewer one deterministic inventory for the repository-owned 0.3.2
+closure-coordinate candidate. It binds every FastAPI and domain source, Flyway V001 through
 V005, local contract and synthetic input, operational configuration, behavior
 proof, evidence record, and public orientation file by path, byte length,
-SHA-256 digest, group digest, and one aggregate content identity. Signed
-annotated tag `v0.3.1` identifies the accepted source release; the later
+SHA-256 digest, group digest, and one aggregate content identity. The signed
+annotated tag `v0.3.1` identifies the prior accepted source release. Its later
 [`promotion receipt`](receipts/promotion-receipt.json) records the tag object,
 accepted commit and tree, tagged archive SHA-256, hosted checks, merge and tag
 signature results, and where human approval was recorded alongside GitHub's
-review state. Verify the checked-in inventory directly:
+review state. The distinct
+[`0.3.2 candidate receipt`](receipts/promotion-candidate.json) binds the current
+inventory to its accepted external coordinates and keeps the evidence still
+needed for an immutable release visible. Verify the checked-in inventory directly:
 
 ```sh
 python3 scripts/build_public_inspection_manifest.py --check
@@ -119,6 +122,8 @@ python3 scripts/build_public_inspection_manifest.py --check
 [`release/external-contract-coordinates.json`](release/external-contract-coordinates.json)
 binds the accepted Program package commit and scoped source digest together
 with the accepted Governance 2.1.0 tag object, commit, tree, and archive digest.
+It also binds the accepted Simulation and Comparative annotated tags that
+reproduce the canonical selected-future closure digest.
 The Program consumer observation uses a clean Python 3.12 environment, reads
 the installed distribution's PEP 610 record, and exercises the released
 catalog, scenario, example observations, and schemas. Reproduce that receiving
@@ -128,7 +133,9 @@ proof from adjacent accepted checkouts after installing the `contracts` extra:
 python3 scripts/validate_received_contracts.py \
   --require-installed-program \
   --program-source ../lims-eln-program-specification \
-  --governance-source ../site-reading-governance
+  --governance-source ../site-reading-governance \
+  --simulation-source ../lims-eln-simulated-final-state \
+  --comparison-source ../lims-eln-comparative-evidence
 ```
 
 The ordinary hosted pull-request proof remains self-contained and
@@ -317,7 +324,7 @@ effect authority.
 The earlier Machine Node is preserved as
 [`release/seed-lineage-machine-node-v0.2.json`](release/seed-lineage-machine-node-v0.2.json).
 It remains useful for historical comparison; `machine-node.json` is the
-canonical governance Machine Node for release `0.3.1`.
+canonical governance Machine Node for the `0.3.2` closure-coordinate candidate.
 
 ## Data and authority boundaries
 
