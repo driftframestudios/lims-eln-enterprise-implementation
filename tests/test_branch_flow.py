@@ -467,6 +467,16 @@ class BranchFlowTests(unittest.TestCase):
         self.assertTrue(controls["human_review"]["review_thread_resolution"])
         self.assertTrue(controls["history_protection"]["branch_deletion_guard"])
         self.assertTrue(controls["history_protection"]["non_fast_forward_guard"])
+        self.assertFalse(controls["history_protection"]["required_signature_rule"])
+        self.assertEqual(
+            {
+                "github_verified_merge_commits": True,
+                "ruleset_admission": (
+                    "pull_request_review_without_required_signatures"
+                ),
+            },
+            controls["signature_observation"],
+        )
         self.assertEqual(
             "source_ready_settings_pending",
             controls["hosted_check_activation"]["state"],

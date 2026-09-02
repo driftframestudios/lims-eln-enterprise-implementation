@@ -228,7 +228,8 @@ A database promotion receipt binds:
 - PostgreSQL version and extension versions;
 - `validate` and `info` results plus clean, target-V003, head, and no-op outcomes;
 - backup, restore, comparison, and reconciliation artifact digests;
-- adversarial tenant, custody, inbox-lineage, quantity, and outbox scenarios;
+- tenant-tampering, custody-conflict, inbox-lineage mismatch, quantity-boundary,
+  and outbox recovery scenarios;
 - lock wait, execution duration, WAL, replica lag, and recovery observations;
 - performer, independent reviewer, evidence mode, limitations, and residual
   risk; and

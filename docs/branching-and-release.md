@@ -68,7 +68,7 @@ object, commit, tree, and archive digest. Configured-system observations remain
 in evidence receipts with their environment and assurance boundaries, so
 release assembly can examine each authority independently.
 
-## Pull-request gates
+## Pull-request review material
 
 Every pull request carries:
 
@@ -87,10 +87,13 @@ and `acceptance` receive domain-specific review.
 
 1. Cut `release/<version>` from a passing `develop`.
 2. Freeze contract and fixture digests.
-3. Run configured-vendor, representative migration/restore, and
-   production-shape security/observability tranches.
-4. Assemble scientific, Quality, and Regulatory decision packets.
-5. Resolve deviations through evidence, bounded conditions, or return-for-evidence.
+3. Run repository validation and the source-owned synthetic database proof,
+   then bind each observed result to the exact candidate.
+4. Keep configured-vendor, representative migration/restore,
+   production-shape security/observability, and accountable Scientific,
+   Quality, and Regulatory encounters with their named successor receipts and
+   environment owners.
+5. Receive the required human and code-owner review for the source release.
 6. Merge the accepted release to `main` and tag `v<version>`.
 7. Merge the release result back to `develop`.
 8. Publish the release manifest, source digest, evidence locators, and open receipts.
@@ -120,8 +123,10 @@ Configure the GitHub ruleset for `main` so that:
 The current release-role manifest keeps required hosted contexts empty while
 the source change and exact hosted check name await acceptance. It records the
 bounded source contract beside the retained human-review, code-owner, deletion,
-non-fast-forward, and main-signature protections. Repository settings receive
-the observed check name after the source lands.
+and non-fast-forward protections. GitHub-generated merge commits currently
+carry verified signatures; the active ruleset admits commits through
+pull-request review without a required-signatures rule. Repository settings
+receive the observed check name after the source lands.
 
 `develop` remains a lean integration branch. Pull requests into `develop` can
 still receive the bounded proof, while the `main` ruleset carries release

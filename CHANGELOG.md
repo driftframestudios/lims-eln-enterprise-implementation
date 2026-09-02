@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased — principal data boundaries
+## 0.3.1 — 2026-09-02
+
+### Public-inspection closure
 
 - Pin the reviewed Program 0.3.1 package source and digest, exercise its complete
   consumer contract in a clean Python 3.12 environment, and bind Governance
@@ -67,7 +69,7 @@
   identity carries the exact time that shaped its lifecycle and evidence.
 - Add V005 instrument-review resolution and security-invoker workbench views
   over the canonical custody and measurement facts.
-- Add live, digest-pinned PostgreSQL 17 migration and adversarial data-boundary
+- Add live, digest-pinned PostgreSQL 17 migration and constructive data-boundary
   proofs to CI.
 - Add a deterministic public-inspection manifest that binds repository-owned
   runtime, Flyway, contract, synthetic-input, operational-configuration, proof,
@@ -76,7 +78,7 @@
 - Publish the data-primitive corrective ledger, plan probabilities, remaining
   gaps, interstitials, and upgrade receipt requirements.
 
-## 0.3.1 — 2026-07-28
+### Initial implementation baseline — 2026-07-28
 
 - Route the golden specimen journey through the bounded caller.
 - Fail closed on in-progress lifecycle and vendor reservations.

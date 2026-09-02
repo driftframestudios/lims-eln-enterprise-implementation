@@ -558,10 +558,18 @@ def validate_manifests() -> None:
     if promotion_controls.get("history_protection") != {
         "branch_deletion_guard": True,
         "non_fast_forward_guard": True,
-        "main_release_signatures": True,
+        "required_signature_rule": False,
     }:
         raise AssertionError(
-            "current release controls require deletion, history, and signature guards"
+            "current release controls require deletion and non-fast-forward guards "
+            "with an explicit signature-rule state"
+        )
+    if promotion_controls.get("signature_observation") != {
+        "github_verified_merge_commits": True,
+        "ruleset_admission": "pull_request_review_without_required_signatures",
+    }:
+        raise AssertionError(
+            "current release controls require the observed merge-signature posture"
         )
     if promotion_controls.get("hosted_check_activation") != {
         "state": "source_ready_settings_pending",

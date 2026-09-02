@@ -349,7 +349,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:a16315dbdb2adc752cec610beadc2878b67bd335c419c95487580b51e5448971",
+      "aggregate_sha256": "sha256:d15415becdfe66fb35b27ce9f7811c02dbb76fa600f227d52736d29491e59752",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -398,8 +398,8 @@
         },
         {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:b3fb1d45f7ca243900ebe34d8257c140696b08cccd164064f18f885e25976b7b",
-          "size_bytes": 41556
+          "sha256": "sha256:ca3572af4374ea69fcfbc6ecafc54ed47f1032bca190db7e0d36191d4e71e2bf",
+          "size_bytes": 41925
         },
         {
           "path": "tests/__init__.py",
@@ -423,8 +423,8 @@
         },
         {
           "path": "tests/test_branch_flow.py",
-          "sha256": "sha256:4da23b517c315817c8da58790926bb405838b97c98af41d3ffc30edf03940cbd",
-          "size_bytes": 25280
+          "sha256": "sha256:4d4ea8ad9f8e61e4ec0d4ef02e8b0410ccba2b76df34ee7b85d8d2d25273e0ef",
+          "size_bytes": 25659
         },
         {
           "path": "tests/test_custody_instrument.py",
@@ -538,7 +538,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:f63ffe297f2975afe92652f4d3873be5c601c42f1404b74a9bd6f71b60948c16",
+      "aggregate_sha256": "sha256:d926eea95739fdf32085245f313c5d033c87971173a025c2b07ef1edc94ba010",
       "artifacts": [
         {
           "path": ".github/AUTOMATION.md",
@@ -567,8 +567,8 @@
         },
         {
           "path": "CHANGELOG.md",
-          "sha256": "sha256:7f07e7928ec3f266d6368abfac5c7d07cd746a1ca0663f6f3f630d5bac55a812",
-          "size_bytes": 9562
+          "sha256": "sha256:562171fabb87f5553000470d9b72d683a98dcf7f98061097e89c6ddff886d06c",
+          "size_bytes": 9601
         },
         {
           "path": "CONTRIBUTING.md",
@@ -577,8 +577,8 @@
         },
         {
           "path": "COORDINATION-HORIZON.json",
-          "sha256": "sha256:1d523a97a1adba83c999b4c265fa9247a4e5ce0d8586fa292475939bfabb1af4",
-          "size_bytes": 5869
+          "sha256": "sha256:d852345f2467c7cd9470026c444a0c62f7e3a56d27f4eabec43e9c5c07b3a6f0",
+          "size_bytes": 5848
         },
         {
           "path": "LICENSE",
@@ -607,18 +607,18 @@
         },
         {
           "path": "docs/branching-and-release.md",
-          "sha256": "sha256:0e52ce98ceef08d498e887ec3af4176c2c669dee3ac0b795789b2e81735c521c",
-          "size_bytes": 6529
+          "sha256": "sha256:9917cbe59ced83f6fa679b65be9eb8694be21c7d55b372ef681ab4b29b0099aa",
+          "size_bytes": 6866
         },
         {
           "path": "docs/data-primitive-corrective-ledger.md",
-          "sha256": "sha256:f4537dc88317056b91376ff50721b009d571a2d2c747d8f6fe7935a0266efb38",
-          "size_bytes": 34029
+          "sha256": "sha256:2942815ec37cea4b9678b8152dd8717973269779657d9db7dff7e2bafb6b9b63",
+          "size_bytes": 34055
         },
         {
           "path": "docs/database-migrations.md",
-          "sha256": "sha256:bf1d95b7c96fce881a319898999b908f95e1234df826f5b417870597e8a46333",
-          "size_bytes": 13394
+          "sha256": "sha256:030e1d12f56c145a17511e5e71db22bef4bb44cc07c65025d7b57f37c4fe0f1d",
+          "size_bytes": 13430
         },
         {
           "path": "docs/golden-specimen-workbench.md",
@@ -715,7 +715,7 @@
   "repository_release": "0.3.1",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:e5cf7048abf184f6dcaca28b69bf904242e066a67fc73c530af40152c7d7afee",
+    "aggregate_sha256": "sha256:51ca127ccef45dc676db52dce268cdc9177d9f550bbaae9e9e70d0e43c15a589",
     "kind": "content_addressed_artifact_inventory"
   }
 }

@@ -2,7 +2,7 @@
   "horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
   "title": "LIMS/ELN Implementation Coordination Horizon",
   "objective": "Keep bounded authority, durable persistence and vendor seams, selected-future comparison, and observed successor evidence legible without coupling the collaboration to one planning cadence.",
-  "as_of": "2026-09-02T01:59:47Z",
+  "as_of": "2026-09-02T02:17:11Z",
   "current_item_ids": [
     "HORIZON-IMPLEMENTATION-SETTLING"
   ],
@@ -77,8 +77,8 @@
       "DECISION-BOUNDED-CALLER-SERVICE-OWNED",
       "DECISION-SIMULATED-AND-OBSERVED-BRANCHES"
     ],
-    "next_safe_action": "Bind the durable workbench sources and passing PostgreSQL scenarios into the release digests and successor synthetic receipt, validate the orientation files through Governance 2.1.0, then close RCP-IMPLEMENTATION-PROMOTION-003 against the reviewed immutable coordinate.",
-    "verification": "Confirm repository tests, configured PostgreSQL restart, replay, collision, isolation, rollback, digest, and recovery scenarios, source bindings, receipt-family names, secret-shape hygiene, Python syntax, and cross-repository schema validation."
+    "next_safe_action": "Promote the reviewed source and evidence carriers through release/0.3.1, record the accepted main and tag coordinate, close RCP-IMPLEMENTATION-PROMOTION-003, then hand comparative evidence the immutable release.",
+    "verification": "Confirm final-head repository validation, accepted Program and Governance coordinates, the hosted PostgreSQL 17 receipt, the local PostgreSQL 18 compatibility observation, source bindings, receipt-family names, credential hygiene, Python syntax, and the public inspection manifest."
   },
   "retained_effects": [
     "Service-owned operations continue to determine caller authority, scope, budgets, approvals, effects, receipts, and recovery.",
@@ -95,7 +95,7 @@
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T01:59:47Z",
+    "updated_at": "2026-09-02T02:17:11Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-HORIZON",
       "display_name": "Implementation stewardship role",
