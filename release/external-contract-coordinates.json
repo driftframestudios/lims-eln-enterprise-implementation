@@ -60,5 +60,33 @@
     "source_commit": "8469c2a6b2c7f4445523cee262b961ffe3d2523b",
     "source_tree": "aed5d57120e15ceabe77d7bba700a43097200b19",
     "git_archive_sha256": "sha256:469ae49fca7d5ad6e1766080b3c39d76c46a840366b217f3839b9d34f2e77d32"
+  },
+  "selected_future": {
+    "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
+    "future_reality_version": "future-reality-2028-06-30-v1",
+    "canonicalization": "python-json-sort-keys-compact-ascii-sha256-v1",
+    "canonical_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+    "accepted_sources": [
+      {
+        "role": "simulated_final_state",
+        "repository": "driftframestudios/lims-eln-simulated-final-state",
+        "release": "forecast-2028-FR-v1",
+        "tag_object": "73fc89690b6cc9df7a99ea495e580e7f4e2caedc",
+        "source_commit": "37c3861b5411db8e772feedf41e4abf1fb7829bc",
+        "source_tree": "595ae59f25f522732577c5f8e00709f023464a6d",
+        "closure_artifact_path": "release/future-reality-2028-06-30-v1.json",
+        "git_archive_sha256": "sha256:c6a062a6efb6786c53dc9e7298a9dd881fcc2301d807db5cecf84663c98438e2"
+      },
+      {
+        "role": "comparative_evidence",
+        "repository": "driftframestudios/lims-eln-comparative-evidence",
+        "release": "comparison-v0.3.1",
+        "tag_object": "4c29f6ca410eb4400c55ad77fc34ada2960d1972",
+        "source_commit": "b5c13689a32739d29437e209816bf0cd6a878976",
+        "source_tree": "10a784b8a677ee6eb524d2860ff5ee7151d6050b",
+        "closure_artifact_path": "fixtures/simulated-closures/future-reality-2028-06-30-v1.json",
+        "git_archive_sha256": "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e"
+      }
+    ]
   }
 }

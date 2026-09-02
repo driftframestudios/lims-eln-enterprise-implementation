@@ -48,31 +48,46 @@ both long-lived branches retain the correction.
 ## Repository-owned inspection identity
 
 `release/public-inspection-manifest.json` records the exact repository bytes
-available for 0.3.1 inspection. Its ordered inventory covers runtime source,
+in the post-release development carrier. Its `release_subject` names the
+immutable v0.3.2 tag object and accepted source coordinate separately. The
+current inventory carries the exact Flyway 13.4.0 database artifacts and their
+hosted receipt without adding those bytes to the signed release subject. The
+ordered inventory covers runtime source,
 Flyway V001 through V005, local contracts and synthetic inputs, consequential
 behavior proofs, operational configuration, evidence records, and public
-orientation. The root and release-role manifests carry its SHA-256 digest.
-These two carriers remain outside the inventory so their reference to the
-inventory stays acyclic.
+orientation. The root manifest and release-role manifest carry the current
+inventory SHA-256. The immutable candidate receipt retains the earlier candidate
+inventory SHA-256 and remains outside the inventory. The observed receipt sits
+inside the current inventory and binds the accepted release to that candidate,
+so the content-addressed route stays acyclic.
 
 Run `python3 scripts/build_public_inspection_manifest.py --check` to establish
 that every selected path, file size, file digest, group digest, and aggregate
 identity matches the working tree. A source change receives a regenerated
 inventory in the same reviewed change.
 
-The signed annotated `v0.3.1` tag identifies the accepted source release.
-A later evidence commit carries
+The signed annotated `v0.3.1` tag identifies the prior accepted source release.
+Its later evidence commit carries
 [`receipts/promotion-receipt.json`](../receipts/promotion-receipt.json), which
 records the tag object, accepted commit and tree, tagged archive SHA-256,
 hosted checks, merge and tag signature results, and where human approval was
 recorded alongside GitHub's review state. This ordering lets the receipt
-observe an already immutable release. The repository-owned
-inspection state also carries the accepted Program and Governance Git
+observe an already immutable release. The
+[`receipts/promotion-candidate.json`](../receipts/promotion-candidate.json)
+surface separately binds the reviewed 0.3.2 inventory and accepted
+selected-future closure. The
+[`receipts/promotion-observation-v0.3.2.json`](../receipts/promotion-observation-v0.3.2.json)
+surface records the accepted 0.3.2 subject, successful hosted validation, valid
+merge and tag verifications, configured ordinary bypass, and deputized
+independent review. The repository-owned inspection state also carries the
+accepted Program and Governance Git
 coordinates through
 [`release/external-contract-coordinates.json`](../release/external-contract-coordinates.json).
 The Program binding includes its exact package source digest and clean Python
 3.12 consumer observation. The Governance binding includes its annotated tag
-object, commit, tree, and archive digest. Configured-system observations remain
+object, commit, tree, and archive digest. The Simulation and Comparative
+bindings identify the two signed sources that reproduce the canonical
+selected-future closure. Configured-system observations remain
 in evidence receipts with their environment and assurance boundaries, so
 release assembly can examine each authority independently.
 
@@ -131,13 +146,13 @@ Configure the GitHub ruleset for `main` so that:
   gate, dispatch confirmation, and a bounded timeout;
 - any later reusable workflow is caller-owned and pinned by immutable commit SHA.
 
-The current release-role manifest keeps required hosted contexts empty while
-the source change and exact hosted check name await acceptance. It records the
-bounded source contract beside the retained human-review, code-owner, deletion,
-and non-fast-forward protections. GitHub-generated merge commits currently
-carry verified signatures; the active ruleset admits commits through
-pull-request review without a required-signatures rule. Repository settings
-receive the observed check name after the source lands.
+The current release-role manifest keeps required hosted contexts empty and
+records the successful `Repository validation` job that accompanied pull
+request 27. The configured ordinary bypass admitted the merge after deputized
+independent review; GitHub's review collection records no formal submitted
+review for that pull request. Deletion and non-fast-forward protections remain
+recorded separately, and GitHub reports valid verification for the accepted
+merge and release tag.
 
 `develop` remains a lean integration branch. Pull requests into `develop` can
 still receive the bounded proof, while the `main` ruleset carries release

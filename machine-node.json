@@ -15,13 +15,13 @@
       "digest-bound independent approval for broad effects"
     ]
   },
-  "lifecycle_state": "reference_ready",
+  "lifecycle_state": "post_release_development",
   "coordination_horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
   "contracts": [
     {
       "contract_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
-      "version": "0.3.1",
-      "digest": "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea"
+      "version": "0.3.2",
+      "digest": "sha256:d141061bf028fdd63cc879ab455b0a68853d369da98edbeb17421a35714ed796"
     },
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
@@ -31,12 +31,12 @@
     {
       "contract_id": "IMPLEMENTATION-OPEN-RECEIPTS-001",
       "version": "2.0.0",
-      "digest": "sha256:f5ec4399b7ba43ce2bbc6260c0eb223c1fc8e405a9e5b13fd71ca806fd709421"
+      "digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad"
     },
     {
       "contract_id": "SIMULATED-SUBSTANTIVE-CLOSURE-2028-V1",
       "version": "2.0.0",
-      "digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb"
+      "digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5"
     }
   ],
   "campaigns": [
@@ -62,9 +62,15 @@
     "digest": "sha256:f00f24984c09a1a413432f725496bebb3906cc6539a5354765cde624c50ae3b4"
   },
   "current_provenance": {
-    "release": "v0.3.1",
-    "commit": "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a",
-    "digest": "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174"
+    "release": "implementation-v0.3.2",
+    "commit": "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+    "digest": "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16"
+  },
+  "current_development_observation": {
+    "scope": "database_artifacts",
+    "coordinate_state": "current_database_artifacts_observed",
+    "flyway_version": "13.4.0",
+    "receipt": "receipts/hosted-postgresql-proof.json"
   },
   "first_receipt_contract_id": "FIRST-RCP-IMPLEMENTATION-001",
   "open_receipts": [
@@ -118,7 +124,7 @@
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T02:42:44Z",
+    "updated_at": "2026-09-02T11:23:40Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-NODE",
       "display_name": "Implementation stewardship role",

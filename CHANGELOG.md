@@ -7,8 +7,27 @@
 - Advance the active, digest-pinned Flyway Community image from 13.0.0 to
   13.4.0 and keep the Dockerfile, release coordinate, configured PostgreSQL
   proofs, tests, and current orientation on that shared source.
-- Preserve the 13.0.0 hosted receipt as the preceding observed coordinate until
-  the 13.4.0 PostgreSQL proof supplies its own run, commit, and artifact bindings.
+- Record the exact Flyway 13.4.0 hosted PostgreSQL proof while retaining the
+  signed v0.3.2 release as the immutable release subject beneath the active
+  post-release development carrier.
+
+## 0.3.2 — 2026-09-02
+
+- Bind the canonical selected-future closure to the accepted Simulation and
+  Comparative annotated tags, commits, trees, and tagged archive digests.
+- Record the signed `v0.3.2` tag object, accepted commit and tree, tagged archive
+  SHA-256, successful hosted validation, valid merge and tag verifications, and
+  the configured ordinary-bypass and deputized independent-review route in a
+  distinct observed receipt.
+- Preserve the signed `v0.3.1` subject, its promotion receipt, and the reviewed
+  0.3.2 candidate receipt in their original evidence roles.
+- Execute the candidate and observation receipts against their separate JSON
+  Schema 2020-12 contracts so each evidence role retains a validated boundary.
+- Align package, API, bounded-caller, Machine Node, First Receipt, Coordination
+  Horizon, and release role with the observed patch release, and bind the later
+  observation carrier through its own public inspection identity.
+- Keep the accepted Program 0.3.1 package coordinate unchanged; its scoped
+  source digest and consumer behavior retain their established authority.
 
 ## 0.3.1 — 2026-09-02
 

@@ -21,6 +21,7 @@ from scripts.validate_received_contracts import (
     validate_declared_program_requirement,
     validate_governance_source,
     validate_installed_program,
+    validate_selected_future_source,
 )
 
 
@@ -99,10 +100,43 @@ class ReceivedContractTests(unittest.TestCase):
             "4d06eeb7f96910311fbcb7f51547c978b6a07290",
         )
         self.assertEqual(coordinates["governance"]["schema_release"], "2.1.0")
+        self.assertEqual(
+            coordinates["selected_future"]["canonical_closure_digest"],
+            "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+        )
+        self.assertEqual(
+            [
+                source["role"]
+                for source in coordinates["selected_future"]["accepted_sources"]
+            ],
+            ["simulated_final_state", "comparative_evidence"],
+        )
+        self.assertEqual(
+            {
+                source["role"]: source["closure_artifact_path"]
+                for source in coordinates["selected_future"]["accepted_sources"]
+            },
+            {
+                "simulated_final_state": (
+                    "release/future-reality-2028-06-30-v1.json"
+                ),
+                "comparative_evidence": (
+                    "fixtures/simulated-closures/"
+                    "future-reality-2028-06-30-v1.json"
+                ),
+            },
+        )
 
         changed = deepcopy(coordinates)
         changed["program_contract"]["source_commit"] = "0" * 40
         with self.assertRaisesRegex(ReceivedContractError, "program source_commit"):
+            validate_coordinate_document(changed)
+
+        changed = deepcopy(coordinates)
+        changed["selected_future"]["canonical_closure_digest"] = "sha256:" + "0" * 64
+        with self.assertRaisesRegex(
+            ReceivedContractError, "selected future canonical_closure_digest"
+        ):
             validate_coordinate_document(changed)
 
     def test_program_digest_reads_the_reviewed_commit_tree(self) -> None:
@@ -206,6 +240,193 @@ class ReceivedContractTests(unittest.TestCase):
             governance["source_tree"] = "0" * 40
             with self.assertRaisesRegex(ReceivedContractError, "accepted tree"):
                 validate_governance_source(root, coordinates)
+
+    def test_selected_future_identity_binds_release_and_closure_artifact(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="received-selected-future-") as directory:
+            root = Path(directory)
+            artifact = root / "release" / "future-reality-2028-06-30-v1.json"
+            artifact.parent.mkdir(parents=True)
+            governance_closure = {
+                "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
+                "closure_status": "closed_in_simulation",
+                "evidence_mode": "simulated",
+                "aggregate_outcome": {
+                    "closed_family_count": 4,
+                    "expected_family_count": 4,
+                    "result": "passed",
+                },
+                "receipt_closures": [
+                    {"family": family, "outcome": "passed"}
+                    for family in (
+                        "configured_vendor_environments",
+                        "representative_migration_restore_rehearsals",
+                        "production_security_observability",
+                        "accountable_scientific_quality_regulatory_acceptance",
+                    )
+                ],
+                "environment_observed_closure": "separate_unasserted_state",
+                "production_authorization_effect": "none",
+            }
+            closure_digest = "sha256:" + sha256(
+                json.dumps(
+                    governance_closure,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=True,
+                ).encode("utf-8")
+            ).hexdigest()
+            bundle = {
+                "bundle_version": "2.0.1",
+                "future_reality_version": "future-reality-2028-06-30-v1",
+                "governance_closure": governance_closure,
+                "governance_closure_digest": closure_digest,
+                "detailed_receipts": [],
+                "source_result_digest": "sha256:" + "1" * 64,
+            }
+            artifact.write_text(
+                json.dumps(bundle, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            for command in (
+                ["git", "init", "--quiet"],
+                ["git", "config", "user.name", "Coordinate Test"],
+                ["git", "config", "user.email", "coordinate-test@example.invalid"],
+                ["git", "add", artifact.relative_to(root).as_posix()],
+                ["git", "commit", "--quiet", "-m", "Selected future source"],
+                [
+                    "git",
+                    "tag",
+                    "--annotate",
+                    "forecast-2028-FR-v1",
+                    "--message",
+                    "Selected future",
+                ],
+            ):
+                subprocess.run(command, cwd=root, check=True)
+
+            def git(*arguments: str, text: bool = True) -> str | bytes:
+                result = subprocess.run(
+                    ["git", *arguments],
+                    cwd=root,
+                    check=True,
+                    capture_output=True,
+                    text=text,
+                )
+                return result.stdout.strip() if text else result.stdout
+
+            coordinates = json.loads((ROOT / COORDINATE_PATH).read_text())
+            coordinates["selected_future"]["canonical_closure_digest"] = closure_digest
+            source = coordinates["selected_future"]["accepted_sources"][0]
+
+            def bind_current_release() -> None:
+                source["tag_object"] = git(
+                    "rev-parse", "refs/tags/forecast-2028-FR-v1"
+                )
+                source["source_commit"] = git("rev-parse", "HEAD")
+                source["source_tree"] = git("rev-parse", "HEAD^{tree}")
+                archive = git("archive", "--format=tar", "HEAD", text=False)
+                assert isinstance(archive, bytes)
+                source["git_archive_sha256"] = (
+                    "sha256:" + sha256(archive).hexdigest()
+                )
+
+            def retag_head() -> None:
+                subprocess.run(
+                    ["git", "tag", "--delete", "forecast-2028-FR-v1"],
+                    cwd=root,
+                    check=True,
+                    capture_output=True,
+                )
+                subprocess.run(
+                    [
+                        "git",
+                        "tag",
+                        "--annotate",
+                        "forecast-2028-FR-v1",
+                        "--message",
+                        "Selected future",
+                    ],
+                    cwd=root,
+                    check=True,
+                    capture_output=True,
+                )
+                bind_current_release()
+
+            bind_current_release()
+
+            validate_selected_future_source(
+                root,
+                coordinates,
+                role="simulated_final_state",
+            )
+
+            artifact.write_text('{"worktree": "mutable"}\n', encoding="utf-8")
+            validate_selected_future_source(
+                root,
+                coordinates,
+                role="simulated_final_state",
+            )
+
+            source["source_tree"] = "0" * 40
+            with self.assertRaisesRegex(ReceivedContractError, "accepted tree"):
+                validate_selected_future_source(
+                    root,
+                    coordinates,
+                    role="simulated_final_state",
+                )
+            source["source_tree"] = git("rev-parse", "HEAD^{tree}")
+
+            changed_bundle = deepcopy(bundle)
+            changed_bundle["governance_closure"]["aggregate_outcome"][
+                "result"
+            ] = "changed"
+            artifact.write_text(
+                json.dumps(changed_bundle, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            subprocess.run(
+                ["git", "add", artifact.relative_to(root).as_posix()],
+                cwd=root,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "commit", "--quiet", "-m", "Closure digest drift"],
+                cwd=root,
+                check=True,
+            )
+            retag_head()
+            with self.assertRaisesRegex(
+                ReceivedContractError, "bundle governance_closure_digest"
+            ):
+                validate_selected_future_source(
+                    root,
+                    coordinates,
+                    role="simulated_final_state",
+                )
+
+            artifact.write_text(
+                '{"governance_closure": {}, "governance_closure": {}}\n',
+                encoding="utf-8",
+            )
+            subprocess.run(
+                ["git", "add", artifact.relative_to(root).as_posix()],
+                cwd=root,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "commit", "--quiet", "-m", "Malformed closure bundle"],
+                cwd=root,
+                check=True,
+            )
+            retag_head()
+            with self.assertRaisesRegex(
+                ReceivedContractError, "duplicate-free finite UTF-8 JSON"
+            ):
+                validate_selected_future_source(
+                    root,
+                    coordinates,
+                    role="simulated_final_state",
+                )
 
     def test_installed_program_accepts_the_exact_distribution_and_import(self) -> None:
         coordinates = load_coordinates(ROOT)
