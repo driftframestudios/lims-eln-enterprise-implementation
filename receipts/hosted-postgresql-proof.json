@@ -59,6 +59,7 @@
   "reviewer_id": "SYN-INDEPENDENT-DATABASE-CONVERGENCE-SUITE",
   "limitations": [
     "This receipt establishes the synthetic hosted PostgreSQL 17 migration, durable workbench, and upgrade-replay paths for the named commit; production authorization remains with accountable environment owners.",
+    "This receipt establishes the preceding Flyway 13.0.0 hosted coordinate. The Flyway 13.4.0 successor becomes the current hosted coordinate when its named implementation-validation run, commit, and artifact bindings are recorded.",
     "PostgreSQL 18.6 compatibility was observed locally and remains outside this hosted coordinate.",
     "Representative populated migration and restore rehearsal retains its independent successor receipt.",
     "Production security and observability evidence retains its independent successor receipt.",

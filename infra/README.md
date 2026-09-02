@@ -5,7 +5,7 @@ S3-compatible object storage, and an OpenTelemetry collector with protected
 attribute removal.
 
 The PostgreSQL path first provisions and verifies cluster roles through a
-separate privileged step. A one-shot, digest-pinned Flyway Community 13.0.0
+separate privileged step. A one-shot, digest-pinned Flyway Community 13.4.0
 container then applies versioned migrations, validates their checksums through
 Flyway history, and exits. A following secret-bound step configures synthetic
 local role passwords and the tenant-verification key. The application proof

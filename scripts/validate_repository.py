@@ -395,16 +395,44 @@ def validate_manifests() -> None:
         raise AssertionError("Flyway release requires schema release 1.0.0")
     if migration_release.get("engine") != "postgresql":
         raise AssertionError("Flyway release requires PostgreSQL")
+    flyway_version = str(migration_release.get("flyway_version", ""))
     if (
         migration_release.get("migration_product") != "Flyway Community"
-        or migration_release.get("flyway_version") != "13.0.0"
+        or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", flyway_version) is None
     ):
-        raise AssertionError("database migrations require Flyway Community 13.0.0")
+        raise AssertionError(
+            "database migrations require one exact Flyway Community release"
+        )
+    container_image = str(migration_release.get("container_image", ""))
     if re.fullmatch(
-        r"flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}",
-        str(migration_release.get("container_image", "")),
+        rf"flyway/flyway:{re.escape(flyway_version)}-alpine@sha256:[a-f0-9]{{64}}",
+        container_image,
     ) is None:
         raise AssertionError("Flyway container requires its released immutable digest")
+    if (
+        database.get("migration_product") != migration_release["migration_product"]
+        or database.get("migration_product_version") != flyway_version
+    ):
+        raise AssertionError(
+            "release manifest requires the selected Flyway product coordinate"
+        )
+    dockerfile = (ROOT / "infra" / "migrator.Dockerfile").read_text(
+        encoding="utf-8"
+    )
+    if dockerfile.splitlines()[0] != f"FROM {container_image}":
+        raise AssertionError(
+            "migrator image requires the selected Flyway release coordinate"
+        )
+    manual_workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(
+        encoding="utf-8"
+    )
+    workflow_flyway_images = re.findall(
+        r"(?m)^\s*FLYWAY_IMAGE:\s*(\S+)\s*$", manual_workflow
+    )
+    if workflow_flyway_images != [container_image, container_image]:
+        raise AssertionError(
+            "configured PostgreSQL proofs require the selected Flyway image"
+        )
     if migration_release.get("credentials") != "runtime_environment_only":
         raise AssertionError("Flyway credentials require runtime-only resolution")
     if migration_release.get("baseline_policy") != "explicit_attested_baseline_only":
@@ -707,6 +735,23 @@ def validate_manifests() -> None:
         raise AssertionError("release role requires the bounded-caller binding digest")
     if release.get("database_flyway_release_digest") != migration_release_digest:
         raise AssertionError("release role requires the Flyway release digest")
+    database_hosted_evidence = release.get("database_hosted_evidence", {})
+    if (
+        set(database_hosted_evidence)
+        != {"receipt_path", "coordinate_state", "promotion_signal"}
+        or database_hosted_evidence.get("receipt_path")
+        != "receipts/hosted-postgresql-proof.json"
+        or database_hosted_evidence.get("coordinate_state")
+        not in {
+            "predecessor_observed_successor_candidate",
+            "current_source_observed",
+        }
+        or database_hosted_evidence.get("promotion_signal")
+        != "implementation-validation"
+    ):
+        raise AssertionError(
+            "release role requires the hosted database evidence coordinate"
+        )
     if release["open_receipt_ledger_digest"] != ledger_digest:
         raise AssertionError("release role requires the open receipt ledger digest")
     if (
@@ -916,32 +961,58 @@ def validate_manifests() -> None:
         )
     observed_commit = str(hosted_bindings.get("repository_commit", ""))
     observed_run = str(hosted_bindings.get("workflow_run", ""))
-    historical_commit = "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
-    historical_run = (
+    flyway_predecessor_commit = "205401a530e984e031bb2c52a1654c6b5f82bc6d"
+    flyway_predecessor_run = (
         "https://github.com/driftframestudios/"
-        "lims-eln-enterprise-implementation/actions/runs/30933020047"
+        "lims-eln-enterprise-implementation/actions/runs/33581976426"
     )
-    if observed_commit == historical_commit:
-        historical_digests = {
-            "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd",
-            "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81",
-        }
+    flyway_predecessor_image = (
+        "flyway/flyway:13.0.0-alpine@"
+        "sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0"
+    )
+    flyway_predecessor_digests = {
+        "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea",
+        "sha256:a4fafe7ebb50da1efbad47df24d6d7af741130039ba8c90b8d6457e9d1d107b9",
+        "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a",
+    }
+    flyway_predecessor_bindings = {
+        "repository": "0.3.1",
+        "repository_commit": flyway_predecessor_commit,
+        "workflow_run": flyway_predecessor_run,
+        "python": "3.12.14",
+        "postgresql": "17.10-alpine",
+        "database_migration_head": "005",
+        "tenant_authority": "signed_short_lived_database_verified_context",
+        "flyway": "13.0.0",
+        "flyway_image": flyway_predecessor_image,
+        "migration_authenticated_login": "laboratory_migrator",
+        "migration_role": "laboratory_owner",
+    }
+    flyway_successor_image = (
+        "flyway/flyway:13.4.0-alpine@"
+        "sha256:66c0278f4398dd46b84d4108919a015b6ca03657a3d44ff2b349ad0602ace956"
+    )
+    flyway_successor_pending_limitation = (
+        "This receipt establishes the preceding Flyway 13.0.0 hosted coordinate. "
+        "The Flyway 13.4.0 successor becomes the current hosted coordinate when "
+        "its named implementation-validation run, commit, and artifact bindings "
+        "are recorded."
+    )
+    hosted_coordinate_state = database_hosted_evidence["coordinate_state"]
+    if hosted_coordinate_state == "predecessor_observed_successor_candidate":
         if (
-            observed_run != historical_run
-            or hosted_bindings.get("database_migration_head") != "004"
-            or not historical_digests.issubset(hosted_receipt["artifact_digests"])
+            migration_release["flyway_version"] != "13.4.0"
+            or migration_release["container_image"] != flyway_successor_image
+            or hosted_bindings != flyway_predecessor_bindings
+            or set(hosted_receipt["artifact_digests"])
+            != flyway_predecessor_digests
+            or flyway_successor_pending_limitation
+            not in hosted_receipt["limitations"]
         ):
             raise AssertionError(
-                "historical hosted PostgreSQL receipt requires its observed bindings"
+                "Flyway successor proof requires its exact observed predecessor"
             )
-        if not any(
-            "superseded by the Flyway transition" in limitation
-            for limitation in hosted_receipt["limitations"]
-        ):
-            raise AssertionError(
-                "historical hosted PostgreSQL receipt requires its successor boundary"
-            )
-    else:
+    elif hosted_coordinate_state == "current_source_observed":
         expected_run_pattern = (
             r"^https://github\.com/driftframestudios/"
             r"lims-eln-enterprise-implementation/actions/runs/[0-9]+$"
@@ -967,6 +1038,10 @@ def validate_manifests() -> None:
         ):
             raise AssertionError(
                 "current hosted PostgreSQL receipt requires Flyway release bindings"
+            )
+        if flyway_successor_pending_limitation in hosted_receipt["limitations"]:
+            raise AssertionError(
+                "current hosted PostgreSQL receipt requires its observed limitation set"
             )
         current_scenarios = {
             "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",

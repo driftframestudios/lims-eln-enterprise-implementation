@@ -33,15 +33,29 @@ class DatabaseMigrationTests(unittest.TestCase):
     def test_flyway_release_is_version_and_digest_pinned(self) -> None:
         release = json.loads(RELEASE_PATH.read_text(encoding="utf-8"))
         self.assertEqual(release["migration_product"], "Flyway Community")
-        self.assertEqual(release["flyway_version"], "13.0.0")
+        self.assertEqual(release["flyway_version"], "13.4.0")
         self.assertRegex(
             release["container_image"],
-            r"^flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}$",
+            rf"^flyway/flyway:{re.escape(release['flyway_version'])}"
+            r"-alpine@sha256:[a-f0-9]{64}$",
+        )
+        dockerfile = (ROOT / "infra" / "migrator.Dockerfile").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(
+            dockerfile.splitlines()[0],
+            f"FROM {release['container_image']}",
+        )
+        manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            manifest["database"]["migration_product_version"],
+            release["flyway_version"],
         )
         self.assertEqual(release["credentials"], "runtime_environment_only")
         self.assertEqual(release["migration_head"], "005")
         self.assertEqual(release["authenticated_login"], "laboratory_migrator")
         self.assertEqual(release["migration_role"], "laboratory_owner")
+
         self.assertEqual(
             release["role_assumption"],
             "database_scoped_startup_role_after_connect_verified_noinherit_membership",
@@ -85,6 +99,65 @@ class DatabaseMigrationTests(unittest.TestCase):
         aggregate = "sha256:" + hashlib.sha256(aggregate_payload).hexdigest()
         self.assertEqual(inventory["aggregate_sha256"], aggregate)
         self.assertEqual(inventory_reference["aggregate_sha256"], aggregate)
+
+    def test_hosted_receipt_tracks_active_flyway_or_exact_predecessor(self) -> None:
+        release = json.loads(RELEASE_PATH.read_text(encoding="utf-8"))
+        repository_role = json.loads(
+            (ROOT / "release" / "repository-role.json").read_text(encoding="utf-8")
+        )
+        receipt = json.loads(
+            (ROOT / "receipts" / "hosted-postgresql-proof.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        bindings = receipt["version_bindings"]
+        coordinate = repository_role["database_hosted_evidence"]
+        self.assertEqual(
+            set(coordinate),
+            {"receipt_path", "coordinate_state", "promotion_signal"},
+        )
+        self.assertEqual(
+            coordinate["receipt_path"], "receipts/hosted-postgresql-proof.json"
+        )
+        self.assertEqual(coordinate["promotion_signal"], "implementation-validation")
+        if coordinate["coordinate_state"] == "current_source_observed":
+            self.assertEqual(bindings["flyway"], release["flyway_version"])
+            self.assertEqual(bindings["flyway_image"], release["container_image"])
+            return
+
+        self.assertEqual(
+            coordinate["coordinate_state"],
+            "predecessor_observed_successor_candidate",
+        )
+        self.assertEqual(
+            bindings,
+            {
+                "repository": "0.3.1",
+                "repository_commit": "205401a530e984e031bb2c52a1654c6b5f82bc6d",
+                "workflow_run": (
+                    "https://github.com/driftframestudios/"
+                    "lims-eln-enterprise-implementation/actions/runs/33581976426"
+                ),
+                "python": "3.12.14",
+                "postgresql": "17.10-alpine",
+                "database_migration_head": "005",
+                "tenant_authority": "signed_short_lived_database_verified_context",
+                "flyway": "13.0.0",
+                "flyway_image": (
+                    "flyway/flyway:13.0.0-alpine@"
+                    "sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0"
+                ),
+                "migration_authenticated_login": "laboratory_migrator",
+                "migration_role": "laboratory_owner",
+            },
+        )
+        self.assertIn(
+            "This receipt establishes the preceding Flyway 13.0.0 hosted "
+            "coordinate. The Flyway 13.4.0 successor becomes the current hosted "
+            "coordinate when its named implementation-validation run, commit, "
+            "and artifact bindings are recorded.",
+            receipt["limitations"],
+        )
 
     def test_flyway_safety_controls_are_explicit(self) -> None:
         config = load_properties(CONFIG_PATH)
