@@ -1,20 +1,20 @@
 {
   "manifest_version": "2.0.0",
   "repository_role": "enterprise_implementation",
-  "repository_release": "0.3.1",
-  "release_state": "release_observed",
-  "external_release": "implementation-v0.3.1",
-  "bounded_caller_binding_digest": "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea",
+  "repository_release": "0.3.2",
+  "release_state": "post_release_development",
+  "external_release": "implementation-v0.3.2",
+  "bounded_caller_binding_digest": "sha256:d141061bf028fdd63cc879ab455b0a68853d369da98edbeb17421a35714ed796",
   "database_flyway_release_digest": "sha256:e5c6daadf3f88df9a83195c7f977dd702c081c796e24e55d67704cfb965cf160",
   "database_hosted_evidence": {
     "receipt_path": "receipts/hosted-postgresql-proof.json",
-    "coordinate_state": "current_source_observed",
+    "coordinate_state": "current_database_artifacts_observed",
     "promotion_signal": "implementation-validation"
   },
-  "external_contract_coordinate_digest": "sha256:e89eb61e8cf04b27c1bd7b84c7c600d0866fb813a7e6761fe7a0e865a11cc077",
-  "public_inspection_manifest_digest": "sha256:f61e6b0cc7091e9f273f064047589633063bdfe33a4f86e12f84ab5c71baf1a7",
-  "open_receipt_ledger_digest": "sha256:f5ec4399b7ba43ce2bbc6260c0eb223c1fc8e405a9e5b13fd71ca806fd709421",
-  "selected_future_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
+  "external_contract_coordinate_digest": "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1",
+  "public_inspection_manifest_digest": "sha256:cb00e7f938ea75b867c871dc073972d72376c205e5b5c258e8076f7c15d9bab6",
+  "open_receipt_ledger_digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad",
+  "selected_future_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
   "first_receipt_contract": {
     "path": "first-receipt.json",
     "authority_mode": "orientation_only",
@@ -32,6 +32,12 @@
     "status": "preserved_seed_lineage"
   },
   "historical_external_releases": [
+    {
+      "repository_release": "0.3.1",
+      "external_release": "implementation-v0.3.1",
+      "status": "preserved_signed_source_release",
+      "promotion_receipt": "receipts/promotion-receipt.json"
+    },
     {
       "repository_release": "0.2.0",
       "external_release": "implementation-v0.2.0",
@@ -51,7 +57,7 @@
     "execution_receipt_schema": "1.1.0",
     "provenance_schema": "1.0.0",
     "runtime_setting_catalog_schema": "1.0.0",
-    "bounded_caller_binding": "0.3.1",
+    "bounded_caller_binding": "0.3.2",
     "database_flyway_release": "1.0.0",
     "open_receipt_ledger": "2.0.0"
   },
@@ -67,10 +73,15 @@
     "implementation_commit": "c79f8727963a427164a11eacb14837d795cd757d"
   },
   "promotion_controls": {
-    "current_state": "human_review_and_history_protection_with_observed_release",
+    "current_state": "standing_review_and_history_protection_with_observed_release_admission",
     "hosted_required_check_contexts": [],
     "protected_branches": ["main"],
     "allowed_merge_methods": ["merge", "squash", "rebase"],
+    "review_observation": {
+      "merge_admission": "configured_ordinary_bypass",
+      "independent_review": "deputized_independent_review_completed",
+      "github_review_record": "no_formal_review_submitted"
+    },
     "human_review": {
       "required_approvals": 1,
       "code_owner_review": true,
@@ -86,12 +97,15 @@
     },
     "signature_observation": {
       "github_verified_merge_commits": true,
-      "ruleset_admission": "pull_request_review_without_required_signatures"
+      "github_verified_release_tags": true,
+      "configured_signature_rule": "not_required"
     },
     "hosted_check_activation": {
-      "state": "source_accepted_settings_pending",
-      "requires_stable_context": true,
-      "requires_funded_execution_path": true
+      "state": "repository_validation_observed",
+      "required_check_contexts": [],
+      "run_id": "33623991109",
+      "job_id": "100227324662",
+      "conclusion": "success"
     }
   },
   "automation_controls": {
@@ -109,18 +123,49 @@
     "dependabot_open_pull_requests_per_ecosystem": 2,
     "dependabot_grouped_update_types": ["minor", "patch"],
     "monthly_budget_minutes": {"minimum": 100, "maximum": 300},
-    "settings_state": "source_accepted_contexts_observed_activation_pending"
+    "settings_state": "repository_validation_observed_required_contexts_empty"
   },
   "promotion_coordinates": {
-    "status": "settled",
-    "settled_receipt_id": "RCP-IMPLEMENTATION-PROMOTION-003",
-    "receipt_path": "receipts/promotion-receipt.json",
-    "observed_release": {
+    "status": "release_observed",
+    "settled_receipt_id": "RCP-IMPLEMENTATION-PROMOTION-004",
+    "observation_receipt": "receipts/promotion-observation-v0.3.2.json",
+    "observation_receipt_digest": "sha256:f1e65be6a701bee526c6481fe65e18bc0a2d6df0150c418f7a76457039cb3061",
+    "candidate_receipt": "receipts/promotion-candidate.json",
+    "candidate_receipt_digest": "sha256:c78f16df5832f6c7b39ea1b0d9a61316b26d90cd1552fd8b2c39043436a94340",
+    "target_release": "v0.3.2",
+    "release_subject": {
+      "git_object_format": "sha1",
+      "tag": "v0.3.2",
+      "tag_object_oid": "c3db01079b88622f06e8714c8bcbdf0dc1803a10",
+      "commit_oid": "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+      "tree_oid": "eb8eadb27a9e07c6069a1946f115a0083d94af5c",
+      "archive_format": "git-tar",
+      "archive_digest": "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16",
+      "promoted_at": "2026-09-02T11:21:02Z",
+      "pull_request": 27,
+      "hosted_checks": [
+        {
+          "name": "Repository validation",
+          "run_id": "33623991109",
+          "job_id": "100227324662",
+          "conclusion": "success"
+        }
+      ],
+      "review_observation": {
+        "merge_admission": "configured_ordinary_bypass",
+        "independent_review": "deputized_independent_review_completed",
+        "github_review_record": "no_formal_review_submitted"
+      },
+      "merge_signature_verification": "valid",
+      "tag_signature_verification": "valid"
+    },
+    "prior_release": {
       "tag": "v0.3.1",
       "tag_object_oid": "8b1013ff6a116b64e5d31c2870b574f641ee88f6",
       "commit_oid": "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a",
       "tree_oid": "cc1bb335c0cdd1a37d1b6554480b3afdb9c9f360",
-      "archive_digest": "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174"
+      "archive_digest": "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174",
+      "promotion_receipt": "receipts/promotion-receipt.json"
     },
     "required_roles": [
       "site_reading_governance",

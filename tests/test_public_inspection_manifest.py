@@ -12,6 +12,7 @@ import unittest
 from scripts.build_public_inspection_manifest import (
     InspectionManifestError,
     MANIFEST_PATH,
+    build_manifest,
     verify_manifest,
     write_manifest,
 )
@@ -38,9 +39,33 @@ class PublicInspectionManifestTests(unittest.TestCase):
 
     def test_manifest_binds_current_repository_owned_bytes(self) -> None:
         manifest = verify_manifest(ROOT)
-        self.assertEqual(manifest["release_state"], "release_observation")
         self.assertEqual(
-            manifest["release_subject"],
+            manifest["release_state"], "post_release_development_carrier"
+        )
+        release_subject = manifest["release_subject"]
+        self.assertEqual(release_subject["tag"], "v0.3.2")
+        self.assertEqual(
+            release_subject["tag_object_oid"],
+            "c3db01079b88622f06e8714c8bcbdf0dc1803a10",
+        )
+        self.assertEqual(
+            release_subject["commit_oid"],
+            "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+        )
+        self.assertEqual(
+            release_subject["archive_digest"],
+            "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16",
+        )
+        self.assertEqual(
+            release_subject["review_observation"],
+            {
+                "merge_admission": "configured_ordinary_bypass",
+                "independent_review": "deputized_independent_review_completed",
+                "github_review_record": "no_formal_review_submitted",
+            },
+        )
+        self.assertEqual(
+            manifest["prior_release_subject"],
             {
                 "promotion_receipt": "receipts/promotion-receipt.json",
                 "tag": "v0.3.1",
@@ -105,7 +130,16 @@ class PublicInspectionManifestTests(unittest.TestCase):
             groups["contracts_and_synthetic_inputs"],
         )
         self.assertIn(
-            "receipts/promotion-receipt.json",
+            "contracts/promotion-observation.v1.schema.json",
+            groups["contracts_and_synthetic_inputs"],
+        )
+        self.assertIn("receipts/promotion-receipt.json", groups["evidence_records"])
+        self.assertIn(
+            "receipts/promotion-observation-v0.3.2.json",
+            groups["evidence_records"],
+        )
+        self.assertNotIn(
+            "receipts/promotion-candidate.json",
             groups["evidence_records"],
         )
         self.assertTrue(
@@ -183,7 +217,7 @@ class PublicInspectionManifestTests(unittest.TestCase):
             ):
                 verify_manifest(target)
 
-    def test_missing_recovery_proof_breaks_the_candidate_identity(self) -> None:
+    def test_missing_recovery_proof_breaks_the_release_identity(self) -> None:
         with tempfile.TemporaryDirectory(prefix="inspection-proof-") as directory:
             target = Path(directory)
             self.copy_inventory(target)
@@ -216,10 +250,15 @@ class PublicInspectionManifestTests(unittest.TestCase):
                 verify_manifest(target)
 
     def test_external_coordinates_project_their_accepted_revisions(self) -> None:
-        coordinates = self.manifest()["coordinate_boundaries"]
+        coordinates = build_manifest(ROOT)["coordinate_boundaries"]
         self.assertEqual(
             {coordinate["role"] for coordinate in coordinates},
-            {"program_contract", "governance_schema"},
+            {
+                "program_contract",
+                "governance_schema",
+                "simulated_final_state",
+                "comparative_evidence",
+            },
         )
         by_role = {coordinate["role"]: coordinate for coordinate in coordinates}
         program = by_role["program_contract"]
@@ -233,6 +272,26 @@ class PublicInspectionManifestTests(unittest.TestCase):
         self.assertEqual(governance["coordinate_state"], "accepted_release")
         self.assertEqual(governance["declared_release"], "2.1.0")
         self.assertEqual(governance["schema_release"], "2.1.0")
+        expected_artifacts = {
+            "simulated_final_state": "release/future-reality-2028-06-30-v1.json",
+            "comparative_evidence": (
+                "fixtures/simulated-closures/future-reality-2028-06-30-v1.json"
+            ),
+        }
+        for role in ("simulated_final_state", "comparative_evidence"):
+            selected_future = by_role[role]
+            self.assertEqual(
+                selected_future["closure_artifact_path"], expected_artifacts[role]
+            )
+            self.assertEqual(
+                selected_future["canonical_closure_digest"],
+                "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+            )
+            self.assertRegex(selected_future["tag_object_oid"], r"^[a-f0-9]{40}$")
+            self.assertRegex(
+                selected_future["archive_digest"],
+                r"^sha256:[a-f0-9]{64}$",
+            )
         for coordinate in coordinates:
             with self.subTest(role=coordinate["role"]):
                 self.assertEqual(
@@ -254,7 +313,11 @@ class PublicInspectionManifestTests(unittest.TestCase):
 
         self.assertEqual(
             manifest["manifest_carriers"],
-            ["manifest.json", "release/repository-role.json"],
+            [
+                "manifest.json",
+                "release/repository-role.json",
+                "receipts/promotion-candidate.json",
+            ],
         )
         self.assertEqual(
             root_manifest["public_inspection"]["manifest_digest"], digest

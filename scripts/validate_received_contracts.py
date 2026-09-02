@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate accepted Program and Governance coordinates at the receiving edge."""
+"""Validate accepted contract and selected-future coordinates at the receiving edge."""
 
 from __future__ import annotations
 
@@ -73,6 +73,43 @@ GOVERNANCE_ARCHIVE_DIGEST = (
     "sha256:469ae49fca7d5ad6e1766080b3c39d76c46a840366b217f3839b9d34f2e77d32"
 )
 
+SELECTED_FUTURE_CLOSURE_ID = "CLOSURE-SIM-SUBSTANTIVE-2028-V1"
+SELECTED_FUTURE_VERSION = "future-reality-2028-06-30-v1"
+SELECTED_FUTURE_CANONICALIZATION = (
+    "python-json-sort-keys-compact-ascii-sha256-v1"
+)
+SELECTED_FUTURE_CLOSURE_DIGEST = (
+    "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5"
+)
+SELECTED_FUTURE_SOURCES = (
+    {
+        "role": "simulated_final_state",
+        "repository": "driftframestudios/lims-eln-simulated-final-state",
+        "release": "forecast-2028-FR-v1",
+        "tag_object": "73fc89690b6cc9df7a99ea495e580e7f4e2caedc",
+        "source_commit": "37c3861b5411db8e772feedf41e4abf1fb7829bc",
+        "source_tree": "595ae59f25f522732577c5f8e00709f023464a6d",
+        "closure_artifact_path": "release/future-reality-2028-06-30-v1.json",
+        "git_archive_sha256": (
+            "sha256:c6a062a6efb6786c53dc9e7298a9dd881fcc2301d807db5cecf84663c98438e2"
+        ),
+    },
+    {
+        "role": "comparative_evidence",
+        "repository": "driftframestudios/lims-eln-comparative-evidence",
+        "release": "comparison-v0.3.1",
+        "tag_object": "4c29f6ca410eb4400c55ad77fc34ada2960d1972",
+        "source_commit": "b5c13689a32739d29437e209816bf0cd6a878976",
+        "source_tree": "10a784b8a677ee6eb524d2860ff5ee7151d6050b",
+        "closure_artifact_path": (
+            "fixtures/simulated-closures/future-reality-2028-06-30-v1.json"
+        ),
+        "git_archive_sha256": (
+            "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e"
+        ),
+    },
+)
+
 
 class ReceivedContractError(ValueError):
     """An accepted coordinate or receiving observation differs from its binding."""
@@ -122,6 +159,7 @@ def validate_coordinate_document(document: Any) -> dict[str, Any]:
             "coordinate_state",
             "program_contract",
             "governance",
+            "selected_future",
         },
         "external contract coordinates",
     )
@@ -250,6 +288,33 @@ def validate_coordinate_document(document: Any) -> dict[str, Any]:
     }.items():
         _require_equal(governance[key], expected, f"governance {key}")
 
+    selected_future = _require_mapping(
+        coordinates["selected_future"], "selected future"
+    )
+    _require_exact_keys(
+        selected_future,
+        {
+            "closure_id",
+            "future_reality_version",
+            "canonicalization",
+            "canonical_closure_digest",
+            "accepted_sources",
+        },
+        "selected future",
+    )
+    for key, expected in {
+        "closure_id": SELECTED_FUTURE_CLOSURE_ID,
+        "future_reality_version": SELECTED_FUTURE_VERSION,
+        "canonicalization": SELECTED_FUTURE_CANONICALIZATION,
+        "canonical_closure_digest": SELECTED_FUTURE_CLOSURE_DIGEST,
+    }.items():
+        _require_equal(selected_future[key], expected, f"selected future {key}")
+
+    sources = selected_future["accepted_sources"]
+    if not isinstance(sources, list):
+        raise ReceivedContractError("selected-future sources require one ordered array")
+    _require_equal(tuple(sources), SELECTED_FUTURE_SOURCES, "selected-future sources")
+
     return coordinates
 
 
@@ -290,6 +355,53 @@ def _run_git(root: Path, *arguments: str, text: bool = True) -> str | bytes:
             f"received source cannot resolve git {' '.join(arguments)}"
         ) from error
     return completed.stdout.strip() if text else completed.stdout
+
+
+def _strict_json_object_from_commit(
+    root: Path,
+    *,
+    commit: str,
+    relative_path: str,
+    label: str,
+) -> dict[str, Any]:
+    """Read one duplicate-free, finite JSON object from an accepted Git commit."""
+
+    raw = _run_git(root, "show", f"{commit}:{relative_path}", text=False)
+    assert isinstance(raw, bytes)
+
+    def reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        document: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in document:
+                raise ValueError(f"duplicate key {key!r}")
+            document[key] = value
+        return document
+
+    def reject_nonfinite(token: str) -> None:
+        raise ValueError(f"non-finite number {token!r}")
+
+    try:
+        parsed = json.loads(
+            raw.decode("utf-8"),
+            object_pairs_hook=reject_duplicate_keys,
+            parse_constant=reject_nonfinite,
+        )
+    except (UnicodeError, json.JSONDecodeError, ValueError) as error:
+        raise ReceivedContractError(
+            f"{label} requires one duplicate-free finite UTF-8 JSON document"
+        ) from error
+    return _require_mapping(parsed, label)
+
+
+def _canonical_json_digest(value: Mapping[str, Any]) -> str:
+    payload = json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + sha256(payload).hexdigest()
 
 
 def program_source_digest_from_git(root: Path, commit: str) -> str:
@@ -392,6 +504,84 @@ def validate_governance_source(root: Path, coordinates: Mapping[str, Any]) -> No
         "sha256:" + sha256(archive).hexdigest(),
         governance["git_archive_sha256"],
         "Governance git archive digest",
+    )
+
+
+def validate_selected_future_source(
+    root: Path,
+    coordinates: Mapping[str, Any],
+    *,
+    role: str,
+) -> None:
+    """Reproduce one accepted selected-future release subject."""
+    selected_future = _require_mapping(
+        coordinates["selected_future"], "selected future"
+    )
+    sources = selected_future["accepted_sources"]
+    source = next((item for item in sources if item.get("role") == role), None)
+    if source is None:
+        raise ReceivedContractError(
+            f"selected-future source role {role!r} requires an accepted coordinate"
+        )
+    _require_equal(
+        _run_git(root, "cat-file", "-t", source["tag_object"]),
+        "tag",
+        f"{role} release object type",
+    )
+    _require_equal(
+        _run_git(root, "rev-parse", f"refs/tags/{source['release']}"),
+        source["tag_object"],
+        f"{role} annotated tag object",
+    )
+    _require_equal(
+        _run_git(root, "rev-parse", f"{source['release']}^{{commit}}"),
+        source["source_commit"],
+        f"{role} accepted commit",
+    )
+    _require_equal(
+        _run_git(root, "rev-parse", f"{source['source_commit']}^{{tree}}"),
+        source["source_tree"],
+        f"{role} accepted tree",
+    )
+    archive = _run_git(
+        root, "archive", "--format=tar", source["source_commit"], text=False
+    )
+    assert isinstance(archive, bytes)
+    _require_equal(
+        "sha256:" + sha256(archive).hexdigest(),
+        source["git_archive_sha256"],
+        f"{role} git archive digest",
+    )
+
+    bundle = _strict_json_object_from_commit(
+        root,
+        commit=source["source_commit"],
+        relative_path=source["closure_artifact_path"],
+        label=f"{role} closure bundle",
+    )
+    _require_equal(
+        bundle.get("future_reality_version"),
+        selected_future["future_reality_version"],
+        f"{role} closure bundle future reality",
+    )
+    governance_closure = _require_mapping(
+        bundle.get("governance_closure"), f"{role} governance closure"
+    )
+    _require_equal(
+        governance_closure.get("closure_id"),
+        selected_future["closure_id"],
+        f"{role} closure bundle closure_id",
+    )
+    reproduced_digest = _canonical_json_digest(governance_closure)
+    _require_equal(
+        bundle.get("governance_closure_digest"),
+        reproduced_digest,
+        f"{role} closure bundle governance_closure_digest",
+    )
+    _require_equal(
+        selected_future["canonical_closure_digest"],
+        reproduced_digest,
+        f"{role} selected-future canonical closure digest",
     )
 
 
@@ -512,6 +702,16 @@ def main() -> int:
         help="local Governance repository containing the accepted annotated tag",
     )
     parser.add_argument(
+        "--simulation-source",
+        type=Path,
+        help="local Simulation repository containing the accepted annotated tag",
+    )
+    parser.add_argument(
+        "--comparison-source",
+        type=Path,
+        help="local Comparative repository containing the accepted annotated tag",
+    )
+    parser.add_argument(
         "--require-installed-program",
         action="store_true",
         help="exercise the publisher-required installed-distribution observations",
@@ -526,6 +726,18 @@ def main() -> int:
         validate_program_source(arguments.program_source, coordinates)
     if arguments.governance_source is not None:
         validate_governance_source(arguments.governance_source, coordinates)
+    if arguments.simulation_source is not None:
+        validate_selected_future_source(
+            arguments.simulation_source,
+            coordinates,
+            role="simulated_final_state",
+        )
+    if arguments.comparison_source is not None:
+        validate_selected_future_source(
+            arguments.comparison_source,
+            coordinates,
+            role="comparative_evidence",
+        )
     if arguments.require_installed_program:
         validate_installed_program(coordinates)
 
@@ -534,6 +746,10 @@ def main() -> int:
         observed.append("Program source digest")
     if arguments.governance_source is not None:
         observed.append("Governance release identity")
+    if arguments.simulation_source is not None:
+        observed.append("Simulation release identity")
+    if arguments.comparison_source is not None:
+        observed.append("Comparative release identity")
     if arguments.require_installed_program:
         observed.append("installed Program consumer behavior")
     print("Received contracts valid: " + ", ".join(observed) + ".")
