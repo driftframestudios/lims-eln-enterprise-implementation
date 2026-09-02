@@ -526,12 +526,12 @@
       "responsibility": "Repository validation and tests for tenant isolation, scientific correctness, replay, recovery, and delivery evidence."
     },
     {
-      "aggregate_sha256": "sha256:081bf6e77f00e932cd19eb7e8c07d9444ac2c31ba9d8a9b91af781109be4bf8d",
+      "aggregate_sha256": "sha256:a6b82757865117ff15fbe240b2085e05dff1d3e9778e995b32d586587a10214e",
       "artifacts": [
         {
           "path": "receipts/hosted-postgresql-proof.json",
-          "sha256": "sha256:12dd3eaa6b41e46b73acdd0d816d99f37e56f64f50ed3b44e9eda13305c8fe22",
-          "size_bytes": 3576
+          "sha256": "sha256:7bd6ddaa9aa81356ac8306c3ee46f3d6d9f13dfdc3816d34da553b2d857ca6b2",
+          "size_bytes": 3341
         },
         {
           "path": "receipts/local-verification.example.json",
@@ -738,7 +738,7 @@
   "repository_release": "0.3.1",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:76ff23a664327a1315ab8d6585229cfe5a9cadb6293c2a5fe26bb5f6af2f06eb",
+    "aggregate_sha256": "sha256:c878958556d70824512abb670067128c68dad84d328ac31780f56acb39587c24",
     "kind": "content_addressed_artifact_inventory"
   }
 }
