@@ -1,4 +1,4 @@
-FROM flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0
+FROM flyway/flyway:13.4.0-alpine@sha256:66c0278f4398dd46b84d4108919a015b6ca03657a3d44ff2b349ad0602ace956
 
 WORKDIR /flyway/project
 COPY flyway.conf ./flyway.conf
