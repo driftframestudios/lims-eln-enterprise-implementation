@@ -102,11 +102,15 @@ deterministic source digest.
 
 [`release/public-inspection-manifest.json`](release/public-inspection-manifest.json)
 gives a reviewer one deterministic inventory for the repository-owned 0.3.1
-candidate. It binds every FastAPI and domain source, Flyway V001 through V005,
-local contract and synthetic input, operational configuration, behavior proof,
-evidence record, and public orientation file by path, byte length, SHA-256
-digest, group digest, and one aggregate content identity. Verify the checked-in
-inventory directly:
+inspection state. It binds every FastAPI and domain source, Flyway V001 through
+V005, local contract and synthetic input, operational configuration, behavior
+proof, evidence record, and public orientation file by path, byte length,
+SHA-256 digest, group digest, and one aggregate content identity. Signed
+annotated tag `v0.3.1` identifies the accepted source release; the later
+[`promotion receipt`](receipts/promotion-receipt.json) records the tag object,
+accepted commit and tree, tagged archive SHA-256, hosted checks, merge and tag
+signature results, and where human approval was recorded alongside GitHub's
+review state. Verify the checked-in inventory directly:
 
 ```sh
 python3 scripts/build_public_inspection_manifest.py --check

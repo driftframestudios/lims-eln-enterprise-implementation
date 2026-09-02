@@ -16,6 +16,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = Path("release/public-inspection-manifest.json")
 EXTERNAL_COORDINATE_PATH = Path("release/external-contract-coordinates.json")
+PROMOTION_RECEIPT_PATH = Path("receipts/promotion-receipt.json")
 CANONICALIZATION = "ordered-path-nul-sha256-lf-v1"
 
 ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
@@ -198,6 +199,22 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
     governance = coordinates["governance"]
     coordinate_digest = _digest(coordinate_path)
 
+    promotion_path = _safe_file(root, PROMOTION_RECEIPT_PATH.as_posix())
+    try:
+        promotion = json.loads(promotion_path.read_text(encoding="utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as error:
+        raise InspectionManifestError(
+            "promotion receipt requires one UTF-8 JSON document"
+        ) from error
+    release_coordinate = promotion.get("release_coordinate")
+    if (
+        promotion.get("promotion_state") != "release_observed"
+        or not isinstance(release_coordinate, dict)
+    ):
+        raise InspectionManifestError(
+            "public inspection requires the observed release promotion receipt"
+        )
+
     groups: list[dict[str, Any]] = []
     all_artifacts: list[dict[str, Any]] = []
     seen_paths: set[str] = set()
@@ -231,11 +248,19 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
         "schema_version": "1.0.0",
         "repository": "lims-eln-enterprise-implementation",
         "repository_release": "0.3.1",
-        "release_state": "repository_owned_candidate",
+        "release_state": "release_observation",
         "canonicalization": CANONICALIZATION,
         "source_identity": {
             "kind": "content_addressed_artifact_inventory",
             "aggregate_sha256": _aggregate(all_artifacts),
+        },
+        "release_subject": {
+            "promotion_receipt": PROMOTION_RECEIPT_PATH.as_posix(),
+            "tag": release_coordinate["tag"],
+            "tag_object_oid": release_coordinate["tag_object_oid"],
+            "commit_oid": release_coordinate["commit_oid"],
+            "tree_oid": release_coordinate["tree_oid"],
+            "archive_digest": release_coordinate["archive_digest"],
         },
         "coordinate_boundaries": [
             {
@@ -258,16 +283,18 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
             },
         ],
         "evidence_boundary": {
-            "repository_owned_candidate": (
-                "The inventory establishes the exact local bytes available for review."
+            "repository_owned_inspection": (
+                "The inventory establishes the exact repository bytes available for "
+                "inspection from this later evidence commit."
             ),
             "configured_environment": (
                 "Environment receipts retain their named system, time, performer, reviewer, "
                 "artifact bindings, assurance stage, and limitations."
             ),
             "promotion": (
-                "Accepted Program and Governance coordinates are bound in the external "
-                "coordinate manifest; remaining release roles retain their own evidence."
+                "The promotion receipt observes the signed implementation source release; "
+                "accepted Program and Governance coordinates remain bound in the external "
+                "coordinate manifest."
             ),
         },
         "manifest_carriers": [
@@ -305,7 +332,7 @@ def _difference(expected: dict[str, Any], actual: dict[str, Any]) -> str:
         if expected_group != actual_group:
             return f"inspection artifact group metadata differs for {name}"
 
-    return "inspection manifest metadata differs from the repository-owned candidate"
+    return "inspection manifest metadata differs from the repository-owned inspection state"
 
 
 def verify_manifest(root: Path = ROOT) -> dict[str, Any]:

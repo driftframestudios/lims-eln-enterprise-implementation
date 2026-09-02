@@ -45,21 +45,29 @@ sources, release manifests, and governance orientation surfaces retain explicit
 ownership. Default-branch security updates are merged forward to `develop` so
 both long-lived branches retain the correction.
 
-## Repository-owned candidate identity
+## Repository-owned inspection identity
 
 `release/public-inspection-manifest.json` records the exact repository bytes
-available for 0.3.1 review. Its ordered inventory covers runtime source, Flyway
-V001 through V005, local contracts and synthetic inputs, consequential behavior
-proofs, operational configuration, evidence records, and public orientation.
-The root and release-role manifests carry its SHA-256 digest. These two carriers
-remain outside the inventory so their reference to the inventory stays acyclic.
+available for 0.3.1 inspection. Its ordered inventory covers runtime source,
+Flyway V001 through V005, local contracts and synthetic inputs, consequential
+behavior proofs, operational configuration, evidence records, and public
+orientation. The root and release-role manifests carry its SHA-256 digest.
+These two carriers remain outside the inventory so their reference to the
+inventory stays acyclic.
 
 Run `python3 scripts/build_public_inspection_manifest.py --check` to establish
 that every selected path, file size, file digest, group digest, and aggregate
 identity matches the working tree. A source change receives a regenerated
 inventory in the same reviewed change.
 
-The repository-owned candidate carries the accepted Program and Governance Git
+The signed annotated `v0.3.1` tag identifies the accepted source release.
+A later evidence commit carries
+[`receipts/promotion-receipt.json`](../receipts/promotion-receipt.json), which
+records the tag object, accepted commit and tree, tagged archive SHA-256,
+hosted checks, merge and tag signature results, and where human approval was
+recorded alongside GitHub's review state. This ordering lets the receipt
+observe an already immutable release. The repository-owned
+inspection state also carries the accepted Program and Governance Git
 coordinates through
 [`release/external-contract-coordinates.json`](../release/external-contract-coordinates.json).
 The Program binding includes its exact package source digest and clean Python
@@ -68,7 +76,7 @@ object, commit, tree, and archive digest. Configured-system observations remain
 in evidence receipts with their environment and assurance boundaries, so
 release assembly can examine each authority independently.
 
-## Pull-request gates
+## Pull-request review material
 
 Every pull request carries:
 
@@ -87,13 +95,19 @@ and `acceptance` receive domain-specific review.
 
 1. Cut `release/<version>` from a passing `develop`.
 2. Freeze contract and fixture digests.
-3. Run configured-vendor, representative migration/restore, and
-   production-shape security/observability tranches.
-4. Assemble scientific, Quality, and Regulatory decision packets.
-5. Resolve deviations through evidence, bounded conditions, or return-for-evidence.
-6. Merge the accepted release to `main` and tag `v<version>`.
-7. Merge the release result back to `develop`.
-8. Publish the release manifest, source digest, evidence locators, and open receipts.
+3. Run repository validation and the source-owned synthetic database proof,
+   then bind each observed result to the exact candidate.
+4. Keep configured-vendor, representative migration/restore,
+   production-shape security/observability, and accountable Scientific,
+   Quality, and Regulatory encounters with their named successor receipts and
+   environment owners.
+5. Receive the required human and code-owner review for the source release.
+6. Merge the accepted release to `main` and create the signed annotated
+   `v<version>` tag at that accepted commit.
+7. Record the observed tag object, commit, tree, archive digest, checks,
+   signatures, and review boundary in a later evidence commit.
+8. Merge the complete release result back to `develop`.
+9. Publish the release manifest, source digest, evidence locators, and open receipts.
 
 Git approval is an engineering act. Each organizational acceptance appears in
 its own signed decision record.
@@ -120,8 +134,10 @@ Configure the GitHub ruleset for `main` so that:
 The current release-role manifest keeps required hosted contexts empty while
 the source change and exact hosted check name await acceptance. It records the
 bounded source contract beside the retained human-review, code-owner, deletion,
-non-fast-forward, and main-signature protections. Repository settings receive
-the observed check name after the source lands.
+and non-fast-forward protections. GitHub-generated merge commits currently
+carry verified signatures; the active ruleset admits commits through
+pull-request review without a required-signatures rule. Repository settings
+receive the observed check name after the source lands.
 
 `develop` remains a lean integration branch. Pull requests into `develop` can
 still receive the bounded proof, while the `main` ruleset carries release

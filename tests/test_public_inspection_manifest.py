@@ -38,7 +38,20 @@ class PublicInspectionManifestTests(unittest.TestCase):
 
     def test_manifest_binds_current_repository_owned_bytes(self) -> None:
         manifest = verify_manifest(ROOT)
-        self.assertEqual(manifest["release_state"], "repository_owned_candidate")
+        self.assertEqual(manifest["release_state"], "release_observation")
+        self.assertEqual(
+            manifest["release_subject"],
+            {
+                "promotion_receipt": "receipts/promotion-receipt.json",
+                "tag": "v0.3.1",
+                "tag_object_oid": "8b1013ff6a116b64e5d31c2870b574f641ee88f6",
+                "commit_oid": "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a",
+                "tree_oid": "cc1bb335c0cdd1a37d1b6554480b3afdb9c9f360",
+                "archive_digest": (
+                    "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174"
+                ),
+            },
+        )
 
         groups = {
             group["name"]: {artifact["path"] for artifact in group["artifacts"]}
@@ -87,6 +100,14 @@ class PublicInspectionManifestTests(unittest.TestCase):
             "release/external-contract-coordinates.json",
             groups["contracts_and_synthetic_inputs"],
         )
+        self.assertIn(
+            "contracts/promotion-receipt.v1.schema.json",
+            groups["contracts_and_synthetic_inputs"],
+        )
+        self.assertIn(
+            "receipts/promotion-receipt.json",
+            groups["evidence_records"],
+        )
         self.assertTrue(
             {"AUTHORS", "README.md", ".github/dependabot.yml"}.issubset(
                 groups["collaboration_and_orientation"]
@@ -96,7 +117,7 @@ class PublicInspectionManifestTests(unittest.TestCase):
         artifact_paths = set().union(*groups.values())
         self.assertTrue(set(manifest["manifest_carriers"]).isdisjoint(artifact_paths))
 
-    def test_runtime_byte_change_breaks_the_candidate_identity(self) -> None:
+    def test_runtime_byte_change_breaks_the_inspection_identity(self) -> None:
         with tempfile.TemporaryDirectory(prefix="inspection-runtime-") as directory:
             target = Path(directory)
             self.copy_inventory(target)
@@ -237,6 +258,10 @@ class PublicInspectionManifestTests(unittest.TestCase):
         )
         self.assertEqual(
             root_manifest["public_inspection"]["manifest_digest"], digest
+        )
+        self.assertEqual(
+            root_manifest["public_inspection"]["authority"],
+            "repository_owned_inspection_bytes",
         )
         self.assertEqual(release_role["public_inspection_manifest_digest"], digest)
 

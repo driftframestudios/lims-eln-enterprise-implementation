@@ -2,16 +2,16 @@
   "horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
   "title": "LIMS/ELN Implementation Coordination Horizon",
   "objective": "Keep bounded authority, durable persistence and vendor seams, selected-future comparison, and observed successor evidence legible without coupling the collaboration to one planning cadence.",
-  "as_of": "2026-09-02T01:59:47Z",
+  "as_of": "2026-09-02T02:42:44Z",
   "current_item_ids": [
-    "HORIZON-IMPLEMENTATION-SETTLING"
+    "HORIZON-SELECTED-FUTURE-COMPARISON"
   ],
   "work_items": [
     {
       "item_id": "HORIZON-IMPLEMENTATION-SETTLING",
       "horizon_label": "Bounded-caller release promotion",
       "sequence": 1,
-      "state": "settling",
+      "state": "complete",
       "desired_state": "The typed operation registry, authority grants, budgets, exact approvals, replay behavior, bounded durable Golden Specimen path, and receipts form one digest-bound release.",
       "entry_evidence": [
         "governance schema release 2.1.0",
@@ -32,7 +32,7 @@
       "item_id": "HORIZON-SELECTED-FUTURE-COMPARISON",
       "horizon_label": "Selected-future implementation comparison",
       "sequence": 2,
-      "state": "ready",
+      "state": "active",
       "desired_state": "The implementation and selected future compare through versioned contracts, canonical receipt families, and independently reproducible evidence.",
       "entry_evidence": [
         "released implementation binding manifest",
@@ -72,13 +72,13 @@
     }
   ],
   "reentry_capsule": {
-    "current_state": "Release 0.3.1 is settling with five registered operations across three effect classes, a process-local workbench, a durable PostgreSQL Golden Specimen slice, least-privilege database identities, and a credential-free LabKey API exemplar.",
+    "current_state": "Release 0.3.1 is reference-ready at signed tag v0.3.1 with five registered operations across three effect classes, a process-local workbench, a durable PostgreSQL Golden Specimen slice, least-privilege database identities, and a credential-free LabKey API exemplar.",
     "recent_decisions": [
       "DECISION-BOUNDED-CALLER-SERVICE-OWNED",
       "DECISION-SIMULATED-AND-OBSERVED-BRANCHES"
     ],
-    "next_safe_action": "Bind the durable workbench sources and passing PostgreSQL scenarios into the release digests and successor synthetic receipt, validate the orientation files through Governance 2.1.0, then close RCP-IMPLEMENTATION-PROMOTION-003 against the reviewed immutable coordinate.",
-    "verification": "Confirm repository tests, configured PostgreSQL restart, replay, collision, isolation, rollback, digest, and recovery scenarios, source bindings, receipt-family names, secret-shape hygiene, Python syntax, and cross-repository schema validation."
+    "next_safe_action": "Pin the observed v0.3.1 coordinate in comparative evidence and compare it with the independently released selected future while each divergence remains with its owning source.",
+    "verification": "Confirm the signed tag object, accepted commit and tree, tagged archive SHA-256, promotion receipt, Program and Governance coordinates, hosted PostgreSQL 17 receipt, local PostgreSQL 18 compatibility observation, source bindings, credential hygiene, and public inspection manifest."
   },
   "retained_effects": [
     "Service-owned operations continue to determine caller authority, scope, budgets, approvals, effects, receipts, and recovery.",
@@ -95,7 +95,7 @@
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T01:59:47Z",
+    "updated_at": "2026-09-02T02:42:44Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-HORIZON",
       "display_name": "Implementation stewardship role",

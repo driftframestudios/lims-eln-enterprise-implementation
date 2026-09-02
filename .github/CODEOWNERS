@@ -16,6 +16,7 @@
 /tests/test_branch_flow.py @driftframestudios
 /tests/test_database_migrations.py @driftframestudios
 /tests/test_public_inspection_manifest.py @driftframestudios
+/tests/test_promotion_lifecycle.py @driftframestudios
 /tests/test_received_contracts.py @driftframestudios
 /tests/test_postgres_integration.py @driftframestudios
 /tests/test_sql_tenant_boundary.py @driftframestudios
