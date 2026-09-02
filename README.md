@@ -20,6 +20,37 @@ The repository begins from the public architectural provenance of
 This implementation is independently evolved. Runtime code stays within this
 repository and consumes versioned contracts rather than simulation code.
 
+## Start here
+
+The shortest orientation route is this README, followed by
+[`AGENTS.md`](AGENTS.md), [`release/repository-role.json`](release/repository-role.json),
+and the source, receipt, runbook, or test that owns the behavior being changed.
+Runnable source and tests define current behavior. Signed release records define
+the accepted baseline. Configured receipts describe only their named source and
+environment.
+
+Five repository-local skills support work that needs a repeatable route:
+
+- [`repository-reentry`](.agents/skills/repository-reentry/SKILL.md) recovers
+  current source, release, configured-environment evidence, and coordination
+  truth.
+- [`source-authority-mapping`](.agents/skills/source-authority-mapping/SKILL.md)
+  distinguishes contract, implementation, observation, acceptance, release,
+  and receiving roles.
+- [`proportionate-recovery-routing`](.agents/skills/proportionate-recovery-routing/SKILL.md)
+  selects the smallest useful recovery move after an observed problem.
+- [`configured-environment-evidence-binding`](.agents/skills/configured-environment-evidence-binding/SKILL.md)
+  admits a returned database, vendor, or runtime observation at exact
+  coordinates.
+- [`contextual-jargon-scan`](.agents/skills/contextual-jargon-scan/SKILL.md)
+  revises collaboration-local shorthand while retaining exact technical and
+  regulated language.
+
+These skills begin as public-possible workbench material and can be refined in
+public view. The source band describes maturity rather than confidentiality:
+`public_ready` means a separate review has accepted the settled reader job and
+navigation route.
+
 ## What runs
 
 The focused test suite exercises:

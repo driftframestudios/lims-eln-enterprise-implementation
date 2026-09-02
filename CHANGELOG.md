@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Collaboration workbench
+
+- Add repository-local orientation and five public-possible skills for
+  re-entry, source authority, recovery routing, configured-environment evidence
+  binding, and in-stride ordinary-language review.
+- Keep recovery selection and configured-observation admission as separate
+  jobs, with exact lineage, changed-signal retry, material-scenario, secret
+  boundary, and assurance-stage guidance.
+- Align contributor orientation with the executable branch families and add
+  focused checks for skill inventory, lineage, route visibility, and the
+  distinction between open publication and public-ready maturity.
+
 ### Database toolchain
 
 - Advance the active, digest-pinned Flyway Community image from 13.0.0 to

@@ -2,7 +2,8 @@
 
 Every change should strengthen a traceable claim.
 
-1. Start from `develop` using `feature/<receipt-or-capability>`.
+1. Start from `develop` using the branch family that matches the work:
+   `feature/`, `fix/`, `chore/`, `experiment/`, `forecast/`, or `evidence/`.
 2. Add or update a stable scenario, its failure twin, and its recovery behavior.
 3. Keep fixtures synthetic and tenant-scoped.
 4. Phrase comments and identifiers as desired-state attractors.
@@ -11,9 +12,10 @@ Every change should strengthen a traceable claim.
 6. Run `python3 scripts/validate_repository.py`.
 7. Open a pull request into `develop` with evidence and limitations.
 
-Release candidates flow from `develop` to `release/<version>`, then to `main`.
-Production corrections flow from `main` through `hotfix/<receipt-id>` and return
-to both `main` and `develop`. Details live in `docs/branching-and-release.md`.
+Release candidates use `release/<version>` from `develop`, then return the
+accepted result to both `main` and `develop`. Production corrections use
+`hotfix/<receipt-id>` from `main` and return to both long-lived branches.
+Details live in `docs/branching-and-release.md`.
 
 Dependabot and Renovate maintenance pull requests follow the bot-bound branch
 policy in the branching guide. Their updates retain the same tests, review,
