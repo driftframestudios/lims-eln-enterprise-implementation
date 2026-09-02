@@ -2,12 +2,12 @@
   "manifest_version": "2.0.0",
   "repository_role": "enterprise_implementation",
   "repository_release": "0.3.2",
-  "release_state": "release_candidate",
+  "release_state": "release_observed",
   "external_release": "implementation-v0.3.2",
   "bounded_caller_binding_digest": "sha256:d141061bf028fdd63cc879ab455b0a68853d369da98edbeb17421a35714ed796",
   "database_flyway_release_digest": "sha256:a4fafe7ebb50da1efbad47df24d6d7af741130039ba8c90b8d6457e9d1d107b9",
   "external_contract_coordinate_digest": "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1",
-  "public_inspection_manifest_digest": "sha256:73a062069301c694df26196a7384184d7229089885d97279cb989244ca7435c8",
+  "public_inspection_manifest_digest": "sha256:bfc1349b89c9ea71f09fda62cec0efb2acd5c7ac71c0374acb06878301207721",
   "open_receipt_ledger_digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad",
   "selected_future_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
   "first_receipt_contract": {
@@ -68,10 +68,15 @@
     "implementation_commit": "c79f8727963a427164a11eacb14837d795cd757d"
   },
   "promotion_controls": {
-    "current_state": "human_review_and_history_protection_with_candidate_ready",
+    "current_state": "standing_review_and_history_protection_with_observed_release_admission",
     "hosted_required_check_contexts": [],
     "protected_branches": ["main"],
     "allowed_merge_methods": ["merge", "squash", "rebase"],
+    "review_observation": {
+      "merge_admission": "configured_ordinary_bypass",
+      "independent_review": "deputized_independent_review_completed",
+      "github_review_record": "no_formal_review_submitted"
+    },
     "human_review": {
       "required_approvals": 1,
       "code_owner_review": true,
@@ -87,12 +92,15 @@
     },
     "signature_observation": {
       "github_verified_merge_commits": true,
-      "ruleset_admission": "pull_request_review_without_required_signatures"
+      "github_verified_release_tags": true,
+      "configured_signature_rule": "not_required"
     },
     "hosted_check_activation": {
-      "state": "candidate_ready_settings_pending",
-      "requires_stable_context": true,
-      "requires_funded_execution_path": true
+      "state": "repository_validation_observed",
+      "required_check_contexts": [],
+      "run_id": "33623991109",
+      "job_id": "100227324662",
+      "conclusion": "success"
     }
   },
   "automation_controls": {
@@ -110,14 +118,42 @@
     "dependabot_open_pull_requests_per_ecosystem": 2,
     "dependabot_grouped_update_types": ["minor", "patch"],
     "monthly_budget_minutes": {"minimum": 100, "maximum": 300},
-    "settings_state": "candidate_ready_contexts_observed_activation_pending"
+    "settings_state": "repository_validation_observed_required_contexts_empty"
   },
   "promotion_coordinates": {
-    "status": "pending_release_promotion",
-    "open_receipt_id": "RCP-IMPLEMENTATION-PROMOTION-004",
+    "status": "release_observed",
+    "settled_receipt_id": "RCP-IMPLEMENTATION-PROMOTION-004",
+    "observation_receipt": "receipts/promotion-observation-v0.3.2.json",
+    "observation_receipt_digest": "sha256:f1e65be6a701bee526c6481fe65e18bc0a2d6df0150c418f7a76457039cb3061",
     "candidate_receipt": "receipts/promotion-candidate.json",
     "candidate_receipt_digest": "sha256:c78f16df5832f6c7b39ea1b0d9a61316b26d90cd1552fd8b2c39043436a94340",
     "target_release": "v0.3.2",
+    "release_subject": {
+      "git_object_format": "sha1",
+      "tag": "v0.3.2",
+      "tag_object_oid": "c3db01079b88622f06e8714c8bcbdf0dc1803a10",
+      "commit_oid": "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+      "tree_oid": "eb8eadb27a9e07c6069a1946f115a0083d94af5c",
+      "archive_format": "git-tar",
+      "archive_digest": "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16",
+      "promoted_at": "2026-09-02T11:21:02Z",
+      "pull_request": 27,
+      "hosted_checks": [
+        {
+          "name": "Repository validation",
+          "run_id": "33623991109",
+          "job_id": "100227324662",
+          "conclusion": "success"
+        }
+      ],
+      "review_observation": {
+        "merge_admission": "configured_ordinary_bypass",
+        "independent_review": "deputized_independent_review_completed",
+        "github_review_record": "no_formal_review_submitted"
+      },
+      "merge_signature_verification": "valid",
+      "tag_signature_verification": "valid"
+    },
     "prior_release": {
       "tag": "v0.3.1",
       "tag_object_oid": "8b1013ff6a116b64e5d31c2870b574f641ee88f6",

@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RCP-IMPLEMENTATION-001",
   "machine_node_id": "NODE-LIMS-ELN-IMPLEMENTATION",
-  "as_of": "2026-09-02T10:28:31Z",
+  "as_of": "2026-09-02T11:23:40Z",
   "orientation_purpose": "Give a human or AI collaborator the minimum complete implementation state, authority boundary, evidence posture, invalidation conditions, and safe handoff needed to reproduce or extend this reference.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -56,9 +56,8 @@
     }
   ],
   "coordination_horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
-  "current_horizon_summary": "Implementation 0.3.2 is a bounded release candidate that aligns the selected-future closure coordinate while retaining the accepted 0.3.1 source release as historical evidence.",
+  "current_horizon_summary": "Implementation 0.3.2 is an observed source release that aligns the selected-future closure coordinate while retaining the accepted 0.3.1 source release and 0.3.2 candidate as historical evidence.",
   "open_receipts": [
-    "RCP-IMPLEMENTATION-PROMOTION-004",
     "RCP-OBSERVED-VENDORS-001",
     "RCP-OBSERVED-MIGRATION-RESTORE-001",
     "RCP-OBSERVED-SECURITY-OBSERVABILITY-001",
@@ -95,14 +94,14 @@
     }
   ],
   "handoff": {
-    "recipient_role": "implementation release stewardship",
-    "next_safe_action": "Review and promote the 0.3.2 closure-coordinate candidate, then record its signed tag object, accepted commit and tree, tagged archive SHA-256, checks, and review boundary in a successor receipt.",
-    "success_evidence": "The signed 0.3.2 source release binds the accepted selected-future closure while the 0.3.1 receipt remains an immutable historical coordinate."
+    "recipient_role": "comparative evidence stewardship",
+    "next_safe_action": "Compare the observed implementation v0.3.2 coordinate with the accepted Simulation and Comparative selected-future artifacts, then return any material divergence to its source owner.",
+    "success_evidence": "The comparison records implementation v0.3.2 by tag object, commit, tree, and archive digest while the configured-environment and production-authorization successors retain their own receipt paths."
   },
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T10:28:31Z",
+    "updated_at": "2026-09-02T11:23:40Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-RECEIPT",
       "display_name": "Implementation stewardship role",

@@ -2,9 +2,9 @@
   "horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
   "title": "LIMS/ELN Implementation Coordination Horizon",
   "objective": "Keep bounded authority, durable persistence and vendor seams, selected-future comparison, and observed successor evidence legible without coupling the collaboration to one planning cadence.",
-  "as_of": "2026-09-02T10:28:31Z",
+  "as_of": "2026-09-02T11:23:40Z",
   "current_item_ids": [
-    "HORIZON-IMPLEMENTATION-CLOSURE-ALIGNMENT"
+    "HORIZON-SELECTED-FUTURE-COMPARISON"
   ],
   "work_items": [
     {
@@ -32,7 +32,7 @@
       "item_id": "HORIZON-IMPLEMENTATION-CLOSURE-ALIGNMENT",
       "horizon_label": "Selected-future closure-coordinate patch",
       "sequence": 2,
-      "state": "settling",
+      "state": "complete",
       "desired_state": "A signed implementation patch release binds the accepted selected-future closure while the earlier signed source release remains available as historical evidence.",
       "entry_evidence": [
         "accepted simulation release with canonical closure digest",
@@ -53,7 +53,7 @@
       "item_id": "HORIZON-SELECTED-FUTURE-COMPARISON",
       "horizon_label": "Selected-future implementation comparison",
       "sequence": 3,
-      "state": "waiting",
+      "state": "active",
       "desired_state": "The implementation and selected future compare through versioned contracts, canonical receipt families, and independently reproducible evidence.",
       "entry_evidence": [
         "released implementation binding manifest",
@@ -93,13 +93,13 @@
     }
   ],
   "reentry_capsule": {
-    "current_state": "Implementation 0.3.2 is a bounded release candidate that aligns the selected-future closure coordinate while preserving the signed 0.3.1 release as historical evidence.",
+    "current_state": "Implementation 0.3.2 is an observed source release that aligns the selected-future closure coordinate while preserving the signed 0.3.1 release and reviewed 0.3.2 candidate as historical evidence.",
     "recent_decisions": [
       "DECISION-BOUNDED-CALLER-SERVICE-OWNED",
       "DECISION-SIMULATED-AND-OBSERVED-BRANCHES"
     ],
-    "next_safe_action": "Review and promote the 0.3.2 closure-coordinate candidate, record its immutable tag coordinate in RCP-IMPLEMENTATION-PROMOTION-004, then return the accepted release to comparative evidence.",
-    "verification": "Confirm the reconciled closure digest, candidate inventory, repository tests, Program and Governance coordinates, retained 0.3.1 promotion receipt, credential hygiene, and the eventual signed 0.3.2 tag object, commit, tree, and archive SHA-256."
+    "next_safe_action": "Receive implementation v0.3.2 into comparative evidence by its exact tag object, commit, tree, and archive digest, then record any material source divergence with its owning repository.",
+    "verification": "Confirm the reconciled closure digest, observed 0.3.2 release subject, repository inventory and tests, Program and Governance coordinates, retained candidate and 0.3.1 receipts, credential hygiene, and the continuing environment-qualification boundaries."
   },
   "retained_effects": [
     "Service-owned operations continue to determine caller authority, scope, budgets, approvals, effects, receipts, and recovery.",
@@ -116,7 +116,7 @@
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T10:28:31Z",
+    "updated_at": "2026-09-02T11:23:40Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-HORIZON",
       "display_name": "Implementation stewardship role",
