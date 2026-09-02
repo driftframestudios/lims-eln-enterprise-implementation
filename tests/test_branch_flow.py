@@ -546,9 +546,14 @@ class BranchFlowTests(unittest.TestCase):
             workflow,
             r"image: postgres:17\.10-alpine@sha256:[a-f0-9]{64}",
         )
-        self.assertRegex(
-            workflow,
-            r"FLYWAY_IMAGE: flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}",
+        flyway_release = json.loads(
+            (ROOT / "database" / "flyway-release.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            re.findall(r"(?m)^\s*FLYWAY_IMAGE:\s*(\S+)\s*$", workflow),
+            [flyway_release["container_image"], flyway_release["container_image"]],
         )
         self.assertIn("-target=003 migrate", workflow)
         self.assertIn("migration 003 through 005", workflow.lower())

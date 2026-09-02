@@ -164,7 +164,7 @@ runtime.
 ## Database evolution boundary
 
 The database begins from versioned migration V001 and advances through Flyway
-Community 13.0.0. Flyway owns discovery, ordering, locking, one PostgreSQL
+Community 13.4.0. Flyway owns discovery, ordering, locking, one PostgreSQL
 transaction per migration, applied history, checksum validation, status, and
 no-op replay. `database/flyway-release.json` pins the open-source image by exact
 version and digest; `flyway.conf` keeps validation enabled, order strict, clean

@@ -275,7 +275,7 @@ offers security-invoker workbench projections. A bounded recording routine
 accepts only quarantined sources and accepted or replayed replacements from the
 same tenant and specimen.
 Flyway
-Community 13.0.0 owns migration discovery, ordering, locking, transactions,
+Community 13.4.0 owns migration discovery, ordering, locking, transactions,
 history, validation, information, target selection, and replay. Cluster roles
 remain a separate privileged deployment concern. Flyway authenticates as the
 least-privilege `laboratory_migrator` login. Its released `afterConnect.sql`

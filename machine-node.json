@@ -26,7 +26,7 @@
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
       "version": "1.0.0",
-      "digest": "sha256:a4fafe7ebb50da1efbad47df24d6d7af741130039ba8c90b8d6457e9d1d107b9"
+      "digest": "sha256:e5c6daadf3f88df9a83195c7f977dd702c081c796e24e55d67704cfb965cf160"
     },
     {
       "contract_id": "IMPLEMENTATION-OPEN-RECEIPTS-001",

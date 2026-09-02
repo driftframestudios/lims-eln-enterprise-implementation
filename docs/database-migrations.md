@@ -2,7 +2,7 @@
 
 ## Ownership boundary
 
-Flyway Community 13.0.0 owns migration discovery, ordering, locking, transaction
+Flyway Community 13.4.0 owns migration discovery, ordering, locking, transaction
 boundaries, applied history, checksum validation, status, and replay behavior.
 `database/flyway-release.json` pins the exact open-source Alpine image by version
 and multi-architecture digest. `database/flyway-artifact-inventory.json` binds
@@ -57,7 +57,7 @@ configuration:
 docker run --rm --network host \
   --volume "$PWD:/flyway/project:ro" \
   --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
-  flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0 \
+  flyway/flyway:13.4.0-alpine@sha256:66c0278f4398dd46b84d4108919a015b6ca03657a3d44ff2b349ad0602ace956 \
   -workingDirectory=/flyway/project \
   -configFiles=/flyway/project/flyway.conf migrate
 ```

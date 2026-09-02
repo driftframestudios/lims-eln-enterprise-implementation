@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Database toolchain
+
+- Advance the active, digest-pinned Flyway Community image from 13.0.0 to
+  13.4.0 and keep the Dockerfile, release coordinate, configured PostgreSQL
+  proofs, tests, and current orientation on that shared source.
+- Preserve the 13.0.0 hosted receipt as the preceding observed coordinate until
+  the 13.4.0 PostgreSQL proof supplies its own run, commit, and artifact bindings.
+
 ## 0.3.1 — 2026-09-02
 
 ### Public-inspection closure
