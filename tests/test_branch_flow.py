@@ -514,6 +514,8 @@ class BranchFlowTests(unittest.TestCase):
     def test_codeowners_cover_branch_and_authority_control_surfaces(self) -> None:
         owners = (ROOT / ".github" / "CODEOWNERS").read_text(encoding="utf-8")
         for path in (
+            "/AGENTS.md",
+            "/.agents/skills/",
             "/.github/dependabot.yml",
             "/.github/workflows/",
             "/.gitignore",

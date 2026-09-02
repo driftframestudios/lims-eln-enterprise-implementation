@@ -364,7 +364,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:2348f977573b9805cd72ca4a6490091ef81d8d29f33c08214f21254c83fc02ca",
+      "aggregate_sha256": "sha256:142ab5cae7fa5300c19ae95d78cd27ad2fba56ba44648a6236674b05f491fcee",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -388,8 +388,8 @@
         },
         {
           "path": "scripts/build_public_inspection_manifest.py",
-          "sha256": "sha256:0835a975bbb03188538c2cc80e0cc5749858b32633c3c947576a63bd733adc65",
-          "size_bytes": 20301
+          "sha256": "sha256:c297dec66b18e1ee8d0d5cd224ffd44887aa65c44cbabe54d9f3b03bee2b115a",
+          "size_bytes": 20367
         },
         {
           "path": "scripts/check_automation_contract.py",
@@ -413,8 +413,8 @@
         },
         {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:319fad8052c588d3b91ab14ceb6da0276416bfffe8cb66e4474ea57eeedf2f31",
-          "size_bytes": 68677
+          "sha256": "sha256:6a2ff94e05d1d59e404c3c7eeb2fc6a05174bc480fd4061886c2db3b3c289433",
+          "size_bytes": 75938
         },
         {
           "path": "tests/__init__.py",
@@ -438,8 +438,13 @@
         },
         {
           "path": "tests/test_branch_flow.py",
-          "sha256": "sha256:8c825d7bf18fb9199f378cb03da3162a56cce1f5aecb073ea5a0800c51aad33d",
-          "size_bytes": 26612
+          "sha256": "sha256:d7960ca6b170b2af140432a27107bf383a816de37604e6a8ff6b4a9711beb765",
+          "size_bytes": 26670
+        },
+        {
+          "path": "tests/test_collaboration_workbench.py",
+          "sha256": "sha256:7bc3ac26d2ca7d377deaebc5764f3a13fe003966a6b0c3d0233670a918dada0d",
+          "size_bytes": 4188
         },
         {
           "path": "tests/test_custody_instrument.py",
@@ -568,8 +573,33 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:4b39085b35eed33d6c6fdc5f0cd2f9c3855874db3301c6893c273d39ed9a2d47",
+      "aggregate_sha256": "sha256:f0e1d2ae7ad428911e64c8200e937dd24b63f4596f4820e0c3cb8f9d04818d4b",
       "artifacts": [
+        {
+          "path": ".agents/skills/configured-environment-evidence-binding/SKILL.md",
+          "sha256": "sha256:a2bfa641430d57da4482f2459e30dddec384d9f14f92d57d3106bcdf68808442",
+          "size_bytes": 6944
+        },
+        {
+          "path": ".agents/skills/contextual-jargon-scan/SKILL.md",
+          "sha256": "sha256:e621ede446823b791471eaf1e893d2eabbfdae21943cbcd0f48ec9d6b22b83f7",
+          "size_bytes": 4071
+        },
+        {
+          "path": ".agents/skills/proportionate-recovery-routing/SKILL.md",
+          "sha256": "sha256:c5f9348705c6ea165f5c4bd6ec1eddeb2a4ccaec4a83cf212b9f22e4ddb43972",
+          "size_bytes": 8709
+        },
+        {
+          "path": ".agents/skills/repository-reentry/SKILL.md",
+          "sha256": "sha256:e13c941f6cafe2b006cd6a737050b9ee7795c379e2a9e4c7803fa7b187a251f5",
+          "size_bytes": 4108
+        },
+        {
+          "path": ".agents/skills/source-authority-mapping/SKILL.md",
+          "sha256": "sha256:c7aac6c191eb960eb110806dd1582aafbaead8695a16d6d2b482f5d3c97486ed",
+          "size_bytes": 4107
+        },
         {
           "path": ".github/AUTOMATION.md",
           "sha256": "sha256:1263d0b06c925b398eed591705f242f39214925784a0634c996f460dccb9eb15",
@@ -577,8 +607,8 @@
         },
         {
           "path": ".github/CODEOWNERS",
-          "sha256": "sha256:ba734b7884263d85f10d1c72064a8864ab1ac5844762d8f64b324fd77cbc3dbb",
-          "size_bytes": 1775
+          "sha256": "sha256:7c2465e3dd4d58aea432d8c08fd25f39a1bb25a78cc8dfc38527af2c1f32a2b4",
+          "size_bytes": 1841
         },
         {
           "path": ".github/dependabot.yml",
@@ -591,19 +621,24 @@
           "size_bytes": 781
         },
         {
+          "path": "AGENTS.md",
+          "sha256": "sha256:94e33beb663098cd8437ae937d0e357d83da39a67e7799959d94b6fbac7f1c77",
+          "size_bytes": 5694
+        },
+        {
           "path": "AUTHORS",
           "sha256": "sha256:63c6673baa090ed6abbc83fa026794c27ac2de85c663bfd53cac7ba977ff9829",
           "size_bytes": 470
         },
         {
           "path": "CHANGELOG.md",
-          "sha256": "sha256:1dcecbac556a0926c53205f3c7e74aa42e25d434300d11ca4dfa545731a8d02f",
-          "size_bytes": 11434
+          "sha256": "sha256:48cae0edeb2d677dc1c2c83a3260214507ec3084174b6f357a585d66904edbd1",
+          "size_bytes": 12074
         },
         {
           "path": "CONTRIBUTING.md",
-          "sha256": "sha256:1dd65a30f9a9b0aab1dc6dbcc3af608eb85c91aba55cd7fcc188328687905e5f",
-          "size_bytes": 1181
+          "sha256": "sha256:99dada30293a694252920c0d3460984e4bd9ca6217e42d0385060b78b09bf347",
+          "size_bytes": 1296
         },
         {
           "path": "COORDINATION-HORIZON.json",
@@ -622,8 +657,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:0992e81aaa6f1f9a315ee0f833f7866d88618952cd1b3fcd5d134b77b5846353",
-          "size_bytes": 20462
+          "sha256": "sha256:d4cb95ea0b7948715f7304146f617a051e509db21b9f966d6b062cc923694bd5",
+          "size_bytes": 22089
         },
         {
           "path": "SECURITY.md",
@@ -637,8 +672,8 @@
         },
         {
           "path": "docs/branching-and-release.md",
-          "sha256": "sha256:58e573eeaf8a901b46b7878bfdfc2923cd1db0d158accc87f55a35214cc4e1ea",
-          "size_bytes": 8526
+          "sha256": "sha256:d7ad91cde216ceb68c2d26158f05325bd51f667a7c160c96f20b2a1109c4b825",
+          "size_bytes": 8951
         },
         {
           "path": "docs/data-primitive-corrective-ledger.md",
@@ -806,7 +841,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:cd5d787739094a0ee4f791e7007b54148be436274c0e4a7b062c4cdcaf860480",
+    "aggregate_sha256": "sha256:183ca2261d68d034e57c9f998b888780f02f3c969af9bfbc77078dd1895dd291",
     "kind": "content_addressed_artifact_inventory"
   }
 }

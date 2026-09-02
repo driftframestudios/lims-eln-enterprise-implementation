@@ -106,6 +106,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
         "Public orientation, release guidance, ownership, provenance, and operational runbooks.",
         (
             "README.md",
+            "AGENTS.md",
             "AUTHORS",
             "CHANGELOG.md",
             "CONTRIBUTING.md",
@@ -123,6 +124,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
             ".github/CODEOWNERS",
             ".github/dependabot.yml",
             ".github/pull_request_template.md",
+            ".agents/skills/*/SKILL.md",
         ),
     ),
 )

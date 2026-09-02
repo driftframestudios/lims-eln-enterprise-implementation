@@ -11,9 +11,13 @@
 | Pattern | Starts from | Returns to | Purpose |
 |---|---|---|---|
 | `feature/<claim-or-receipt>` | `develop` | `develop` | Capability, specification, test, or receipt work |
+| `fix/<claim-or-receipt>` | `develop` | `develop` | Correction to the current development carrier |
+| `chore/<bounded-maintenance>` | `develop` | `develop` | Bounded repository maintenance |
 | `release/<semver>` | `develop` | `main` and `develop` | Frozen release candidate and evidence assembly |
 | `hotfix/<receipt-id>` | `main` | `main` and `develop` | Production correction with bounded evidence |
 | `experiment/<question>` | `develop` | `develop` when promoted, or archived tag | Time-boxed exploration with an explicit learning record |
+| `forecast/<year>-q<quarter>-r<revision>` | `develop` | `develop` | Versioned planning evidence ready to enter the living carrier |
+| `evidence/<claim-or-receipt>` | `develop` | `develop` | Observed evidence and its exact binding |
 
 ## Local and hosted proof
 

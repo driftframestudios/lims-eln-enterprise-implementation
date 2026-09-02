@@ -21,6 +21,75 @@ sys.path.insert(0, str(SRC))
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tests"))
 
+PUBLIC_POSSIBLE_SKILL_METADATA = {
+    ".agents/skills/configured-environment-evidence-binding/SKILL.md": {
+        "name": "configured-environment-evidence-binding",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "origin": "repository_native",
+    },
+    ".agents/skills/contextual-jargon-scan/SKILL.md": {
+        "name": "contextual-jargon-scan",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "upstream_repository": "driftframestudios/human-ai-systems-exemplars",
+        "upstream_path": ".agents/skills/contextual-jargon-scan/SKILL.md",
+        "upstream_revision": "0c023343e46cd9b1333a63c2d509787352fbad14",
+        "upstream_blob_sha1": "3c3a94db99152385253e0281c8afa8fea8208ac5",
+        "upstream_sha256": (
+            "da383f99eaff364d7e17c3bff93d8da618ec95894a45ff78a9620d8d7fc81523"
+        ),
+        "adaptation_relation": "repository_local_derivative",
+    },
+    ".agents/skills/proportionate-recovery-routing/SKILL.md": {
+        "name": "proportionate-recovery-routing",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "upstream_repository": "driftframestudios/lims-eln-program-specification",
+        "upstream_path": ".agents/skills/proportionate-recovery-routing/SKILL.md",
+        "upstream_revision": "05357fbed16a5b5aca80c239e4c7535f67d5654b",
+        "upstream_blob_sha1": "2756ae9630c5016b13eb9b7158718d0b03e1d3cc",
+        "upstream_sha256": (
+            "a3e4a7b558793a54558c945034a5199631103cdd69435e3f3720b062b8b9cb9d"
+        ),
+        "adaptation_relation": "repository_local_derivative",
+    },
+    ".agents/skills/repository-reentry/SKILL.md": {
+        "name": "repository-reentry",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "upstream_repository": "driftframestudios/human-ai-systems-exemplars",
+        "upstream_path": ".agents/skills/repository-reentry/SKILL.md",
+        "upstream_revision": "0c023343e46cd9b1333a63c2d509787352fbad14",
+        "upstream_blob_sha1": "ac2c3732826c515b236598af10e0a204dbe14ace",
+        "upstream_sha256": (
+            "c60bb1bac3a993c78d94b1d05aaa7a97761b99275fc9acdc8285acba6f688f02"
+        ),
+        "adaptation_relation": "repository_local_derivative",
+    },
+    ".agents/skills/source-authority-mapping/SKILL.md": {
+        "name": "source-authority-mapping",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "upstream_repository": "driftframestudios/human-ai-systems-exemplars",
+        "upstream_path": ".agents/skills/source-authority-mapping/SKILL.md",
+        "upstream_revision": "0c023343e46cd9b1333a63c2d509787352fbad14",
+        "upstream_blob_sha1": "112830e9b70540b0bc9a8535ab77c7a04c1a5926",
+        "upstream_sha256": (
+            "1420eaee7f6d58805c29eaff23644d4982fdf1f12d2f6ce3cc39c65791939aff"
+        ),
+        "adaptation_relation": "repository_local_derivative",
+    },
+}
+_SKILL_REQUIRED_SECTIONS = (
+    "## Contract",
+    "## Rules",
+    "## Operating sequence",
+    "## Completion",
+)
+_GIT_OID = re.compile(r"[0-9a-f]{40}")
+_SHA256 = re.compile(r"[0-9a-f]{64}")
+
 PUBLISHED_SUFFIXES = {
     ".py",
     ".md",
@@ -133,6 +202,91 @@ def is_generated_or_external(path: Path) -> bool:
 
 def file_digest(path: Path) -> str:
     return f"sha256:{sha256(path.read_bytes()).hexdigest()}"
+
+
+def parse_skill_source(path: Path) -> tuple[dict[str, str], str]:
+    """Return simple scalar front matter and the complete skill source."""
+
+    content = path.read_text(encoding="utf-8")
+    lines = content.splitlines()
+    if not lines or lines[0] != "---":
+        raise ValueError(f"{path} requires YAML front matter")
+    try:
+        closing = lines.index("---", 1)
+    except ValueError as error:
+        raise ValueError(f"{path} has unclosed YAML front matter") from error
+    metadata: dict[str, str] = {}
+    for line in lines[1:closing]:
+        if not line.strip():
+            continue
+        if ":" not in line:
+            raise ValueError(f"{path} has unsupported front-matter line {line!r}")
+        key, value = line.split(":", 1)
+        metadata[key.strip()] = value.strip().strip('"')
+    return metadata, content
+
+
+def validate_collaboration_workbench(root: Path = ROOT) -> list[str]:
+    """Validate the exact repository-local skill workbench and its orientation."""
+
+    findings: list[str] = []
+    skills_root = root / ".agents" / "skills"
+    actual_paths = {
+        str(path.relative_to(root)) for path in skills_root.glob("*/SKILL.md")
+    }
+    expected_paths = set(PUBLIC_POSSIBLE_SKILL_METADATA)
+    if actual_paths != expected_paths:
+        findings.append(
+            "public-possible skill inventory differs: expected "
+            f"{sorted(expected_paths)!r}; received {sorted(actual_paths)!r}"
+        )
+    for relative_path, expected in PUBLIC_POSSIBLE_SKILL_METADATA.items():
+        path = root / relative_path
+        if not path.is_file():
+            continue
+        try:
+            metadata, content = parse_skill_source(path)
+        except ValueError as error:
+            findings.append(str(error))
+            continue
+        observed = {key: metadata.get(key) for key in expected}
+        if observed != expected:
+            findings.append(
+                f"{relative_path} metadata differs: expected {expected!r}; "
+                f"received {observed!r}"
+            )
+        if path.parent.name != metadata.get("name"):
+            findings.append(f"{relative_path} directory and skill name must match")
+        if not metadata.get("description", "").strip():
+            findings.append(f"{relative_path} requires a discovery description")
+        if metadata.get("adaptation_relation") == "repository_local_derivative":
+            if not _GIT_OID.fullmatch(metadata.get("upstream_revision", "")):
+                findings.append(f"{relative_path} requires a full upstream revision")
+            if not _GIT_OID.fullmatch(metadata.get("upstream_blob_sha1", "")):
+                findings.append(f"{relative_path} requires an upstream blob identity")
+            if not _SHA256.fullmatch(metadata.get("upstream_sha256", "")):
+                findings.append(f"{relative_path} requires an upstream SHA-256 identity")
+        for heading in _SKILL_REQUIRED_SECTIONS:
+            if heading not in content:
+                findings.append(f"{relative_path} requires {heading}")
+        if "notion.so" in content or "app.notion.com" in content:
+            findings.append(
+                f"{relative_path} must remain usable through repository-local "
+                "guidance; private workspace locator found"
+            )
+    for orientation_name in ("README.md", "AGENTS.md"):
+        orientation_path = root / orientation_name
+        if not orientation_path.is_file():
+            findings.append(f"{orientation_name} is required for workbench routing")
+            continue
+        orientation = orientation_path.read_text(encoding="utf-8")
+        for relative_path in expected_paths:
+            if relative_path not in orientation:
+                findings.append(
+                    f"{orientation_name} must link the exact skill path {relative_path}"
+                )
+
+    return findings
 
 
 def load_json_files() -> list[Path]:
@@ -1587,6 +1741,9 @@ def run_tests() -> unittest.result.TestResult:
 def main() -> int:
     json_paths = load_json_files()
     validate_contracts()
+    collaboration_findings = validate_collaboration_workbench()
+    if collaboration_findings:
+        raise AssertionError("\n".join(collaboration_findings))
     validate_manifests()
     validate_synthetic_fixtures()
     validate_runtime_setting_catalog()
@@ -1598,6 +1755,7 @@ def main() -> int:
     report = {
         "status": "passed",
         "repository_role": "enterprise_implementation",
+        "collaboration_skills": len(PUBLIC_POSSIBLE_SKILL_METADATA),
         "json_files_validated": len(json_paths),
         "tests_run": result.testsRun,
         "source_digest": source_digest(),
