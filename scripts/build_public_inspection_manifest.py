@@ -15,6 +15,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = Path("release/public-inspection-manifest.json")
+EXTERNAL_COORDINATE_PATH = Path("release/external-contract-coordinates.json")
 CANONICALIZATION = "ordered-path-nul-sha256-lf-v1"
 
 ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
@@ -52,6 +53,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
             "contracts/*.json",
             "fixtures/synthetic/*.json",
             "release/bounded-caller-bindings.json",
+            "release/external-contract-coordinates.json",
         ),
     ),
     (
@@ -185,6 +187,17 @@ def _aggregate(artifacts: list[dict[str, Any]]) -> str:
 
 
 def build_manifest(root: Path = ROOT) -> dict[str, Any]:
+    coordinate_path = _safe_file(root, EXTERNAL_COORDINATE_PATH.as_posix())
+    try:
+        coordinates = json.loads(coordinate_path.read_text(encoding="utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as error:
+        raise InspectionManifestError(
+            "external coordinates require one UTF-8 JSON document"
+        ) from error
+    program = coordinates["program_contract"]
+    governance = coordinates["governance"]
+    coordinate_digest = _digest(coordinate_path)
+
     groups: list[dict[str, Any]] = []
     all_artifacts: list[dict[str, Any]] = []
     seen_paths: set[str] = set()
@@ -227,13 +240,21 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
         "coordinate_boundaries": [
             {
                 "role": "program_contract",
-                "declared_compatibility": ">=0.3.1,<0.4",
-                "coordinate_state": "awaiting_accepted_revision",
+                "coordinate_manifest": EXTERNAL_COORDINATE_PATH.as_posix(),
+                "coordinate_manifest_sha256": coordinate_digest,
+                "declared_release": program["package_version"],
+                "accepted_revision": program["source_commit"],
+                "source_digest": program["source_identity"]["digest"],
+                "coordinate_state": "accepted_source_consumer_observed",
             },
             {
                 "role": "governance_schema",
-                "declared_release": "2.0.1",
-                "coordinate_state": "awaiting_accepted_revision",
+                "coordinate_manifest": EXTERNAL_COORDINATE_PATH.as_posix(),
+                "coordinate_manifest_sha256": coordinate_digest,
+                "declared_release": governance["release"],
+                "schema_release": governance["schema_release"],
+                "accepted_revision": governance["source_commit"],
+                "coordinate_state": "accepted_release",
             },
         ],
         "evidence_boundary": {
@@ -245,8 +266,8 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
                 "artifact bindings, assurance stage, and limitations."
             ),
             "promotion": (
-                "The release steward adds accepted Git and dependency coordinates after "
-                "their receiving reviews settle."
+                "Accepted Program and Governance coordinates are bound in the external "
+                "coordinate manifest; remaining release roles retain their own evidence."
             ),
         },
         "manifest_carriers": [

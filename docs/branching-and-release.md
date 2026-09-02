@@ -59,11 +59,14 @@ that every selected path, file size, file digest, group digest, and aggregate
 identity matches the working tree. A source change receives a regenerated
 inventory in the same reviewed change.
 
-The repository-owned candidate carries declared dependency bands. Accepted
-program and governance Git revisions enter during their own receiving reviews,
-and configured-system observations remain in evidence receipts with their
-environment and assurance boundaries. Release assembly can therefore examine
-each authority independently.
+The repository-owned candidate carries the accepted Program and Governance Git
+coordinates through
+[`release/external-contract-coordinates.json`](../release/external-contract-coordinates.json).
+The Program binding includes its exact package source digest and clean Python
+3.12 consumer observation. The Governance binding includes its annotated tag
+object, commit, tree, and archive digest. Configured-system observations remain
+in evidence receipts with their environment and assurance boundaries, so
+release assembly can examine each authority independently.
 
 ## Pull-request gates
 

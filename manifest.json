@@ -8,7 +8,7 @@
   "fixture_policy": "synthetic_only",
   "validation_command": "python3 scripts/validate_repository.py",
   "control_plane": {
-    "governance_schema_release": "2.0.1",
+    "governance_schema_release": "2.1.0",
     "control_plane_profile": "0.3.0",
     "machine_node": "machine-node.json",
     "first_receipt": "first-receipt.json",
@@ -17,9 +17,14 @@
   },
   "public_inspection": {
     "manifest": "release/public-inspection-manifest.json",
-    "manifest_digest": "sha256:59a41d841a3691ef41c82a03a5cc7b095cc95694119a13f22e128f7221ec74f0",
+    "manifest_digest": "sha256:ecacf9e87267e89e450d80d9d491cc6b09f97ff124f8316f417b36634f6e41a4",
     "authority": "repository_owned_candidate_bytes",
-    "cross_repository_coordinate_state": "awaiting_accepted_revisions"
+    "cross_repository_coordinate_state": "accepted_and_consumer_observed"
+  },
+  "external_contracts": {
+    "coordinate_manifest": "release/external-contract-coordinates.json",
+    "coordinate_manifest_digest": "sha256:e89eb61e8cf04b27c1bd7b84c7c600d0866fb813a7e6761fe7a0e865a11cc077",
+    "coordinate_state": "accepted_and_consumer_observed"
   },
   "contract_versions": {
     "specimen_command": "1.0.0",
@@ -32,7 +37,7 @@
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:04bff51ec3e319c91268d340c63f0fbb548aa936117efd2ede24c42a2adb4a7d",
+    "binding_digest": "sha256:3fa9494b74e48130f564389c05a2354ae43a92ac9d2fd4a4c595f97cfd9a381d",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",

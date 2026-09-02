@@ -10,11 +10,13 @@
 /scripts/check_branch_flow.py @driftframestudios
 /scripts/check_automation_contract.py @driftframestudios
 /scripts/build_public_inspection_manifest.py @driftframestudios
+/scripts/validate_received_contracts.py @driftframestudios
 /scripts/validate_repository.py @driftframestudios
 /flyway.conf @driftframestudios
 /tests/test_branch_flow.py @driftframestudios
 /tests/test_database_migrations.py @driftframestudios
 /tests/test_public_inspection_manifest.py @driftframestudios
+/tests/test_received_contracts.py @driftframestudios
 /tests/test_postgres_integration.py @driftframestudios
 /tests/test_sql_tenant_boundary.py @driftframestudios
 /src/lims_eln_implementation/bounded_caller.py @driftframestudios

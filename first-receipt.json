@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RCP-IMPLEMENTATION-001",
   "machine_node_id": "NODE-LIMS-ELN-IMPLEMENTATION",
-  "as_of": "2026-08-04T14:30:22Z",
+  "as_of": "2026-09-02T00:33:54Z",
   "orientation_purpose": "Give a human or AI collaborator the minimum complete implementation state, authority boundary, evidence posture, invalidation conditions, and safe handoff needed to reproduce or extend this reference.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -11,7 +11,7 @@
     {
       "contract_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
       "version": "0.3.1",
-      "digest": "sha256:04bff51ec3e319c91268d340c63f0fbb548aa936117efd2ede24c42a2adb4a7d"
+      "digest": "sha256:3fa9494b74e48130f564389c05a2354ae43a92ac9d2fd4a4c595f97cfd9a381d"
     },
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
@@ -100,9 +100,9 @@
     "success_evidence": "Tests, credential hygiene, canonical receipt-family checks, governance schemas, and every declared source binding pass against one release candidate whose immutable provenance closes RCP-IMPLEMENTATION-PROMOTION-003."
   },
   "metadata": {
-    "schema_version": "2.0.1",
+    "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-08-04T14:30:22Z",
+    "updated_at": "2026-09-02T00:33:54Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-RECEIPT",
       "display_name": "Implementation stewardship role",

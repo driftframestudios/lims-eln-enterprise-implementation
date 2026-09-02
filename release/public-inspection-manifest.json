@@ -1,12 +1,12 @@
 {
   "artifact_groups": [
     {
-      "aggregate_sha256": "sha256:36cb75cfb56b3d62aa27500b67b871114338de667c29af4cff3886177eedb92f",
+      "aggregate_sha256": "sha256:4f5784c6af320d088fae62e13cb1ce74de1d882fd554ffef064c76b8f30f3bad",
       "artifacts": [
         {
           "path": "pyproject.toml",
-          "sha256": "sha256:d8723567c3863d4ccab2c7735554bc9d620469f45194368d5c0f3629f283f143",
-          "size_bytes": 1098
+          "sha256": "sha256:abd87354133d433fe89d9f89797b2646d0198e3e91739ba3b76175c740c9bc34",
+          "size_bytes": 1205
         },
         {
           "path": "src/lims_eln_implementation/__init__.py",
@@ -140,8 +140,8 @@
         },
         {
           "path": "src/lims_eln_implementation/workbench/static/workbench.js",
-          "sha256": "sha256:acb28fb8a7980350c2a28ca62c15c4d79b27988af09222879cbb19df6ca78365",
-          "size_bytes": 8679
+          "sha256": "sha256:f128a927b5da2b7a980d427a1ac435946d9a7848d8aeee3c46f088cbbe51e32f",
+          "size_bytes": 8685
         },
         {
           "path": "src/lims_eln_implementation/workbench/templates/workbench.html",
@@ -235,7 +235,7 @@
       "responsibility": "Flyway V001 through V005, its bounded identity, and deployment-shape database support."
     },
     {
-      "aggregate_sha256": "sha256:d4b7d6888bdfcec3127b823c2752196886ec5257b39f77555a96d07625dcab3f",
+      "aggregate_sha256": "sha256:04f8f210a14b748bcda8f736f05b6f181c7a8f7a6b8a32436be6827c5de4bee7",
       "artifacts": [
         {
           "path": "contracts/execution-receipt.v1.1.schema.json",
@@ -284,8 +284,13 @@
         },
         {
           "path": "release/bounded-caller-bindings.json",
-          "sha256": "sha256:04bff51ec3e319c91268d340c63f0fbb548aa936117efd2ede24c42a2adb4a7d",
+          "sha256": "sha256:3fa9494b74e48130f564389c05a2354ae43a92ac9d2fd4a4c595f97cfd9a381d",
           "size_bytes": 5006
+        },
+        {
+          "path": "release/external-contract-coordinates.json",
+          "sha256": "sha256:e89eb61e8cf04b27c1bd7b84c7c600d0866fb813a7e6761fe7a0e865a11cc077",
+          "size_bytes": 2958
         }
       ],
       "name": "contracts_and_synthetic_inputs",
@@ -339,7 +344,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:e0f088557fde7af6f06a8fd52728bc3c81a4f1b2bda92bd4cf0cddf6aa345a22",
+      "aggregate_sha256": "sha256:9f6627980f500a24f814415a642d780895ae2ebb295aba3f97b96de2984b52e0",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -363,8 +368,8 @@
         },
         {
           "path": "scripts/build_public_inspection_manifest.py",
-          "sha256": "sha256:f8c747e823a011d7a6303c8173f560f8868c7744551c2fbc0591ee82c8d90db2",
-          "size_bytes": 15769
+          "sha256": "sha256:105356bfb09ba65287147327fc4c2c878e14e937de927a9f45bf015ff14de107",
+          "size_bytes": 16994
         },
         {
           "path": "scripts/check_automation_contract.py",
@@ -382,9 +387,14 @@
           "size_bytes": 5409
         },
         {
+          "path": "scripts/validate_received_contracts.py",
+          "sha256": "sha256:dbaa451472b65ae9077331ab7833e9baa1dc5656e0ba91352b6fff8ed31ac34b",
+          "size_bytes": 19541
+        },
+        {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:469d8359ecf6154eb734de6e2390a0eaa6bd4f1c5b5e8e831177bb5177e2d2e7",
-          "size_bytes": 38059
+          "sha256": "sha256:50484d2c901dc8d93664d2da3ac8f662c3f02c671cfde7622636eeffdcbe9694",
+          "size_bytes": 40482
         },
         {
           "path": "tests/__init__.py",
@@ -398,8 +408,8 @@
         },
         {
           "path": "tests/test_attribution_boundary.py",
-          "sha256": "sha256:dd4264aca7d85637d100f32bcd81beb48c0879fe544a9808743c3aa1215d13ec",
-          "size_bytes": 2118
+          "sha256": "sha256:f7e872949791e984ffd1a58eeaa0d250824f2973d54d4abdc2426f34fa6e8ad3",
+          "size_bytes": 2188
         },
         {
           "path": "tests/test_bounded_caller.py",
@@ -448,8 +458,13 @@
         },
         {
           "path": "tests/test_public_inspection_manifest.py",
-          "sha256": "sha256:f94c5b2d01b1d96a9e2265f912e72674a4d148cc69a84d14f7fb8a772bd9deb9",
-          "size_bytes": 8769
+          "sha256": "sha256:c0b7cb0beb6b3dd84ec138418bedcaa43a09ed8c544d5251a3f9e2cac7b2e3f9",
+          "size_bytes": 9809
+        },
+        {
+          "path": "tests/test_received_contracts.py",
+          "sha256": "sha256:a99af11e73c7580ab048ca72272b5ed4f1312ec5ede74a3161714262c26ce190",
+          "size_bytes": 13724
         },
         {
           "path": "tests/test_runtime_configuration.py",
@@ -463,8 +478,8 @@
         },
         {
           "path": "tests/test_shared_contract_binding.py",
-          "sha256": "sha256:8d9fb44af7f44be3ddc846cbdd9274f092bbc4f4d5e376eb0b42e39cc85e731f",
-          "size_bytes": 3962
+          "sha256": "sha256:d20e78cb015390824d4b8f0c6b92a5d684d819ae79bd7f03546fd894904b086e",
+          "size_bytes": 4963
         },
         {
           "path": "tests/test_sql_tenant_boundary.py",
@@ -513,7 +528,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:d665e52c70b2086a2585991a83d46e41dd06508d9fdaf19d1ab11707033b6292",
+      "aggregate_sha256": "sha256:6c1bb8f9df8d9b64fff64ba95c85e1472793d69558e6ba2e41e69243cbe81b86",
       "artifacts": [
         {
           "path": ".github/AUTOMATION.md",
@@ -522,8 +537,8 @@
         },
         {
           "path": ".github/CODEOWNERS",
-          "sha256": "sha256:bfde22bca21e6236de9075b756dfd218450642f076ee1c84943cd49ed4a4cd27",
-          "size_bytes": 1426
+          "sha256": "sha256:8e4c81a05247c20605b8c0e5a2df8a37c260030b843eb13253761db6fddc6942",
+          "size_bytes": 1538
         },
         {
           "path": ".github/dependabot.yml",
@@ -542,8 +557,8 @@
         },
         {
           "path": "CHANGELOG.md",
-          "sha256": "sha256:bbacbb9826b2c2883e010ee8beb96dcb42f043ff641e49f5c94b32ab58a35b56",
-          "size_bytes": 8528
+          "sha256": "sha256:db3286c29e941db1f8663fe867c00a88244fb6da74de10169de2a6a4165631a3",
+          "size_bytes": 8976
         },
         {
           "path": "CONTRIBUTING.md",
@@ -552,7 +567,7 @@
         },
         {
           "path": "COORDINATION-HORIZON.json",
-          "sha256": "sha256:0e3dc94ee162a41feb2bac22cef7c1c45188214dbc6c5de7546c110b7fcb6dc6",
+          "sha256": "sha256:4ec5e0210845756023a9fc2b8ea0105de2f39ab85d1c7e44d2c4c452b884681f",
           "size_bytes": 5350
         },
         {
@@ -567,8 +582,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:d04054aff1644cbd161d7a4362bf9652da9b7f0c87167f61054049ba724f2af9",
-          "size_bytes": 17759
+          "sha256": "sha256:7afffcd395c231149adb78bfc59de5725522922d1e5b8ffe271c1b758e5a7df8",
+          "size_bytes": 18393
         },
         {
           "path": "SECURITY.md",
@@ -582,8 +597,8 @@
         },
         {
           "path": "docs/branching-and-release.md",
-          "sha256": "sha256:8a83ef79474b19a67ef9d981a42145d4db88d3f2e1e8e6519db7f218571c590b",
-          "size_bytes": 6303
+          "sha256": "sha256:0e52ce98ceef08d498e887ec3af4176c2c669dee3ac0b795789b2e81735c521c",
+          "size_bytes": 6529
         },
         {
           "path": "docs/data-primitive-corrective-ledger.md",
@@ -597,8 +612,8 @@
         },
         {
           "path": "docs/golden-specimen-workbench.md",
-          "sha256": "sha256:a2b8ef6dd7e593769e39958f4b8183e6e31617a67d7698d05bd6e6a3190a69fc",
-          "size_bytes": 5858
+          "sha256": "sha256:14e2dc61d8226b08dbf29b62b6c4b0ca0867d574ed7d868b49f4a3dec66b4c55",
+          "size_bytes": 6095
         },
         {
           "path": "docs/qualification-boundaries.md",
@@ -627,7 +642,7 @@
         },
         {
           "path": "first-receipt.json",
-          "sha256": "sha256:bb43df5c2d580c86ea1a3492a8affe34d1fed117d05740d93ea1f2fa089683d2",
+          "sha256": "sha256:0d37f1549601a667025110073538cd187898bc53466ec7f07c2aa831f72de6f9",
           "size_bytes": 5541
         },
         {
@@ -637,7 +652,7 @@
         },
         {
           "path": "machine-node.json",
-          "sha256": "sha256:c611a70014d7b4e551210e48b98a1b7cbbb7678c0ea464760e4642339f0ba80f",
+          "sha256": "sha256:d6583e541a3567abbac9d483d2874ab482994af9391f13fb8d3bdb0db159f6f6",
           "size_bytes": 5450
         },
         {
@@ -658,19 +673,27 @@
   "canonicalization": "ordered-path-nul-sha256-lf-v1",
   "coordinate_boundaries": [
     {
-      "coordinate_state": "awaiting_accepted_revision",
-      "declared_compatibility": ">=0.3.1,<0.4",
-      "role": "program_contract"
+      "accepted_revision": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+      "coordinate_manifest": "release/external-contract-coordinates.json",
+      "coordinate_manifest_sha256": "sha256:e89eb61e8cf04b27c1bd7b84c7c600d0866fb813a7e6761fe7a0e865a11cc077",
+      "coordinate_state": "accepted_source_consumer_observed",
+      "declared_release": "0.3.1",
+      "role": "program_contract",
+      "source_digest": "sha256:e4d7ef6aa1036b69395e9de3ab0064297dc80e5f697ab60de699a355e45f7674"
     },
     {
-      "coordinate_state": "awaiting_accepted_revision",
-      "declared_release": "2.0.1",
-      "role": "governance_schema"
+      "accepted_revision": "8469c2a6b2c7f4445523cee262b961ffe3d2523b",
+      "coordinate_manifest": "release/external-contract-coordinates.json",
+      "coordinate_manifest_sha256": "sha256:e89eb61e8cf04b27c1bd7b84c7c600d0866fb813a7e6761fe7a0e865a11cc077",
+      "coordinate_state": "accepted_release",
+      "declared_release": "2.1.0",
+      "role": "governance_schema",
+      "schema_release": "2.1.0"
     }
   ],
   "evidence_boundary": {
     "configured_environment": "Environment receipts retain their named system, time, performer, reviewer, artifact bindings, assurance stage, and limitations.",
-    "promotion": "The release steward adds accepted Git and dependency coordinates after their receiving reviews settle.",
+    "promotion": "Accepted Program and Governance coordinates are bound in the external coordinate manifest; remaining release roles retain their own evidence.",
     "repository_owned_candidate": "The inventory establishes the exact local bytes available for review."
   },
   "manifest_carriers": [
@@ -682,7 +705,7 @@
   "repository_release": "0.3.1",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:5c093141ea7b5a577745a9bf36db8f55d931b220d7c059b000f75561466e6712",
+    "aggregate_sha256": "sha256:a0f285162a64448adbb755edbc11ceb80a0a9fcc87d073d07211b5aaeba5d15f",
     "kind": "content_addressed_artifact_inventory"
   }
 }

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from importlib.util import find_spec
+from importlib.metadata import version as distribution_version
 from datetime import datetime
 import json
 import unittest
@@ -18,15 +19,33 @@ CONTRACT_PACKAGE_AVAILABLE = find_spec("lims_eln_contracts") is not None
 class SharedContractBindingTests(unittest.TestCase):
     def test_shared_scenario_and_observation_envelope_converge(self) -> None:
         from lims_eln_contracts import (
+            CONTRACT_VERSION,
             ObservationEnvelope,
+            SCHEMA_RESOURCE_NAMES,
             __version__ as shared_package_version,
+            load_generated_schema,
+            load_golden_specimen_observation_example,
             load_golden_specimen_scenario,
+            load_operation_catalog,
             model_from_strict_json,
         )
 
+        self.assertEqual(
+            distribution_version("lims-eln-program-specification"), "0.3.1"
+        )
         self.assertEqual(shared_package_version, "0.3.1")
+        self.assertEqual(CONTRACT_VERSION, "1.0.0")
 
+        operation_catalog = load_operation_catalog()
+        self.assertGreater(len(operation_catalog.operations), 0)
         scenario = load_golden_specimen_scenario()
+        for producer in ("implementation", "simulation"):
+            with self.subTest(producer=producer):
+                observation_example = load_golden_specimen_observation_example(producer)
+                self.assertEqual(observation_example.scenario_id, scenario.scenario_id)
+        for schema_name in SCHEMA_RESOURCE_NAMES:
+            with self.subTest(schema=schema_name):
+                self.assertIsInstance(load_generated_schema(schema_name), dict)
         scientific_result = scenario.instrument_message.raw_document["result"]
         self.assertEqual(scientific_result["unit"], "copies")
         # The shared scenario binds journey identity and expected state. The

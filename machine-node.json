@@ -4,7 +4,7 @@
   "title": "LIMS/ELN Enterprise Implementation",
   "purpose": "Orient collaborators to the executable enterprise reference, bounded-caller authority boundary, receipt posture, Coordination Horizon, and release evidence without granting runtime authority.",
   "control_plane_profile": "0.3.0",
-  "schema_release": "2.0.1",
+  "schema_release": "2.1.0",
   "repository_role": "enterprise_implementation",
   "authority": {
     "mode": "orientation_only",
@@ -21,7 +21,7 @@
     {
       "contract_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
       "version": "0.3.1",
-      "digest": "sha256:04bff51ec3e319c91268d340c63f0fbb548aa936117efd2ede24c42a2adb4a7d"
+      "digest": "sha256:3fa9494b74e48130f564389c05a2354ae43a92ac9d2fd4a4c595f97cfd9a381d"
     },
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
@@ -42,17 +42,17 @@
   "campaigns": [
     {
       "campaign_id": "LIMS-ELN-OPEN-RECEIPTS",
-      "marking_schema_version": "2.0.1",
+      "marking_schema_version": "2.1.0",
       "status": "active"
     },
     {
       "campaign_id": "COMPARATIVE-LITERACY-COLLABORATION",
-      "marking_schema_version": "2.0.1",
+      "marking_schema_version": "2.1.0",
       "status": "active"
     },
     {
       "campaign_id": "SITE-READING-SYSTEM",
-      "marking_schema_version": "2.0.1",
+      "marking_schema_version": "2.1.0",
       "status": "active"
     }
   ],
@@ -117,9 +117,9 @@
     }
   ],
   "metadata": {
-    "schema_version": "2.0.1",
+    "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-07-28T19:32:00Z",
+    "updated_at": "2026-09-02T00:33:54Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-NODE",
       "display_name": "Implementation stewardship role",

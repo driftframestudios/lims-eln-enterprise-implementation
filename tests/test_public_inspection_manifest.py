@@ -71,12 +71,18 @@ class PublicInspectionManifestTests(unittest.TestCase):
         self.assertTrue(
             {
                 "scripts/build_package_archive.py",
+                "scripts/validate_received_contracts.py",
                 "tests/test_postgres_integration.py",
                 "tests/test_shared_contract_binding.py",
+                "tests/test_received_contracts.py",
                 "tests/test_workbench_service.py",
                 ".github/workflows/ci.yml",
                 ".github/workflows/pull-request.yml",
             }.issubset(groups["behavior_proofs"])
+        )
+        self.assertIn(
+            "release/external-contract-coordinates.json",
+            groups["contracts_and_synthetic_inputs"],
         )
         self.assertTrue(
             {"AUTHORS", "README.md", ".github/dependabot.yml"}.issubset(
@@ -185,19 +191,34 @@ class PublicInspectionManifestTests(unittest.TestCase):
             ):
                 verify_manifest(target)
 
-    def test_foreign_coordinates_wait_for_their_accepted_revisions(self) -> None:
+    def test_external_coordinates_project_their_accepted_revisions(self) -> None:
         coordinates = self.manifest()["coordinate_boundaries"]
         self.assertEqual(
             {coordinate["role"] for coordinate in coordinates},
             {"program_contract", "governance_schema"},
         )
+        by_role = {coordinate["role"]: coordinate for coordinate in coordinates}
+        program = by_role["program_contract"]
+        self.assertEqual(program["coordinate_state"], "accepted_source_consumer_observed")
+        self.assertEqual(
+            program["accepted_revision"],
+            "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+        )
+        self.assertEqual(program["declared_release"], "0.3.1")
+        governance = by_role["governance_schema"]
+        self.assertEqual(governance["coordinate_state"], "accepted_release")
+        self.assertEqual(governance["declared_release"], "2.1.0")
+        self.assertEqual(governance["schema_release"], "2.1.0")
         for coordinate in coordinates:
             with self.subTest(role=coordinate["role"]):
                 self.assertEqual(
-                    coordinate["coordinate_state"],
-                    "awaiting_accepted_revision",
+                    coordinate["coordinate_manifest"],
+                    "release/external-contract-coordinates.json",
                 )
-                self.assertNotIn("accepted_revision", coordinate)
+                self.assertRegex(
+                    coordinate["coordinate_manifest_sha256"],
+                    r"^sha256:[a-f0-9]{64}$",
+                )
 
     def test_manifest_carriers_bind_the_exact_inventory_document(self) -> None:
         digest = "sha256:" + sha256((ROOT / MANIFEST_PATH).read_bytes()).hexdigest()
