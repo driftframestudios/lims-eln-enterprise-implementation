@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RCP-IMPLEMENTATION-001",
   "machine_node_id": "NODE-LIMS-ELN-IMPLEMENTATION",
-  "as_of": "2026-09-02T01:59:47Z",
+  "as_of": "2026-09-02T02:42:44Z",
   "orientation_purpose": "Give a human or AI collaborator the minimum complete implementation state, authority boundary, evidence posture, invalidation conditions, and safe handoff needed to reproduce or extend this reference.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -56,9 +56,8 @@
     }
   ],
   "coordination_horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
-  "current_horizon_summary": "Implementation release 0.3.1 is settling around process-local and durable PostgreSQL workbench paths, least-privilege database identities, and governance-conformant orientation surfaces.",
+  "current_horizon_summary": "Implementation release 0.3.1 is reference-ready with process-local and durable PostgreSQL workbench paths, least-privilege database identities, and an immutable release coordinate available to comparative evidence.",
   "open_receipts": [
-    "RCP-IMPLEMENTATION-PROMOTION-003",
     "RCP-OBSERVED-VENDORS-001",
     "RCP-OBSERVED-MIGRATION-RESTORE-001",
     "RCP-OBSERVED-SECURITY-OBSERVABILITY-001",
@@ -95,14 +94,14 @@
     }
   ],
   "handoff": {
-    "recipient_role": "implementation stewardship",
-    "next_safe_action": "Run repository validation and governance projection validation, reconcile source and release digests, then close RCP-IMPLEMENTATION-PROMOTION-003 against the reviewed immutable coordinate.",
-    "success_evidence": "Tests, credential hygiene, canonical receipt-family checks, governance schemas, and every declared source binding pass against one release candidate whose immutable provenance closes RCP-IMPLEMENTATION-PROMOTION-003."
+    "recipient_role": "comparative evidence stewardship",
+    "next_safe_action": "Pin the observed v0.3.1 tag, accepted commit, tree, and tagged archive SHA-256 in comparative evidence, then compare the implementation with the independently released selected future.",
+    "success_evidence": "Comparative evidence reproduces the tagged archive, binds the exact implementation coordinate, preserves observed and simulated authority as distinct states, and records each material divergence against its owning source."
   },
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T01:59:47Z",
+    "updated_at": "2026-09-02T02:42:44Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-RECEIPT",
       "display_name": "Implementation stewardship role",
