@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_set": "postgresql-flyway-head-005",
+  "canonicalization": "ordered-path-nul-sha256-lf-v1",
+  "artifacts": [
+    {
+      "kind": "configuration",
+      "path": "flyway.conf",
+      "sha256": "d942bdda5d05b775efe91397a7caea3c0c9078aab0427b0c4b11457bf6141d0c"
+    },
+    {
+      "kind": "connection_callback",
+      "path": "sql/afterConnect.sql",
+      "sha256": "5bb2c9dbb8b4f8659c48ec329ee5d59b1ba6e94337b6509fd2d48b1180e047d9"
+    },
+    {
+      "kind": "cluster_role_provisioning",
+      "path": "database/provision_cluster_roles.sql",
+      "sha256": "0ebfb5ecf405130a28704322fb7140caad0b5dd25df6be07894d7aca55801584"
+    },
+    {
+      "kind": "versioned_migration",
+      "version": "001",
+      "path": "sql/V001__laboratory_core.sql",
+      "sha256": "d0a8a360debb70f5dfdfcb8834ae8558a285e3f852014b91d9c521a2bd9ec7e4"
+    },
+    {
+      "kind": "versioned_migration",
+      "version": "002",
+      "path": "sql/V002__principal_data_boundaries.sql",
+      "sha256": "ed9f4f4f342eb133575c1e1920558427ae0044750c61885bee7d89d4ac8afe91"
+    },
+    {
+      "kind": "versioned_migration",
+      "version": "003",
+      "path": "sql/V003__trusted_routines_and_outbox_cas.sql",
+      "sha256": "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70"
+    },
+    {
+      "kind": "versioned_migration",
+      "version": "004",
+      "path": "sql/V004__outbox_attempt_evidence_and_recovery.sql",
+      "sha256": "2cb392ab1d59ce8db7cf163da221c09e898f65358462819f81ab29b558386b36"
+    },
+    {
+      "kind": "versioned_migration",
+      "version": "005",
+      "path": "sql/V005__golden_specimen_workbench.sql",
+      "sha256": "6366a6093992c6fa42770cb5e6706a9109cbbcf2c0828f14bfe8af9288e0ed6e"
+    }
+  ],
+  "aggregate_sha256": "sha256:029e6a37796057e8915cec79caad424b3573fd9085c8cbc20a7d6cf97315c808"
+}

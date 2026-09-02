@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "engine": "postgresql",
+  "migration_product": "Flyway Community",
+  "flyway_version": "13.0.0",
+  "container_image": "flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
+  "configuration": "flyway.conf",
+  "locations": [
+    "filesystem:sql"
+  ],
+  "migration_head": "005",
+  "authenticated_login": "laboratory_migrator",
+  "migration_role": "laboratory_owner",
+  "role_assumption": "database_scoped_startup_role_after_connect_verified_noinherit_membership",
+  "connection_callback": {
+    "path": "sql/afterConnect.sql",
+    "sha256": "5bb2c9dbb8b4f8659c48ec329ee5d59b1ba6e94337b6509fd2d48b1180e047d9"
+  },
+  "artifact_inventory": {
+    "path": "database/flyway-artifact-inventory.json",
+    "sha256": "8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a",
+    "aggregate_sha256": "sha256:029e6a37796057e8915cec79caad424b3573fd9085c8cbc20a7d6cf97315c808"
+  },
+  "baseline_policy": "explicit_attested_baseline_only",
+  "cluster_role_provisioning": {
+    "path": "database/provision_cluster_roles.sql",
+    "sha256": "0ebfb5ecf405130a28704322fb7140caad0b5dd25df6be07894d7aca55801584",
+    "execution": "separate_privileged_deployment_step"
+  },
+  "credentials": "runtime_environment_only"
+}

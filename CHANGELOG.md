@@ -1,5 +1,99 @@
 # Changelog
 
+## 0.3.1 — 2026-09-02
+
+### Public-inspection closure
+
+- Pin the reviewed Program 0.3.1 package source and digest, exercise its complete
+  consumer contract in a clean Python 3.12 environment, and bind Governance
+  2.1.0 through its annotated tag object, commit, tree, and archive digest.
+- Advance the live Machine Node, First Receipt, Coordination Horizon, and
+  bounded-caller metadata to Governance schema release 2.1.0 while preserving
+  the earlier 2.0.1 local observation as historical evidence.
+- Add one read-only, cancellable Python 3.12 pull-request proof and a monthly,
+  bounded dependency-update stream into `develop`; retain the two-version and
+  PostgreSQL evidence as a confirmed manual proof. Parse those automation
+  sources through a dependency-free semantic contract and bind their effective
+  controls to the release manifest.
+- Delegate PostgreSQL migration ordering, locking, transactions, history,
+  checksum validation, status, target selection, and replay to the
+  version-and-digest-pinned Flyway Community 13.0.0 image.
+- Keep cluster-role provisioning outside Flyway and resolve database credentials
+  only through runtime secret boundaries.
+- Authenticate Flyway through a constrained, non-inheriting migrator login;
+  select the no-login schema owner through a database-scoped startup setting;
+  and verify the authenticated identity, effective identity, and exact catalog
+  binding in a digest-bound connection callback.
+- Keep forced row-level security active during cross-tenant evolution and open
+  the maintenance path only for the catalog-verified bounded migration session.
+- Preserve the segregated outbox ownership boundary through a SET-only,
+  non-inheriting, non-admin owner-to-outbox-authority membership; bind the role
+  edge, transaction-bounded schema capability, and final table and routine
+  owners on clean and successor paths.
+- Publish a digest inventory for the Flyway configuration, connection callback,
+  cluster-role prerequisite, and every migration; pin all Compose support
+  images; and constrain the
+  container build context and local-secret exclusions.
+- Replace caller-selected tenant state with short-lived signed assertions which
+  PostgreSQL verifies against private key material.
+- Add finite temporal constraints, exact decimal instrument measurements,
+  UCUM-coded units, and raw-to-normalized lineage.
+- Add custody compare-and-set, tenant-scoped transfer replay, append-only event
+  history, schema-qualified privileged execution, and atomic full-payload outbox
+  insertion.
+- Bind outbox identity to tenant, verify payload digests at insertion, preserve
+  message content through delivery, and govern worker claim, expired-lease
+  reclaim, and confirmation through exact tenant/token/fence compare-and-set
+  functions with 1-through-900 integer-second lease authority.
+- Complete the outbox transition matrix, narrow initial-state insertion,
+  separate recovery release authority, and preserve append-only attempt,
+  outcome, transport-acknowledgement, and recovery evidence.
+- Align message identity bounds across producer and worker paths, and require a
+  locked initial-ready provenance boundary before attempt ledgers begin, with
+  bounded migration wait and statement budgets.
+- Bind measurement scale to the stored numeric value, bind complete inbox
+  lineage through one composite foreign key, make projected inbox facts
+  append-only, and bind custody positions to complete custody-event coordinates.
+- Reuse the PostgreSQL integration scenarios for Flyway target V003, transactional
+  V004 rejection, head migration, validation, information, no-op replay, and
+  clean-versus-upgrade schema convergence.
+- Add the bounded Golden Specimen Workbench with visible call receipts, distinct
+  grant-bound scientific and Quality actors, and a separate recovery operation.
+- Compose the workbench's FastAPI route with PostgreSQL V001–V005 in one
+  tenant-bound transaction; rebuild the released specimen from durable state;
+  produce the exact shared observation when the accepted Program contract
+  package is installed; and prove restart, replay, collision, isolation,
+  rollback, recovery, decimal source shape, and digest checks.
+- Bind canonical event time into the Golden Specimen operation payloads and
+  advance execute to 3.0.0 and instrument recovery to 2.0.0, so each run
+  identity carries the exact time that shaped its lifecycle and evidence.
+- Add V005 instrument-review resolution and security-invoker workbench views
+  over the canonical custody and measurement facts.
+- Add live, digest-pinned PostgreSQL 17 migration and constructive data-boundary
+  proofs to CI.
+- Add a deterministic public-inspection manifest that binds repository-owned
+  runtime, Flyway, contract, synthetic-input, operational-configuration, proof,
+  evidence, and orientation bytes while accepted cross-repository revisions
+  retain their own promotion step.
+- Publish the data-primitive corrective ledger, plan probabilities, remaining
+  gaps, interstitials, and upgrade receipt requirements.
+
+### Initial implementation baseline — 2026-07-28
+
+- Route the golden specimen journey through the bounded caller.
+- Fail closed on in-progress lifecycle and vendor reservations.
+- Add rollback-capable atomic reference seams for state and evidence.
+- Add least-privilege PostgreSQL identities, tenant-scoped acceptance evidence,
+  and leased outbox recovery state.
+- Bind acceptance to one intended use and release claim.
+- Harden AWS response binding and runtime-value log redaction.
+- Add a credential-free LabKey JSON API exemplar with bounded reads and pagination.
+- Strengthen migration parity, package validation, and the stable CI aggregate.
+- Migrate orientation and evidence bindings to governance 2.0.1 and the corrected
+  canonical selected-future closure.
+- Make the stable implementation aggregate run on every outcome and fail when any
+  proof-matrix member differs from success.
+
 ## 0.3.0 — 2026-07-28
 
 - Added a typed bounded-caller boundary with task-scoped grants, tenant and

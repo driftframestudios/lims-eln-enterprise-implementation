@@ -1,7 +1,7 @@
 {
   "binding_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
-  "binding_version": "0.3.0",
-  "governance_schema_release": "2.0.0",
+  "binding_version": "0.3.1",
+  "governance_schema_release": "2.1.0",
   "control_plane_profile": "0.3.0",
   "python": ">=3.12",
   "source_artifacts": [
@@ -17,13 +17,68 @@
     },
     {
       "path": "src/lims_eln_implementation/production_adapters.py",
-      "sha256": "402fddeb7049fe2574671b9efb2e414be221d92bc069115ed07b4a7ccf1d20e6",
-      "responsibility": "qualified durable invocation and receipt persistence plus version-banded vendor SDK integration seams"
+      "sha256": "a2a528075862d2c09f427776bedbddccc8975e6b008b9c47dec6eca988e9670e",
+      "responsibility": "qualified durable invocation and receipt persistence with database-verified signed tenant assertions plus version-banded vendor SDK integration seams"
     },
     {
-      "path": "sql/001_laboratory_core.sql",
-      "sha256": "9ca1e85f87c19b9cf155e6daff10eb124226a6e55f3184df95b69dc98b92b218",
+      "path": "src/lims_eln_implementation/security.py",
+      "sha256": "ae552059c9b7b9a92b64f4a0adbf67e6cf6d33e9d14559a893ada89d7578bd98",
+      "responsibility": "immutable short-lived signed tenant context and database binding contract"
+    },
+    {
+      "path": "src/lims_eln_implementation/application.py",
+      "sha256": "ba97f18342c0e7f12917fb4de1a8689bb9e39de7ba00aa65249617506a92cb6a",
+      "responsibility": "bounded process-local application entry point plus shared event-time-bound initial and recovery Golden Specimen operation contracts"
+    },
+    {
+      "path": "src/lims_eln_implementation/workbench/api.py",
+      "sha256": "38a0c7b5f02b549f7d29934552907576ca616eab15a78756202e9593ba4e83c4",
+      "responsibility": "injectable FastAPI delivery boundary with state-adapter readiness and typed authority decisions"
+    },
+    {
+      "path": "src/lims_eln_implementation/workbench/postgres.py",
+      "sha256": "04180ebe2361a0217d48b2e007474acca1af3c72ddd5fdbbd81b9b4e5844706e",
+      "responsibility": "repeatable-read PostgreSQL Golden Specimen composition with tenant binding, lease-and-fence completion, exact replay evidence, and authenticated recovery"
+    },
+    {
+      "path": "src/lims_eln_implementation/workbench/service.py",
+      "sha256": "57df0794cb6a9888734482267c82f918f5d72a5ab2359bf6629c19ab8b235d69",
+      "responsibility": "process-local workbench composition and the shared visitor-facing result shape"
+    },
+    {
+      "path": "src/lims_eln_implementation/workbench/shared_contracts.py",
+      "sha256": "d621c76219c52c1f10e82e5181a55d27ea39e708f90b2ec6deb08d194a0dd421",
+      "responsibility": "optional exact projection from workbench state into the independently distributed Program observation contract"
+    },
+    {
+      "path": "src/lims_eln_implementation/labkey_adapter.py",
+      "sha256": "3812bd16f3aefb4db2bd8f758835a71cbfd0e8c3fb0dd382fb38cefc4709b79d",
+      "responsibility": "credential-free configured LabKey JSON API exemplar with bounded pagination and failure taxonomy"
+    },
+    {
+      "path": "sql/V001__laboratory_core.sql",
+      "sha256": "d0a8a360debb70f5dfdfcb8834ae8558a285e3f852014b91d9c521a2bd9ec7e4",
       "responsibility": "tenant-scoped invocation leases, fencing state, recovery ownership, completed outcomes, receipts, and row-level security"
+    },
+    {
+      "path": "sql/V002__principal_data_boundaries.sql",
+      "sha256": "ed9f4f4f342eb133575c1e1920558427ae0044750c61885bee7d89d4ac8afe91",
+      "responsibility": "database-verified tenant authority, catalog-bounded forced-RLS migration policy, custody compare-and-set history, and immutable outbox content"
+    },
+    {
+      "path": "sql/V003__trusted_routines_and_outbox_cas.sql",
+      "sha256": "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
+      "responsibility": "schema-qualified privileged custody execution plus tenant-bound outbox claim, reclaim, and confirmation fencing"
+    },
+    {
+      "path": "sql/V004__outbox_attempt_evidence_and_recovery.sql",
+      "sha256": "2cb392ab1d59ce8db7cf163da221c09e898f65358462819f81ab29b558386b36",
+      "responsibility": "coherent measurement scale, complete inbox and custody lineage, integer-second lease authority, complete outbox transition control, immutable attempt and outcome evidence, bounded transport receipts, and governed recovery release"
+    },
+    {
+      "path": "sql/V005__golden_specimen_workbench.sql",
+      "sha256": "6366a6093992c6fa42770cb5e6706a9109cbbcf2c0828f14bfe8af9288e0ed6e",
+      "responsibility": "specimen-bound instrument inbox facts, tenant-and-specimen-bound review resolution, and canonical workbench projections"
     }
   ],
   "operation_bindings": [
@@ -44,6 +99,18 @@
       "version": "1.0.0",
       "implementation_effect_class": "approval_gated_broad_write",
       "governance_effect_class": "broad_write"
+    },
+    {
+      "operation_name": "specimen.golden_journey.execute",
+      "version": "3.0.0",
+      "implementation_effect_class": "idempotent_narrow_write",
+      "governance_effect_class": "narrow_write"
+    },
+    {
+      "operation_name": "specimen.golden_journey.recover_instrument",
+      "version": "2.0.0",
+      "implementation_effect_class": "idempotent_narrow_write",
+      "governance_effect_class": "narrow_write"
     }
   ],
   "receipt_requirements": [

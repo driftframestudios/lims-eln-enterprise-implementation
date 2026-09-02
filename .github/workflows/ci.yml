@@ -1,11 +1,13 @@
 name: implementation-proof
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - develop
+  workflow_dispatch:
+    inputs:
+      confirm_run:
+        description: Confirm a human has allocated this remote proof
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -17,6 +19,7 @@ concurrency:
 jobs:
   validate:
     name: Python ${{ matrix.python-version }} proof
+    if: ${{ vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
@@ -37,4 +40,524 @@ jobs:
           cache: ""
 
       - name: Validate repository
-        run: python3 scripts/validate_repository.py
+        run: |
+          python3 -m pip install -e ".[test]"
+          python3 scripts/validate_repository.py
+
+  postgres-invariants:
+    name: PostgreSQL 17 migration and constructive boundary proof
+    if: ${{ vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+        env:
+          POSTGRES_DB: laboratory
+          POSTGRES_USER: laboratory_bootstrap
+          POSTGRES_PASSWORD: synthetic-ci-bootstrap-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U laboratory_bootstrap -d laboratory"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      PYTHONPATH: src
+      LIMS_TEST_POSTGRES_ADMIN_DSN: postgresql://laboratory_bootstrap:synthetic-ci-bootstrap-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_APP_DSN: postgresql://laboratory_app:synthetic-ci-app-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_OUTBOX_DSN: postgresql://laboratory_outbox_worker:synthetic-ci-outbox-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_RECOVERY_DSN: postgresql://laboratory_outbox_recovery_operator:synthetic-ci-recovery-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_DSN: postgresql://laboratory_app:synthetic-ci-app-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_MIGRATOR_DSN: postgresql://laboratory_migrator:synthetic-ci-migrator-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      FLYWAY_IMAGE: flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0
+      FLYWAY_URL: jdbc:postgresql://127.0.0.1:5432/laboratory
+      FLYWAY_USER: laboratory_migrator
+      FLYWAY_PASSWORD: synthetic-ci-migrator-password
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Select Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+          cache: ""
+
+      - name: Install PostgreSQL workbench proof dependencies
+        run: python3 -m pip install -e ".[test,postgres]"
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+
+      - name: Provision cluster roles outside Flyway
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
+        run: >-
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN"
+          --no-psqlrc --set ON_ERROR_STOP=1
+          --file database/provision_cluster_roles.sql
+
+      - name: Bind and verify the bounded Flyway login
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
+        run: |
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --set ON_ERROR_STOP=1 \
+            --command="alter role laboratory_migrator password 'synthetic-ci-migrator-password'"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select rolcanlogin::text || ':' || rolsuper::text || ':' || rolcreatedb::text || ':' || rolcreaterole::text || ':' || rolinherit::text || ':' || rolbypassrls::text from pg_catalog.pg_roles where rolname = 'laboratory_migrator'")" = "true:false:false:false:false:false"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select membership.admin_option::text || ':' || membership.inherit_option::text || ':' || membership.set_option::text from pg_catalog.pg_auth_members as membership join pg_catalog.pg_roles as granted_role on granted_role.oid = membership.roleid join pg_catalog.pg_roles as member_role on member_role.oid = membership.member where granted_role.rolname = 'laboratory_owner' and member_role.rolname = 'laboratory_migrator'")" = "false:false:true"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select membership.admin_option::text || ':' || membership.inherit_option::text || ':' || membership.set_option::text from pg_catalog.pg_auth_members as membership join pg_catalog.pg_roles as granted_role on granted_role.oid = membership.roleid join pg_catalog.pg_roles as member_role on member_role.oid = membership.member where granted_role.rolname = 'laboratory_outbox_authority' and member_role.rolname = 'laboratory_owner'")" = "false:false:true"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select configuration.value from pg_catalog.pg_db_role_setting as role_setting join pg_catalog.pg_roles as member_role on member_role.oid = role_setting.setrole join pg_catalog.pg_database as target_database on target_database.oid = role_setting.setdatabase cross join lateral pg_catalog.unnest(role_setting.setconfig) as configuration(value) where member_role.rolname = 'laboratory_migrator' and target_database.datname = pg_catalog.current_database() and configuration.value like 'role=%'")" = "role=laboratory_owner"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select owner_role.rolname from pg_catalog.pg_namespace as target_schema join pg_catalog.pg_roles as owner_role on owner_role.oid = target_schema.nspowner where target_schema.nspname = 'public'")" = "laboratory_owner"
+          test "$(PGPASSWORD=synthetic-ci-migrator-password psql \
+            postgresql://laboratory_migrator@127.0.0.1:5432/laboratory \
+            --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select session_user || ':' || current_user || ':' || current_setting('role')")" = "laboratory_migrator:laboratory_owner:laboratory_owner"
+          set +e
+          PGPASSWORD=synthetic-ci-migrator-password psql \
+            postgresql://laboratory_migrator@127.0.0.1:5432/laboratory \
+            --no-psqlrc --set ON_ERROR_STOP=1 \
+            --command="set role none; begin; create table public.synthetic_direct_migrator_ddl (proof integer); rollback" \
+            > direct-migrator-ddl.log 2>&1
+          direct_ddl_status=$?
+          set -e
+          if [ "$direct_ddl_status" -eq 0 ]; then
+            echo "laboratory_migrator acquired direct schema authority" >&2
+            exit 1
+          fi
+          grep --fixed-strings --quiet \
+            "permission denied for schema public" direct-migrator-ddl.log
+
+      - name: Apply, validate, inspect, and replay Flyway migrations
+        run: |
+          run_flyway() {
+            docker run --rm --network host \
+              --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
+              --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
+              "$FLYWAY_IMAGE" \
+              -workingDirectory=/flyway/project \
+              -configFiles=/flyway/project/flyway.conf "$@"
+          }
+          run_flyway migrate
+          run_flyway validate
+          run_flyway info
+          run_flyway migrate
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'flyway_schema_history'")" = "laboratory_owner"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'tenant'")" = "laboratory_owner"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'transactional_outbox'")" = "laboratory_outbox_authority"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner where routine.oid = pg_catalog.to_regprocedure('public.claim_outbox_delivery(text,integer)')")" = "laboratory_outbox_authority"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select pg_catalog.has_schema_privilege('laboratory_outbox_authority', 'public', 'create')::text")" = "false"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select (
+              pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'update')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'insert')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'insert')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'insert')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'insert')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'delete')
+              and pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'payload', 'insert')
+              and not pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'delivery_state', 'insert')
+              and not pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'delivery_state', 'update')
+            )::text")" = "true"
+
+      - name: Configure synthetic workload identities and verification key
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
+        run: |
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc --set ON_ERROR_STOP=1 <<'SQL'
+          alter role laboratory_app password 'synthetic-ci-app-password';
+          alter role laboratory_outbox_worker password 'synthetic-ci-outbox-password';
+          alter role laboratory_outbox_recovery_operator
+              password 'synthetic-ci-recovery-password';
+          insert into laboratory_security.tenant_context_key (
+              key_id, secret_material, valid_from_utc, valid_until_utc
+          ) values (
+              'synthetic-ci-v1',
+              decode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'hex'),
+              '2025-01-01T00:00:00Z',
+              '2036-01-01T00:00:00Z'
+          );
+          SQL
+
+      - name: Prove live tenant, custody, and outbox invariants
+        run: python3 -m unittest tests.test_postgres_integration -v
+
+  postgres-upgrade:
+    name: PostgreSQL 17 migration 003 through 005 upgrade and replay proof
+    if: ${{ vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+        env:
+          POSTGRES_DB: laboratory
+          POSTGRES_USER: laboratory_bootstrap
+          POSTGRES_PASSWORD: synthetic-ci-bootstrap-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U laboratory_bootstrap -d laboratory"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      postgres-clean:
+        image: postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+        env:
+          POSTGRES_DB: laboratory
+          POSTGRES_USER: laboratory_bootstrap
+          POSTGRES_PASSWORD: synthetic-ci-bootstrap-password
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U laboratory_bootstrap -d laboratory"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      PYTHONPATH: src
+      LIMS_TEST_POSTGRES_ADMIN_DSN: postgresql://laboratory_bootstrap:synthetic-ci-bootstrap-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_UPGRADE_OUTBOX_DSN: postgresql://laboratory_outbox_worker:synthetic-ci-outbox-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_UPGRADE_RECOVERY_DSN: postgresql://laboratory_outbox_recovery_operator:synthetic-ci-recovery-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      FLYWAY_IMAGE: flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0
+      FLYWAY_URL: jdbc:postgresql://127.0.0.1:5432/laboratory
+      FLYWAY_USER: laboratory_migrator
+      FLYWAY_PASSWORD: synthetic-ci-migrator-password
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Select Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+          cache: ""
+
+      - name: Install PostgreSQL proof dependencies
+        run: python3 -m pip install -e ".[test,postgres]"
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+
+      - name: Provision cluster roles in upgrade and clean clusters
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
+        run: |
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" \
+            --no-psqlrc --set ON_ERROR_STOP=1 \
+            --file database/provision_cluster_roles.sql
+          psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            --no-psqlrc --set ON_ERROR_STOP=1 \
+            --file database/provision_cluster_roles.sql
+
+      - name: Bind the bounded Flyway login in both clusters
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
+        run: |
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --set ON_ERROR_STOP=1 \
+            --command="alter role laboratory_migrator password 'synthetic-ci-migrator-password'"
+          psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            --no-psqlrc --set ON_ERROR_STOP=1 \
+            --command="alter role laboratory_migrator password 'synthetic-ci-migrator-password'"
+          verify_migrator_boundary() {
+            admin_dsn="$1"
+            migrator_dsn="$2"
+            test "$(psql "$admin_dsn" --no-psqlrc \
+              --tuples-only --no-align --set ON_ERROR_STOP=1 \
+              --command="select configuration.value from pg_catalog.pg_db_role_setting as role_setting join pg_catalog.pg_roles as member_role on member_role.oid = role_setting.setrole join pg_catalog.pg_database as target_database on target_database.oid = role_setting.setdatabase cross join lateral pg_catalog.unnest(role_setting.setconfig) as configuration(value) where member_role.rolname = 'laboratory_migrator' and target_database.datname = pg_catalog.current_database() and configuration.value like 'role=%'")" = "role=laboratory_owner"
+            test "$(psql "$admin_dsn" --no-psqlrc \
+              --tuples-only --no-align --set ON_ERROR_STOP=1 \
+              --command="select membership.admin_option::text || ':' || membership.inherit_option::text || ':' || membership.set_option::text from pg_catalog.pg_auth_members as membership join pg_catalog.pg_roles as granted_role on granted_role.oid = membership.roleid join pg_catalog.pg_roles as member_role on member_role.oid = membership.member where granted_role.rolname = 'laboratory_outbox_authority' and member_role.rolname = 'laboratory_owner'")" = "false:false:true"
+            test "$(psql "$admin_dsn" --no-psqlrc \
+              --tuples-only --no-align --set ON_ERROR_STOP=1 \
+              --command="select owner_role.rolname from pg_catalog.pg_namespace as target_schema join pg_catalog.pg_roles as owner_role on owner_role.oid = target_schema.nspowner where target_schema.nspname = 'public'")" = "laboratory_owner"
+            test "$(PGPASSWORD=synthetic-ci-migrator-password psql "$migrator_dsn" \
+              --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
+              --command="select session_user || ':' || current_user || ':' || current_setting('role')")" = "laboratory_migrator:laboratory_owner:laboratory_owner"
+          }
+          verify_migrator_boundary \
+            "$LIMS_TEST_POSTGRES_ADMIN_DSN" \
+            postgresql://laboratory_migrator@127.0.0.1:5432/laboratory
+          verify_migrator_boundary \
+            postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            postgresql://laboratory_migrator@127.0.0.1:5433/laboratory
+
+      - name: Apply historical migration head with Flyway target
+        run: |
+          docker run --rm --network host \
+            --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
+            --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
+            "$FLYWAY_IMAGE" \
+            -workingDirectory=/flyway/project \
+            -configFiles=/flyway/project/flyway.conf \
+            -target=003 migrate
+
+      - name: Seed representative pre-004 outbox states
+        run: |
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --set ON_ERROR_STOP=1 <<'SQL'
+          insert into public.tenant (tenant_id, display_name)
+          values ('SYN-UPGRADE-TENANT', 'Synthetic upgrade tenant');
+          insert into public.transactional_outbox (
+              tenant_id, message_id, topic, aggregate_id, aggregate_version,
+              payload, payload_sha256
+          ) values
+              (
+                  'SYN-UPGRADE-TENANT', 'SYN-UPGRADE-READY-CONFIRM',
+                  'synthetic.upgrade', 'SYN-UPGRADE-AGGREGATE', 1,
+                  '{"state":"ready"}'::jsonb,
+                  encode(public.digest(convert_to(
+                      '{"state":"ready"}'::jsonb::text, 'UTF8'
+                  ), 'sha256'), 'hex')
+              ),
+              (
+                  'SYN-UPGRADE-TENANT', 'SYN-UPGRADE-READY-RECOVERY',
+                  'synthetic.upgrade', 'SYN-UPGRADE-AGGREGATE', 2,
+                  '{"state":"ready"}'::jsonb,
+                  encode(public.digest(convert_to(
+                      '{"state":"ready"}'::jsonb::text, 'UTF8'
+                  ), 'sha256'), 'hex')
+              );
+          insert into public.transactional_outbox (
+              tenant_id, message_id, topic, aggregate_id, aggregate_version,
+              payload, payload_sha256, delivery_state, delivery_attempts,
+              fencing_token, delivered_at_utc
+          ) values (
+              'SYN-UPGRADE-TENANT', 'SYN-UPGRADE-HISTORICAL-DELIVERED',
+              'synthetic.upgrade', 'SYN-UPGRADE-AGGREGATE', 3,
+              '{"state":"delivered"}'::jsonb,
+              encode(public.digest(convert_to(
+                  '{"state":"delivered"}'::jsonb::text, 'UTF8'
+              ), 'sha256'), 'hex'),
+              'delivered', 1, 1, clock_timestamp()
+          );
+          SQL
+
+      - name: Prove the provenance gate retains the historical head
+        run: |
+          set +e
+          docker run --rm --network host \
+            --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
+            --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
+            "$FLYWAY_IMAGE" \
+            -workingDirectory=/flyway/project \
+            -configFiles=/flyway/project/flyway.conf migrate \
+            > migration-004-rejection.log 2>&1
+          migration_status=$?
+          set -e
+          if [ "$migration_status" -eq 0 ]; then
+            echo "migration 004 provenance gate expected a historical-state disposition" >&2
+            exit 1
+          fi
+          if ! grep --fixed-strings --quiet \
+            "migration 004 requires an initial ready outbox provenance boundary" \
+            migration-004-rejection.log; then
+            sed -n '1,160p' migration-004-rejection.log >&2
+            exit 1
+          fi
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --set ON_ERROR_STOP=1 <<'SQL'
+          do $proof$
+          begin
+              if exists (
+                  select 1 from public.flyway_schema_history
+                  where version::integer = 4 and success
+              ) then
+                  raise exception 'migration 004 was applied despite the provenance gate';
+              end if;
+              if not exists (
+                  select 1 from public.transactional_outbox
+                  where message_id = 'SYN-UPGRADE-HISTORICAL-DELIVERED'
+                    and delivery_state = 'delivered'
+              ) then
+                  raise exception 'historical terminal fixture must remain available for disposition';
+              end if;
+          end;
+          $proof$;
+          delete from public.transactional_outbox
+          where message_id = 'SYN-UPGRADE-HISTORICAL-DELIVERED';
+          SQL
+
+      - name: Apply successor and replay with ready-row preservation
+        run: |
+          run_flyway() {
+            docker run --rm --network host \
+              --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
+              --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
+              "$FLYWAY_IMAGE" \
+              -workingDirectory=/flyway/project \
+              -configFiles=/flyway/project/flyway.conf "$@"
+          }
+          run_flyway migrate
+          run_flyway validate
+          run_flyway info
+          run_flyway migrate
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command 'select count(*) from public.flyway_schema_history where version is not null and success')" = "5"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command "select count(*) from public.transactional_outbox where tenant_id = 'SYN-UPGRADE-TENANT' and delivery_state = 'ready' and delivery_attempts = 0 and fencing_token = 0")" = "2"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'transactional_outbox'")" = "laboratory_outbox_authority"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner where routine.oid = pg_catalog.to_regprocedure('public.claim_outbox_delivery(text,integer)')")" = "laboratory_outbox_authority"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select pg_catalog.has_schema_privilege('laboratory_outbox_authority', 'public', 'create')::text")" = "false"
+          test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select (
+              pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'update')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'insert')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.transactional_outbox', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'insert')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'insert')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_delivery_attempt_outcome', 'delete')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'select')
+              and pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'insert')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'update')
+              and not pg_catalog.has_table_privilege('laboratory_outbox_authority', 'public.outbox_recovery_release', 'delete')
+              and pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'payload', 'insert')
+              and not pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'delivery_state', 'insert')
+              and not pg_catalog.has_column_privilege('laboratory_owner', 'public.transactional_outbox', 'delivery_state', 'update')
+            )::text")" = "true"
+
+      - name: Configure upgrade proof identities and verification key
+        run: |
+          psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
+            --set ON_ERROR_STOP=1 <<'SQL'
+          alter role laboratory_outbox_worker
+              password 'synthetic-ci-outbox-password';
+          alter role laboratory_outbox_recovery_operator
+              password 'synthetic-ci-recovery-password';
+          insert into laboratory_security.tenant_context_key (
+              key_id, secret_material, valid_from_utc, valid_until_utc
+          ) values (
+              'synthetic-ci-v1',
+              decode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'hex'),
+              '2025-01-01T00:00:00Z',
+              '2036-01-01T00:00:00Z'
+          );
+          SQL
+
+      - name: Prove upgraded ready rows gain complete delivery evidence
+        run: >-
+          python3 -m unittest
+          tests.test_postgres_integration.PostgresUpgradeBoundaryIntegrationTests
+          -v
+
+      - name: Prove clean and upgraded schema convergence
+        env:
+          PGPASSWORD: synthetic-ci-bootstrap-password
+        run: |
+          docker run --rm --network host \
+            --volume "$GITHUB_WORKSPACE:/flyway/project:ro" \
+            --env FLYWAY_USER --env FLYWAY_PASSWORD \
+            --env FLYWAY_URL=jdbc:postgresql://127.0.0.1:5433/laboratory \
+            "$FLYWAY_IMAGE" \
+            -workingDirectory=/flyway/project \
+            -configFiles=/flyway/project/flyway.conf migrate
+          test "$(psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select tableowner from pg_catalog.pg_tables where schemaname = 'public' and tablename = 'transactional_outbox'")" = "laboratory_outbox_authority"
+          test "$(psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select owner_role.rolname from pg_catalog.pg_proc as routine join pg_catalog.pg_roles as owner_role on owner_role.oid = routine.proowner where routine.oid = pg_catalog.to_regprocedure('public.claim_outbox_delivery(text,integer)')")" = "laboratory_outbox_authority"
+          test "$(psql postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            --no-psqlrc --tuples-only --no-align --set ON_ERROR_STOP=1 \
+            --command="select pg_catalog.has_schema_privilege('laboratory_outbox_authority', 'public', 'create')::text")" = "false"
+          pg_dump "$LIMS_TEST_POSTGRES_ADMIN_DSN" \
+            --schema-only --no-owner --no-privileges \
+            | sed '/^\\restrict /d; /^\\unrestrict /d' > upgraded-schema.sql
+          pg_dump postgresql://laboratory_bootstrap@127.0.0.1:5433/laboratory \
+            --schema-only --no-owner --no-privileges \
+            | sed '/^\\restrict /d; /^\\unrestrict /d' > clean-schema.sql
+          diff --unified clean-schema.sql upgraded-schema.sql
+
+  implementation-validation:
+    name: implementation-validation
+    if: ${{ always() && vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
+    needs: [validate, postgres-invariants, postgres-upgrade]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Require the complete implementation proof matrix
+        env:
+          VALIDATE_RESULT: ${{ needs.validate.result }}
+          POSTGRES_RESULT: ${{ needs.postgres-invariants.result }}
+          POSTGRES_UPGRADE_RESULT: ${{ needs.postgres-upgrade.result }}
+        run: >-
+          test "$VALIDATE_RESULT" = "success"
+          && test "$POSTGRES_RESULT" = "success"
+          && test "$POSTGRES_UPGRADE_RESULT" = "success"
+
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Select Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+          cache: ""
+
+      - name: Validate package type surfaces schemas and secret patterns
+        run: python3 scripts/validate_implementation.py
+
+      - name: Build and import-check dependency-free package archive
+        run: >-
+          python3 scripts/build_package_archive.py
+          /tmp/lims_eln_enterprise_implementation-0.3.1-py3-none-any.whl

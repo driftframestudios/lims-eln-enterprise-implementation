@@ -7,7 +7,7 @@ from enum import StrEnum
 from typing import Any, Mapping
 from uuid import UUID, uuid5
 
-from .idempotency import IdempotencyLedger, ReservationState
+from .idempotency import IdempotencyInProgress, IdempotencyLedger, ReservationState
 from .model import canonical_digest
 from .observability import OperationalMetrics
 from .ports import (
@@ -127,6 +127,11 @@ class VendorProjectionService:
         if reservation.state is ReservationState.REPLAY:
             assert reservation.outcome is not None
             return reservation.outcome
+        if reservation.state is ReservationState.IN_PROGRESS:
+            raise IdempotencyInProgress(
+                f"vendor request {request_id} is already in progress; "
+                "use authoritative readback and an accountable recovery decision"
+            )
         write = self._gateway.write(
             tenant_id=tenant_id,
             external_identity=external_identity,
@@ -165,4 +170,3 @@ class VendorProjectionService:
         self._idempotency.commit(tenant_id, request_id, outcome)
         self._metrics.vendor_projection.observe(good=True)
         return outcome
-

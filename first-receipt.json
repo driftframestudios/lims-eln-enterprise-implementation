@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RCP-IMPLEMENTATION-001",
   "machine_node_id": "NODE-LIMS-ELN-IMPLEMENTATION",
-  "as_of": "2026-07-28T19:30:00Z",
+  "as_of": "2026-09-02T01:59:47Z",
   "orientation_purpose": "Give a human or AI collaborator the minimum complete implementation state, authority boundary, evidence posture, invalidation conditions, and safe handoff needed to reproduce or extend this reference.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -10,23 +10,34 @@
   "contract_state": [
     {
       "contract_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
-      "version": "0.3.0",
-      "digest": "sha256:f0e05a5ce3c4ae98b410d2a33b3722565263214c4efd5964997f9ce39c67733b"
+      "version": "0.3.1",
+      "digest": "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea"
+    },
+    {
+      "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
+      "version": "1.0.0",
+      "digest": "sha256:a4fafe7ebb50da1efbad47df24d6d7af741130039ba8c90b8d6457e9d1d107b9"
     },
     {
       "contract_id": "IMPLEMENTATION-OPEN-RECEIPTS-001",
       "version": "2.0.0",
-      "digest": "sha256:dd4ba99d45727605114b08208eff355a6ae217ecd4b7eb7da5d92264e773c707"
+      "digest": "sha256:f5ec4399b7ba43ce2bbc6260c0eb223c1fc8e405a9e5b13fd71ca806fd709421"
     },
     {
       "contract_id": "SIMULATED-SUBSTANTIVE-CLOSURE-2028-V1",
       "version": "2.0.0",
-      "digest": "sha256:6194029aae98f2d70f3a115eed7c0f6b191667f849c89cd548b0e575192e2af9"
+      "digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb"
     }
   ],
   "evidence_posture": [
     {
       "claim": "The bounded caller enforces typed registered operations, task-scoped grants, tenant and resource boundaries, budgets, exact approvals, durable replay seams, and attributable receipts.",
+      "mode": "observed",
+      "assurance_stage": "verified",
+      "status": "active"
+    },
+    {
+      "claim": "Flyway Community advances PostgreSQL through ordered checksum-validated transactions while the repository exercises signed tenant, durable Golden Specimen, custody, quantity, lineage, and outbox behavior in a synthetic live database.",
       "mode": "observed",
       "assurance_stage": "verified",
       "status": "active"
@@ -45,7 +56,7 @@
     }
   ],
   "coordination_horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
-  "current_horizon_summary": "Implementation release 0.3.0 is settling around a digest-bound bounded-caller slice, durable adapter seams, and governance-conformant orientation surfaces.",
+  "current_horizon_summary": "Implementation release 0.3.1 is settling around process-local and durable PostgreSQL workbench paths, least-privilege database identities, and governance-conformant orientation surfaces.",
   "open_receipts": [
     "RCP-IMPLEMENTATION-PROMOTION-003",
     "RCP-OBSERVED-VENDORS-001",
@@ -89,9 +100,9 @@
     "success_evidence": "Tests, credential hygiene, canonical receipt-family checks, governance schemas, and every declared source binding pass against one release candidate whose immutable provenance closes RCP-IMPLEMENTATION-PROMOTION-003."
   },
   "metadata": {
-    "schema_version": "2.0.0",
+    "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-07-28T19:30:00Z",
+    "updated_at": "2026-09-02T01:59:47Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-RECEIPT",
       "display_name": "Implementation stewardship role",

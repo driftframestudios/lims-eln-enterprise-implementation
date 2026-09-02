@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import json
 import re
+import time
 from typing import Any, Callable, Iterator, Mapping, Protocol
 from uuid import uuid4
 
@@ -19,7 +20,7 @@ from .bounded_caller import (
 )
 from .model import canonical_json, require_aware_utc
 from .ports import ExternalRecord, VendorGateway, WriteCertainty, WriteResult
-from .security import PostgresTenantBinding
+from .security import PostgresTenantBinding, TenantContextProvider
 
 
 class AdapterVersionError(RuntimeError):
@@ -32,6 +33,48 @@ class ResourceReleaseError(RuntimeError):
 
 class DurableInvocationError(RuntimeError):
     """A durable invocation transition lost its expected database state."""
+
+
+class RetryableVendorRead(RuntimeError):
+    """A read failed before yielding an authoritative vendor response."""
+
+
+class AmbiguousVendorWrite(RuntimeError):
+    """A vendor write may have reached its material-effect boundary."""
+
+
+@dataclass(frozen=True, slots=True)
+class RetryPolicy:
+    max_attempts: int = 3
+    initial_delay_seconds: float = 0.05
+    maximum_delay_seconds: float = 1.0
+
+    def __post_init__(self) -> None:
+        if self.max_attempts < 1:
+            raise ValueError("retry policy requires at least one attempt")
+        if (
+            self.initial_delay_seconds < 0
+            or self.maximum_delay_seconds < self.initial_delay_seconds
+        ):
+            raise ValueError("retry delays require an ordered nonnegative range")
+
+    def delay(self, completed_attempts: int) -> float:
+        return min(
+            self.maximum_delay_seconds,
+            self.initial_delay_seconds * (2 ** max(completed_attempts - 1, 0)),
+        )
+
+
+class VendorRateGate(Protocol):
+    def acquire(self, *, operation: str) -> None: ...
+
+
+class OpenVendorRateGate:
+    """Default gate for callers whose deployment limiter sits outside the adapter."""
+
+    def acquire(self, *, operation: str) -> None:
+        if not operation:
+            raise ValueError("rate-gate operation requires a name")
 
 
 _RELEASED_VERSION = re.compile(
@@ -205,6 +248,7 @@ class DbApiInvocationLedger:
         driver_name: str,
         driver_version: str,
         qualified_band: VersionBand,
+        tenant_context_provider: TenantContextProvider,
         clock: Callable[[], datetime],
         lease_duration: timedelta = timedelta(seconds=30),
         lease_token_factory: Callable[[], str] = lambda: str(uuid4()),
@@ -219,6 +263,7 @@ class DbApiInvocationLedger:
         self.driver_name = driver_name
         self.driver_version = driver_version
         self._connection_factory = connection_factory
+        self._tenant_context_provider = tenant_context_provider
         self._clock = clock
         self._lease_duration = lease_duration
         self._lease_token_factory = lease_token_factory
@@ -238,7 +283,10 @@ class DbApiInvocationLedger:
         lease_token = self._lease_token_factory()
         lease_expires_at = evaluated_at + self._lease_duration
         with _transaction(self._connection_factory) as cursor:
-            PostgresTenantBinding(tenant_id).bind(cursor)
+            PostgresTenantBinding(self._tenant_context_provider(tenant_id)).bind(
+                cursor,
+                expected_tenant_id=tenant_id,
+            )
             cursor.execute(
                 self.INSERT,
                 (
@@ -362,7 +410,10 @@ class DbApiInvocationLedger:
     ) -> None:
         completed_at = require_aware_utc(self._clock())
         with _transaction(self._connection_factory) as cursor:
-            PostgresTenantBinding(tenant_id).bind(cursor)
+            PostgresTenantBinding(self._tenant_context_provider(tenant_id)).bind(
+                cursor,
+                expected_tenant_id=tenant_id,
+            )
             cursor.execute(
                 self.COMPLETE,
                 (
@@ -393,7 +444,10 @@ class DbApiInvocationLedger:
     ) -> None:
         released_at = require_aware_utc(self._clock())
         with _transaction(self._connection_factory) as cursor:
-            PostgresTenantBinding(tenant_id).bind(cursor)
+            PostgresTenantBinding(self._tenant_context_provider(tenant_id)).bind(
+                cursor,
+                expected_tenant_id=tenant_id,
+            )
             cursor.execute(
                 self.RELEASE,
                 (
@@ -423,7 +477,10 @@ class DbApiInvocationLedger:
         if not reason_code.strip():
             raise ValueError("recovery reason requires a stable code")
         with _transaction(self._connection_factory) as cursor:
-            PostgresTenantBinding(tenant_id).bind(cursor)
+            PostgresTenantBinding(self._tenant_context_provider(tenant_id)).bind(
+                cursor,
+                expected_tenant_id=tenant_id,
+            )
             cursor.execute(
                 self.MARK_RECOVERY,
                 (
@@ -466,6 +523,7 @@ class DbApiCallReceiptStore:
         driver_name: str,
         driver_version: str,
         qualified_band: VersionBand,
+        tenant_context_provider: TenantContextProvider,
     ) -> None:
         if driver_name != qualified_band.component:
             raise AdapterVersionError(
@@ -475,6 +533,7 @@ class DbApiCallReceiptStore:
         self.driver_name = driver_name
         self.driver_version = driver_version
         self._connection_factory = connection_factory
+        self._tenant_context_provider = tenant_context_provider
 
     def append(self, receipt: CallReceipt) -> None:
         connection = self._connection_factory()
@@ -482,7 +541,9 @@ class DbApiCallReceiptStore:
         primary_error: BaseException | None = None
         try:
             cursor = connection.cursor()
-            PostgresTenantBinding(receipt.tenant_id).bind(cursor)
+            PostgresTenantBinding(
+                self._tenant_context_provider(receipt.tenant_id)
+            ).bind(cursor, expected_tenant_id=receipt.tenant_id)
             cursor.execute(
                 self.INSERT,
                 (
@@ -566,6 +627,22 @@ class VendorSdkClient(Protocol):
     def close(self) -> None: ...
 
 
+@dataclass(frozen=True, slots=True)
+class VendorRecordPage:
+    records: tuple[ExternalRecord, ...]
+    next_cursor: str | None
+
+
+class PaginatedVendorSdkClient(VendorSdkClient, Protocol):
+    def list_records_page(
+        self,
+        *,
+        tenant_id: str,
+        cursor: str | None,
+        page_size: int,
+    ) -> VendorRecordPage: ...
+
+
 class VersionedVendorGatewayAdapter(VendorGateway):
     """Adapt an injected vendor SDK while keeping lifecycle and versions visible."""
 
@@ -577,6 +654,19 @@ class VersionedVendorGatewayAdapter(VendorGateway):
         sdk_name: str,
         qualified_sdk_band: VersionBand,
         required_api_version: str,
+        retry_policy: RetryPolicy = RetryPolicy(),
+        rate_gate: VendorRateGate | None = None,
+        sleep: Callable[[float], None] = time.sleep,
+        retryable_read_exceptions: tuple[type[Exception], ...] = (
+            TimeoutError,
+            RetryableVendorRead,
+            ResourceReleaseError,
+        ),
+        ambiguous_write_exceptions: tuple[type[Exception], ...] = (
+            TimeoutError,
+            ResourceReleaseError,
+            AmbiguousVendorWrite,
+        ),
     ) -> None:
         if sdk_name != qualified_sdk_band.component:
             raise AdapterVersionError(
@@ -589,6 +679,11 @@ class VersionedVendorGatewayAdapter(VendorGateway):
         self.required_api_version = required_api_version
         self._client_factory = client_factory
         self._qualified_sdk_band = qualified_sdk_band
+        self._retry_policy = retry_policy
+        self._rate_gate = rate_gate or OpenVendorRateGate()
+        self._sleep = sleep
+        self._retryable_read_exceptions = retryable_read_exceptions
+        self._ambiguous_write_exceptions = ambiguous_write_exceptions
 
     @contextmanager
     def _client(self) -> Iterator[VendorSdkClient]:
@@ -629,6 +724,7 @@ class VersionedVendorGatewayAdapter(VendorGateway):
     ) -> WriteResult:
         try:
             with self._client() as client:
+                self._rate_gate.acquire(operation="write")
                 result = client.write_record(
                     tenant_id=tenant_id,
                     external_identity=external_identity,
@@ -646,7 +742,7 @@ class VersionedVendorGatewayAdapter(VendorGateway):
                         revision=None,
                         trace_id=f"{self.vendor_name}:{request_id}:identity-or-revision",
                     )
-        except (TimeoutError, ResourceReleaseError):
+        except self._ambiguous_write_exceptions:
             return WriteResult(
                 certainty=WriteCertainty.AMBIGUOUS,
                 external_identity=external_identity,
@@ -661,11 +757,20 @@ class VersionedVendorGatewayAdapter(VendorGateway):
         )
 
     def read(self, *, tenant_id: str, external_identity: str) -> ExternalRecord | None:
-        with self._client() as client:
-            record = client.read_record(
-                tenant_id=tenant_id,
-                external_identity=external_identity,
-            )
+        record: ExternalRecord | None = None
+        for attempt in range(1, self._retry_policy.max_attempts + 1):
+            try:
+                with self._client() as client:
+                    self._rate_gate.acquire(operation="read")
+                    record = client.read_record(
+                        tenant_id=tenant_id,
+                        external_identity=external_identity,
+                    )
+                break
+            except self._retryable_read_exceptions:
+                if attempt >= self._retry_policy.max_attempts:
+                    raise
+                self._sleep(self._retry_policy.delay(attempt))
         if record is not None and (
             record.tenant_id != tenant_id
             or record.external_identity != external_identity
@@ -674,3 +779,43 @@ class VersionedVendorGatewayAdapter(VendorGateway):
                 "vendor readback requires the requested tenant and external identity"
             )
         return record
+
+    def iter_records(
+        self,
+        *,
+        tenant_id: str,
+        page_size: int = 100,
+        max_pages: int = 1_000,
+    ) -> Iterator[ExternalRecord]:
+        """Traverse a bounded cursor sequence with tenant verification."""
+
+        if not 1 <= page_size <= 1_000 or max_pages < 1:
+            raise ValueError("pagination requires bounded page and traversal limits")
+        cursor: str | None = None
+        observed_cursors: set[str] = set()
+        for _ in range(max_pages):
+            with self._client() as generic_client:
+                if not hasattr(generic_client, "list_records_page"):
+                    raise TypeError(
+                        "configured vendor client requires list_records_page support"
+                    )
+                client = generic_client
+                self._rate_gate.acquire(operation="list")
+                page = client.list_records_page(  # type: ignore[attr-defined]
+                    tenant_id=tenant_id,
+                    cursor=cursor,
+                    page_size=page_size,
+                )
+            for record in page.records:
+                if record.tenant_id != tenant_id:
+                    raise RuntimeError(
+                        "vendor pagination requires the requested tenant identity"
+                    )
+                yield record
+            if page.next_cursor is None:
+                return
+            if page.next_cursor in observed_cursors:
+                raise RuntimeError("vendor pagination returned a repeated cursor")
+            observed_cursors.add(page.next_cursor)
+            cursor = page.next_cursor
+        raise RuntimeError("vendor pagination exceeded its configured page bound")

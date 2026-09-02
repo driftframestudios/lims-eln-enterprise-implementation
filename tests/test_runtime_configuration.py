@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+import sys
 import unittest
 
 from lims_eln_implementation.runtime_configuration import (
@@ -48,13 +49,17 @@ class FakeParameterStore:
 
     def get_parameter(self, **kwargs: object) -> dict[str, object]:
         self.calls.append(kwargs)
+        name = kwargs["Name"]
+        parameter: dict[str, object] = {
+            "Name": PARAMETER_ARN,
+            "Type": "String",
+            "Value": self.value,
+            "Version": self.version,
+        }
+        if name != PARAMETER_ARN:
+            parameter["Selector"] = name
         return {
-            "Parameter": {
-                "Name": PARAMETER_ARN,
-                "Type": "String",
-                "Value": self.value,
-                "Version": self.version,
-            }
+            "Parameter": parameter
         }
 
 
@@ -165,18 +170,28 @@ class RuntimeConfigurationTests(unittest.TestCase):
             secret_spec(secret_version_stage="AWSCURRENT;next")
 
     def test_parameter_version_and_decryption_posture_reach_provider(self) -> None:
+        self.parameters.version = 4
         resolved = self.resolver.resolve(parameter_spec(parameter_version=4))
         self.assertEqual(resolved.reveal(), "https://synthetic-vendor.invalid")
         self.assertEqual(
             self.parameters.calls,
             [{"Name": f"{PARAMETER_ARN}:4", "WithDecryption": False}],
         )
-        self.assertEqual(resolved.version, "7")
+        self.assertEqual(resolved.version, "4")
         self.assertIn("[REDACTED]", repr(resolved))
         self.assertNotIn(resolved.reveal(), repr(resolved))
 
     def test_secret_stage_and_id_reach_provider_as_explicit_selectors(self) -> None:
         version_id = "2" * 32
+        self.secrets.version = version_id
+        original = self.secrets.get_secret_value
+
+        def previous_secret(**kwargs: object) -> dict[str, object]:
+            response = original(**kwargs)
+            response["VersionStages"] = ["AWSPREVIOUS"]
+            return response
+
+        self.secrets.get_secret_value = previous_secret  # type: ignore[method-assign]
         resolved = self.resolver.resolve(
             secret_spec(
                 secret_version_id=version_id,
@@ -193,7 +208,7 @@ class RuntimeConfigurationTests(unittest.TestCase):
                 }
             ],
         )
-        self.assertEqual(resolved.version, "1" * 32)
+        self.assertEqual(resolved.version, version_id)
 
     def test_secret_cache_refreshes_after_ttl_and_supports_rotation_refresh(self) -> None:
         spec = secret_spec()
@@ -312,6 +327,81 @@ class RuntimeConfigurationTests(unittest.TestCase):
         )
         self.assertTrue(guard.filter(record))
         self.assertEqual(record.msg, {"client_id": "[REDACTED]"})
+
+    def test_redaction_filter_scrubs_traceback_chain_stack_and_extras(self) -> None:
+        resolved = self.resolver.resolve(secret_spec())
+        protected = resolved.reveal()
+        guard = RuntimeValueRedactionFilter()
+        guard.register(resolved)
+        try:
+            try:
+                raise FakeProviderError("AccessDeniedException", protected)
+            except FakeProviderError as cause:
+                raise RuntimeError(f"outer failure {protected}") from cause
+        except RuntimeError:
+            record = logging.LogRecord(
+                name="runtime-configuration-test",
+                level=logging.ERROR,
+                pathname=__file__,
+                lineno=1,
+                msg="resolution failed",
+                args=(),
+                exc_info=sys.exc_info(),
+            )
+        record.stack_info = f"synthetic stack {protected}"
+        record.provider_context = {"detail": protected}
+
+        self.assertTrue(guard.filter(record))
+        rendered = logging.Formatter(
+            "%(message)s %(provider_context)s"
+        ).format(record)
+
+        self.assertNotIn(protected, rendered)
+        self.assertNotIn(protected, record.stack_info)
+        self.assertEqual(record.provider_context, {"detail": "[REDACTED]"})
+
+    def test_parameter_and_secret_responses_bind_to_requested_identity(self) -> None:
+        original_parameter = self.parameters.get_parameter
+
+        def foreign_parameter(**kwargs: object) -> dict[str, object]:
+            response = original_parameter(**kwargs)
+            parameter = response["Parameter"]
+            assert isinstance(parameter, dict)
+            parameter["Name"] = PARAMETER_ARN.replace(
+                "vendor-base-url", "foreign-value"
+            )
+            return response
+
+        self.parameters.get_parameter = foreign_parameter  # type: ignore[method-assign]
+        with self.assertRaises(ConfigurationResolutionError) as captured:
+            self.resolver.resolve(parameter_spec())
+        self.assertEqual(captured.exception.code, ResolutionCode.RESOURCE_SCOPE)
+
+        self.parameters.get_parameter = original_parameter  # type: ignore[method-assign]
+        original_secret = self.secrets.get_secret_value
+
+        def foreign_secret(**kwargs: object) -> dict[str, object]:
+            response = original_secret(**kwargs)
+            response["ARN"] = SECRET_ARN.replace("SYN001", "OTHER1")
+            return response
+
+        self.secrets.get_secret_value = foreign_secret  # type: ignore[method-assign]
+        with self.assertRaises(ConfigurationResolutionError) as captured:
+            self.resolver.resolve(secret_spec(), force_refresh=True)
+        self.assertEqual(captured.exception.code, ResolutionCode.RESOURCE_SCOPE)
+
+    def test_requested_secret_stage_must_be_returned_by_provider(self) -> None:
+        original = self.secrets.get_secret_value
+
+        def stale_stage(**kwargs: object) -> dict[str, object]:
+            response = original(**kwargs)
+            response["VersionStages"] = ["AWSPREVIOUS"]
+            return response
+
+        self.secrets.get_secret_value = stale_stage  # type: ignore[method-assign]
+        with self.assertRaises(ConfigurationResolutionError) as captured:
+            self.resolver.resolve(secret_spec())
+        self.assertEqual(captured.exception.provider_code, "SecretStageMismatch")
 
     def test_invalidation_removes_only_the_selected_logical_name(self) -> None:
         self.resolver.resolve(parameter_spec())

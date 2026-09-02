@@ -4,19 +4,35 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lims-eln-enterprise-implementation"
-version = "0.3.0"
+version = "0.3.1"
 description = "Synthetic, evidence-bearing reference implementation for a LIMS/ELN re-platform"
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "Apache-2.0"}
-authors = [{name = "driftframestudios"}]
-dependencies = []
+authors = [{name = "Driftframe Studios, Limited Liability Company"}]
+dependencies = [
+  "fastapi>=0.141,<1",
+  "jinja2>=3.1.6,<4",
+  "pydantic>=2.13,<3",
+  "uvicorn>=0.52,<1",
+]
+
+[project.optional-dependencies]
+contracts = ["lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@4d06eeb7f96910311fbcb7f51547c978b6a07290"]
+postgres = ["psycopg[binary]>=3.3,<4"]
+test = ["httpx2>=2.12,<3"]
+
+[project.scripts]
+lims-eln-workbench = "lims_eln_implementation.workbench.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"lims_eln_implementation.workbench" = ["templates/*.html", "static/*.css", "static/*.js"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

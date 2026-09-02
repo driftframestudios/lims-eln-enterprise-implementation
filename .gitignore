@@ -9,6 +9,9 @@ build/
 dist/
 *.egg-info/
 receipts/local/
+infra/secrets/*
+infra/secrets/*.txt
+!infra/secrets/.gitignore
 .DS_Store
 .env
 .env.*

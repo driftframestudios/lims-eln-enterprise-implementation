@@ -39,17 +39,40 @@ instrument bytes ──> durable inbox ──> canonical domain ──> scientif
     retain immutable construction snapshots.
 12. A write exception retains durable recovery ownership until authoritative
     reconciliation determines its material effect.
+13. A tenant assertion is short-lived, signed by a trusted issuer, and verified
+    inside PostgreSQL before a row policy returns state.
+14. Scientific quantities retain finite exact decimal value, source precision
+    and scale, a released unit code/system, and raw-to-normalized lineage.
+15. Applied schema migrations retain immutable identity, path, checksum, actor,
+    database time, transaction ownership, and serialized runner coordination.
+16. Privileged database routines resolve canonical relations and composite types
+    by released schema, with temporary schemas last in the fixed search path.
+17. Outbox delivery requires the signed tenant, invoking SQL principal,
+    worker-instance label, rotating lease UUID, monotonic fence, and database time.
 
 ## Transaction boundaries
 
 The production persistence contract places aggregate mutation, append-only
 domain event, idempotency commit, and outbox message in one database transaction.
-The reference adapters implement the durable invocation and receipt
-transitions; the deployment adapter composes them with domain SQL and the outbox
-on one connection and retains a configured-environment crash-point receipt.
-External delivery begins after commit. A worker claims outbox rows with bounded
-leases, records each attempt, and moves exhausted work to a reviewable recovery
-queue with its source identity intact.
+The in-memory atomic adapter proves rollback semantics for lifecycle plus
+idempotency and custody plus outbox. PostgreSQL's `record_custody_transfer`
+function locks the current position, enforces expected-version CAS, appends one
+immutable custody event, updates the position, and inserts the full-payload
+outbox message in one transaction. The schema supplies tenant-bound claim,
+expired-lease reclaim, and exact confirmation functions. These functions record
+the invoking SQL principal separately from the worker-instance label, rotate the
+lease UUID, advance a monotonic fence, and compare the complete unexpired lease
+coordinate before completion. `PostgresWorkbenchService` composes one bounded
+Golden Specimen slice on that connection: invocation reservation, signed tenant
+binding, lifecycle and custody updates, instrument facts, normalized
+measurement, vendor projection, receipt, idempotency completion, and outbox.
+It commits quarantine as a named recovery state, applies a corrected recovery
+through a distinct operation, and rolls back an invalid recovery attempt. A
+fresh tenant-bound transaction rebuilds the specimen from canonical V005 views
+from verified stored facts. When the independently distributed accepted Program
+contract package is installed, those facts also produce the shared typed
+observation. Broker delivery, versioned raw-object storage, and configured
+vendor qualification retain their own environment receipts.
 
 The bounded-caller invocation row uses a lease token and monotonically governed
 fencing token for every completion, pre-effect release, and recovery transition.
@@ -58,10 +81,12 @@ collision. An expired lease and an ambiguous write exception move to
 `recovery_required`, preserving the call identity for authoritative
 reconciliation.
 
-Instrument ingress stores bytes in versioned object storage before parsing.
-Database metadata binds the object key and checksum to the inbox identity.
-Scientific normalization creates a new canonical digest while preserving the
-raw digest.
+The production contract stores instrument bytes in versioned object storage
+before parsing and binds object key and checksum to the inbox identity. The
+PostgreSQL workbench persists that key-and-digest boundary and the normalized
+measurement; the object-store write and its crash-point proof remain a separate
+configured-environment encounter. Scientific normalization creates a new
+canonical digest while preserving the raw digest.
 
 ## Vendor boundaries
 
@@ -116,15 +141,103 @@ registered with the logging guard.
 
 ## Governance-plane database boundary
 
-`evidence_receipt` and `acceptance_decision` are deliberate governance-plane
-records rather than workload tenant tables. They bind cross-tenant claims to
-independent reviewers and accountable Scientific, Quality, and Regulatory
-decisions. The application workload role receives zero direct write authority
-to these tables. A separate evidence-writer role uses reviewed procedures,
-append-only audit capture, and the minimum statement set needed to record a
-receipt or decision.
+`evidence_receipt` and `acceptance_decision` are tenant-scoped governance-plane
+records. They bind one intended use and release claim to independent reviewers
+and accountable Scientific, Quality, and Regulatory decisions. The application
+workload role receives zero direct write authority to these tables. A separate
+evidence-writer role uses append-only tables and the minimum statement set
+needed to record a receipt or decision.
 
-Tenant-scoped workload tables use forced row-level security and a verified,
-transaction-local `app.tenant_id` setting. Migration activity uses a dedicated,
-time-bounded administration role with audited `BYPASSRLS` authority; application
-connections remain outside that role.
+Tenant-scoped tables use forced row-level security and
+`laboratory_security.authorized_tenant_id()`. A trusted issuer supplies a
+short-lived HMAC assertion containing tenant, subject, key identity, validity
+window, and nonce. PostgreSQL verifies its exact field set, lifetime, active
+private key, and signature before setting the transaction-local context. The
+legacy caller-set tenant GUC has zero policy authority.
+
+Application, outbox, evidence, and migration identities are distinct
+`NOSUPERUSER NOBYPASSRLS` roles. They can execute verification and have zero
+key-table access. A separately approved break-glass administration identity
+belongs to the adopting environment and sits outside the ordinary repository
+runtime.
+
+## Database evolution boundary
+
+The database begins from versioned migration V001 and advances through Flyway
+Community 13.0.0. Flyway owns discovery, ordering, locking, one PostgreSQL
+transaction per migration, applied history, checksum validation, status, and
+no-op replay. `database/flyway-release.json` pins the open-source image by exact
+version and digest; `flyway.conf` keeps validation enabled, order strict, clean
+disabled, and automatic baseline adoption disabled. A failed migration rolls
+back. An applied migration receives a successor forward repair. Cluster-wide
+role provisioning remains a separate privileged deployment step. The Flyway
+runtime authenticates as `laboratory_migrator`, whose role attributes are
+`LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS`. A
+digest-bound `afterConnect.sql` callback verifies that session identity and
+the effective identity. Privileged provisioning installs a target-database
+startup setting that selects the no-login `laboratory_owner` through its `SET
+TRUE, INHERIT FALSE, ADMIN FALSE` membership on every new connection. Database
+and schema ownership live on that owner role; the authenticated login
+receives connection authority and a distinct runtime credential. The callback
+also verifies the exact catalog binding, while `RESET ROLE` exposes the
+configured owner default and `SET ROLE NONE` exposes the migrator's
+direct-DDL-rejecting privilege set. The credential can deliberately select the
+owner through its released membership and therefore enters only the migration
+workload boundary.
+
+V004 moves outbox state relations and trusted transition routines to the
+isolated `laboratory_outbox_authority`. The schema owner receives a single
+`ADMIN FALSE, INHERIT FALSE, SET TRUE` membership so it can perform PostgreSQL's
+required ownership transfer. Both roles remain `NOLOGIN NOBYPASSRLS`, and
+`INHERIT FALSE` keeps the transfer capability distinct from ambient runtime
+authority. V004 settles caller access controls and triggers under the migration
+owner, then transfers ownership while the destination role has its bounded
+schema capability. The destination role clears ownership-transferred outbox
+privileges, then establishes the narrow DML used by its routines and guards,
+including `UPDATE` on attempt and outcome so append-only triggers govern
+attempted mutation and PostgreSQL can lock an outcome while validating the
+recovery foreign key. It restores the custody producer's column-level insert
+grant before the migration owner revokes that capability. Static and hosted
+catalog proofs verify the ordering, exact role edge, final table and routine
+owners, bounded DML surface, and absence of schema-creation privilege on clean
+and successor paths.
+
+Forced row-level security remains active during migration. Every tenant table
+has a second permissive policy scoped to `laboratory_owner` whose predicate
+verifies the complete catalog-backed migration session coordinate. The ordinary
+tenant predicate becomes SQL `NULL` only for that exact coordinate, avoiding an
+exception during cross-tenant maintenance. Application, worker, evidence,
+trusted `SECURITY DEFINER`, and direct migrator paths continue to require a
+signed tenant context. This keeps cross-tenant data evolution explicit while
+the migration secret, digest-bound SQL, and deployment stage form its authority
+boundary.
+
+Migration V002 establishes finite temporal values, state coherence, the signed
+tenant authority, typed instrument measurements, custody history/CAS, and
+immutable outbox content. Migration V003 fixes privileged routine name resolution,
+removes direct worker delivery mutation, and introduces fenced outbox lease
+functions plus transition guards. Migration V004 retains that released history
+and narrows the current API to 1 through 900 integer seconds. A dedicated
+no-login authority enforces the complete transition matrix; append-only tenant
+relations preserve each attempt, outcome, transport receipt, and recovery
+release. The producer and worker share one database-enforced, nonblank
+printable-ASCII message identity of at most 256 bytes. Migration V004 admits only
+initial ready rows with zero attempts, so every accepted message begins durable
+attempt provenance under the new model. It also binds measurement scale to the
+stored numeric, binds complete inbox lineage, and binds each custody position to
+one complete event coordinate. A deterministic transaction-scoped
+`ACCESS EXCLUSIVE` lock set precedes the preflight; 30-second lock acquisition
+and five-minute statement and idle-in-transaction budgets make contention a
+clean, retryable rollback. Source precision remains producer-observed metadata
+until retained source lexemes or canonical payload bytes support independent
+verification. A populated untracked baseline enters
+through a fresh-target restore and semantic comparison rehearsal rather than
+object-name inference. The complete adoption and evidence gates are documented in
+`docs/database-migrations.md`.
+
+Migration V005 keeps `custody_event` and `instrument_measurement` as the single
+durable facts. It binds inbox rows to specimens, records append-only instrument
+review resolutions through signed tenant authority, and requires any accepted
+replacement to carry the same specimen identity. Security-invoker views provide
+the normalized-observation and workbench read shapes without duplicating
+canonical scientific values.

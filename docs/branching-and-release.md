@@ -3,8 +3,8 @@
 ## Long-lived branches
 
 - `main` contains released, receipt-bound versions.
-- `develop` integrates the next release and remains deployable to the shared
-  qualification environment.
+- `develop` is the lean integration branch for the next release and remains
+  deployable to the shared qualification environment.
 
 ## Short-lived branches
 
@@ -15,32 +15,60 @@
 | `hotfix/<receipt-id>` | `main` | `main` and `develop` | Production correction with bounded evidence |
 | `experiment/<question>` | `develop` | `develop` when promoted, or archived tag | Time-boxed exploration with an explicit learning record |
 
-## Automated maintenance branches
+## Local and hosted proof
 
-Automated dependency maintenance is admitted as its own governed flow:
+`python3 scripts/validate_repository.py` is the standing repository proof.
+The repository allocates 100–300 hosted runner minutes per month. One
+read-only, cancellable Python 3.12 proof accompanies pull requests into
+`develop` and `main`. The manually dispatched `implementation-proof` preserves
+the two-version and PostgreSQL evidence for a named receiver who sets
+`ENABLE_GITHUB_ACTIONS=true` and selects `confirm_run`.
+
+`.github/dependabot.yml` supplies monthly version updates into `develop` with a
+two-open-pull-request limit for each configured ecosystem. Minor and patch
+updates share a reviewable group when available. Maintenance branches retain
+their bounded coordinate contract:
 
 - Dependabot uses the complete
-  `dependabot/github_actions/<dependency-update>` grammar and the
+  `dependabot/<ecosystem>/<dependency-update>` grammar and the
   `dependabot[bot]` pull-request identity.
 - Renovate uses the complete `renovate/<dependency-update>` grammar and the
   `renovate[bot]` pull-request identity.
-- Either flow targets `main` or `develop`; branch grammar, bot identity, and
-  target must agree.
+- Dependabot version updates target `develop`; default-branch security updates
+  retain their `main` route. Renovate retains its reviewed `main` or `develop`
+  target. Branch grammar, bot identity, and target agree.
 
-Each maintenance pull request continues through the ordinary validation,
-review, and merge controls. GitHub Actions execute with read-only repository
-permission. Dependabot jobs use Dependabot-scoped secrets when an approved
-workflow requires a secret. Default-branch security updates are merged forward
-to `develop` so both long-lived branches retain the correction.
+Each maintenance pull request continues through local validation, human review,
+and the ordinary merge controls. The repository-local branch checker remains a
+review aid. Its checker, tests, dependency-activation template, bounded-caller
+sources, release manifests, and governance orientation surfaces retain explicit
+ownership. Default-branch security updates are merged forward to `develop` so
+both long-lived branches retain the correction.
 
-The branch-policy workflow runs on pull-request metadata while checking out the
-target branch's immutable base commit into a dedicated path. Its checker,
-workflow, tests, dependency-automation configuration, bounded-caller sources,
-release manifests, and governance orientation surfaces all require code-owner
-review. Repository rulesets retain the required-check and fresh-approval
-enforcement around these repository-local controls.
+## Repository-owned candidate identity
 
-## Pull-request gates
+`release/public-inspection-manifest.json` records the exact repository bytes
+available for 0.3.1 review. Its ordered inventory covers runtime source, Flyway
+V001 through V005, local contracts and synthetic inputs, consequential behavior
+proofs, operational configuration, evidence records, and public orientation.
+The root and release-role manifests carry its SHA-256 digest. These two carriers
+remain outside the inventory so their reference to the inventory stays acyclic.
+
+Run `python3 scripts/build_public_inspection_manifest.py --check` to establish
+that every selected path, file size, file digest, group digest, and aggregate
+identity matches the working tree. A source change receives a regenerated
+inventory in the same reviewed change.
+
+The repository-owned candidate carries the accepted Program and Governance Git
+coordinates through
+[`release/external-contract-coordinates.json`](../release/external-contract-coordinates.json).
+The Program binding includes its exact package source digest and clean Python
+3.12 consumer observation. The Governance binding includes its annotated tag
+object, commit, tree, and archive digest. Configured-system observations remain
+in evidence receipts with their environment and assurance boundaries, so
+release assembly can examine each authority independently.
+
+## Pull-request review material
 
 Every pull request carries:
 
@@ -59,10 +87,13 @@ and `acceptance` receive domain-specific review.
 
 1. Cut `release/<version>` from a passing `develop`.
 2. Freeze contract and fixture digests.
-3. Run configured-vendor, representative migration/restore, and
-   production-shape security/observability tranches.
-4. Assemble scientific, Quality, and Regulatory decision packets.
-5. Resolve deviations through evidence, bounded conditions, or return-for-evidence.
+3. Run repository validation and the source-owned synthetic database proof,
+   then bind each observed result to the exact candidate.
+4. Keep configured-vendor, representative migration/restore,
+   production-shape security/observability, and accountable Scientific,
+   Quality, and Regulatory encounters with their named successor receipts and
+   environment owners.
+5. Receive the required human and code-owner review for the source release.
 6. Merge the accepted release to `main` and tag `v<version>`.
 7. Merge the release result back to `develop`.
 8. Publish the release manifest, source digest, evidence locators, and open receipts.
@@ -72,13 +103,32 @@ its own signed decision record.
 
 ## Branch protection target
 
-Configure GitHub rulesets so that:
+Configure the GitHub ruleset for `main` so that:
 
-- `main` and `develop` receive pull requests and required status checks;
-- `main` receives two fresh approvals, including a code owner;
-- `develop` receives one fresh approval;
-- release and hotfix merges preserve a linear, traceable history;
+- `main` receives pull requests and the bounded pull-request proof after
+  repository settings activate it;
+- each pull request receives one approval, including code-owner review where a
+  covered path changes;
+- changes without an attributed author receive the configured extra approval;
+- stale approvals are dismissed, the last push receives approval from another
+  contributor, and review threads reach resolution;
+- deletion and non-fast-forward protections preserve branch history;
+- merge, squash, and rebase merge methods remain available;
 - contract, fixture, migration, security, and expected-result changes receive
   an independent reviewer;
-- workflow permissions are read-only by default;
-- reusable workflows are pinned by immutable commit SHA.
+- the manual full-proof workflow retains read-only permission, the repository-variable
+  gate, dispatch confirmation, and a bounded timeout;
+- any later reusable workflow is caller-owned and pinned by immutable commit SHA.
+
+The current release-role manifest keeps required hosted contexts empty while
+the source change and exact hosted check name await acceptance. It records the
+bounded source contract beside the retained human-review, code-owner, deletion,
+and non-fast-forward protections. GitHub-generated merge commits currently
+carry verified signatures; the active ruleset admits commits through
+pull-request review without a required-signatures rule. Repository settings
+receive the observed check name after the source lands.
+
+`develop` remains a lean integration branch. Pull requests into `develop` can
+still receive the bounded proof, while the `main` ruleset carries release
+protection. `release/<version>` remains a short-lived route from `develop` to
+`main` and back to `develop` after acceptance.

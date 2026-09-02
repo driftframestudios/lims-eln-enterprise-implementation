@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0.0",
+  "consumer": "driftframestudios/lims-eln-enterprise-implementation",
+  "coordinate_state": "accepted_and_consumer_observed",
+  "program_contract": {
+    "repository": "driftframestudios/lims-eln-program-specification",
+    "distribution_name": "lims-eln-program-specification",
+    "import_name": "lims_eln_contracts",
+    "package_version": "0.3.1",
+    "contract_version": "1.0.0",
+    "source_commit": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+    "source_identity": {
+      "scope": [
+        "pyproject.toml",
+        "src/lims_eln_contracts"
+      ],
+      "algorithm": "path-length-bytes-sha256-v1",
+      "digest": "sha256:e4d7ef6aa1036b69395e9de3ab0064297dc80e5f697ab60de699a355e45f7674"
+    },
+    "requirement": "lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@4d06eeb7f96910311fbcb7f51547c978b6a07290",
+    "consumer_conformance": {
+      "state": "observed",
+      "environment": "clean Python 3.12 environment",
+      "command": "python3 scripts/validate_received_contracts.py --require-installed-program --program-source ../lims-eln-program-specification",
+      "observed_values": {
+        "distribution_version": "0.3.1",
+        "import_version": "0.3.1",
+        "contract_version": "1.0.0",
+        "direct_url": "https://github.com/driftframestudios/lims-eln-program-specification.git",
+        "direct_url_requested_revision": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+        "direct_url_commit": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+        "source_digest": "sha256:e4d7ef6aa1036b69395e9de3ab0064297dc80e5f697ab60de699a355e45f7674",
+        "operation_count": 3,
+        "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
+        "observation_producers": [
+          "implementation",
+          "simulation"
+        ],
+        "schema_count": 7
+      },
+      "observations": [
+        "installed distribution version is 0.3.1",
+        "lims_eln_contracts.__version__ is 0.3.1",
+        "lims_eln_contracts.CONTRACT_VERSION is 1.0.0",
+        "the PEP 610 source URL, requested revision, and commit match the reviewed source",
+        "the scoped package source digest matches the reviewed binding",
+        "the released operation catalog loads",
+        "the Golden Specimen scenario loads",
+        "the implementation and simulation shaped observations load",
+        "every released schema in SCHEMA_RESOURCE_NAMES loads as a JSON object"
+      ]
+    }
+  },
+  "governance": {
+    "repository": "driftframestudios/site-reading-governance",
+    "release": "2.1.0",
+    "schema_release": "2.1.0",
+    "annotated_tag": "governance-v2.1.0",
+    "tag_object": "1c77396e44b71719ccab138fecd02e525089e39d",
+    "source_commit": "8469c2a6b2c7f4445523cee262b961ffe3d2523b",
+    "source_tree": "aed5d57120e15ceabe77d7bba700a43097200b19",
+    "git_archive_sha256": "sha256:469ae49fca7d5ad6e1766080b3c39d76c46a840366b217f3839b9d34f2e77d32"
+  }
+}

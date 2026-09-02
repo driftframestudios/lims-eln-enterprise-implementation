@@ -1,35 +1,49 @@
 {
   "schema_version": "2.0.0",
   "name": "lims-eln-enterprise-implementation",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "python": ">=3.12",
   "repository_role": "enterprise_implementation",
   "evidence_role": "actual_implementation",
   "fixture_policy": "synthetic_only",
   "validation_command": "python3 scripts/validate_repository.py",
   "control_plane": {
-    "governance_schema_release": "2.0.0",
+    "governance_schema_release": "2.1.0",
     "control_plane_profile": "0.3.0",
     "machine_node": "machine-node.json",
     "first_receipt": "first-receipt.json",
     "coordination_horizon": "COORDINATION-HORIZON.json",
     "historical_machine_node": "release/seed-lineage-machine-node-v0.2.json"
   },
+  "public_inspection": {
+    "manifest": "release/public-inspection-manifest.json",
+    "manifest_digest": "sha256:1e41212a2ca0cfe679ffc799bb08d1854300d57354364831b82390ab0133a12f",
+    "authority": "repository_owned_candidate_bytes",
+    "cross_repository_coordinate_state": "accepted_and_consumer_observed"
+  },
+  "external_contracts": {
+    "coordinate_manifest": "release/external-contract-coordinates.json",
+    "coordinate_manifest_digest": "sha256:e89eb61e8cf04b27c1bd7b84c7c600d0866fb813a7e6761fe7a0e865a11cc077",
+    "coordinate_state": "accepted_and_consumer_observed"
+  },
   "contract_versions": {
     "specimen_command": "1.0.0",
-    "execution_receipt": "1.0.0",
+    "execution_receipt": "1.1.0",
     "provenance": "1.0.0",
     "runtime_setting_catalog": "1.0.0",
-    "bounded_caller_binding": "0.3.0",
+    "bounded_caller_binding": "0.3.1",
+    "database_flyway_release": "1.0.0",
     "open_receipt_ledger": "2.0.0"
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:f0e05a5ce3c4ae98b410d2a33b3722565263214c4efd5964997f9ce39c67733b",
+    "binding_digest": "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",
-      "specimen.quarantine.bulk"
+      "specimen.quarantine.bulk",
+      "specimen.golden_journey.execute",
+      "specimen.golden_journey.recover_instrument"
     ],
     "effect_classes": [
       "read",
@@ -43,6 +57,19 @@
     "resource_scope": "full_arn_partition_region_account",
     "cache": "bounded_process_memory_fail_closed_at_expiry",
     "credential_source": "workload_identity"
+  },
+  "database": {
+    "engine": "postgresql",
+    "qualified_major": 17,
+    "migration_head": "005",
+    "migration_product": "Flyway Community",
+    "migration_product_version": "13.0.0",
+    "migration_release": "database/flyway-release.json",
+    "migration_release_digest": "sha256:a4fafe7ebb50da1efbad47df24d6d7af741130039ba8c90b8d6457e9d1d107b9",
+    "migration_configuration": "flyway.conf",
+    "migration_transaction_policy": "one_transaction_per_migration",
+    "tenant_authority": "signed_short_lived_database_verified_context",
+    "outbox_canonicalization": "postgresql-jsonb-text-v1"
   },
   "receipt_families": [
     "configured_vendor_environments",
