@@ -109,6 +109,8 @@ class WorkbenchService:
     deployment adapters.
     """
 
+    state_adapter = "process_local"
+
     def __init__(
         self,
         *,

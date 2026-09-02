@@ -57,6 +57,14 @@
   clean-versus-upgrade schema convergence.
 - Add the bounded Golden Specimen Workbench with visible call receipts, distinct
   grant-bound scientific and Quality actors, and a separate recovery operation.
+- Compose the workbench's FastAPI route with PostgreSQL V001–V005 in one
+  tenant-bound transaction; rebuild the released specimen from durable state;
+  produce the exact shared observation when the accepted Program contract
+  package is installed; and prove restart, replay, collision, isolation,
+  rollback, recovery, decimal source shape, and digest checks.
+- Bind canonical event time into the Golden Specimen operation payloads and
+  advance execute to 3.0.0 and instrument recovery to 2.0.0, so each run
+  identity carries the exact time that shaped its lifecycle and evidence.
 - Add V005 instrument-review resolution and security-invoker workbench views
   over the canonical custody and measurement facts.
 - Add live, digest-pinned PostgreSQL 17 migration and adversarial data-boundary

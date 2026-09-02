@@ -2,7 +2,7 @@
   "horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
   "title": "LIMS/ELN Implementation Coordination Horizon",
   "objective": "Keep bounded authority, durable persistence and vendor seams, selected-future comparison, and observed successor evidence legible without coupling the collaboration to one planning cadence.",
-  "as_of": "2026-09-02T00:33:54Z",
+  "as_of": "2026-09-02T01:59:47Z",
   "current_item_ids": [
     "HORIZON-IMPLEMENTATION-SETTLING"
   ],
@@ -12,7 +12,7 @@
       "horizon_label": "Bounded-caller release promotion",
       "sequence": 1,
       "state": "settling",
-      "desired_state": "The typed operation registry, authority grants, budgets, exact approvals, replay behavior, durable adapter seams, and receipts form one digest-bound release.",
+      "desired_state": "The typed operation registry, authority grants, budgets, exact approvals, replay behavior, bounded durable Golden Specimen path, and receipts form one digest-bound release.",
       "entry_evidence": [
         "governance schema release 2.1.0",
         "implementation release 0.2.0 proof floor",
@@ -20,6 +20,7 @@
       ],
       "completion_evidence": [
         "repository tests and validation pass",
+        "configured PostgreSQL Golden Specimen restart, replay, isolation, rollback, digest, and recovery proof passes",
         "governance Machine Node first receipt and Coordination Horizon validate",
         "every bounded-caller source digest matches the release binding manifest",
         "RCP-IMPLEMENTATION-PROMOTION-003 closes against the reviewed immutable coordinate"
@@ -71,29 +72,30 @@
     }
   ],
   "reentry_capsule": {
-    "current_state": "Release 0.3.1 is settling with a bounded public application path, four operation classes, atomic reference seams, least-privilege PostgreSQL identities, and a configured LabKey exemplar.",
+    "current_state": "Release 0.3.1 is settling with five registered operations across three effect classes, a process-local workbench, a durable PostgreSQL Golden Specimen slice, least-privilege database identities, and a credential-free LabKey API exemplar.",
     "recent_decisions": [
       "DECISION-BOUNDED-CALLER-SERVICE-OWNED",
       "DECISION-SIMULATED-AND-OBSERVED-BRANCHES"
     ],
-    "next_safe_action": "Validate the complete repository, recompute every declared digest, project the orientation files through governance schema release 2.1.0, and close RCP-IMPLEMENTATION-PROMOTION-003 against the reviewed immutable coordinate.",
-    "verification": "Confirm tests, source bindings, receipt-family names, secret-shape hygiene, Python syntax, and cross-repository schema validation."
+    "next_safe_action": "Bind the durable workbench sources and passing PostgreSQL scenarios into the release digests and successor synthetic receipt, validate the orientation files through Governance 2.1.0, then close RCP-IMPLEMENTATION-PROMOTION-003 against the reviewed immutable coordinate.",
+    "verification": "Confirm repository tests, configured PostgreSQL restart, replay, collision, isolation, rollback, digest, and recovery scenarios, source bindings, receipt-family names, secret-shape hygiene, Python syntax, and cross-repository schema validation."
   },
   "retained_effects": [
     "Service-owned operations continue to determine caller authority, scope, budgets, approvals, effects, receipts, and recovery.",
+    "The process-local and PostgreSQL workbench adapters keep one FastAPI contract; the PostgreSQL path rebuilds durable results from canonical V005 state.",
     "The selected future can fully close the four substantive receipt families using modeled roles and remains non-authorizing outside that simulation.",
     "Configured-environment observations and organizational acceptance remain available as independent successor evidence.",
     "The historical Machine Node remains explicit seed lineage while the governance 2.0 Machine Node is canonical."
   ],
   "consequential_questions": [
-    "Which persistence and vendor SDK versions should enter the first qualified implementation band?",
+    "Which PostgreSQL driver band and configured vendor SDK versions should enter the first qualified environment?",
     "Which comparison divergence should change the implementation rather than its specification or simulation?",
     "Which observed encounter would improve calibration enough to justify its qualification and evidence-retention cost?"
   ],
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T00:33:54Z",
+    "updated_at": "2026-09-02T01:59:47Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-HORIZON",
       "display_name": "Implementation stewardship role",

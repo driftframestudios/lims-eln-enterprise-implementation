@@ -3,10 +3,10 @@
   "repository_role": "enterprise_implementation",
   "repository_release": "0.3.1",
   "external_release": "implementation-v0.3.1",
-  "bounded_caller_binding_digest": "sha256:3fa9494b74e48130f564389c05a2354ae43a92ac9d2fd4a4c595f97cfd9a381d",
+  "bounded_caller_binding_digest": "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea",
   "database_flyway_release_digest": "sha256:a4fafe7ebb50da1efbad47df24d6d7af741130039ba8c90b8d6457e9d1d107b9",
   "external_contract_coordinate_digest": "sha256:e89eb61e8cf04b27c1bd7b84c7c600d0866fb813a7e6761fe7a0e865a11cc077",
-  "public_inspection_manifest_digest": "sha256:ecacf9e87267e89e450d80d9d491cc6b09f97ff124f8316f417b36634f6e41a4",
+  "public_inspection_manifest_digest": "sha256:79e39233a1338bc2925be33fbcfed2778674e07646f416929dc311a008e1af40",
   "open_receipt_ledger_digest": "sha256:f5ec4399b7ba43ce2bbc6260c0eb223c1fc8e405a9e5b13fd71ca806fd709421",
   "selected_future_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
   "first_receipt_contract": {

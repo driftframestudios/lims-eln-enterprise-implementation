@@ -17,10 +17,13 @@ required check after its exact hosted name has been observed.
 ## Confirmed full proof
 
 `implementation-proof` retains the two-version Python matrix, PostgreSQL 17
-services, Flyway migration and upgrade paths, and the stable matrix-result
-check. A named receiver can run it by setting `ENABLE_GITHUB_ACTIONS=true`,
-selecting `confirm_run`, and dispatching the workflow when that broader evidence
-is useful.
+services, Flyway migration and upgrade paths, the durable FastAPI workbench
+journey, and the stable matrix-result check. The PostgreSQL job proves restart
+reload, exact replay, changed-content collision, tenant isolation, rollback and
+retry, quarantine and corrected recovery, decimal source shape, and canonical
+digest enforcement. A named receiver can run it by setting
+`ENABLE_GITHUB_ACTIONS=true`, selecting `confirm_run`, and dispatching the
+workflow when that broader evidence is useful.
 
 ## Monthly dependency upkeep
 

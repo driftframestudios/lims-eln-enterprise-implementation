@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RCP-IMPLEMENTATION-001",
   "machine_node_id": "NODE-LIMS-ELN-IMPLEMENTATION",
-  "as_of": "2026-09-02T00:33:54Z",
+  "as_of": "2026-09-02T01:59:47Z",
   "orientation_purpose": "Give a human or AI collaborator the minimum complete implementation state, authority boundary, evidence posture, invalidation conditions, and safe handoff needed to reproduce or extend this reference.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -11,7 +11,7 @@
     {
       "contract_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
       "version": "0.3.1",
-      "digest": "sha256:3fa9494b74e48130f564389c05a2354ae43a92ac9d2fd4a4c595f97cfd9a381d"
+      "digest": "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea"
     },
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
@@ -37,7 +37,7 @@
       "status": "active"
     },
     {
-      "claim": "Flyway Community advances PostgreSQL through ordered checksum-validated transactions while the repository exercises signed tenant, custody, quantity, lineage, and outbox invariants in a synthetic live database.",
+      "claim": "Flyway Community advances PostgreSQL through ordered checksum-validated transactions while the repository exercises signed tenant, durable Golden Specimen, custody, quantity, lineage, and outbox behavior in a synthetic live database.",
       "mode": "observed",
       "assurance_stage": "verified",
       "status": "active"
@@ -56,7 +56,7 @@
     }
   ],
   "coordination_horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
-  "current_horizon_summary": "Implementation release 0.3.1 is settling around a bounded application path, atomic reference seams, least-privilege PostgreSQL identities, and governance-conformant orientation surfaces.",
+  "current_horizon_summary": "Implementation release 0.3.1 is settling around process-local and durable PostgreSQL workbench paths, least-privilege database identities, and governance-conformant orientation surfaces.",
   "open_receipts": [
     "RCP-IMPLEMENTATION-PROMOTION-003",
     "RCP-OBSERVED-VENDORS-001",
@@ -102,7 +102,7 @@
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T00:33:54Z",
+    "updated_at": "2026-09-02T01:59:47Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-RECEIPT",
       "display_name": "Implementation stewardship role",

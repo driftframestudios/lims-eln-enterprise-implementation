@@ -174,7 +174,12 @@ class InstrumentIngress:
                 + ", ".join(additional),
             )
         analyte = payload["analyte"]
-        if not isinstance(analyte, str) or not analyte.strip() or len(analyte) > 128:
+        if (
+            not isinstance(analyte, str)
+            or not analyte.strip()
+            or len(analyte) > 128
+            or any(ord(character) < 32 or ord(character) > 126 for character in analyte)
+        ):
             return self._quarantine(
                 envelope,
                 "analyte_requires_mapping",
@@ -208,6 +213,8 @@ class InstrumentIngress:
                 "quantity_requires_mapping",
                 "supply a finite decimal quantity from the approved profile",
             )
+        if quantity.is_zero():
+            quantity = quantity.copy_abs()
         quantity_tuple = quantity.as_tuple()
         precision = len(quantity_tuple.digits)
         scale = max(-quantity_tuple.exponent, 0)

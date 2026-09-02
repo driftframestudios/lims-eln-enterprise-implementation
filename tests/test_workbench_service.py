@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 import unittest
+from datetime import timedelta
+from unittest.mock import patch
 
-from lims_eln_implementation.custody import CustodyService
+from helpers import NOW, command
+
 from lims_eln_implementation.application import InstrumentReviewRequired
+from lims_eln_implementation.custody import CustodyService
 from lims_eln_implementation.idempotency import (
+    ContentCollision,
     IdempotencyLedger,
     ReservationInProgress,
 )
@@ -17,9 +22,6 @@ from lims_eln_implementation.lifecycle import LifecycleService
 from lims_eln_implementation.model import DomainError
 from lims_eln_implementation.store import InMemoryOutbox, InMemorySpecimenRepository
 from lims_eln_implementation.workbench.service import WorkbenchService
-
-from helpers import NOW, command
-
 
 RAW_INSTRUMENT_JSON = b'{"analyte":"synthetic-dna","value":"12.5","unit":"ng/uL"}'
 
@@ -48,9 +50,7 @@ class WorkbenchServiceTests(unittest.TestCase):
         self.assertEqual(specimen["version"], 5)
         self.assertEqual(len(specimen["events"]), 5)
         self.assertEqual(specimen["custody"]["location"], "SYN-LAB-A/RECEIVING")
-        self.assertEqual(
-            specimen["instrument_receipts"][0]["disposition"], "accepted"
-        )
+        self.assertEqual(specimen["instrument_receipts"][0]["disposition"], "accepted")
         self.assertEqual(len(specimen["instrument_receipts"][0]["raw_sha256"]), 64)
         self.assertEqual(
             specimen["instrument_receipts"][0]["normalized_observation"]["analyte"],
@@ -68,6 +68,8 @@ class WorkbenchServiceTests(unittest.TestCase):
         self.assertEqual(result["outcome"]["call_decision"], "succeeded")
         self.assertTrue(result["outcome"]["call_receipt_id"])
         self.assertEqual(specimen["events"][3]["actor_id"], "SYN-SCIENTIST-01")
+        self.assertEqual(specimen["events"][3]["payload"]["decision"], "accepted")
+        self.assertEqual(specimen["events"][3]["payload"]["quality_flag"], "pass")
         self.assertEqual(specimen["events"][4]["actor_id"], "SYN-QUALITY-01")
 
     def test_exact_run_replay_preserves_one_custody_and_ingress_result(self) -> None:
@@ -79,12 +81,36 @@ class WorkbenchServiceTests(unittest.TestCase):
         self.assertEqual(summary["instrument_receipt_count"], 1)
         self.assertEqual(summary["pending_outbox_count"], 1)
 
+    def test_changed_event_time_collides_with_the_recorded_run_identity(self) -> None:
+        self.run_specimen("SYN-RUN-001", "SYN-SPECIMEN-0001")
+        with self.assertRaisesRegex(ContentCollision, "different content"):
+            self.service.run_golden_specimen(
+                run_id="SYN-RUN-001",
+                tenant_id="SYN-TENANT-A",
+                specimen_id="SYN-SPECIMEN-0001",
+                actor_id="SYN-ACTOR-01",
+                scientist_id="SYN-SCIENTIST-01",
+                quality_actor_id="SYN-QUALITY-01",
+                occurred_at=NOW + timedelta(seconds=1),
+                raw_instrument_json=RAW_INSTRUMENT_JSON,
+                vendor_payload={"status": "under_review"},
+            )
+
     def test_run_scoped_command_identities_support_multiple_specimens(self) -> None:
         self.run_specimen("SYN-RUN-001", "SYN-SPECIMEN-0001")
         self.run_specimen("SYN-RUN-002", "SYN-SPECIMEN-0002")
         summary = self.service.summary("SYN-TENANT-A")
         self.assertEqual(summary["specimen_count"], 2)
         self.assertEqual(summary["lifecycle_counts"], {"released": 2})
+
+    def test_run_remains_available_while_shared_contract_package_is_absent(self) -> None:
+        with patch(
+            "lims_eln_implementation.workbench.shared_contracts.import_module",
+            side_effect=ModuleNotFoundError,
+        ):
+            result = self.run_specimen("SYN-RUN-OPTIONAL-001", "SYN-SPECIMEN-OPTIONAL")
+        self.assertIsNone(result["observation"])
+        self.assertEqual(result["specimen"]["state"], "released")
 
     def test_instrument_review_is_visible_and_resumable(self) -> None:
         with self.assertRaisesRegex(

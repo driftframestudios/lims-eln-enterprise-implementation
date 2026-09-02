@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from hashlib import sha256
 import hmac
 import json
 import os
@@ -10,9 +9,31 @@ import shutil
 import subprocess
 import time
 import unittest
+from base64 import b64encode
+from collections.abc import Callable
+from datetime import datetime, timedelta
+from hashlib import sha256
+from importlib.util import find_spec
 from uuid import uuid4
 
-from lims_eln_implementation.security import tenant_context_signing_message
+from fastapi.testclient import TestClient
+
+from lims_eln_implementation.security import (
+    PostgresTenantBinding,
+    SignedTenantContext,
+    tenant_context_signing_message,
+)
+from lims_eln_implementation.workbench.api import create_app
+from lims_eln_implementation.workbench.postgres import (
+    PostgresWorkbenchService,
+    _operation_contract,
+)
+from lims_eln_implementation.workbench.service import ObservationAbsent, SpecimenAbsent
+
+try:
+    import psycopg
+except ModuleNotFoundError:  # pragma: no cover - exercised by the configured job
+    psycopg = None
 
 
 ADMIN_DSN = os.environ.get("LIMS_TEST_POSTGRES_ADMIN_DSN")
@@ -32,6 +53,7 @@ def signed_context(
     issued_offset_seconds: int = 0,
     expires_offset_seconds: int = 300,
     signature_tenant_id: str | None = None,
+    subject_id: str = "SYN-CI-SERVICE-IDENTITY",
 ) -> str:
     if HMAC_KEY_HEX is None:
         raise RuntimeError("integration context requires the configured synthetic key")
@@ -42,7 +64,7 @@ def signed_context(
     signed_tenant = signature_tenant_id or tenant_id
     content = tenant_context_signing_message(
         tenant_id=signed_tenant,
-        subject_id="SYN-CI-SERVICE-IDENTITY",
+        subject_id=subject_id,
         key_id=key_id,
         issued_at_epoch=issued_at,
         expires_at_epoch=expires_at,
@@ -56,7 +78,7 @@ def signed_context(
     return json.dumps(
         {
             "tenant_id": tenant_id,
-            "subject_id": "SYN-CI-SERVICE-IDENTITY",
+            "subject_id": subject_id,
             "key_id": key_id,
             "issued_at_epoch": issued_at,
             "expires_at_epoch": expires_at,
@@ -213,8 +235,10 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             ),
             (
                 "unsigned",
-                "begin; select set_config('app.tenant_id', :'tenant', true); "
-                "select count(*) from tenant; commit;",
+                (
+                    "begin; select set_config('app.tenant_id', :'tenant', true); "
+                    "select count(*) from tenant; commit;"
+                ),
                 {"tenant": self.tenant_a},
             ),
         ):
@@ -444,10 +468,8 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
                 )
                 self.assertNotEqual(rejected.returncode, 0)
                 self.assertTrue(
-                    "instrument_measurement_source_scale_coherent"
-                    in rejected.stderr
-                    or "instrument_measurement_complete_inbox_lineage_fk"
-                    in rejected.stderr
+                    "instrument_measurement_source_scale_coherent" in rejected.stderr
+                    or "instrument_measurement_complete_inbox_lineage_fk" in rejected.stderr
                 )
 
     def test_workbench_resolution_and_views_reuse_canonical_instrument_facts(self) -> None:
@@ -681,7 +703,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
                 + "', '"
                 + message_id
                 + "', 'synthetic.changed', 'SYN-AGGREGATE', 1, "
-                "'{\"state\":\"ready\"}'::jsonb, "
+                '\'{"state":"ready"}\'::jsonb, '
                 "encode(public.digest(convert_to("
                 "'{\"state\":\"ready\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'))",
             )
@@ -693,7 +715,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             "begin; select laboratory_security.bind_tenant_context(:'context'::jsonb); "
             "set local role laboratory_outbox_authority; "
             "update transactional_outbox "
-            "set payload = '{\"state\":\"changed\"}'::jsonb, "
+            'set payload = \'{"state":"changed"}\'::jsonb, '
             "payload_sha256 = encode(public.digest(convert_to("
             "'{\"state\":\"changed\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex') "
             "where message_id = :'message'; commit;",
@@ -716,7 +738,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             + "', '"
             + message_id
             + "', 'synthetic.delivery', 'SYN-OUTBOX-AGGREGATE', 1, "
-            "'{\"state\":\"ready\"}'::jsonb, "
+            '\'{"state":"ready"}\'::jsonb, '
             "encode(public.digest(convert_to("
             "'{\"state\":\"ready\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'))",
         )
@@ -749,7 +771,9 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             variables={"context": context},
         )
         claimed_fields = self.last_output_row(claimed).split("|")
-        self.assertEqual(claimed_fields[:3], [message_id, "SYN-WORKER-A", "laboratory_outbox_worker"])
+        self.assertEqual(
+            claimed_fields[:3], [message_id, "SYN-WORKER-A", "laboratory_outbox_worker"]
+        )
         first_token = claimed_fields[3]
         first_fence = int(claimed_fields[4])
         self.assertEqual(first_fence, 1)
@@ -925,7 +949,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             + "', '"
             + valid_message
             + "', 'synthetic.identity', 'SYN-AGGREGATE', 1, "
-            "'{\"state\":\"ready\"}'::jsonb, "
+            '\'{"state":"ready"}\'::jsonb, '
             "encode(public.digest(convert_to("
             "'{\"state\":\"ready\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'))",
         )
@@ -973,7 +997,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
                 + "', '"
                 + message_id
                 + "', 'synthetic.receipt', 'SYN-AGGREGATE', 1, "
-                "'{\"state\":\"ready\"}'::jsonb, "
+                '\'{"state":"ready"}\'::jsonb, '
                 "encode(public.digest(convert_to("
                 "'{\"state\":\"ready\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'))",
             )
@@ -1062,7 +1086,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             "payload, payload_sha256, delivery_state, delivery_attempts, "
             "fencing_token, delivered_at_utc) values ("
             ":'tenant', :'message', 'synthetic.forged', 'SYN-AGGREGATE', 1, "
-            "'{\"state\":\"forged\"}'::jsonb, "
+            '\'{"state":"forged"}\'::jsonb, '
             "encode(public.digest(convert_to("
             "'{\"state\":\"forged\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'), "
             "'delivered', 1, 1, clock_timestamp()); commit;",
@@ -1086,7 +1110,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             "payload, payload_sha256, delivery_state, delivery_attempts, "
             "fencing_token, last_error_code) values ("
             ":'tenant', :'message', 'synthetic.null-state', 'SYN-AGGREGATE', 1, "
-            "'{\"state\":\"recovery_required\"}'::jsonb, "
+            '\'{"state":"recovery_required"}\'::jsonb, '
             "encode(public.digest(convert_to("
             "'{\"state\":\"recovery_required\"}'::jsonb::text, 'UTF8'), "
             "'sha256'), 'hex'), 'recovery_required', 1, 1, null); commit;",
@@ -1110,7 +1134,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             + "', '"
             + ready_message
             + "', 'synthetic.transition', 'SYN-AGGREGATE', 1, "
-            "'{\"state\":\"ready\"}'::jsonb, "
+            '\'{"state":"ready"}\'::jsonb, '
             "encode(public.digest(convert_to("
             "'{\"state\":\"ready\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'), "
             "'2035-01-01T00:00:00Z')",
@@ -1149,7 +1173,7 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
             + "', '"
             + message_id
             + "', 'synthetic.recovery', 'SYN-AGGREGATE', 1, "
-            "'{\"state\":\"ready\"}'::jsonb, "
+            '\'{"state":"ready"}\'::jsonb, '
             "encode(public.digest(convert_to("
             "'{\"state\":\"ready\"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex'))",
         )
@@ -1292,16 +1316,12 @@ class PostgresDataBoundaryIntegrationTests(unittest.TestCase):
         )
         self.assertEqual(
             self.last_output_row(evidence),
-            "2|2|SYN-INCIDENT-0042:laboratory_outbox_recovery_operator|"
-            "SYN-ACK-AFTER-RECOVERY",
+            "2|2|SYN-INCIDENT-0042:laboratory_outbox_recovery_operator|SYN-ACK-AFTER-RECOVERY",
         )
 
 
 @unittest.skipUnless(
-    UPGRADE_OUTBOX_DSN
-    and UPGRADE_RECOVERY_DSN
-    and HMAC_KEY_HEX
-    and shutil.which("psql"),
+    UPGRADE_OUTBOX_DSN and UPGRADE_RECOVERY_DSN and HMAC_KEY_HEX and shutil.which("psql"),
     "configured upgrade DSNs, synthetic HMAC key, and psql enable this proof",
 )
 class PostgresUpgradeBoundaryIntegrationTests(unittest.TestCase):
@@ -1355,9 +1375,7 @@ class PostgresUpgradeBoundaryIntegrationTests(unittest.TestCase):
             "'SYN-UPGRADE-WORKER-CONFIRM', 300); commit;",
             variables={"context": context},
         )
-        message_value, token_value, fence_value = self.last_output_row(
-            confirmed_claim
-        ).split("|")
+        message_value, token_value, fence_value = self.last_output_row(confirmed_claim).split("|")
         self.assertEqual(message_value, "SYN-UPGRADE-READY-CONFIRM")
         confirmed = self.run_sql(
             UPGRADE_OUTBOX_DSN,
@@ -1427,9 +1445,7 @@ class PostgresUpgradeBoundaryIntegrationTests(unittest.TestCase):
             "'SYN-UPGRADE-WORKER-RECOVERED', 300); commit;",
             variables={"context": context},
         )
-        second_message, second_token, second_fence = self.last_output_row(
-            second_claim
-        ).split("|")
+        second_message, second_token, second_fence = self.last_output_row(second_claim).split("|")
         self.assertEqual(second_message, recovery_message)
         recovered = self.run_sql(
             UPGRADE_OUTBOX_DSN,
@@ -1459,6 +1475,620 @@ class PostgresUpgradeBoundaryIntegrationTests(unittest.TestCase):
             variables={"context": context},
         )
         self.assertEqual(self.last_output_row(evidence), "3|3|1")
+
+
+@unittest.skipUnless(
+    ADMIN_DSN and APP_DSN and HMAC_KEY_HEX and psycopg is not None,
+    "configured PostgreSQL DSNs, synthetic HMAC key, and psycopg enable this proof",
+)
+class PostgresGoldenSpecimenIntegrationTests(unittest.TestCase):
+    """One durable FastAPI journey with restart and recovery evidence."""
+
+    CALLER_ID = "SYN-CI-SERVICE-IDENTITY"
+    VALID_RAW = b'{"analyte":"synthetic-dna","value":"12.5","unit":"ng/uL"}'
+    QUARANTINED_RAW = b'{"analyte":" ","value":"12.5","unit":"ng/uL"}'
+    ACTORS = frozenset({"SYN-ACTOR-01", "SYN-SCIENTIST-01", "SYN-QUALITY-01"})
+    OCCURRED_AT = datetime.fromisoformat("2026-08-17T14:30:00+00:00")
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        suffix = uuid4().hex[:10].upper()
+        cls.tenant_a = f"SYN-WORKBENCH-A-{suffix}"
+        cls.tenant_b = f"SYN-WORKBENCH-B-{suffix}"
+        cls.run_sql(
+            """
+            insert into public.tenant (tenant_id, display_name)
+            values (%s, 'Synthetic durable workbench tenant A'),
+                   (%s, 'Synthetic durable workbench tenant B')
+            """,
+            (cls.tenant_a, cls.tenant_b),
+        )
+
+    @classmethod
+    def run_sql(cls, statement: str, parameters: tuple[object, ...]) -> None:
+        assert ADMIN_DSN is not None and psycopg is not None
+        with psycopg.connect(ADMIN_DSN) as connection, connection.cursor() as cursor:
+            cursor.execute(statement, parameters)
+
+    @classmethod
+    def scalar(cls, statement: str, parameters: tuple[object, ...]) -> str:
+        assert ADMIN_DSN is not None and psycopg is not None
+        with psycopg.connect(ADMIN_DSN) as connection, connection.cursor() as cursor:
+            cursor.execute(statement, parameters)
+            row = cursor.fetchone()
+        if row is None:
+            raise AssertionError("configured PostgreSQL proof requires one result row")
+        return str(row[0])
+
+    @classmethod
+    def context_for(cls, tenant_id: str) -> SignedTenantContext:
+        return SignedTenantContext(
+            **json.loads(signed_context(tenant_id, subject_id=cls.CALLER_ID))
+        )
+
+    @classmethod
+    def service(
+        cls,
+        *,
+        tenant_id: str | None = None,
+        failure_probe: Callable[[str], None] | None = None,
+    ) -> PostgresWorkbenchService:
+        assert APP_DSN is not None and psycopg is not None
+        return PostgresWorkbenchService(
+            lambda: psycopg.connect(APP_DSN),
+            tenant_context_provider=cls.context_for,
+            tenant_id=tenant_id or cls.tenant_a,
+            caller_id=cls.CALLER_ID,
+            actor_ids=cls.ACTORS,
+            failure_probe=failure_probe,
+        )
+
+    def identity(self, label: str) -> tuple[str, str]:
+        suffix = uuid4().hex[:12].upper()
+        return f"SYN-PG-RUN-{label}-{suffix}", f"SYN-PG-SPM-{label}-{suffix}"
+
+    def payload(
+        self,
+        run_id: str,
+        specimen_id: str,
+        *,
+        raw: bytes | None = None,
+    ) -> dict[str, object]:
+        return {
+            "run_id": run_id,
+            "tenant_id": self.tenant_a,
+            "specimen_id": specimen_id,
+            "actor_id": "SYN-ACTOR-01",
+            "scientist_id": "SYN-SCIENTIST-01",
+            "quality_actor_id": "SYN-QUALITY-01",
+            "occurred_at": self.OCCURRED_AT.isoformat(),
+            "raw_instrument_payload_base64": b64encode(
+                raw if raw is not None else self.VALID_RAW
+            ).decode("ascii"),
+            "vendor_payload": {"status": "under_review"},
+        }
+
+    def post(self, client: TestClient, route: str, payload: dict[str, object]):
+        return client.post(
+            route,
+            headers={"X-Tenant-ID": self.tenant_a},
+            json=payload,
+        )
+
+    def test_fastapi_result_reloads_from_canonical_state_after_restart(self) -> None:
+        run_id, specimen_id = self.identity("RESTART")
+        first_client = TestClient(create_app(self.service()))
+        self.assertEqual(
+            first_client.get("/health/ready").json(),
+            {"status": "ready", "state_adapter": "postgresql"},
+        )
+        created = self.post(
+            first_client,
+            "/api/workbench/golden-runs",
+            self.payload(run_id, specimen_id),
+        )
+        self.assertEqual(created.status_code, 201, created.text)
+        self.assertEqual(created.json()["specimen"]["state"], "released")
+        self.assertEqual(created.json()["specimen"]["version"], 5)
+
+        restarted_client = TestClient(create_app(self.service()))
+        specimen = restarted_client.get(
+            f"/api/workbench/specimens/{specimen_id}",
+            headers={"X-Tenant-ID": self.tenant_a},
+            params={"tenant_id": self.tenant_a},
+        )
+        observation = restarted_client.get(
+            f"/api/workbench/observations/{run_id}",
+            headers={"X-Tenant-ID": self.tenant_a},
+            params={"tenant_id": self.tenant_a},
+        )
+        self.assertEqual(specimen.status_code, 200, specimen.text)
+        self.assertEqual(specimen.json(), created.json()["specimen"])
+
+        if find_spec("lims_eln_contracts") is None:
+            self.assertIsNone(created.json()["observation"])
+            self.assertEqual(observation.status_code, 404, observation.text)
+            self.assertEqual(
+                observation.json()["type"],
+                "urn:lims-eln:problem:observation_absent",
+            )
+        else:
+            from lims_eln_contracts import (
+                GoldenSpecimenObservation,
+                model_from_strict_json,
+            )
+
+            self.assertEqual(observation.status_code, 200, observation.text)
+            self.assertEqual(observation.json(), created.json()["observation"])
+            typed = model_from_strict_json(
+                GoldenSpecimenObservation,
+                json.dumps(observation.json(), separators=(",", ":")),
+            )
+            self.assertEqual(
+                typed.result.producer_detail["configuration"]["state_adapter"],
+                "postgresql",
+            )
+            self.assertEqual(
+                typed.result.producer_detail["configuration"]["migration_head"],
+                "005",
+            )
+
+        temporal = self.scalar(
+            """
+            select (
+                invocation.lease_expires_at_utc > invocation.reserved_at_utc
+                and invocation.completed_at_utc >= invocation.reserved_at_utc
+                and receipt.recorded_at_utc >= receipt.requested_at_utc
+            )::text
+              from public.bounded_call_invocation as invocation
+              join public.bounded_call_receipt as receipt
+                on receipt.tenant_id = invocation.tenant_id
+               and receipt.call_id = invocation.call_id
+             where invocation.tenant_id = %s and invocation.call_id = %s
+            """,
+            (self.tenant_a, run_id),
+        )
+        self.assertEqual(temporal, "true")
+
+    def test_replay_collision_and_tenant_isolation_remain_bounded(self) -> None:
+        run_id, specimen_id = self.identity("REPLAY")
+        payload = self.payload(run_id, specimen_id)
+        first = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/golden-runs",
+            payload,
+        )
+        self.assertEqual(first.status_code, 201, first.text)
+        before = self.row_counts(run_id, specimen_id)
+        replay = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/golden-runs",
+            payload,
+        )
+        self.assertEqual(replay.status_code, 201, replay.text)
+        self.assertEqual(replay.json(), first.json())
+        self.assertEqual(self.row_counts(run_id, specimen_id), before)
+
+        changed_time_payload = dict(payload)
+        changed_time_payload["occurred_at"] = (self.OCCURRED_AT + timedelta(seconds=1)).isoformat()
+        changed_time = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/golden-runs",
+            changed_time_payload,
+        )
+        self.assertEqual(changed_time.status_code, 409, changed_time.text)
+        self.assertIn("different content", changed_time.json()["detail"])
+
+        changed = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/golden-runs",
+            self.payload(
+                run_id,
+                specimen_id,
+                raw=b'{"analyte":"synthetic-dna","value":"12.6","unit":"ng/uL"}',
+            ),
+        )
+        self.assertEqual(changed.status_code, 409, changed.text)
+        self.assertIn("different content", changed.json()["detail"])
+        with self.assertRaises(SpecimenAbsent):
+            self.service(tenant_id=self.tenant_b).specimen(self.tenant_b, specimen_id)
+
+        outside_run, _ = self.identity("OUTSIDE-GRANT")
+        outside = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/golden-runs",
+            self.payload(outside_run, "OUTSIDE-GRANT-SPECIMEN"),
+        )
+        self.assertEqual(outside.status_code, 403, outside.text)
+        self.assertEqual(
+            outside.json()["type"],
+            "urn:lims-eln:problem:resource_outside_grant",
+        )
+
+    def test_workbench_authority_failures_return_typed_forbidden_problems(self) -> None:
+        actor_run, actor_specimen = self.identity("ACTOR-AUTHORITY")
+        actor_payload = self.payload(actor_run, actor_specimen)
+        actor_payload["actor_id"] = "SYN-ACTOR-OUTSIDE-WORKBENCH"
+        actor_response = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/golden-runs",
+            actor_payload,
+        )
+        self.assertEqual(actor_response.status_code, 403, actor_response.text)
+        self.assertEqual(
+            actor_response.json()["type"],
+            "urn:lims-eln:problem:actor_outside_workbench_authority",
+        )
+
+        tenant_run, tenant_specimen = self.identity("TENANT-AUTHORITY")
+        tenant_payload = self.payload(tenant_run, tenant_specimen)
+        tenant_payload["tenant_id"] = self.tenant_b
+        tenant_response = TestClient(create_app(self.service())).post(
+            "/api/workbench/golden-runs",
+            headers={"X-Tenant-ID": self.tenant_b},
+            json=tenant_payload,
+        )
+        self.assertEqual(tenant_response.status_code, 403, tenant_response.text)
+        self.assertEqual(
+            tenant_response.json()["type"],
+            "urn:lims-eln:problem:tenant_outside_workbench_authority",
+        )
+
+    def test_completed_replay_keeps_its_snapshot_after_later_custody_move(self) -> None:
+        assert APP_DSN is not None and psycopg is not None
+        run_id, specimen_id = self.identity("IMMUTABLE-REPLAY")
+        payload = self.payload(run_id, specimen_id)
+        client = TestClient(create_app(self.service()))
+        first = self.post(client, "/api/workbench/golden-runs", payload)
+        self.assertEqual(first.status_code, 201, first.text)
+        self.assertEqual(
+            first.json()["specimen"]["custody"]["location"],
+            "SYN-LAB-A/RECEIVING",
+        )
+
+        moved_location = "SYN-LAB-A/ARCHIVE"
+        with psycopg.connect(APP_DSN) as connection, connection.cursor() as cursor:
+            PostgresTenantBinding(self.context_for(self.tenant_a)).bind(
+                cursor,
+                expected_tenant_id=self.tenant_a,
+            )
+            cursor.execute(
+                """
+                select custody_version
+                  from public.record_custody_transfer(%s, %s, %s, 1, %s, %s)
+                """,
+                (
+                    specimen_id,
+                    moved_location,
+                    "SYN-ACTOR-01",
+                    f"{run_id}:custody:archive",
+                    self.OCCURRED_AT + timedelta(minutes=1),
+                ),
+            )
+            moved = cursor.fetchone()
+        self.assertIsNotNone(moved)
+        self.assertEqual(int(moved[0]), 2)
+
+        replay = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/golden-runs",
+            payload,
+        )
+        self.assertEqual(replay.status_code, 201, replay.text)
+        self.assertEqual(replay.json(), first.json())
+
+        current = TestClient(create_app(self.service())).get(
+            f"/api/workbench/specimens/{specimen_id}",
+            headers={"X-Tenant-ID": self.tenant_a},
+            params={"tenant_id": self.tenant_a},
+        )
+        self.assertEqual(current.status_code, 200, current.text)
+        self.assertEqual(current.json()["custody"]["location"], moved_location)
+        self.assertEqual(current.json()["custody"]["version"], 2)
+        self.assertEqual(
+            replay.json()["specimen"]["custody"]["location"],
+            "SYN-LAB-A/RECEIVING",
+        )
+
+    def row_counts(self, run_id: str, specimen_id: str) -> str:
+        return self.scalar(
+            """
+            select concat_ws(':',
+                (select count(*) from public.specimen_event
+                  where tenant_id = %s and specimen_id = %s),
+                (select count(*) from public.instrument_inbox
+                  where tenant_id = %s and specimen_id = %s),
+                (select count(*) from public.bounded_call_receipt
+                  where tenant_id = %s and call_id = %s))
+            """,
+            (
+                self.tenant_a,
+                specimen_id,
+                self.tenant_a,
+                specimen_id,
+                self.tenant_a,
+                run_id,
+            ),
+        )
+
+    def test_late_failure_rolls_back_then_a_fresh_request_repairs(self) -> None:
+        run_id, specimen_id = self.identity("ROLLBACK")
+
+        def fail_after_materialization(label: str) -> None:
+            if label == "after_materialization":
+                raise OSError("synthetic late materialization failure")
+
+        with self.assertRaisesRegex(OSError, "late materialization"):
+            self.service(failure_probe=fail_after_materialization).run_golden_specimen(
+                run_id=run_id,
+                tenant_id=self.tenant_a,
+                specimen_id=specimen_id,
+                actor_id="SYN-ACTOR-01",
+                scientist_id="SYN-SCIENTIST-01",
+                quality_actor_id="SYN-QUALITY-01",
+                occurred_at=self.OCCURRED_AT,
+                raw_instrument_json=self.VALID_RAW,
+                vendor_payload={"status": "under_review"},
+            )
+        with self.assertRaises(SpecimenAbsent):
+            self.service().specimen(self.tenant_a, specimen_id)
+        self.assertEqual(self.partial_row_count(run_id, specimen_id), "0")
+
+        repaired = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/golden-runs",
+            self.payload(run_id, specimen_id),
+        )
+        self.assertEqual(repaired.status_code, 201, repaired.text)
+        self.assertEqual(repaired.json()["specimen"]["state"], "released")
+
+    def partial_row_count(self, run_id: str, specimen_id: str) -> str:
+        return self.scalar(
+            """
+            select (
+                (select count(*) from public.specimen
+                  where tenant_id = %s and specimen_id = %s)
+              + (select count(*) from public.specimen_event
+                  where tenant_id = %s and specimen_id = %s)
+              + (select count(*) from public.instrument_inbox
+                  where tenant_id = %s and specimen_id = %s)
+              + (select count(*) from public.bounded_call_invocation
+                  where tenant_id = %s and call_id = %s)
+              + (select count(*) from public.bounded_call_receipt
+                  where tenant_id = %s and call_id = %s)
+            )::text
+            """,
+            (
+                self.tenant_a,
+                specimen_id,
+                self.tenant_a,
+                specimen_id,
+                self.tenant_a,
+                specimen_id,
+                self.tenant_a,
+                run_id,
+                self.tenant_a,
+                run_id,
+            ),
+        )
+
+    def test_quarantine_and_one_recovery_survive_two_restarts(self) -> None:
+        quarantine_run, specimen_id = self.identity("QUARANTINE")
+        recovery_run, _ = self.identity("RECOVERY")
+        invalid_recovery_run, _ = self.identity("INVALID-RECOVERY")
+        review = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/golden-runs",
+            self.payload(quarantine_run, specimen_id, raw=self.QUARANTINED_RAW),
+        )
+        self.assertEqual(review.status_code, 409, review.text)
+        self.assertEqual(self.service().summary(self.tenant_a)["quarantine_count"], 1)
+
+        invalid_recovery_payload = {
+            **self.payload(
+                invalid_recovery_run,
+                specimen_id,
+                raw=self.QUARANTINED_RAW,
+            ),
+            "recovery_of_run_id": quarantine_run,
+        }
+        invalid_recovery = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/instrument-recovery-runs",
+            invalid_recovery_payload,
+        )
+        self.assertEqual(invalid_recovery.status_code, 409, invalid_recovery.text)
+        self.assertEqual(
+            self.scalar(
+                """
+                select count(*)::text
+                  from public.bounded_call_invocation
+                 where tenant_id = %s and call_id = %s
+                """,
+                (self.tenant_a, invalid_recovery_run),
+            ),
+            "0",
+        )
+
+        recovery_payload = {
+            **self.payload(recovery_run, specimen_id),
+            "recovery_of_run_id": quarantine_run,
+        }
+        recovered = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/instrument-recovery-runs",
+            recovery_payload,
+        )
+        self.assertEqual(recovered.status_code, 201, recovered.text)
+        second_restart = self.service()
+        if find_spec("lims_eln_contracts") is None:
+            self.assertIsNone(recovered.json()["observation"])
+            with self.assertRaises(ObservationAbsent):
+                second_restart.observation(self.tenant_a, recovery_run)
+        else:
+            self.assertEqual(
+                second_restart.observation(self.tenant_a, recovery_run),
+                recovered.json()["observation"],
+            )
+        final_summary = second_restart.summary(self.tenant_a)
+        self.assertEqual(final_summary["quarantine_count"], 0)
+        self.assertEqual(final_summary["quarantine_history_count"], 1)
+
+    def test_recovery_requires_the_original_failed_receipt(self) -> None:
+        rogue_run, specimen_id = self.identity("ROGUE-RECOVERY-SOURCE")
+        recovery_run, _ = self.identity("ROGUE-RECOVERY")
+        operation_name, operation_version, operation_digest = _operation_contract("initial")
+        self.run_sql(
+            """
+            insert into public.bounded_call_invocation (
+                tenant_id, call_id, invocation_sha256, operation_name,
+                operation_version, operation_contract_sha256, state,
+                lease_token, fencing_token, lease_expires_at_utc, recovery_reason
+            ) values (
+                %s, %s, %s, %s, %s, %s, 'recovery_required',
+                %s, 1, clock_timestamp() + interval '5 minutes', %s
+            )
+            """,
+            (
+                self.tenant_a,
+                rogue_run,
+                sha256(rogue_run.encode("ascii")).hexdigest(),
+                operation_name,
+                operation_version,
+                operation_digest,
+                uuid4(),
+                "instrument.analyte.required",
+            ),
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "exact failed receipt"):
+            self.service().resume_instrument_review(
+                recovery_of_run_id=rogue_run,
+                run_id=recovery_run,
+                tenant_id=self.tenant_a,
+                specimen_id=specimen_id,
+                actor_id="SYN-ACTOR-01",
+                scientist_id="SYN-SCIENTIST-01",
+                quality_actor_id="SYN-QUALITY-01",
+                occurred_at=self.OCCURRED_AT,
+                raw_instrument_json=self.VALID_RAW,
+                vendor_payload={"status": "under_review"},
+            )
+        self.assertEqual(
+            self.scalar(
+                """
+                select count(*)::text
+                  from public.bounded_call_invocation
+                 where tenant_id = %s and call_id = %s
+                """,
+                (self.tenant_a, recovery_run),
+            ),
+            "0",
+        )
+
+    def test_recovery_fails_closed_when_canonical_digest_has_drifted(self) -> None:
+        quarantine_run, specimen_id = self.identity("RECOVERY-DIGEST-SOURCE")
+        recovery_run, _ = self.identity("RECOVERY-DIGEST")
+        review = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/golden-runs",
+            self.payload(quarantine_run, specimen_id, raw=self.QUARANTINED_RAW),
+        )
+        self.assertEqual(review.status_code, 409, review.text)
+        self.run_sql(
+            """
+            update public.specimen
+               set canonical_sha256 = repeat('0', 64)
+             where tenant_id = %s and specimen_id = %s
+            """,
+            (self.tenant_a, specimen_id),
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "stored digest"):
+            self.service().resume_instrument_review(
+                recovery_of_run_id=quarantine_run,
+                run_id=recovery_run,
+                tenant_id=self.tenant_a,
+                specimen_id=specimen_id,
+                actor_id="SYN-ACTOR-01",
+                scientist_id="SYN-SCIENTIST-01",
+                quality_actor_id="SYN-QUALITY-01",
+                occurred_at=self.OCCURRED_AT,
+                raw_instrument_json=self.VALID_RAW,
+                vendor_payload={"status": "under_review"},
+            )
+        self.assertEqual(
+            self.scalar(
+                """
+                select count(*)::text
+                  from public.bounded_call_invocation
+                 where tenant_id = %s and call_id = %s
+                """,
+                (self.tenant_a, recovery_run),
+            ),
+            "0",
+        )
+
+    def test_decimal_source_shape_survives_postgresql_roundtrip(self) -> None:
+        cases = (
+            ("EXPONENT", "1E+2", "100:1:0"),
+            ("SIGNED-ZERO", "-0.0", "0.0:1:1"),
+        )
+        for label, value, expected in cases:
+            with self.subTest(label=label):
+                run_id, specimen_id = self.identity(label)
+                raw = json.dumps(
+                    {
+                        "analyte": "synthetic-dna",
+                        "value": value,
+                        "unit": "ng/uL",
+                    },
+                    separators=(",", ":"),
+                ).encode("ascii")
+                created = self.post(
+                    TestClient(create_app(self.service())),
+                    "/api/workbench/golden-runs",
+                    self.payload(run_id, specimen_id, raw=raw),
+                )
+                self.assertEqual(created.status_code, 201, created.text)
+                if find_spec("lims_eln_contracts") is None:
+                    self.assertIsNone(created.json()["observation"])
+                    with self.assertRaises(ObservationAbsent):
+                        self.service().observation(self.tenant_a, run_id)
+                else:
+                    self.service().observation(self.tenant_a, run_id)
+                self.assertEqual(
+                    self.scalar(
+                        """
+                        select quantity::text || ':' || source_precision::text
+                               || ':' || source_scale::text
+                          from public.instrument_measurement
+                         where tenant_id = %s and message_id = %s
+                        """,
+                        (self.tenant_a, f"{run_id}:instrument"),
+                    ),
+                    expected,
+                )
+
+    def test_canonical_digest_drift_fails_closed_on_reload(self) -> None:
+        run_id, specimen_id = self.identity("DIGEST")
+        created = self.post(
+            TestClient(create_app(self.service())),
+            "/api/workbench/golden-runs",
+            self.payload(run_id, specimen_id),
+        )
+        self.assertEqual(created.status_code, 201, created.text)
+        self.run_sql(
+            """
+            update public.specimen
+               set canonical_sha256 = repeat('0', 64)
+             where tenant_id = %s and specimen_id = %s
+            """,
+            (self.tenant_a, specimen_id),
+        )
+        with self.assertRaisesRegex(RuntimeError, "stored digest"):
+            self.service().specimen(self.tenant_a, specimen_id)
 
 
 if __name__ == "__main__":

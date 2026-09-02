@@ -6,7 +6,7 @@ from base64 import b64decode
 from binascii import Error as Base64Error
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Protocol
 
 from fastapi import FastAPI, Header, Query, Request
 from fastapi.responses import JSONResponse
@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
+from ..bounded_caller import CallDenied
 from ..idempotency import IdempotencyError
 from ..model import DomainError
 from ..ports import VendorRevisionConflict
@@ -53,8 +54,22 @@ class TenantContextMismatch(DomainError):
     """The authority context and requested resource belong to different tenants."""
 
 
-def create_app(service: WorkbenchService | None = None) -> FastAPI:
-    """Create an application with an injectable process-local composition root."""
+class WorkbenchPort(Protocol):
+    state_adapter: str
+
+    def summary(self, tenant_id: str) -> dict[str, Any]: ...
+
+    def specimen(self, tenant_id: str, specimen_id: str) -> dict[str, Any]: ...
+
+    def observation(self, tenant_id: str, run_id: str) -> dict[str, Any]: ...
+
+    def run_golden_specimen(self, **arguments: Any) -> dict[str, Any]: ...
+
+    def resume_instrument_review(self, **arguments: Any) -> dict[str, Any]: ...
+
+
+def create_app(service: WorkbenchPort | None = None) -> FastAPI:
+    """Create an application with an injectable state composition root."""
     workbench = service or WorkbenchService()
     templates = Jinja2Templates(directory=str(_PACKAGE_ROOT / "templates"))
     app = FastAPI(
@@ -101,6 +116,10 @@ def create_app(service: WorkbenchService | None = None) -> FastAPI:
     ) -> JSONResponse:
         return _problem(request, 403, "tenant_context_mismatch", str(error))
 
+    @app.exception_handler(CallDenied)
+    async def call_denied(request: Request, error: CallDenied) -> JSONResponse:
+        return _problem(request, 403, error.reason_code, str(error))
+
     for error_type in (
         DomainError,
         IdempotencyError,
@@ -115,7 +134,7 @@ def create_app(service: WorkbenchService | None = None) -> FastAPI:
 
     @app.get("/health/ready", include_in_schema=False)
     def readiness() -> dict[str, str]:
-        return {"status": "ready", "state_adapter": "process_local"}
+        return {"status": "ready", "state_adapter": workbench.state_adapter}
 
     @app.get("/workbench", include_in_schema=False)
     def workbench_page(request: Request) -> Any:

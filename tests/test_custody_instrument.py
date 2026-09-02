@@ -293,6 +293,32 @@ class InstrumentIngressTests(unittest.TestCase):
         self.assertEqual(object_analyte.reason_code, "analyte_requires_mapping")
         self.assertEqual(additional_field.reason_code, "unreleased_fields")
 
+    def test_analyte_profile_matches_the_printable_database_boundary(self) -> None:
+        for index, analyte in enumerate(("β", "A\nB"), start=1):
+            with self.subTest(analyte=analyte):
+                raw = json.dumps(
+                    {"analyte": analyte, "value": "1", "unit": "ng/uL"},
+                    separators=(",", ":"),
+                ).encode("utf-8")
+                result = self.ingress.ingest(
+                    self.envelope(raw, message_id=f"SYN-ANALYTE-PROFILE-{index}")
+                )
+                self.assertEqual(result.disposition, IngressDisposition.QUARANTINED)
+                self.assertEqual(result.reason_code, "analyte_requires_mapping")
+
+    def test_signed_zero_canonicalizes_without_losing_source_scale(self) -> None:
+        result = self.ingress.ingest(
+            self.envelope(
+                b'{"analyte":"A","value":"-0.0","unit":"ng/uL"}',
+                message_id="SYN-SIGNED-ZERO",
+            )
+        )
+        normalized = json.loads(result.normalized_document_json or "{}")
+        self.assertEqual(result.disposition, IngressDisposition.ACCEPTED)
+        self.assertEqual(normalized["quantity"]["decimal"], "0.0")
+        self.assertEqual(normalized["quantity"]["precision"], 1)
+        self.assertEqual(normalized["quantity"]["scale"], 1)
+
     def test_quantity_precision_is_bounded_by_released_decimal_profile(self) -> None:
         examples = (
             b'{"analyte":"A","value":"0.0000000000000000001","unit":"ng/uL"}',

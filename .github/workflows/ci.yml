@@ -89,6 +89,9 @@ jobs:
           python-version: "3.12"
           cache: ""
 
+      - name: Install PostgreSQL workbench proof dependencies
+        run: python3 -m pip install -e ".[test,postgres]"
+
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install --yes postgresql-client
 
@@ -270,6 +273,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: ""
+
+      - name: Install PostgreSQL proof dependencies
+        run: python3 -m pip install -e ".[test,postgres]"
 
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install --yes postgresql-client

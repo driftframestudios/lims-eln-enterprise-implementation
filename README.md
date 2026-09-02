@@ -57,7 +57,9 @@ The focused test suite exercises:
 The Golden Specimen Workbench adds a small FastAPI application and dashboard
 over the same domain services. One synthetic run makes lifecycle events,
 custody, raw-byte instrument provenance, the readable normalized result and its
-digest, and reconciled vendor projection visible together.
+digest, and reconciled vendor projection visible together. Its PostgreSQL
+composition carries the same FastAPI journey through the V001–V005 model and
+rebuilds the response from a fresh tenant-bound database read.
 
 Run the complete local proof:
 
@@ -81,8 +83,13 @@ workbench. The optional `contracts` dependency pins the reviewed Program source
 commit exactly. The runtime keeps the package and contract identities visible
 at the observation boundary.
 
-Open `http://127.0.0.1:8000/workbench`. The process-local adapter offers a
-fast synthetic encounter and resets on restart. Flyway successor migration
+Open `http://127.0.0.1:8000/workbench`. The default CLI uses the process-local
+adapter for a fast synthetic encounter that resets on restart. The injectable
+FastAPI composition also accepts `PostgresWorkbenchService`; its configured
+proof creates a specimen, starts a fresh service instance, and reloads the same
+released state from PostgreSQL. When the independently distributed accepted
+Program contract package is installed, that durable read also produces and
+reloads the exact typed observation. Flyway successor migration
 [`sql/V005__golden_specimen_workbench.sql`](sql/V005__golden_specimen_workbench.sql)
 adds tenant-and-specimen-bound review resolution and workbench views over the
 canonical custody and measurement records. See the
@@ -133,7 +140,9 @@ and inspects history, targets V003, proves transactional V004 rejection, applies
 V004 and V005, replays the head, compares clean and upgraded schemas, and exercises unsigned and
 tampered tenant contexts, temporary-relation shadowing, custody CAS/replay,
 measurement lineage, tenant-scoped outbox identity, immutable outbox content,
-worker crash/reclaim, and stale-fence rejection.
+worker crash/reclaim, stale-fence rejection, and the durable FastAPI workbench's
+restart, exact replay, changed-content collision, tenant isolation, rollback,
+instrument recovery, and canonical-digest checks.
 
 ## Evidence ladder
 
@@ -165,7 +174,7 @@ reviewer, artifacts, and decisions are recorded.
 
 - `src/lims_eln_implementation` — canonical domain and application services.
 - `src/lims_eln_implementation/workbench` — functional dashboard, API, and
-  process-local composition root.
+  process-local and PostgreSQL composition roots.
 - `contracts` — versioned machine-readable command and receipt contracts.
 - `fixtures/synthetic` — synthetic, stable examples for comparison.
 - `sql` — PostgreSQL persistence, inbox/outbox, evidence, and tenant controls.
@@ -195,6 +204,7 @@ The reference registry exposes:
 | `specimen.review_flag.set` | `idempotent_narrow_write` | `narrow_write` |
 | `specimen.quarantine.bulk` | `approval_gated_broad_write` | `broad_write` |
 | `specimen.golden_journey.execute` | `idempotent_narrow_write` | `narrow_write` |
+| `specimen.golden_journey.recover_instrument` | `idempotent_narrow_write` | `narrow_write` |
 
 The invocation ledger reserves a tenant and call identity before execution,
 replays an exact completed call, surfaces in-progress work, and routes
@@ -217,12 +227,13 @@ effects, outcome, receipt publication, and an outbox in one service-owned
 transaction. `InMemoryAtomicExecutor` proves rollback behavior for lifecycle
 plus idempotency and custody plus outbox. `record_custody_transfer` supplies the
 durable custody CAS, append-only event, exact replay, and outbox transaction.
-Durable invocation and receipt adapters prove their PostgreSQL statements
-independently. A specimen-lifecycle deployment adapter still has to compose its
-aggregate, event, idempotency, and outbox transitions on one connection, then
-prove the resulting crash points in a configured PostgreSQL encounter.
-Separate-transaction or external-write uncertainty remains in
-`recovery_required` and receives reconciliation ownership.
+`PostgresWorkbenchService` now composes the bounded Golden Specimen aggregate,
+events, idempotency state, custody, instrument facts, vendor projection,
+receipt, and outbox records on one connection. Its configured synthetic proof
+observes late-failure rollback and a clean retry, then reconstructs the response
+from canonical stored state after restart. Separate-transaction or external-
+write uncertainty remains in `recovery_required` and receives reconciliation
+ownership.
 External vendor effects use a stable request identity, qualified SDK and API
 bands, response-identity checks, and authoritative readback for timeouts,
 cleanup ambiguity, or unexpected confirmation. Driver and SDK bands accept
