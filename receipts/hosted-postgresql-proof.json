@@ -9,12 +9,16 @@
   "environment": "github-hosted-synthetic-postgresql",
   "version_bindings": {
     "repository": "0.3.1",
-    "repository_commit": "ef3320686842a2c7f1ab98c12479c3ed7c5709f5",
-    "workflow_run": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/actions/runs/30933020047",
-    "python": "3.12.13",
+    "repository_commit": "205401a530e984e031bb2c52a1654c6b5f82bc6d",
+    "workflow_run": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/actions/runs/33581976426",
+    "python": "3.12.14",
     "postgresql": "17.10-alpine",
-    "database_migration_head": "004",
-    "tenant_authority": "signed_short_lived_database_verified_context"
+    "database_migration_head": "005",
+    "tenant_authority": "signed_short_lived_database_verified_context",
+    "flyway": "13.0.0",
+    "flyway_image": "flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0",
+    "migration_authenticated_login": "laboratory_migrator",
+    "migration_role": "laboratory_owner"
   },
   "scenario_ids": [
     "SCN-DB-MIGRATION-CHECKSUM-REPLAY",
@@ -32,20 +36,32 @@
     "SCN-DB-OUTBOX-ATTEMPT-ACK-RECOVERY-EVIDENCE",
     "SCN-DB-OUTBOX-TRANSPORT-RECEIPT-UNIQUENESS",
     "SCN-DB-SCIENTIFIC-QUANTITY-EXACTNESS",
-    "SCN-DB-VERIFICATION-KEY-CONFIDENTIALITY"
+    "SCN-DB-VERIFICATION-KEY-CONFIDENTIALITY",
+    "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",
+    "SCN-DB-FLYWAY-ARTIFACT-INVENTORY",
+    "SCN-DB-MIGRATION-CLEAN-UPGRADE-CONVERGENCE",
+    "SCN-DB-MEASUREMENT-COMPLETE-LINEAGE",
+    "SCN-DB-CUSTODY-COMPLETE-EVENT-BINDING",
+    "SCN-DB-WORKBENCH-RESTART-RELOAD",
+    "SCN-DB-WORKBENCH-REPLAY-COLLISION-ISOLATION",
+    "SCN-DB-WORKBENCH-ROLLBACK-RETRY",
+    "SCN-DB-WORKBENCH-INSTRUMENT-RECOVERY",
+    "SCN-DB-WORKBENCH-DECIMAL-SOURCE-SHAPE",
+    "SCN-DB-WORKBENCH-CANONICAL-DIGEST"
   ],
   "artifact_digests": [
-    "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd",
-    "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81"
+    "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea",
+    "sha256:a4fafe7ebb50da1efbad47df24d6d7af741130039ba8c90b8d6457e9d1d107b9",
+    "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a"
   ],
-  "observed_at": "2026-08-04T17:16:04Z",
+  "observed_at": "2026-09-02T02:08:40Z",
   "performer_id": "GITHUB-ACTIONS-HOSTED-RUNNER",
-  "reviewer_id": "SYN-INDEPENDENT-ADVERSARIAL-DATABASE-SUITE",
+  "reviewer_id": "SYN-INDEPENDENT-DATABASE-CONVERGENCE-SUITE",
   "limitations": [
-    "This historical receipt is superseded by the Flyway transition and remains evidence for the predecessor migration runner only.",
-    "This receipt records a synthetic hosted PostgreSQL proof and grants no production authorization.",
-    "Representative populated migration and restore rehearsal remains an independent successor receipt.",
-    "Production security and observability evidence remains an independent successor receipt.",
-    "Accountable Scientific, Quality, and Regulatory acceptance remains an independent successor receipt."
+    "This receipt establishes the synthetic hosted PostgreSQL 17 migration, durable workbench, and upgrade-replay paths for the named commit; production authorization remains with accountable environment owners.",
+    "PostgreSQL 18.6 compatibility was observed locally and remains outside this hosted coordinate.",
+    "Representative populated migration and restore rehearsal retains its independent successor receipt.",
+    "Production security and observability evidence retains its independent successor receipt.",
+    "Accountable Scientific, Quality, and Regulatory acceptance retains its independent successor receipt."
   ]
 }

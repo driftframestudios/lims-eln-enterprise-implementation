@@ -447,7 +447,22 @@ def validate_manifests() -> None:
         raise AssertionError(
             "bounded-caller binding requires the selected governance schema release"
         )
-    for artifact in binding["source_artifacts"]:
+    source_artifacts = binding["source_artifacts"]
+    source_paths = [artifact["path"] for artifact in source_artifacts]
+    if len(source_paths) != len(set(source_paths)):
+        raise AssertionError("bounded-caller source bindings require unique paths")
+    required_workbench_paths = {
+        "src/lims_eln_implementation/application.py",
+        "src/lims_eln_implementation/workbench/api.py",
+        "src/lims_eln_implementation/workbench/postgres.py",
+        "src/lims_eln_implementation/workbench/service.py",
+        "src/lims_eln_implementation/workbench/shared_contracts.py",
+    }
+    if not required_workbench_paths.issubset(source_paths):
+        raise AssertionError(
+            "bounded-caller source bindings require the durable workbench slice"
+        )
+    for artifact in source_artifacts:
         path = ROOT / artifact["path"]
         if sha256(path.read_bytes()).hexdigest() != artifact["sha256"]:
             raise AssertionError(
@@ -739,6 +754,12 @@ def validate_manifests() -> None:
             "SCN-DB-MIGRATION-CLEAN-UPGRADE-CONVERGENCE",
             "SCN-DB-MEASUREMENT-COMPLETE-LINEAGE",
             "SCN-DB-CUSTODY-COMPLETE-EVENT-BINDING",
+            "SCN-DB-WORKBENCH-RESTART-RELOAD",
+            "SCN-DB-WORKBENCH-REPLAY-COLLISION-ISOLATION",
+            "SCN-DB-WORKBENCH-ROLLBACK-RETRY",
+            "SCN-DB-WORKBENCH-INSTRUMENT-RECOVERY",
+            "SCN-DB-WORKBENCH-DECIMAL-SOURCE-SHAPE",
+            "SCN-DB-WORKBENCH-CANONICAL-DIGEST",
         }
         if not current_scenarios.issubset(hosted_receipt["scenario_ids"]):
             raise AssertionError(

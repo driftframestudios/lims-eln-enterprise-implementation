@@ -25,6 +25,9 @@
 /src/lims_eln_implementation/migration.py @driftframestudios
 /src/lims_eln_implementation/security.py @driftframestudios
 /src/lims_eln_implementation/acceptance.py @driftframestudios
+/src/lims_eln_implementation/application.py @driftframestudios
+/src/lims_eln_implementation/workbench/ @driftframestudios
+/tests/test_workbench_postgres_adapter.py @driftframestudios
 /sql/ @driftframestudios
 /infra/ @driftframestudios
 /receipts/ @driftframestudios

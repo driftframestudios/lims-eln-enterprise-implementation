@@ -62,11 +62,17 @@ outbox message in one transaction. The schema supplies tenant-bound claim,
 expired-lease reclaim, and exact confirmation functions. These functions record
 the invoking SQL principal separately from the worker-instance label, rotate the
 lease UUID, advance a monotonic fence, and compare the complete unexpired lease
-coordinate before completion. The durable invocation and receipt adapters prove
-their statements independently. The configured deployment still needs a
-connection-scoped specimen-lifecycle composition and broker-facing worker that
-routes exhausted work to reviewable recovery. Those configured-environment
-receipts remain open.
+coordinate before completion. `PostgresWorkbenchService` composes one bounded
+Golden Specimen slice on that connection: invocation reservation, signed tenant
+binding, lifecycle and custody updates, instrument facts, normalized
+measurement, vendor projection, receipt, idempotency completion, and outbox.
+It commits quarantine as a named recovery state, applies a corrected recovery
+through a distinct operation, and rolls back an invalid recovery attempt. A
+fresh tenant-bound transaction rebuilds the specimen from canonical V005 views
+from verified stored facts. When the independently distributed accepted Program
+contract package is installed, those facts also produce the shared typed
+observation. Broker delivery, versioned raw-object storage, and configured
+vendor qualification retain their own environment receipts.
 
 The bounded-caller invocation row uses a lease token and monotonically governed
 fencing token for every completion, pre-effect release, and recovery transition.
@@ -76,11 +82,11 @@ collision. An expired lease and an ambiguous write exception move to
 reconciliation.
 
 The production contract stores instrument bytes in versioned object storage
-before parsing and binds object key and checksum to the inbox identity.
-The current executable ingress is an in-memory conformance model; a durable
-object-store/inbox adapter and its crash-point proof remain configured-
-environment work. Scientific normalization creates a new canonical digest
-while preserving the raw digest.
+before parsing and binds object key and checksum to the inbox identity. The
+PostgreSQL workbench persists that key-and-digest boundary and the normalized
+measurement; the object-store write and its crash-point proof remain a separate
+configured-environment encounter. Scientific normalization creates a new
+canonical digest while preserving the raw digest.
 
 ## Vendor boundaries
 

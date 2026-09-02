@@ -36,8 +36,8 @@
   "performer_id": "SYN-AUTOMATION-RUNNER",
   "reviewer_id": "SYN-INDEPENDENT-REVIEWER",
   "limitations": [
-    "This example captures the predecessor migration head 004 coordinate; V005 requires a successor local or hosted PostgreSQL receipt before its database claims become observed evidence.",
-    "This local receipt verifies the synthetic implementation and grants no production authorization.",
+    "This example preserves the predecessor migration head 004 coordinate; the current hosted PostgreSQL receipt establishes the V005 synthetic database claims.",
+    "This local receipt verifies the synthetic implementation; production authorization remains with accountable environment owners.",
     "The selected-future simulation closes the four substantive families under its own modeled authority and evidence boundary.",
     "Configured-environment observation and organizational acceptance remain independent successor receipts."
   ]

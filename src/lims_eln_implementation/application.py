@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 from base64 import b64decode, b64encode
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Callable, Mapping
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from .bounded_caller import (
     BoundedCaller,
     BudgetPolicy,
-    CallRequest,
     CallerGrant,
+    CallRequest,
     EffectClass,
     InMemoryApprovalStore,
     InMemoryBudgetLedger,
@@ -38,13 +39,60 @@ from .model import (
 )
 from .vendors import ProjectionOutcome, VendorProjectionService
 
-
 _OPERATION_NAME = "specimen.golden_journey.execute"
-_OPERATION_VERSION = "2.0.0"
+_OPERATION_VERSION = "3.0.0"
 _CAPABILITY = "specimen.golden_journey.execute"
 _RECOVERY_OPERATION_NAME = "specimen.golden_journey.recover_instrument"
-_RECOVERY_OPERATION_VERSION = "1.0.0"
+_RECOVERY_OPERATION_VERSION = "2.0.0"
 _RECOVERY_CAPABILITY = "specimen.golden_journey.recover_instrument"
+
+
+def golden_specimen_operation_contract(mode: str) -> tuple[str, str, str]:
+    """Return the shared operation identity used by both state adapters."""
+    if mode == "initial":
+        name = _OPERATION_NAME
+        version = _OPERATION_VERSION
+        capability = _CAPABILITY
+        fields = [
+            "occurred_at",
+            "raw_instrument_base64",
+            "specimen_id",
+            "scientist_id",
+            "quality_actor_id",
+            "vendor_payload",
+        ]
+    elif mode == "instrument_recovery":
+        name = _RECOVERY_OPERATION_NAME
+        version = _RECOVERY_OPERATION_VERSION
+        capability = _RECOVERY_CAPABILITY
+        fields = [
+            "occurred_at",
+            "quality_actor_id",
+            "raw_instrument_base64",
+            "recovery_of_call_id",
+            "scientist_id",
+            "specimen_id",
+            "vendor_payload",
+        ]
+    else:
+        raise ValueError(f"unsupported Golden Specimen operation mode {mode!r}")
+    return (
+        name,
+        version,
+        canonical_digest(
+            {
+                "name": name,
+                "version": version,
+                "effect_class": EffectClass.IDEMPOTENT_NARROW_WRITE.value,
+                "capability": capability,
+                "fields": fields,
+            }
+        ),
+    )
+
+
+def _canonical_timestamp(value: datetime) -> str:
+    return require_aware_utc(value).astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,9 +110,7 @@ class InstrumentReviewRequired(DomainError):
 
     def __init__(self, result: IngressResult) -> None:
         self.result = result
-        super().__init__(
-            f"instrument review required ({result.reason_code}); {result.recovery}"
-        )
+        super().__init__(f"instrument review required ({result.reason_code}); {result.recovery}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +118,7 @@ class _GoldenSpecimenInput:
     specimen_id: str
     scientist_id: str
     quality_actor_id: str
+    occurred_at: datetime
     raw_instrument_json: bytes
     vendor_payload: Mapping[str, Any]
 
@@ -81,6 +128,7 @@ class _GoldenSpecimenInput:
             "specimen_id",
             "scientist_id",
             "quality_actor_id",
+            "occurred_at",
             "raw_instrument_base64",
             "vendor_payload",
         }
@@ -92,6 +140,7 @@ class _GoldenSpecimenInput:
         specimen_id = payload["specimen_id"]
         scientist_id = payload["scientist_id"]
         quality_actor_id = payload["quality_actor_id"]
+        occurred_at = payload["occurred_at"]
         encoded = payload["raw_instrument_base64"]
         vendor_payload = payload["vendor_payload"]
         if not isinstance(specimen_id, str) or not specimen_id.strip():
@@ -102,6 +151,12 @@ class _GoldenSpecimenInput:
         ):
             if not isinstance(value, str) or not value.strip():
                 raise OperationInputError(f"{name} requires a populated identity")
+        if not isinstance(occurred_at, str):
+            raise OperationInputError("occurred_at requires an explicit UTC timestamp")
+        try:
+            event_time = require_aware_utc(datetime.fromisoformat(occurred_at))
+        except (DomainError, ValueError) as error:
+            raise OperationInputError("occurred_at requires an explicit UTC timestamp") from error
         if not isinstance(encoded, str) or not encoded:
             raise OperationInputError("raw instrument content requires base64 text")
         if not isinstance(vendor_payload, Mapping):
@@ -109,17 +164,14 @@ class _GoldenSpecimenInput:
         try:
             raw = b64decode(encoded, validate=True)
         except ValueError as error:
-            raise OperationInputError(
-                "raw instrument content requires canonical base64"
-            ) from error
+            raise OperationInputError("raw instrument content requires canonical base64") from error
         if not raw or len(raw) > 1_048_576:
-            raise OperationInputError(
-                "raw instrument content requires 1..1048576 bytes"
-            )
+            raise OperationInputError("raw instrument content requires 1..1048576 bytes")
         return cls(
             specimen_id,
             scientist_id,
             quality_actor_id,
+            event_time,
             raw,
             dict(vendor_payload),
         )
@@ -136,6 +188,7 @@ class _GoldenSpecimenRecoveryInput(_GoldenSpecimenInput):
             "specimen_id",
             "scientist_id",
             "quality_actor_id",
+            "occurred_at",
             "raw_instrument_base64",
             "vendor_payload",
         }
@@ -146,20 +199,15 @@ class _GoldenSpecimenRecoveryInput(_GoldenSpecimenInput):
             )
         recovery_of_call_id = payload["recovery_of_call_id"]
         if not isinstance(recovery_of_call_id, str) or not recovery_of_call_id.strip():
-            raise OperationInputError(
-                "recovery_of_call_id requires a populated identity"
-            )
+            raise OperationInputError("recovery_of_call_id requires a populated identity")
         initial = _GoldenSpecimenInput.decode(
-            {
-                key: value
-                for key, value in payload.items()
-                if key != "recovery_of_call_id"
-            }
+            {key: value for key, value in payload.items() if key != "recovery_of_call_id"}
         )
         return cls(
             initial.specimen_id,
             initial.scientist_id,
             initial.quality_actor_id,
+            initial.occurred_at,
             initial.raw_instrument_json,
             initial.vendor_payload,
             recovery_of_call_id,
@@ -229,6 +277,7 @@ class _GoldenSpecimenWorkflow:
                 suffix="register",
                 action="register",
                 expected_version=0,
+                occurred_at=value.occurred_at,
                 payload={"specimen_type": "synthetic_plasma"},
             )
         )
@@ -239,6 +288,7 @@ class _GoldenSpecimenWorkflow:
                 suffix="accession",
                 action="accession",
                 expected_version=aggregate.version,
+                occurred_at=value.occurred_at,
             )
         )
         position = self._custody.place(
@@ -248,7 +298,7 @@ class _GoldenSpecimenWorkflow:
             custodian_id=context.actor_id,
             expected_version=0,
             transfer_id=f"{context.call_id}:custody:receiving",
-            occurred_at=context.requested_at,
+            occurred_at=value.occurred_at,
         )
         aggregate = self._lifecycle.transition(
             _command(
@@ -257,6 +307,7 @@ class _GoldenSpecimenWorkflow:
                 suffix="start-processing",
                 action="start_processing",
                 expected_version=aggregate.version,
+                occurred_at=value.occurred_at,
                 payload={"assay_id": "SYN-ASSAY-01"},
             )
         )
@@ -290,8 +341,7 @@ class _GoldenSpecimenWorkflow:
         )
         if original is None:
             raise DomainError(
-                f"call {value.recovery_of_call_id} requires a quarantined "
-                "instrument receipt"
+                f"call {value.recovery_of_call_id} requires a quarantined instrument receipt"
             )
         original_envelope, _ = original
         if original_envelope.specimen_id != value.specimen_id:
@@ -335,7 +385,7 @@ class _GoldenSpecimenWorkflow:
                 message_id=f"{context.call_id}:instrument",
                 instrument_id="SYN-INSTRUMENT-01",
                 specimen_id=value.specimen_id,
-                captured_at=context.requested_at,
+                captured_at=value.occurred_at,
                 media_type="application/json",
                 raw_bytes=value.raw_instrument_json,
             )
@@ -359,8 +409,13 @@ class _GoldenSpecimenWorkflow:
                 suffix="submit-review",
                 action="submit_review",
                 expected_version=aggregate.version,
+                occurred_at=value.occurred_at,
                 actor_id=value.scientist_id,
-                payload={"review_id": f"{context.call_id}:scientific-review"},
+                payload={
+                    "review_id": f"{context.call_id}:scientific-review",
+                    "decision": "accepted",
+                    "quality_flag": "pass",
+                },
             )
         )
         aggregate = self._lifecycle.transition(
@@ -370,6 +425,7 @@ class _GoldenSpecimenWorkflow:
                 suffix="release",
                 action="release",
                 expected_version=aggregate.version,
+                occurred_at=value.occurred_at,
                 actor_id=value.quality_actor_id,
                 payload={"approval_receipt_id": f"{context.call_id}:quality-approval"},
                 reason_code="scientific_review_complete",
@@ -424,9 +480,8 @@ class GoldenSpecimenApplication:
                     "specimen_id": specimen_id,
                     "scientist_id": scientist,
                     "quality_actor_id": quality_actor,
-                    "raw_instrument_base64": b64encode(raw_instrument_json).decode(
-                        "ascii"
-                    ),
+                    "occurred_at": _canonical_timestamp(occurred_at),
+                    "raw_instrument_base64": b64encode(raw_instrument_json).decode("ascii"),
                     "vendor_payload": dict(vendor_payload),
                 },
                 requested_at=require_aware_utc(occurred_at),
@@ -470,9 +525,8 @@ class GoldenSpecimenApplication:
                     "specimen_id": specimen_id,
                     "scientist_id": scientist_id,
                     "quality_actor_id": quality_actor_id,
-                    "raw_instrument_base64": b64encode(raw_instrument_json).decode(
-                        "ascii"
-                    ),
+                    "occurred_at": _canonical_timestamp(occurred_at),
+                    "raw_instrument_base64": b64encode(raw_instrument_json).decode("ascii"),
                     "vendor_payload": dict(vendor_payload),
                 },
                 requested_at=require_aware_utc(occurred_at),
@@ -503,21 +557,7 @@ def register_golden_specimen_operation(
         projection=projection,
         permitted_actor_ids=permitted_actor_ids,
     )
-    contract_digest = canonical_digest(
-        {
-            "name": _OPERATION_NAME,
-            "version": _OPERATION_VERSION,
-            "effect_class": EffectClass.IDEMPOTENT_NARROW_WRITE.value,
-            "capability": _CAPABILITY,
-            "fields": [
-                "raw_instrument_base64",
-                "specimen_id",
-                "scientist_id",
-                "quality_actor_id",
-                "vendor_payload",
-            ],
-        }
-    )
+    _, _, contract_digest = golden_specimen_operation_contract("initial")
     registry.register(
         OperationDefinition[
             _GoldenSpecimenInput,
@@ -537,22 +577,7 @@ def register_golden_specimen_operation(
             encode=_encode_outcome,
         )
     )
-    recovery_contract_digest = canonical_digest(
-        {
-            "name": _RECOVERY_OPERATION_NAME,
-            "version": _RECOVERY_OPERATION_VERSION,
-            "effect_class": EffectClass.IDEMPOTENT_NARROW_WRITE.value,
-            "capability": _RECOVERY_CAPABILITY,
-            "fields": [
-                "quality_actor_id",
-                "raw_instrument_base64",
-                "recovery_of_call_id",
-                "scientist_id",
-                "specimen_id",
-                "vendor_payload",
-            ],
-        }
-    )
+    _, _, recovery_contract_digest = golden_specimen_operation_contract("instrument_recovery")
     registry.register(
         OperationDefinition[
             _GoldenSpecimenRecoveryInput,
@@ -640,6 +665,7 @@ def _command(
     suffix: str,
     action: str,
     expected_version: int,
+    occurred_at: datetime,
     payload: Mapping[str, Any] | None = None,
     actor_id: str | None = None,
     reason_code: str | None = None,
@@ -651,7 +677,7 @@ def _command(
         actor_id=actor_id or context.actor_id,
         action=action,
         expected_version=expected_version,
-        occurred_at=context.requested_at,
+        occurred_at=occurred_at,
         payload=dict(payload or {}),
         reason_code=reason_code,
     )
@@ -713,9 +739,7 @@ def _decode_outcome(value: Mapping[str, Any]) -> GoldenSpecimenOutcome:
             command_digest=str(event["command_digest"]),
             occurred_at=datetime.fromisoformat(str(event["occurred_at"])),
             payload=dict(event["payload"]),
-            reason_code=(
-                None if event["reason_code"] is None else str(event["reason_code"])
-            ),
+            reason_code=(None if event["reason_code"] is None else str(event["reason_code"])),
         )
         for event in aggregate_value["events"]
     )

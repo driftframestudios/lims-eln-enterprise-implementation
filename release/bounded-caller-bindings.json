@@ -27,8 +27,28 @@
     },
     {
       "path": "src/lims_eln_implementation/application.py",
-      "sha256": "6f812e14b35ef3223ef8769aa4421fff34862d37c6fb96a4dc626cd873df48ef",
-      "responsibility": "bounded public application entry point plus grant-bound initial and recovery golden specimen operations"
+      "sha256": "ba97f18342c0e7f12917fb4de1a8689bb9e39de7ba00aa65249617506a92cb6a",
+      "responsibility": "bounded process-local application entry point plus shared event-time-bound initial and recovery Golden Specimen operation contracts"
+    },
+    {
+      "path": "src/lims_eln_implementation/workbench/api.py",
+      "sha256": "38a0c7b5f02b549f7d29934552907576ca616eab15a78756202e9593ba4e83c4",
+      "responsibility": "injectable FastAPI delivery boundary with state-adapter readiness and typed authority decisions"
+    },
+    {
+      "path": "src/lims_eln_implementation/workbench/postgres.py",
+      "sha256": "04180ebe2361a0217d48b2e007474acca1af3c72ddd5fdbbd81b9b4e5844706e",
+      "responsibility": "repeatable-read PostgreSQL Golden Specimen composition with tenant binding, lease-and-fence completion, exact replay evidence, and authenticated recovery"
+    },
+    {
+      "path": "src/lims_eln_implementation/workbench/service.py",
+      "sha256": "57df0794cb6a9888734482267c82f918f5d72a5ab2359bf6629c19ab8b235d69",
+      "responsibility": "process-local workbench composition and the shared visitor-facing result shape"
+    },
+    {
+      "path": "src/lims_eln_implementation/workbench/shared_contracts.py",
+      "sha256": "d621c76219c52c1f10e82e5181a55d27ea39e708f90b2ec6deb08d194a0dd421",
+      "responsibility": "optional exact projection from workbench state into the independently distributed Program observation contract"
     },
     {
       "path": "src/lims_eln_implementation/labkey_adapter.py",
@@ -82,13 +102,13 @@
     },
     {
       "operation_name": "specimen.golden_journey.execute",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "implementation_effect_class": "idempotent_narrow_write",
       "governance_effect_class": "narrow_write"
     },
     {
       "operation_name": "specimen.golden_journey.recover_instrument",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "implementation_effect_class": "idempotent_narrow_write",
       "governance_effect_class": "narrow_write"
     }

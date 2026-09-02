@@ -47,7 +47,9 @@ class PublicInspectionManifestTests(unittest.TestCase):
         self.assertTrue(
             {
                 "src/lims_eln_implementation/workbench/api.py",
+                "src/lims_eln_implementation/workbench/postgres.py",
                 "src/lims_eln_implementation/workbench/service.py",
+                "src/lims_eln_implementation/workbench/shared_contracts.py",
                 "src/lims_eln_implementation/production_adapters.py",
             }.issubset(groups["runtime_source"])
         )
@@ -76,6 +78,7 @@ class PublicInspectionManifestTests(unittest.TestCase):
                 "tests/test_shared_contract_binding.py",
                 "tests/test_received_contracts.py",
                 "tests/test_workbench_service.py",
+                "tests/test_workbench_postgres_adapter.py",
                 ".github/workflows/ci.yml",
                 ".github/workflows/pull-request.yml",
             }.issubset(groups["behavior_proofs"])

@@ -504,6 +504,9 @@ class BranchFlowTests(unittest.TestCase):
             "/src/lims_eln_implementation/bounded_caller.py",
             "/src/lims_eln_implementation/bounded_examples.py",
             "/src/lims_eln_implementation/production_adapters.py",
+            "/src/lims_eln_implementation/application.py",
+            "/src/lims_eln_implementation/workbench/",
+            "/tests/test_workbench_postgres_adapter.py",
             "/release/",
             "/database/",
             "/machine-node.json",
@@ -548,6 +551,14 @@ class BranchFlowTests(unittest.TestCase):
             workflow,
         )
         self.assertIn("set role none; begin; create table", workflow.lower())
+        self.assertEqual(
+            workflow.count('python3 -m pip install -e ".[test,postgres]"'),
+            2,
+        )
+        self.assertIn(
+            "python3 -m unittest tests.test_postgres_integration -v",
+            workflow,
+        )
         self.assertNotIn("options=-c%20role%3D", workflow)
         self.assertIn("flyway_schema_history", workflow)
         self.assertIn('= "laboratory_owner"', workflow)
