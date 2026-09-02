@@ -15,7 +15,7 @@
       "digest-bound independent approval for broad effects"
     ]
   },
-  "lifecycle_state": "settling",
+  "lifecycle_state": "reference_ready",
   "coordination_horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
   "contracts": [
     {
@@ -62,13 +62,12 @@
     "digest": "sha256:f00f24984c09a1a413432f725496bebb3906cc6539a5354765cde624c50ae3b4"
   },
   "current_provenance": {
-    "release": "candidate-implementation-v0.3.1",
-    "commit": "0000000000000000000000000000000000000000",
-    "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    "release": "v0.3.1",
+    "commit": "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a",
+    "digest": "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174"
   },
   "first_receipt_contract_id": "FIRST-RCP-IMPLEMENTATION-001",
   "open_receipts": [
-    "RCP-IMPLEMENTATION-PROMOTION-003",
     "RCP-OBSERVED-VENDORS-001",
     "RCP-OBSERVED-MIGRATION-RESTORE-001",
     "RCP-OBSERVED-SECURITY-OBSERVABILITY-001",
@@ -119,7 +118,7 @@
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T01:59:47Z",
+    "updated_at": "2026-09-02T02:42:44Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-NODE",
       "display_name": "Implementation stewardship role",

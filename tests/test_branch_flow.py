@@ -441,13 +441,13 @@ class BranchFlowTests(unittest.TestCase):
                 declared_controls=drifted,
             )
 
-    def test_release_controls_record_settings_pending_hosted_source(self) -> None:
+    def test_release_controls_record_observed_release_and_pending_activation(self) -> None:
         release = json.loads(
             (ROOT / "release" / "repository-role.json").read_text(encoding="utf-8")
         )
         controls = release["promotion_controls"]
         self.assertEqual(
-            "human_review_and_history_protection_with_hosted_source_ready",
+            "human_review_and_history_protection_with_observed_release",
             controls["current_state"],
         )
         self.assertEqual([], controls["hosted_required_check_contexts"])
@@ -478,7 +478,7 @@ class BranchFlowTests(unittest.TestCase):
             controls["signature_observation"],
         )
         self.assertEqual(
-            "source_ready_settings_pending",
+            "source_accepted_settings_pending",
             controls["hosted_check_activation"]["state"],
         )
         automation = release["automation_controls"]
@@ -488,6 +488,10 @@ class BranchFlowTests(unittest.TestCase):
         self.assertEqual(10, automation["pull_request_timeout_minutes"])
         self.assertEqual({"contents": "read"}, automation["pull_request_permissions"])
         self.assertTrue(automation["pull_request_concurrency_cancellation"])
+        self.assertEqual(
+            "source_accepted_contexts_observed_activation_pending",
+            automation["settings_state"],
+        )
         self.assertEqual("develop", automation["dependabot_target"])
         self.assertEqual(
             {"minimum": 100, "maximum": 300},
@@ -509,6 +513,7 @@ class BranchFlowTests(unittest.TestCase):
             "/tests/test_branch_flow.py",
             "/tests/test_database_migrations.py",
             "/tests/test_public_inspection_manifest.py",
+            "/tests/test_promotion_lifecycle.py",
             "/tests/test_postgres_integration.py",
             "/tests/test_sql_tenant_boundary.py",
             "/src/lims_eln_implementation/bounded_caller.py",
@@ -525,7 +530,6 @@ class BranchFlowTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertIn(f"{path} @driftframestudios", owners)
-
 
     def test_stable_implementation_context_fails_closed_on_matrix_result(self):
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(

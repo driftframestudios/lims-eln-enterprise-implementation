@@ -1,0 +1,67 @@
+{
+  "$schema": "../contracts/promotion-receipt.v1.schema.json",
+  "schema_version": "1.0.0",
+  "promotion_receipt_id": "RCP-IMPLEMENTATION-PROMOTION-003",
+  "repository": "driftframestudios/lims-eln-enterprise-implementation",
+  "target_release": "v0.3.1",
+  "promotion_state": "release_observed",
+  "evidence_mode": "observed",
+  "assurance_stage": "verified",
+  "candidate_coordinate": {
+    "release": "candidate-implementation-v0.3.1",
+    "commit_oid": "a4982734fbfa7f8dbe81d41bbc8435ed66a96d46",
+    "tree_oid": "cc1bb335c0cdd1a37d1b6554480b3afdb9c9f360",
+    "public_inspection_manifest_digest": "sha256:1e41212a2ca0cfe679ffc799bb08d1854300d57354364831b82390ab0133a12f"
+  },
+  "release_coordinate": {
+    "git_object_format": "sha1",
+    "tag": "v0.3.1",
+    "tag_object_oid": "8b1013ff6a116b64e5d31c2870b574f641ee88f6",
+    "commit_oid": "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a",
+    "tree_oid": "cc1bb335c0cdd1a37d1b6554480b3afdb9c9f360",
+    "archive_format": "git-tar",
+    "archive_digest": "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174",
+    "promoted_at": "2026-09-02T02:40:50Z",
+    "pull_request": 23,
+    "hosted_checks": [
+      {
+        "name": "Repository validation",
+        "run_id": "33582958659",
+        "conclusion": "success"
+      },
+      {
+        "name": "branch-shape",
+        "run_id": "33582958981",
+        "conclusion": "success"
+      }
+    ],
+    "local_proof_receipt": "evidence://local/release-candidate/a498273/repository-validation",
+    "ruleset_receipt": "governed://github/rulesets/19919124",
+    "codeowner_resolution": "evidence://collaboration/pull-23/human-codeowner-approval",
+    "merge_signature_verification": "valid",
+    "tag_signature_verification": "valid"
+  },
+  "required_evidence": [
+    "The reviewed release candidate and the accepted main merge share one Git tree.",
+    "Repository validation and branch-shape checks pass for the protected pull request.",
+    "The annotated v0.3.1 tag resolves to the accepted merge commit and carries a valid registered-key signature.",
+    "The tagged archive SHA-256, public inspection manifest, source bindings, and external Program and Governance coordinates remain content-addressed.",
+    "A later evidence commit records the release observation while the accepted tag continues to identify the source release."
+  ],
+  "limitations": [
+    "The release establishes the repository-owned source and synthetic evidence named by the v0.3.1 tag. Configured vendors, representative migration and restore, production security and observability, container supply-chain qualification, and accountable organizational acceptance retain separate successor receipts.",
+    "The human code-owner approval was received in the collaboration channel. GitHub records passing checks and an empty formal review collection; the configured pull-request bypass admitted the approved merge.",
+    "This receipt preserves the validly signed annotated tag object and accepted source coordinate independently of later tag-reference changes. The repository currently has no tag-target ruleset."
+  ],
+  "accountable_role": "Implementation release stewardship",
+  "metadata": {
+    "schema_version": "1.0.0",
+    "created_at": "2026-09-02T02:42:44Z",
+    "updated_at": "2026-09-02T02:42:44Z",
+    "owner": {
+      "actor_id": "OWNER-IMPLEMENTATION-PROMOTION-003",
+      "display_name": "Implementation release stewardship role",
+      "role": "Promotion receipt owner"
+    }
+  }
+}

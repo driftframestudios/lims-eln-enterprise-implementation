@@ -45,21 +45,29 @@ sources, release manifests, and governance orientation surfaces retain explicit
 ownership. Default-branch security updates are merged forward to `develop` so
 both long-lived branches retain the correction.
 
-## Repository-owned candidate identity
+## Repository-owned inspection identity
 
 `release/public-inspection-manifest.json` records the exact repository bytes
-available for 0.3.1 review. Its ordered inventory covers runtime source, Flyway
-V001 through V005, local contracts and synthetic inputs, consequential behavior
-proofs, operational configuration, evidence records, and public orientation.
-The root and release-role manifests carry its SHA-256 digest. These two carriers
-remain outside the inventory so their reference to the inventory stays acyclic.
+available for 0.3.1 inspection. Its ordered inventory covers runtime source,
+Flyway V001 through V005, local contracts and synthetic inputs, consequential
+behavior proofs, operational configuration, evidence records, and public
+orientation. The root and release-role manifests carry its SHA-256 digest.
+These two carriers remain outside the inventory so their reference to the
+inventory stays acyclic.
 
 Run `python3 scripts/build_public_inspection_manifest.py --check` to establish
 that every selected path, file size, file digest, group digest, and aggregate
 identity matches the working tree. A source change receives a regenerated
 inventory in the same reviewed change.
 
-The repository-owned candidate carries the accepted Program and Governance Git
+The signed annotated `v0.3.1` tag identifies the accepted source release.
+A later evidence commit carries
+[`receipts/promotion-receipt.json`](../receipts/promotion-receipt.json), which
+records the tag object, accepted commit and tree, tagged archive SHA-256,
+hosted checks, merge and tag signature results, and where human approval was
+recorded alongside GitHub's review state. This ordering lets the receipt
+observe an already immutable release. The repository-owned
+inspection state also carries the accepted Program and Governance Git
 coordinates through
 [`release/external-contract-coordinates.json`](../release/external-contract-coordinates.json).
 The Program binding includes its exact package source digest and clean Python
@@ -94,9 +102,12 @@ and `acceptance` receive domain-specific review.
    Quality, and Regulatory encounters with their named successor receipts and
    environment owners.
 5. Receive the required human and code-owner review for the source release.
-6. Merge the accepted release to `main` and tag `v<version>`.
-7. Merge the release result back to `develop`.
-8. Publish the release manifest, source digest, evidence locators, and open receipts.
+6. Merge the accepted release to `main` and create the signed annotated
+   `v<version>` tag at that accepted commit.
+7. Record the observed tag object, commit, tree, archive digest, checks,
+   signatures, and review boundary in a later evidence commit.
+8. Merge the complete release result back to `develop`.
+9. Publish the release manifest, source digest, evidence locators, and open receipts.
 
 Git approval is an engineering act. Each organizational acceptance appears in
 its own signed decision record.

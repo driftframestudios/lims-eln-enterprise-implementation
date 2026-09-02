@@ -4,6 +4,10 @@
 
 ### Public-inspection closure
 
+- Publish the signed annotated `v0.3.1` tag at the accepted release merge and
+  record its tag object, commit, tree, tagged archive SHA-256, merge and tag
+  signature results, and the location of human approval alongside GitHub's
+  review state in a later promotion receipt.
 - Pin the reviewed Program 0.3.1 package source and digest, exercise its complete
   consumer contract in a clean Python 3.12 environment, and bind Governance
   2.1.0 through its annotated tag object, commit, tree, and archive digest.
