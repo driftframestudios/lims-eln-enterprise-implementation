@@ -1,0 +1,53 @@
+{
+  "$schema": "../contracts/promotion-candidate.v1.schema.json",
+  "schema_version": "1.0.0",
+  "promotion_receipt_id": "RCP-IMPLEMENTATION-PROMOTION-004",
+  "repository": "driftframestudios/lims-eln-enterprise-implementation",
+  "target_release": "v0.3.2",
+  "promotion_state": "release_candidate",
+  "evidence_mode": "observed",
+  "assurance_stage": "verified",
+  "candidate_coordinate": {
+    "release": "candidate-implementation-v0.3.2",
+    "repository_release": "0.3.2",
+    "public_inspection_manifest": "release/public-inspection-manifest.json",
+    "public_inspection_manifest_digest": "sha256:73a062069301c694df26196a7384184d7229089885d97279cb989244ca7435c8",
+    "external_coordinate_manifest": "release/external-contract-coordinates.json",
+    "external_coordinate_manifest_digest": "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1",
+    "selected_future_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5"
+  },
+  "prior_release_coordinate": {
+    "promotion_receipt": "receipts/promotion-receipt.json",
+    "tag": "v0.3.1",
+    "tag_object_oid": "8b1013ff6a116b64e5d31c2870b574f641ee88f6",
+    "commit_oid": "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a",
+    "tree_oid": "cc1bb335c0cdd1a37d1b6554480b3afdb9c9f360",
+    "archive_digest": "sha256:00da1be41bdf23a21124d600f3788464bfd8f590c819f6a9c74b98671edb2174"
+  },
+  "required_evidence": [
+    "The accepted Simulation and Comparative releases reproduce one canonical selected-future closure digest.",
+    "The repository-owned candidate inventory binds runtime, contracts, receipts, tests, and public orientation by SHA-256.",
+    "The complete repository validator passes against repository release 0.3.2 and its exact external coordinates.",
+    "The accepted v0.3.1 promotion receipt remains available as the earlier immutable source subject."
+  ],
+  "remaining_promotion_evidence": [
+    "Review and merge the exact candidate through the repository branch and approval controls.",
+    "Create and verify the signed annotated v0.3.2 tag at the accepted release commit.",
+    "Record the tag object, commit, tree, archive digest, hosted checks, signatures, and review boundary in a successor observed receipt."
+  ],
+  "limitations": [
+    "Release identity remains candidate-scoped until the signed annotated v0.3.2 tag and its exact object coordinates are observed.",
+    "Configured-environment qualification and accountable production authorization remain with their named successor receipts."
+  ],
+  "accountable_role": "Implementation release stewardship",
+  "metadata": {
+    "schema_version": "1.0.0",
+    "created_at": "2026-09-02T10:28:31Z",
+    "updated_at": "2026-09-02T10:28:31Z",
+    "owner": {
+      "actor_id": "OWNER-IMPLEMENTATION-PROMOTION-004",
+      "display_name": "Implementation release stewardship role",
+      "role": "Promotion candidate owner"
+    }
+  }
+}

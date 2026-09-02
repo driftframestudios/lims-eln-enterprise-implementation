@@ -75,7 +75,7 @@ def create_app(service: WorkbenchPort | None = None) -> FastAPI:
     app = FastAPI(
         title="LIMS/ELN Golden Specimen Workbench",
         summary="Inspectable specimen flow and evidence across system boundaries",
-        version="0.3.1",
+        version="0.3.2",
         docs_url="/api/docs",
         redoc_url=None,
     )

@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RCP-IMPLEMENTATION-001",
   "machine_node_id": "NODE-LIMS-ELN-IMPLEMENTATION",
-  "as_of": "2026-09-02T02:42:44Z",
+  "as_of": "2026-09-02T10:28:31Z",
   "orientation_purpose": "Give a human or AI collaborator the minimum complete implementation state, authority boundary, evidence posture, invalidation conditions, and safe handoff needed to reproduce or extend this reference.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -10,8 +10,8 @@
   "contract_state": [
     {
       "contract_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
-      "version": "0.3.1",
-      "digest": "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea"
+      "version": "0.3.2",
+      "digest": "sha256:d141061bf028fdd63cc879ab455b0a68853d369da98edbeb17421a35714ed796"
     },
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
@@ -21,12 +21,12 @@
     {
       "contract_id": "IMPLEMENTATION-OPEN-RECEIPTS-001",
       "version": "2.0.0",
-      "digest": "sha256:f5ec4399b7ba43ce2bbc6260c0eb223c1fc8e405a9e5b13fd71ca806fd709421"
+      "digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad"
     },
     {
       "contract_id": "SIMULATED-SUBSTANTIVE-CLOSURE-2028-V1",
       "version": "2.0.0",
-      "digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb"
+      "digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5"
     }
   ],
   "evidence_posture": [
@@ -56,8 +56,9 @@
     }
   ],
   "coordination_horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
-  "current_horizon_summary": "Implementation release 0.3.1 is reference-ready with process-local and durable PostgreSQL workbench paths, least-privilege database identities, and an immutable release coordinate available to comparative evidence.",
+  "current_horizon_summary": "Implementation 0.3.2 is a bounded release candidate that aligns the selected-future closure coordinate while retaining the accepted 0.3.1 source release as historical evidence.",
   "open_receipts": [
+    "RCP-IMPLEMENTATION-PROMOTION-004",
     "RCP-OBSERVED-VENDORS-001",
     "RCP-OBSERVED-MIGRATION-RESTORE-001",
     "RCP-OBSERVED-SECURITY-OBSERVABILITY-001",
@@ -94,14 +95,14 @@
     }
   ],
   "handoff": {
-    "recipient_role": "comparative evidence stewardship",
-    "next_safe_action": "Pin the observed v0.3.1 tag, accepted commit, tree, and tagged archive SHA-256 in comparative evidence, then compare the implementation with the independently released selected future.",
-    "success_evidence": "Comparative evidence reproduces the tagged archive, binds the exact implementation coordinate, preserves observed and simulated authority as distinct states, and records each material divergence against its owning source."
+    "recipient_role": "implementation release stewardship",
+    "next_safe_action": "Review and promote the 0.3.2 closure-coordinate candidate, then record its signed tag object, accepted commit and tree, tagged archive SHA-256, checks, and review boundary in a successor receipt.",
+    "success_evidence": "The signed 0.3.2 source release binds the accepted selected-future closure while the 0.3.1 receipt remains an immutable historical coordinate."
   },
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T02:42:44Z",
+    "updated_at": "2026-09-02T10:28:31Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-RECEIPT",
       "display_name": "Implementation stewardship role",

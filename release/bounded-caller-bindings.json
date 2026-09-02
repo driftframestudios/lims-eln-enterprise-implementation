@@ -1,6 +1,6 @@
 {
   "binding_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
-  "binding_version": "0.3.1",
+  "binding_version": "0.3.2",
   "governance_schema_release": "2.1.0",
   "control_plane_profile": "0.3.0",
   "python": ">=3.12",
@@ -32,7 +32,7 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/api.py",
-      "sha256": "38a0c7b5f02b549f7d29934552907576ca616eab15a78756202e9593ba4e83c4",
+      "sha256": "ef49fc60fbb9f68e7e48e65f9c6d1663b1f2c8aea58ae46748d1d9f1e1b9123b",
       "responsibility": "injectable FastAPI delivery boundary with state-adapter readiness and typed authority decisions"
     },
     {
@@ -47,7 +47,7 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/shared_contracts.py",
-      "sha256": "d621c76219c52c1f10e82e5181a55d27ea39e708f90b2ec6deb08d194a0dd421",
+      "sha256": "e6e1483ce92566972eac9deb92b08a225f189cc4034e02853bde3f619fdbcec2",
       "responsibility": "optional exact projection from workbench state into the independently distributed Program observation contract"
     },
     {

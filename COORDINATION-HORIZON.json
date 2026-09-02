@@ -2,9 +2,9 @@
   "horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
   "title": "LIMS/ELN Implementation Coordination Horizon",
   "objective": "Keep bounded authority, durable persistence and vendor seams, selected-future comparison, and observed successor evidence legible without coupling the collaboration to one planning cadence.",
-  "as_of": "2026-09-02T02:42:44Z",
+  "as_of": "2026-09-02T10:28:31Z",
   "current_item_ids": [
-    "HORIZON-SELECTED-FUTURE-COMPARISON"
+    "HORIZON-IMPLEMENTATION-CLOSURE-ALIGNMENT"
   ],
   "work_items": [
     {
@@ -29,10 +29,31 @@
       "dependency_ids": []
     },
     {
+      "item_id": "HORIZON-IMPLEMENTATION-CLOSURE-ALIGNMENT",
+      "horizon_label": "Selected-future closure-coordinate patch",
+      "sequence": 2,
+      "state": "settling",
+      "desired_state": "A signed implementation patch release binds the accepted selected-future closure while the earlier signed source release remains available as historical evidence.",
+      "entry_evidence": [
+        "accepted simulation release with canonical closure digest",
+        "accepted comparative release with the same canonical closure digest",
+        "Program reconciliation of the selected-future artifact family"
+      ],
+      "completion_evidence": [
+        "repository validation passes against the reconciled closure digest",
+        "the reviewed candidate preserves the 0.3.1 promotion receipt as historical evidence",
+        "RCP-IMPLEMENTATION-PROMOTION-004 closes against the signed 0.3.2 coordinate"
+      ],
+      "owner_role": "implementation release stewardship",
+      "dependency_ids": [
+        "HORIZON-IMPLEMENTATION-SETTLING"
+      ]
+    },
+    {
       "item_id": "HORIZON-SELECTED-FUTURE-COMPARISON",
       "horizon_label": "Selected-future implementation comparison",
-      "sequence": 2,
-      "state": "active",
+      "sequence": 3,
+      "state": "waiting",
       "desired_state": "The implementation and selected future compare through versioned contracts, canonical receipt families, and independently reproducible evidence.",
       "entry_evidence": [
         "released implementation binding manifest",
@@ -46,13 +67,13 @@
       ],
       "owner_role": "comparative evidence stewardship",
       "dependency_ids": [
-        "HORIZON-IMPLEMENTATION-SETTLING"
+        "HORIZON-IMPLEMENTATION-CLOSURE-ALIGNMENT"
       ]
     },
     {
       "item_id": "HORIZON-OBSERVED-SUCCESSORS",
       "horizon_label": "Observed successor evidence",
-      "sequence": 3,
+      "sequence": 4,
       "state": "waiting",
       "desired_state": "Configured environments and accountable organizational roles can add observed qualification and acceptance without rewriting the selected-future baseline.",
       "entry_evidence": [
@@ -72,13 +93,13 @@
     }
   ],
   "reentry_capsule": {
-    "current_state": "Release 0.3.1 is reference-ready at signed tag v0.3.1 with five registered operations across three effect classes, a process-local workbench, a durable PostgreSQL Golden Specimen slice, least-privilege database identities, and a credential-free LabKey API exemplar.",
+    "current_state": "Implementation 0.3.2 is a bounded release candidate that aligns the selected-future closure coordinate while preserving the signed 0.3.1 release as historical evidence.",
     "recent_decisions": [
       "DECISION-BOUNDED-CALLER-SERVICE-OWNED",
       "DECISION-SIMULATED-AND-OBSERVED-BRANCHES"
     ],
-    "next_safe_action": "Pin the observed v0.3.1 coordinate in comparative evidence and compare it with the independently released selected future while each divergence remains with its owning source.",
-    "verification": "Confirm the signed tag object, accepted commit and tree, tagged archive SHA-256, promotion receipt, Program and Governance coordinates, hosted PostgreSQL 17 receipt, local PostgreSQL 18 compatibility observation, source bindings, credential hygiene, and public inspection manifest."
+    "next_safe_action": "Review and promote the 0.3.2 closure-coordinate candidate, record its immutable tag coordinate in RCP-IMPLEMENTATION-PROMOTION-004, then return the accepted release to comparative evidence.",
+    "verification": "Confirm the reconciled closure digest, candidate inventory, repository tests, Program and Governance coordinates, retained 0.3.1 promotion receipt, credential hygiene, and the eventual signed 0.3.2 tag object, commit, tree, and archive SHA-256."
   },
   "retained_effects": [
     "Service-owned operations continue to determine caller authority, scope, budgets, approvals, effects, receipts, and recovery.",
@@ -95,7 +116,7 @@
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T02:42:44Z",
+    "updated_at": "2026-09-02T10:28:31Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-HORIZON",
       "display_name": "Implementation stewardship role",

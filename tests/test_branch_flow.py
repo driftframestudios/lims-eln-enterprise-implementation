@@ -441,13 +441,13 @@ class BranchFlowTests(unittest.TestCase):
                 declared_controls=drifted,
             )
 
-    def test_release_controls_record_observed_release_and_pending_activation(self) -> None:
+    def test_release_controls_record_candidate_and_pending_activation(self) -> None:
         release = json.loads(
             (ROOT / "release" / "repository-role.json").read_text(encoding="utf-8")
         )
         controls = release["promotion_controls"]
         self.assertEqual(
-            "human_review_and_history_protection_with_observed_release",
+            "human_review_and_history_protection_with_candidate_ready",
             controls["current_state"],
         )
         self.assertEqual([], controls["hosted_required_check_contexts"])
@@ -478,7 +478,7 @@ class BranchFlowTests(unittest.TestCase):
             controls["signature_observation"],
         )
         self.assertEqual(
-            "source_accepted_settings_pending",
+            "candidate_ready_settings_pending",
             controls["hosted_check_activation"]["state"],
         )
         automation = release["automation_controls"]
@@ -489,7 +489,7 @@ class BranchFlowTests(unittest.TestCase):
         self.assertEqual({"contents": "read"}, automation["pull_request_permissions"])
         self.assertTrue(automation["pull_request_concurrency_cancellation"])
         self.assertEqual(
-            "source_accepted_contexts_observed_activation_pending",
+            "candidate_ready_contexts_observed_activation_pending",
             automation["settings_state"],
         )
         self.assertEqual("develop", automation["dependabot_target"])

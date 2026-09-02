@@ -12,6 +12,7 @@ import unittest
 from scripts.build_public_inspection_manifest import (
     InspectionManifestError,
     MANIFEST_PATH,
+    build_manifest,
     verify_manifest,
     write_manifest,
 )
@@ -38,9 +39,9 @@ class PublicInspectionManifestTests(unittest.TestCase):
 
     def test_manifest_binds_current_repository_owned_bytes(self) -> None:
         manifest = verify_manifest(ROOT)
-        self.assertEqual(manifest["release_state"], "release_observation")
+        self.assertEqual(manifest["release_state"], "repository_owned_candidate")
         self.assertEqual(
-            manifest["release_subject"],
+            manifest["prior_release_subject"],
             {
                 "promotion_receipt": "receipts/promotion-receipt.json",
                 "tag": "v0.3.1",
@@ -104,8 +105,9 @@ class PublicInspectionManifestTests(unittest.TestCase):
             "contracts/promotion-receipt.v1.schema.json",
             groups["contracts_and_synthetic_inputs"],
         )
-        self.assertIn(
-            "receipts/promotion-receipt.json",
+        self.assertIn("receipts/promotion-receipt.json", groups["evidence_records"])
+        self.assertNotIn(
+            "receipts/promotion-candidate.json",
             groups["evidence_records"],
         )
         self.assertTrue(
@@ -216,10 +218,15 @@ class PublicInspectionManifestTests(unittest.TestCase):
                 verify_manifest(target)
 
     def test_external_coordinates_project_their_accepted_revisions(self) -> None:
-        coordinates = self.manifest()["coordinate_boundaries"]
+        coordinates = build_manifest(ROOT)["coordinate_boundaries"]
         self.assertEqual(
             {coordinate["role"] for coordinate in coordinates},
-            {"program_contract", "governance_schema"},
+            {
+                "program_contract",
+                "governance_schema",
+                "simulated_final_state",
+                "comparative_evidence",
+            },
         )
         by_role = {coordinate["role"]: coordinate for coordinate in coordinates}
         program = by_role["program_contract"]
@@ -233,6 +240,26 @@ class PublicInspectionManifestTests(unittest.TestCase):
         self.assertEqual(governance["coordinate_state"], "accepted_release")
         self.assertEqual(governance["declared_release"], "2.1.0")
         self.assertEqual(governance["schema_release"], "2.1.0")
+        expected_artifacts = {
+            "simulated_final_state": "release/future-reality-2028-06-30-v1.json",
+            "comparative_evidence": (
+                "fixtures/simulated-closures/future-reality-2028-06-30-v1.json"
+            ),
+        }
+        for role in ("simulated_final_state", "comparative_evidence"):
+            selected_future = by_role[role]
+            self.assertEqual(
+                selected_future["closure_artifact_path"], expected_artifacts[role]
+            )
+            self.assertEqual(
+                selected_future["canonical_closure_digest"],
+                "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+            )
+            self.assertRegex(selected_future["tag_object_oid"], r"^[a-f0-9]{40}$")
+            self.assertRegex(
+                selected_future["archive_digest"],
+                r"^sha256:[a-f0-9]{64}$",
+            )
         for coordinate in coordinates:
             with self.subTest(role=coordinate["role"]):
                 self.assertEqual(
@@ -254,14 +281,18 @@ class PublicInspectionManifestTests(unittest.TestCase):
 
         self.assertEqual(
             manifest["manifest_carriers"],
-            ["manifest.json", "release/repository-role.json"],
+            [
+                "manifest.json",
+                "release/repository-role.json",
+                "receipts/promotion-candidate.json",
+            ],
         )
         self.assertEqual(
             root_manifest["public_inspection"]["manifest_digest"], digest
         )
         self.assertEqual(
             root_manifest["public_inspection"]["authority"],
-            "repository_owned_inspection_bytes",
+            "repository_owned_candidate_bytes",
         )
         self.assertEqual(release_role["public_inspection_manifest_digest"], digest)
 

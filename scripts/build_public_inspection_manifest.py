@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build or verify the repository-owned 0.3.1 inspection inventory."""
+"""Build or verify the repository-owned 0.3.2 candidate inventory."""
 
 from __future__ import annotations
 
@@ -17,7 +17,13 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = Path("release/public-inspection-manifest.json")
 EXTERNAL_COORDINATE_PATH = Path("release/external-contract-coordinates.json")
 PROMOTION_RECEIPT_PATH = Path("receipts/promotion-receipt.json")
+PROMOTION_CANDIDATE_PATH = Path("receipts/promotion-candidate.json")
 CANONICALIZATION = "ordered-path-nul-sha256-lf-v1"
+MANIFEST_CARRIER_PATHS = (
+    "manifest.json",
+    "release/repository-role.json",
+    PROMOTION_CANDIDATE_PATH.as_posix(),
+)
 
 ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     (
@@ -197,6 +203,7 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
         ) from error
     program = coordinates["program_contract"]
     governance = coordinates["governance"]
+    selected_future = coordinates["selected_future"]
     coordinate_digest = _digest(coordinate_path)
 
     promotion_path = _safe_file(root, PROMOTION_RECEIPT_PATH.as_posix())
@@ -212,7 +219,7 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
         or not isinstance(release_coordinate, dict)
     ):
         raise InspectionManifestError(
-            "public inspection requires the observed release promotion receipt"
+            "candidate history requires the observed prior-release promotion receipt"
         )
 
     groups: list[dict[str, Any]] = []
@@ -222,6 +229,8 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
     for name, responsibility, patterns in ARTIFACT_GROUPS:
         artifacts: list[dict[str, Any]] = []
         for relative_path in _group_paths(root, patterns):
+            if relative_path in MANIFEST_CARRIER_PATHS:
+                continue
             if relative_path in seen_paths:
                 raise InspectionManifestError(
                     f"inspection artifact belongs to one group: {relative_path}"
@@ -247,14 +256,14 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
     return {
         "schema_version": "1.0.0",
         "repository": "lims-eln-enterprise-implementation",
-        "repository_release": "0.3.1",
-        "release_state": "release_observation",
+        "repository_release": "0.3.2",
+        "release_state": "repository_owned_candidate",
         "canonicalization": CANONICALIZATION,
         "source_identity": {
             "kind": "content_addressed_artifact_inventory",
             "aggregate_sha256": _aggregate(all_artifacts),
         },
-        "release_subject": {
+        "prior_release_subject": {
             "promotion_receipt": PROMOTION_RECEIPT_PATH.as_posix(),
             "tag": release_coordinate["tag"],
             "tag_object_oid": release_coordinate["tag_object_oid"],
@@ -281,26 +290,40 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
                 "accepted_revision": governance["source_commit"],
                 "coordinate_state": "accepted_release",
             },
+            *[
+                {
+                    "role": source["role"],
+                    "coordinate_manifest": EXTERNAL_COORDINATE_PATH.as_posix(),
+                    "coordinate_manifest_sha256": coordinate_digest,
+                    "declared_release": source["release"],
+                    "accepted_revision": source["source_commit"],
+                    "accepted_tree": source["source_tree"],
+                    "tag_object_oid": source["tag_object"],
+                    "archive_digest": source["git_archive_sha256"],
+                    "closure_artifact_path": source["closure_artifact_path"],
+                    "canonical_closure_digest": selected_future[
+                        "canonical_closure_digest"
+                    ],
+                    "coordinate_state": "accepted_release",
+                }
+                for source in selected_future["accepted_sources"]
+            ],
         ],
         "evidence_boundary": {
-            "repository_owned_inspection": (
+            "repository_owned_candidate": (
                 "The inventory establishes the exact repository bytes available for "
-                "inspection from this later evidence commit."
+                "review as the 0.3.2 closure-coordinate candidate."
             ),
             "configured_environment": (
                 "Environment receipts retain their named system, time, performer, reviewer, "
                 "artifact bindings, assurance stage, and limitations."
             ),
             "promotion": (
-                "The promotion receipt observes the signed implementation source release; "
-                "accepted Program and Governance coordinates remain bound in the external "
-                "coordinate manifest."
+                "The prior promotion receipt preserves the signed 0.3.1 source release. "
+                "The 0.3.2 candidate receives its own immutable coordinate after review."
             ),
         },
-        "manifest_carriers": [
-            "manifest.json",
-            "release/repository-role.json",
-        ],
+        "manifest_carriers": list(MANIFEST_CARRIER_PATHS),
         "artifact_groups": groups,
     }
 
