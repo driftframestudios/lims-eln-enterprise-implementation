@@ -516,17 +516,17 @@
       "responsibility": "Repository validation and tests for tenant isolation, scientific correctness, replay, recovery, and delivery evidence."
     },
     {
-      "aggregate_sha256": "sha256:5a8b4f8eeb7d445933f97c25fd1285e2cd7324ae083536914997b7dba2a58364",
+      "aggregate_sha256": "sha256:ddf2bd22ab7df2ae3976b2bd0028718e4703b7ad62944e5216952ce9a5845d92",
       "artifacts": [
         {
           "path": "receipts/hosted-postgresql-proof.json",
-          "sha256": "sha256:946d79803f2ec34f451b77ac3b97e7418259dc9efca23dfa6b796a8657c5386a",
-          "size_bytes": 2455
+          "sha256": "sha256:171fa8160f77e3c4937c3a7396d16607ac0945b0cb0483fafabfcd86feb458ed",
+          "size_bytes": 3341
         },
         {
           "path": "receipts/local-verification.example.json",
-          "sha256": "sha256:e3d2482c183d13df6316b8e3b1d103958e898c8c8c7803944c671b639b5756c5",
-          "size_bytes": 1934
+          "sha256": "sha256:55a4c6cdf3a35119a09b1d000b66d1e10e5a7e02997005eb5f6afd372c8dd8de",
+          "size_bytes": 1938
         },
         {
           "path": "receipts/open-receipt-ledger.json",
@@ -715,7 +715,7 @@
   "repository_release": "0.3.1",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:825a35035e304a1df3b51ef8e8de98150b06508dd672d853f020c1078b053776",
+    "aggregate_sha256": "sha256:e5cf7048abf184f6dcaca28b69bf904242e066a67fc73c530af40152c7d7afee",
     "kind": "content_addressed_artifact_inventory"
   }
 }
