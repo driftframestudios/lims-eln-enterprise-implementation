@@ -45,7 +45,7 @@ jobs:
           python3 scripts/validate_repository.py
 
   postgres-invariants:
-    name: PostgreSQL 17 migration and adversarial boundary proof
+    name: PostgreSQL 17 migration and constructive boundary proof
     if: ${{ vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15

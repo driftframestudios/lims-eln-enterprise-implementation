@@ -6,7 +6,7 @@
   "bounded_caller_binding_digest": "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea",
   "database_flyway_release_digest": "sha256:a4fafe7ebb50da1efbad47df24d6d7af741130039ba8c90b8d6457e9d1d107b9",
   "external_contract_coordinate_digest": "sha256:e89eb61e8cf04b27c1bd7b84c7c600d0866fb813a7e6761fe7a0e865a11cc077",
-  "public_inspection_manifest_digest": "sha256:79e39233a1338bc2925be33fbcfed2778674e07646f416929dc311a008e1af40",
+  "public_inspection_manifest_digest": "sha256:cde852b175c84d5314b41eff37289b39d0abd9f2a7f4abb5e4744931c4538a04",
   "open_receipt_ledger_digest": "sha256:f5ec4399b7ba43ce2bbc6260c0eb223c1fc8e405a9e5b13fd71ca806fd709421",
   "selected_future_closure_digest": "sha256:c402e7a72d9066424d5b83c8fda51ca2fad43c025d017a5f5535126239c96ffb",
   "first_receipt_contract": {
