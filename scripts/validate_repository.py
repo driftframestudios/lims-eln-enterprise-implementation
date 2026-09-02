@@ -71,11 +71,17 @@ CURRENT_PROMOTION_CANDIDATE_PATH = Path("receipts/promotion-candidate.json")
 CURRENT_PROMOTION_CANDIDATE_SCHEMA_PATH = Path(
     "contracts/promotion-candidate.v1.schema.json"
 )
+CURRENT_PROMOTION_OBSERVATION_PATH = Path(
+    "receipts/promotion-observation-v0.3.2.json"
+)
+CURRENT_PROMOTION_OBSERVATION_SCHEMA_PATH = Path(
+    "contracts/promotion-observation.v1.schema.json"
+)
 CURRENT_RELEASE_TAG = "v0.3.2"
 PRIOR_PROMOTION_RECEIPT_ID = "RCP-IMPLEMENTATION-PROMOTION-003"
 PRIOR_PROMOTION_RECEIPT_PATH = Path("receipts/promotion-receipt.json")
 PRIOR_RELEASE_TAG = "v0.3.1"
-REVIEWED_CANDIDATE_COMMIT = "a4982734fbfa7f8dbe81d41bbc8435ed66a96d46"
+PRIOR_REVIEWED_CANDIDATE_COMMIT = "a4982734fbfa7f8dbe81d41bbc8435ed66a96d46"
 PRIOR_RELEASE_COMMIT = "44a4b8e67ff2e6af232b12daf3692bee8e8f3a3a"
 PRIOR_RELEASE_TREE = "cc1bb335c0cdd1a37d1b6554480b3afdb9c9f360"
 PRIOR_TAG_OBJECT = "8b1013ff6a116b64e5d31c2870b574f641ee88f6"
@@ -85,6 +91,25 @@ PRIOR_ARCHIVE_DIGEST = (
 REVIEWED_INSPECTION_MANIFEST_DIGEST = (
     "sha256:1e41212a2ca0cfe679ffc799bb08d1854300d57354364831b82390ab0133a12f"
 )
+CURRENT_REVIEWED_CANDIDATE_COMMIT = "ce612ae3e4fcf6ff478f5d801343e8b28b4f847d"
+CURRENT_RELEASE_COMMIT = "fe0bd2a08ac1697ce18ca583d9631faae7db7132"
+CURRENT_RELEASE_TREE = "eb8eadb27a9e07c6069a1946f115a0083d94af5c"
+CURRENT_TAG_OBJECT = "c3db01079b88622f06e8714c8bcbdf0dc1803a10"
+CURRENT_ARCHIVE_DIGEST = (
+    "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16"
+)
+CURRENT_CANDIDATE_RECEIPT_DIGEST = (
+    "sha256:c78f16df5832f6c7b39ea1b0d9a61316b26d90cd1552fd8b2c39043436a94340"
+)
+CURRENT_CANDIDATE_INSPECTION_MANIFEST_DIGEST = (
+    "sha256:73a062069301c694df26196a7384184d7229089885d97279cb989244ca7435c8"
+)
+CURRENT_EXTERNAL_COORDINATE_DIGEST = (
+    "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1"
+)
+CURRENT_OBSERVATION_TIME = "2026-09-02T11:23:40Z"
+ACCEPTED_PRIOR_HOSTED_COMMIT = "205401a530e984e031bb2c52a1654c6b5f82bc6d"
+HISTORICAL_PRIOR_HOSTED_COMMIT = "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
 EXCLUDED_DIRECTORY_NAMES = {
     ".git",
     ".mypy_cache",
@@ -161,18 +186,72 @@ def validate_promotion_candidate_schema(
         )
 
 
+def validate_promotion_observation_schema(
+    observation: dict,
+    *,
+    schema_path: Path | None = None,
+) -> None:
+    """Execute the observation's declared JSON Schema against its exact document."""
+
+    path = schema_path or (ROOT / CURRENT_PROMOTION_OBSERVATION_SCHEMA_PATH)
+    try:
+        schema = json.loads(path.read_text(encoding="utf-8"))
+        Draft202012Validator.check_schema(schema)
+    except (OSError, UnicodeError, json.JSONDecodeError, SchemaError) as error:
+        raise AssertionError(
+            "promotion observation schema requires valid JSON Schema 2020-12"
+        ) from error
+
+    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    errors = sorted(
+        validator.iter_errors(observation),
+        key=lambda error: tuple(str(part) for part in error.absolute_path),
+    )
+    if errors:
+        first = errors[0]
+        location = ".".join(str(part) for part in first.absolute_path) or "$"
+        raise AssertionError(
+            "promotion observation schema validation differs at "
+            f"{location}: {first.message}"
+        )
+
+
+def classify_hosted_postgresql_receipt_binding(
+    hosted_bindings: dict,
+) -> str:
+    """Identify an exact hosted receipt already observed in repository history."""
+
+    repository_version = hosted_bindings.get("repository")
+    observed_commit = str(hosted_bindings.get("repository_commit", ""))
+    if repository_version == "0.3.1":
+        if observed_commit == ACCEPTED_PRIOR_HOSTED_COMMIT:
+            return "accepted_prior"
+        if observed_commit == HISTORICAL_PRIOR_HOSTED_COMMIT:
+            return "historical_prior"
+        raise AssertionError(
+            "retained 0.3.1 hosted receipt requires an exact observed commit"
+        )
+    raise AssertionError(
+        "hosted PostgreSQL receipt requires an exact retained observation; "
+        "a later release receives its own accepted hosted commit coordinate"
+    )
+
+
 def validate_promotion_lifecycle(
     *,
     promotion: dict,
     candidate: dict,
+    observation: dict,
     machine: dict,
     first_receipt: dict,
     horizon: dict,
     release: dict,
     inspection_manifest: dict,
 ) -> None:
+    """Keep both historical carriers distinct from the observed patch release."""
+
     validate_promotion_candidate_schema(candidate)
-    """Keep the prior signed subject distinct from the current patch candidate."""
+    validate_promotion_observation_schema(observation)
     expected_keys = {
         "$schema",
         "schema_version",
@@ -206,7 +285,7 @@ def validate_promotion_lifecycle(
 
     expected_candidate = {
         "release": "candidate-implementation-v0.3.1",
-        "commit_oid": REVIEWED_CANDIDATE_COMMIT,
+        "commit_oid": PRIOR_REVIEWED_CANDIDATE_COMMIT,
         "tree_oid": PRIOR_RELEASE_TREE,
         "public_inspection_manifest_digest": REVIEWED_INSPECTION_MANIFEST_DIGEST,
     }
@@ -324,13 +403,11 @@ def validate_promotion_lifecycle(
         "release": "candidate-implementation-v0.3.2",
         "repository_release": REPOSITORY_RELEASE,
         "public_inspection_manifest": "release/public-inspection-manifest.json",
-        "public_inspection_manifest_digest": release[
-            "public_inspection_manifest_digest"
-        ],
+        "public_inspection_manifest_digest": (
+            CURRENT_CANDIDATE_INSPECTION_MANIFEST_DIGEST
+        ),
         "external_coordinate_manifest": "release/external-contract-coordinates.json",
-        "external_coordinate_manifest_digest": release[
-            "external_contract_coordinate_digest"
-        ],
+        "external_coordinate_manifest_digest": CURRENT_EXTERNAL_COORDINATE_DIGEST,
         "selected_future_closure_digest": CANONICAL_SELECTED_FUTURE_CLOSURE_DIGEST,
     }:
         raise AssertionError("promotion candidate requires its exact candidate coordinates")
@@ -357,75 +434,176 @@ def validate_promotion_lifecycle(
     }:
         raise AssertionError("promotion candidate requires its bounded ownership metadata")
 
-    expected_candidate_provenance = {
+    observation_keys = {
+        "$schema",
+        "schema_version",
+        "promotion_receipt_id",
+        "repository",
+        "target_release",
+        "promotion_state",
+        "evidence_mode",
+        "assurance_stage",
+        "candidate_coordinate",
+        "release_coordinate",
+        "required_evidence",
+        "limitations",
+        "accountable_role",
+        "metadata",
+    }
+    if set(observation) != observation_keys:
+        raise AssertionError("promotion observation requires the released closed shape")
+    if (
+        observation["$schema"]
+        != "../contracts/promotion-observation.v1.schema.json"
+        or observation["schema_version"] != "1.0.0"
+        or observation["promotion_receipt_id"] != CURRENT_PROMOTION_RECEIPT_ID
+        or observation["repository"]
+        != "driftframestudios/lims-eln-enterprise-implementation"
+        or observation["target_release"] != CURRENT_RELEASE_TAG
+        or observation["promotion_state"] != "release_observed"
+        or observation["evidence_mode"] != "observed"
+        or observation["assurance_stage"] != "verified"
+        or observation["accountable_role"]
+        != "Implementation release stewardship"
+    ):
+        raise AssertionError("promotion observation requires the verified v0.3.2 identity")
+    if observation["candidate_coordinate"] != {
         "release": "candidate-implementation-v0.3.2",
-        "commit": "0" * 40,
-        "digest": "sha256:" + "0" * 64,
+        "commit_oid": CURRENT_REVIEWED_CANDIDATE_COMMIT,
+        "tree_oid": CURRENT_RELEASE_TREE,
+        "candidate_receipt": CURRENT_PROMOTION_CANDIDATE_PATH.as_posix(),
+        "candidate_receipt_digest": CURRENT_CANDIDATE_RECEIPT_DIGEST,
+        "public_inspection_manifest_digest": (
+            CURRENT_CANDIDATE_INSPECTION_MANIFEST_DIGEST
+        ),
+    }:
+        raise AssertionError("promotion observation requires the reviewed candidate")
+    expected_current_release = {
+        "git_object_format": "sha1",
+        "tag": CURRENT_RELEASE_TAG,
+        "tag_object_oid": CURRENT_TAG_OBJECT,
+        "commit_oid": CURRENT_RELEASE_COMMIT,
+        "tree_oid": CURRENT_RELEASE_TREE,
+        "archive_format": "git-tar",
+        "archive_digest": CURRENT_ARCHIVE_DIGEST,
+        "promoted_at": "2026-09-02T11:21:02Z",
+        "pull_request": 27,
+        "hosted_checks": [
+            {
+                "name": "Repository validation",
+                "run_id": "33623991109",
+                "job_id": "100227324662",
+                "conclusion": "success",
+            }
+        ],
+        "review_observation": {
+            "merge_admission": "configured_ordinary_bypass",
+            "independent_review": "deputized_independent_review_completed",
+            "github_review_record": "no_formal_review_submitted",
+        },
+        "merge_signature_verification": "valid",
+        "tag_signature_verification": "valid",
+    }
+    if observation["release_coordinate"] != expected_current_release:
+        raise AssertionError("promotion observation requires the exact v0.3.2 subject")
+    for field in ("required_evidence", "limitations"):
+        statements = observation[field]
+        if (
+            not isinstance(statements, list)
+            or not statements
+            or any(not isinstance(item, str) or len(item) < 20 for item in statements)
+            or len(statements) != len(set(statements))
+        ):
+            raise AssertionError(
+                f"promotion observation requires material {field.replace('_', ' ')}"
+            )
+    if observation["metadata"] != {
+        "schema_version": "1.0.0",
+        "created_at": CURRENT_OBSERVATION_TIME,
+        "updated_at": CURRENT_OBSERVATION_TIME,
+        "owner": {
+            "actor_id": "OWNER-IMPLEMENTATION-PROMOTION-004",
+            "display_name": "Implementation release stewardship role",
+            "role": "Promotion observation owner",
+        },
+    }:
+        raise AssertionError("promotion observation requires its bounded ownership metadata")
+
+    expected_release_provenance = {
+        "release": "implementation-v0.3.2",
+        "commit": CURRENT_RELEASE_COMMIT,
+        "digest": CURRENT_ARCHIVE_DIGEST,
     }
     if (
-        machine.get("lifecycle_state") != "settling"
-        or machine.get("current_provenance") != expected_candidate_provenance
+        machine.get("lifecycle_state") != "reference_ready"
+        or machine.get("current_provenance") != expected_release_provenance
     ):
-        raise AssertionError("candidate Machine Node requires pending v0.3.2 provenance")
+        raise AssertionError("Machine Node requires the observed v0.3.2 provenance")
     if machine.get("open_receipts") != first_receipt.get("open_receipts"):
         raise AssertionError("Machine Node and first receipt require one open-receipt set")
     if (
         PRIOR_PROMOTION_RECEIPT_ID in machine.get("open_receipts", [])
-        or CURRENT_PROMOTION_RECEIPT_ID not in machine.get("open_receipts", [])
+        or CURRENT_PROMOTION_RECEIPT_ID in machine.get("open_receipts", [])
     ):
         raise AssertionError(
-            "candidate orientation requires the prior receipt closed and current receipt open"
+            "observed orientation requires both promotion receipts closed"
         )
 
-    candidate_time = "2026-09-02T10:28:31Z"
     if (
-        first_receipt.get("as_of") != candidate_time
-        or first_receipt.get("metadata", {}).get("updated_at") != candidate_time
-        or machine.get("metadata", {}).get("updated_at") != candidate_time
-        or horizon.get("as_of") != candidate_time
-        or horizon.get("metadata", {}).get("updated_at") != candidate_time
+        first_receipt.get("as_of") != CURRENT_OBSERVATION_TIME
+        or first_receipt.get("metadata", {}).get("updated_at")
+        != CURRENT_OBSERVATION_TIME
+        or machine.get("metadata", {}).get("updated_at") != CURRENT_OBSERVATION_TIME
+        or horizon.get("as_of") != CURRENT_OBSERVATION_TIME
+        or horizon.get("metadata", {}).get("updated_at")
+        != CURRENT_OBSERVATION_TIME
     ):
-        raise AssertionError("candidate orientation requires one reconciliation time")
+        raise AssertionError("observed orientation requires one reconciliation time")
 
     horizon_items = {
         item["item_id"]: item for item in horizon.get("work_items", [])
     }
     if (
         horizon.get("current_item_ids")
-        != ["HORIZON-IMPLEMENTATION-CLOSURE-ALIGNMENT"]
+        != ["HORIZON-SELECTED-FUTURE-COMPARISON"]
         or horizon_items.get("HORIZON-IMPLEMENTATION-SETTLING", {}).get("state")
         != "complete"
         or horizon_items.get("HORIZON-IMPLEMENTATION-CLOSURE-ALIGNMENT", {}).get(
             "state"
         )
-        != "settling"
+        != "complete"
         or horizon_items.get("HORIZON-SELECTED-FUTURE-COMPARISON", {}).get("state")
-        != "waiting"
+        != "active"
     ):
         raise AssertionError(
-            "Coordination Horizon requires the closure-coordinate patch handoff"
+            "Coordination Horizon requires the selected-future comparison handoff"
         )
 
     if (
-        inspection_manifest.get("release_state") != "repository_owned_candidate"
+        inspection_manifest.get("release_state") != "release_observation_carrier"
+        or inspection_manifest.get("release_subject") != expected_current_release
         or inspection_manifest.get("prior_release_subject")
         != expected_prior_release
     ):
-        raise AssertionError("candidate inspection requires the prior release subject")
+        raise AssertionError("release inspection requires current and prior subjects")
 
     promotion_coordinates = release.get("promotion_coordinates", {})
     if (
-        release.get("release_state") != "release_candidate"
-        or promotion_coordinates.get("status") != "pending_release_promotion"
-        or promotion_coordinates.get("open_receipt_id")
+        release.get("release_state") != "release_observed"
+        or promotion_coordinates.get("status") != "release_observed"
+        or promotion_coordinates.get("settled_receipt_id")
         != CURRENT_PROMOTION_RECEIPT_ID
+        or promotion_coordinates.get("observation_receipt")
+        != CURRENT_PROMOTION_OBSERVATION_PATH.as_posix()
         or promotion_coordinates.get("candidate_receipt")
         != CURRENT_PROMOTION_CANDIDATE_PATH.as_posix()
         or promotion_coordinates.get("target_release") != CURRENT_RELEASE_TAG
+        or promotion_coordinates.get("release_subject")
+        != expected_current_release
         or promotion_coordinates.get("prior_release")
         != expected_prior_release
     ):
-        raise AssertionError("release role requires the pending v0.3.2 promotion coordinate")
+        raise AssertionError("release role requires the observed v0.3.2 coordinate")
 
 
 def validate_manifests() -> None:
@@ -476,13 +654,13 @@ def validate_manifests() -> None:
     inspection_manifest_digest = file_digest(inspection_manifest_path)
     if (
         public_inspection.get("manifest_digest") != inspection_manifest_digest
-        or public_inspection.get("authority") != "repository_owned_candidate_bytes"
+        or public_inspection.get("authority") != "repository_owned_observation_bytes"
         or public_inspection.get("cross_repository_coordinate_state")
         != "accepted_and_consumer_observed"
         or inspection_manifest.get("repository_release") != manifest["version"]
     ):
         raise AssertionError(
-            "release manifest requires the exact repository-owned inspection candidate"
+            "release manifest requires the exact repository-owned observation carrier"
         )
 
     coordinates = load_coordinates(ROOT)
@@ -718,6 +896,9 @@ def validate_manifests() -> None:
     candidate = json.loads(
         (ROOT / CURRENT_PROMOTION_CANDIDATE_PATH).read_text(encoding="utf-8")
     )
+    observation = json.loads(
+        (ROOT / CURRENT_PROMOTION_OBSERVATION_PATH).read_text(encoding="utf-8")
+    )
     if machine["schema_release"] != "2.1.0" or not machine["campaigns"]:
         raise AssertionError(
             "canonical Machine Node requires governance schema v2 and campaigns"
@@ -861,6 +1042,7 @@ def validate_manifests() -> None:
     validate_promotion_lifecycle(
         promotion=promotion,
         candidate=candidate,
+        observation=observation,
         machine=machine,
         first_receipt=first_receipt,
         horizon=horizon,
@@ -868,19 +1050,36 @@ def validate_manifests() -> None:
         inspection_manifest=inspection_manifest,
     )
     candidate_digest = file_digest(ROOT / CURRENT_PROMOTION_CANDIDATE_PATH)
-    if release["promotion_coordinates"].get("candidate_receipt_digest") != candidate_digest:
-        raise AssertionError("release role requires the exact promotion candidate digest")
+    observation_digest = file_digest(ROOT / CURRENT_PROMOTION_OBSERVATION_PATH)
+    if (
+        candidate_digest != CURRENT_CANDIDATE_RECEIPT_DIGEST
+        or release["promotion_coordinates"].get("candidate_receipt_digest")
+        != candidate_digest
+        or release["promotion_coordinates"].get("observation_receipt_digest")
+        != observation_digest
+    ):
+        raise AssertionError(
+            "release role requires the exact candidate and observation receipt digests"
+        )
     promotion_controls = release.get("promotion_controls", {})
     if (
         promotion_controls.get("current_state")
-        != "human_review_and_history_protection_with_candidate_ready"
+        != "standing_review_and_history_protection_with_observed_release_admission"
         or promotion_controls.get("hosted_required_check_contexts") != []
         or promotion_controls.get("protected_branches") != ["main"]
         or promotion_controls.get("allowed_merge_methods")
         != ["merge", "squash", "rebase"]
     ):
         raise AssertionError(
-            "release controls require review, history protection, and hosted source readiness"
+            "release controls require the observed review route and history protection"
+        )
+    if promotion_controls.get("review_observation") != {
+        "merge_admission": "configured_ordinary_bypass",
+        "independent_review": "deputized_independent_review_completed",
+        "github_review_record": "no_formal_review_submitted",
+    }:
+        raise AssertionError(
+            "current release controls require the factual review observation"
         )
     if promotion_controls.get("human_review") != {
         "required_approvals": 1,
@@ -891,7 +1090,7 @@ def validate_manifests() -> None:
         "review_thread_resolution": True,
     }:
         raise AssertionError(
-            "current release controls require human and code-owner review"
+            "standing release controls require the configured human-review posture"
         )
     if promotion_controls.get("history_protection") != {
         "branch_deletion_guard": True,
@@ -904,18 +1103,21 @@ def validate_manifests() -> None:
         )
     if promotion_controls.get("signature_observation") != {
         "github_verified_merge_commits": True,
-        "ruleset_admission": "pull_request_review_without_required_signatures",
+        "github_verified_release_tags": True,
+        "configured_signature_rule": "not_required",
     }:
         raise AssertionError(
             "current release controls require the observed merge-signature posture"
         )
     if promotion_controls.get("hosted_check_activation") != {
-        "state": "candidate_ready_settings_pending",
-        "requires_stable_context": True,
-        "requires_funded_execution_path": True,
+        "state": "repository_validation_observed",
+        "required_check_contexts": [],
+        "run_id": "33623991109",
+        "job_id": "100227324662",
+        "conclusion": "success",
     }:
         raise AssertionError(
-            "hosted-check source requires a stable, funded settings receiver"
+            "hosted-check observation requires the successful repository validation job"
         )
     if release.get("automation_controls") != {
         "pull_request_workflow": ".github/workflows/pull-request.yml",
@@ -932,7 +1134,7 @@ def validate_manifests() -> None:
         "dependabot_open_pull_requests_per_ecosystem": 2,
         "dependabot_grouped_update_types": ["minor", "patch"],
         "monthly_budget_minutes": {"minimum": 100, "maximum": 300},
-        "settings_state": "candidate_ready_contexts_observed_activation_pending",
+        "settings_state": "repository_validation_observed_required_contexts_empty",
     }:
         raise AssertionError(
             "release automation controls require the bounded hosted source contract"
@@ -975,13 +1177,10 @@ def validate_manifests() -> None:
             encoding="utf-8"
         )
     )
-    if release["release_state"] == "release_candidate":
-        if receipt["version_bindings"]["repository"] != "0.3.1":
-            raise AssertionError(
-                "candidate orientation requires the accepted 0.3.1 local receipt"
-            )
-    elif receipt["version_bindings"]["repository"] != manifest["version"]:
-        raise AssertionError("local verification receipt requires the repository release")
+    if receipt["version_bindings"]["repository"] != "0.3.1":
+        raise AssertionError(
+            "historical local verification receipt requires its observed 0.3.1 release"
+        )
     inventory_digest = file_digest(inventory_path)
     local_head = receipt["version_bindings"].get("database_migration_head")
     if local_head == "004":
@@ -1041,19 +1240,9 @@ def validate_manifests() -> None:
             "hosted PostgreSQL receipt requires observed synthetic verification"
         )
     hosted_bindings = hosted_receipt.get("version_bindings", {})
-    candidate_stage = release["release_state"] == "release_candidate"
-    if candidate_stage:
-        if hosted_bindings.get("repository") != "0.3.1":
-            raise AssertionError(
-                "candidate orientation requires the accepted 0.3.1 hosted receipt"
-            )
-    elif hosted_bindings.get("repository") != manifest["version"]:
-        raise AssertionError(
-            "hosted PostgreSQL receipt requires its observed repository release"
-        )
     observed_commit = str(hosted_bindings.get("repository_commit", ""))
     observed_run = str(hosted_bindings.get("workflow_run", ""))
-    historical_commit = "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
+    binding_kind = classify_hosted_postgresql_receipt_binding(hosted_bindings)
     historical_run = (
         "https://github.com/driftframestudios/"
         "lims-eln-enterprise-implementation/actions/runs/30933020047"
@@ -1071,7 +1260,7 @@ def validate_manifests() -> None:
         "SCN-DB-WORKBENCH-DECIMAL-SOURCE-SHAPE",
         "SCN-DB-WORKBENCH-CANONICAL-DIGEST",
     }
-    if candidate_stage:
+    if binding_kind == "accepted_prior":
         accepted_prior_run = (
             "https://github.com/driftframestudios/"
             "lims-eln-enterprise-implementation/actions/runs/33581976426"
@@ -1082,7 +1271,7 @@ def validate_manifests() -> None:
             inventory_digest,
         }
         if (
-            observed_commit != "205401a530e984e031bb2c52a1654c6b5f82bc6d"
+            observed_commit != ACCEPTED_PRIOR_HOSTED_COMMIT
             or observed_run != accepted_prior_run
             or hosted_bindings.get("database_migration_head") != "005"
             or not accepted_prior_digests.issubset(
@@ -1098,9 +1287,9 @@ def validate_manifests() -> None:
             or not candidate_scenarios.issubset(hosted_receipt["scenario_ids"])
         ):
             raise AssertionError(
-                "candidate orientation requires the accepted 0.3.1 hosted bindings"
+                "historical hosted receipt requires the accepted 0.3.1 bindings"
             )
-    elif observed_commit == historical_commit:
+    elif binding_kind == "historical_prior":
         historical_digests = {
             "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd",
             "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81",
@@ -1119,37 +1308,6 @@ def validate_manifests() -> None:
         ):
             raise AssertionError(
                 "historical hosted PostgreSQL receipt requires its successor boundary"
-            )
-    else:
-        expected_run_pattern = (
-            r"^https://github\.com/driftframestudios/"
-            r"lims-eln-enterprise-implementation/actions/runs/[0-9]+$"
-        )
-        current_digests = {
-            binding_digest,
-            migration_release_digest,
-            inventory_digest,
-        }
-        if (
-            re.fullmatch(r"[a-f0-9]{40}", observed_commit) is None
-            or re.fullmatch(expected_run_pattern, observed_run) is None
-            or hosted_bindings.get("database_migration_head")
-            != database.get("migration_head")
-            or not current_digests.issubset(hosted_receipt["artifact_digests"])
-            or hosted_bindings.get("flyway") != migration_release["flyway_version"]
-            or hosted_bindings.get("flyway_image")
-            != migration_release["container_image"]
-            or hosted_bindings.get("migration_authenticated_login")
-            != migration_release["authenticated_login"]
-            or hosted_bindings.get("migration_role")
-            != migration_release["migration_role"]
-        ):
-            raise AssertionError(
-                "current hosted PostgreSQL receipt requires Flyway release bindings"
-            )
-        if not candidate_scenarios.issubset(hosted_receipt["scenario_ids"]):
-            raise AssertionError(
-                "current hosted PostgreSQL receipt requires successor scenarios"
             )
     required_database_scenarios = {
         "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",

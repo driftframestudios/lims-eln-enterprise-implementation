@@ -1,17 +1,20 @@
 # Changelog
 
-## Unreleased — 0.3.2 closure-coordinate alignment
+## 0.3.2 — 2026-09-02
 
 - Bind the canonical selected-future closure to the accepted Simulation and
   Comparative annotated tags, commits, trees, and tagged archive digests.
-- Preserve the signed `v0.3.1` subject and its promotion receipt as historical
-  evidence while a distinct candidate receipt carries the review-ready 0.3.2
-  inventory and remaining release observations.
-- Execute that candidate receipt against its JSON Schema 2020-12 contract so
-  its descriptive carrier and validated lifecycle remain one boundary.
+- Record the signed `v0.3.2` tag object, accepted commit and tree, tagged archive
+  SHA-256, successful hosted validation, valid merge and tag verifications, and
+  the configured ordinary-bypass and deputized independent-review route in a
+  distinct observed receipt.
+- Preserve the signed `v0.3.1` subject, its promotion receipt, and the reviewed
+  0.3.2 candidate receipt in their original evidence roles.
+- Execute the candidate and observation receipts against their separate JSON
+  Schema 2020-12 contracts so each evidence role retains a validated boundary.
 - Align package, API, bounded-caller, Machine Node, First Receipt, Coordination
-  Horizon, release-role, and public-inspection identities to the bounded patch
-  candidate.
+  Horizon, and release role with the observed patch release, and bind the later
+  observation carrier through its own public inspection identity.
 - Keep the accepted Program 0.3.1 package coordinate unchanged; its scoped
   source digest and consumer behavior retain their established authority.
 

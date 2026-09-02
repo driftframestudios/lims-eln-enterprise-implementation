@@ -39,7 +39,29 @@ class PublicInspectionManifestTests(unittest.TestCase):
 
     def test_manifest_binds_current_repository_owned_bytes(self) -> None:
         manifest = verify_manifest(ROOT)
-        self.assertEqual(manifest["release_state"], "repository_owned_candidate")
+        self.assertEqual(manifest["release_state"], "release_observation_carrier")
+        release_subject = manifest["release_subject"]
+        self.assertEqual(release_subject["tag"], "v0.3.2")
+        self.assertEqual(
+            release_subject["tag_object_oid"],
+            "c3db01079b88622f06e8714c8bcbdf0dc1803a10",
+        )
+        self.assertEqual(
+            release_subject["commit_oid"],
+            "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+        )
+        self.assertEqual(
+            release_subject["archive_digest"],
+            "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16",
+        )
+        self.assertEqual(
+            release_subject["review_observation"],
+            {
+                "merge_admission": "configured_ordinary_bypass",
+                "independent_review": "deputized_independent_review_completed",
+                "github_review_record": "no_formal_review_submitted",
+            },
+        )
         self.assertEqual(
             manifest["prior_release_subject"],
             {
@@ -105,7 +127,15 @@ class PublicInspectionManifestTests(unittest.TestCase):
             "contracts/promotion-receipt.v1.schema.json",
             groups["contracts_and_synthetic_inputs"],
         )
+        self.assertIn(
+            "contracts/promotion-observation.v1.schema.json",
+            groups["contracts_and_synthetic_inputs"],
+        )
         self.assertIn("receipts/promotion-receipt.json", groups["evidence_records"])
+        self.assertIn(
+            "receipts/promotion-observation-v0.3.2.json",
+            groups["evidence_records"],
+        )
         self.assertNotIn(
             "receipts/promotion-candidate.json",
             groups["evidence_records"],
@@ -185,7 +215,7 @@ class PublicInspectionManifestTests(unittest.TestCase):
             ):
                 verify_manifest(target)
 
-    def test_missing_recovery_proof_breaks_the_candidate_identity(self) -> None:
+    def test_missing_recovery_proof_breaks_the_release_identity(self) -> None:
         with tempfile.TemporaryDirectory(prefix="inspection-proof-") as directory:
             target = Path(directory)
             self.copy_inventory(target)
@@ -292,7 +322,7 @@ class PublicInspectionManifestTests(unittest.TestCase):
         )
         self.assertEqual(
             root_manifest["public_inspection"]["authority"],
-            "repository_owned_candidate_bytes",
+            "repository_owned_observation_bytes",
         )
         self.assertEqual(release_role["public_inspection_manifest_digest"], digest)
 

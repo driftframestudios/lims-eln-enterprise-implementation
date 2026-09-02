@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build or verify the repository-owned 0.3.2 candidate inventory."""
+"""Build or verify the repository-owned 0.3.2 observation-carrier inventory."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ MANIFEST_PATH = Path("release/public-inspection-manifest.json")
 EXTERNAL_COORDINATE_PATH = Path("release/external-contract-coordinates.json")
 PROMOTION_RECEIPT_PATH = Path("receipts/promotion-receipt.json")
 PROMOTION_CANDIDATE_PATH = Path("receipts/promotion-candidate.json")
+PROMOTION_OBSERVATION_PATH = Path("receipts/promotion-observation-v0.3.2.json")
 CANONICALIZATION = "ordered-path-nul-sha256-lf-v1"
 MANIFEST_CARRIER_PATHS = (
     "manifest.json",
@@ -222,6 +223,22 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
             "candidate history requires the observed prior-release promotion receipt"
         )
 
+    observation_path = _safe_file(root, PROMOTION_OBSERVATION_PATH.as_posix())
+    try:
+        observation = json.loads(observation_path.read_text(encoding="utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as error:
+        raise InspectionManifestError(
+            "promotion observation requires one UTF-8 JSON document"
+        ) from error
+    observed_release_coordinate = observation.get("release_coordinate")
+    if (
+        observation.get("promotion_state") != "release_observed"
+        or not isinstance(observed_release_coordinate, dict)
+    ):
+        raise InspectionManifestError(
+            "release inventory requires the observed 0.3.2 promotion receipt"
+        )
+
     groups: list[dict[str, Any]] = []
     all_artifacts: list[dict[str, Any]] = []
     seen_paths: set[str] = set()
@@ -257,12 +274,13 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
         "schema_version": "1.0.0",
         "repository": "lims-eln-enterprise-implementation",
         "repository_release": "0.3.2",
-        "release_state": "repository_owned_candidate",
+        "release_state": "release_observation_carrier",
         "canonicalization": CANONICALIZATION,
         "source_identity": {
             "kind": "content_addressed_artifact_inventory",
             "aggregate_sha256": _aggregate(all_artifacts),
         },
+        "release_subject": observed_release_coordinate,
         "prior_release_subject": {
             "promotion_receipt": PROMOTION_RECEIPT_PATH.as_posix(),
             "tag": release_coordinate["tag"],
@@ -310,17 +328,17 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
             ],
         ],
         "evidence_boundary": {
-            "repository_owned_candidate": (
-                "The inventory establishes the exact repository bytes available for "
-                "review as the 0.3.2 closure-coordinate candidate."
+            "repository_owned_observation": (
+                "The inventory establishes the exact post-tag carrier bytes that record "
+                "the observed 0.3.2 release coordinate and its retained evidence."
             ),
             "configured_environment": (
                 "Environment receipts retain their named system, time, performer, reviewer, "
                 "artifact bindings, assurance stage, and limitations."
             ),
             "promotion": (
-                "The prior promotion receipt preserves the signed 0.3.1 source release. "
-                "The 0.3.2 candidate receives its own immutable coordinate after review."
+                "The 0.3.2 observation records the accepted immutable coordinate. The "
+                "0.3.2 candidate and prior 0.3.1 receipt retain their original evidence roles."
             ),
         },
         "manifest_carriers": list(MANIFEST_CARRIER_PATHS),

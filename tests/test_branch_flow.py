@@ -441,19 +441,27 @@ class BranchFlowTests(unittest.TestCase):
                 declared_controls=drifted,
             )
 
-    def test_release_controls_record_candidate_and_pending_activation(self) -> None:
+    def test_release_controls_record_observed_review_and_validation(self) -> None:
         release = json.loads(
             (ROOT / "release" / "repository-role.json").read_text(encoding="utf-8")
         )
         controls = release["promotion_controls"]
         self.assertEqual(
-            "human_review_and_history_protection_with_candidate_ready",
+            "standing_review_and_history_protection_with_observed_release_admission",
             controls["current_state"],
         )
         self.assertEqual([], controls["hosted_required_check_contexts"])
         self.assertEqual(["main"], controls["protected_branches"])
         self.assertEqual(
             ["merge", "squash", "rebase"], controls["allowed_merge_methods"]
+        )
+        self.assertEqual(
+            {
+                "merge_admission": "configured_ordinary_bypass",
+                "independent_review": "deputized_independent_review_completed",
+                "github_review_record": "no_formal_review_submitted",
+            },
+            controls["review_observation"],
         )
         self.assertEqual(1, controls["human_review"]["required_approvals"])
         self.assertTrue(controls["human_review"]["code_owner_review"])
@@ -471,15 +479,20 @@ class BranchFlowTests(unittest.TestCase):
         self.assertEqual(
             {
                 "github_verified_merge_commits": True,
-                "ruleset_admission": (
-                    "pull_request_review_without_required_signatures"
-                ),
+                "github_verified_release_tags": True,
+                "configured_signature_rule": "not_required",
             },
             controls["signature_observation"],
         )
         self.assertEqual(
-            "candidate_ready_settings_pending",
+            "repository_validation_observed",
             controls["hosted_check_activation"]["state"],
+        )
+        self.assertEqual(
+            "33623991109", controls["hosted_check_activation"]["run_id"]
+        )
+        self.assertEqual(
+            "100227324662", controls["hosted_check_activation"]["job_id"]
         )
         automation = release["automation_controls"]
         self.assertEqual(["develop", "main"], automation["pull_request_targets"])
@@ -489,7 +502,7 @@ class BranchFlowTests(unittest.TestCase):
         self.assertEqual({"contents": "read"}, automation["pull_request_permissions"])
         self.assertTrue(automation["pull_request_concurrency_cancellation"])
         self.assertEqual(
-            "candidate_ready_contexts_observed_activation_pending",
+            "repository_validation_observed_required_contexts_empty",
             automation["settings_state"],
         )
         self.assertEqual("develop", automation["dependabot_target"])

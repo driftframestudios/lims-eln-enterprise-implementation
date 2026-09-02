@@ -102,7 +102,9 @@ deterministic source digest.
 
 [`release/public-inspection-manifest.json`](release/public-inspection-manifest.json)
 gives a reviewer one deterministic inventory for the repository-owned 0.3.2
-closure-coordinate candidate. It binds every FastAPI and domain source, Flyway V001 through
+post-tag observation carrier. The separate `release_subject` names the immutable
+tag object and accepted source coordinate. The inventory binds every current
+FastAPI and domain source, Flyway V001 through
 V005, local contract and synthetic input, operational configuration, behavior
 proof, evidence record, and public orientation file by path, byte length,
 SHA-256 digest, group digest, and one aggregate content identity. The signed
@@ -111,9 +113,11 @@ annotated tag `v0.3.1` identifies the prior accepted source release. Its later
 accepted commit and tree, tagged archive SHA-256, hosted checks, merge and tag
 signature results, and where human approval was recorded alongside GitHub's
 review state. The distinct
-[`0.3.2 candidate receipt`](receipts/promotion-candidate.json) binds the current
-inventory to its accepted external coordinates and keeps the evidence still
-needed for an immutable release visible. Verify the checked-in inventory directly:
+[`0.3.2 candidate receipt`](receipts/promotion-candidate.json) preserves the
+bytes and external coordinates that entered review. The later
+[`0.3.2 observation`](receipts/promotion-observation-v0.3.2.json) records the
+accepted tag object, commit, tree, archive SHA-256, hosted validation, signature
+results, and review route. Verify the checked-in inventory directly:
 
 ```sh
 python3 scripts/build_public_inspection_manifest.py --check
@@ -324,7 +328,7 @@ effect authority.
 The earlier Machine Node is preserved as
 [`release/seed-lineage-machine-node-v0.2.json`](release/seed-lineage-machine-node-v0.2.json).
 It remains useful for historical comparison; `machine-node.json` is the
-canonical governance Machine Node for the `0.3.2` closure-coordinate candidate.
+canonical governance Machine Node for the observed `0.3.2` source release.
 
 ## Data and authority boundaries
 
