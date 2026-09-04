@@ -11,10 +11,26 @@
     "coordinate_state": "current_database_artifacts_observed",
     "promotion_signal": "implementation-validation"
   },
-  "external_contract_coordinate_digest": "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1",
-  "public_inspection_manifest_digest": "sha256:f8b41c04776a25d595cdd2a4215848cfbd526cac62ea5109071a0e570354b27c",
+  "external_contract_coordinate_digest": "sha256:c74a30a1196029fb4077718b84b2e80635c3cb1a0e2a8c355eaadb3dd3a93d28",
+  "public_inspection_manifest_digest": "sha256:7a09e2b996e7012c7c56318a57a63231b5e8f6115fcd4fe01f4c6a85707a54a9",
   "open_receipt_ledger_digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad",
   "selected_future_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+  "comparison_return": {
+    "coordinate_state": "accepted_return",
+    "release": "comparison-v0.3.2",
+    "release_commit": "0289ff835c790693a769347e69da0abdcfaa47de",
+    "observation_carrier_commit": "2cca88982444ebc8280f9eb2891d97bf25dbeb95",
+    "report_digest": "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c",
+    "leaf_paths_compared": 17,
+    "classification_counts": {
+      "agreement": 10,
+      "explainable_variation": 4,
+      "material_divergence": 3
+    },
+    "material_divergence_receiver": "accountable_scientific_mapping",
+    "docs_revision": "6ccc087875b439eb70304771f534434acae3f01c",
+    "projection_manifest_sha256": "sha256:38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea"
+  },
   "first_receipt_contract": {
     "path": "first-receipt.json",
     "authority_mode": "orientation_only",

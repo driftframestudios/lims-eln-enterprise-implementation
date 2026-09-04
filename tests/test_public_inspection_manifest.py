@@ -258,6 +258,7 @@ class PublicInspectionManifestTests(unittest.TestCase):
                 "governance_schema",
                 "simulated_final_state",
                 "comparative_evidence",
+                "comparison_return",
             },
         )
         by_role = {coordinate["role"]: coordinate for coordinate in coordinates}
@@ -292,6 +293,34 @@ class PublicInspectionManifestTests(unittest.TestCase):
                 selected_future["archive_digest"],
                 r"^sha256:[a-f0-9]{64}$",
             )
+        comparison_return = by_role["comparison_return"]
+        self.assertEqual(comparison_return["coordinate_state"], "accepted_return")
+        self.assertEqual(
+            comparison_return["declared_release"], "comparison-v0.3.2"
+        )
+        self.assertEqual(
+            comparison_return["classification_counts"],
+            {
+                "agreement": 10,
+                "explainable_variation": 4,
+                "material_divergence": 3,
+            },
+        )
+        self.assertEqual(
+            comparison_return["material_divergence_paths"],
+            [
+                "$.measurement.analyte",
+                "$.measurement.value",
+                "$.measurement.unit",
+            ],
+        )
+        self.assertEqual(
+            comparison_return["material_divergence_receiver"],
+            "accountable_scientific_mapping",
+        )
+        self.assertEqual(
+            comparison_return["canonical_origin"], "https://cometspectrum.io/"
+        )
         for coordinate in coordinates:
             with self.subTest(role=coordinate["role"]):
                 self.assertEqual(

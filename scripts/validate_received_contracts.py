@@ -110,6 +110,49 @@ SELECTED_FUTURE_SOURCES = (
     },
 )
 
+COMPARISON_REPOSITORY = "driftframestudios/lims-eln-comparative-evidence"
+COMPARISON_RELEASE = "comparison-v0.3.2"
+COMPARISON_TAG_OBJECT = "ccc4b206d9071933516863ee0eb3f5b091fc76b0"
+COMPARISON_RELEASE_COMMIT = "0289ff835c790693a769347e69da0abdcfaa47de"
+COMPARISON_RELEASE_TREE = "60c85e4206e2d487dac83d521401816dec0f34ae"
+COMPARISON_ARCHIVE_DIGEST = (
+    "sha256:5c1697f98655ce1979fcc6f4a85b719e0c44afde8a3004037d19dd1416d0720e"
+)
+COMPARISON_OBSERVATION_COMMIT = "2cca88982444ebc8280f9eb2891d97bf25dbeb95"
+COMPARISON_OBSERVATION_PATH = "receipts/promotion-observation-v0.3.2.json"
+COMPARISON_OBSERVATION_FILE_DIGEST = (
+    "sha256:acccb507f0675cdc079aa56bc12299bd4ce533344cb150e42dba1c991c024fd4"
+)
+COMPARISON_RECORD_COMMIT = "c854a6f58c587a0b099efa24d2b745b2bd7187df"
+COMPARISON_DOCS_COMMIT = "6ccc087875b439eb70304771f534434acae3f01c"
+COMPARISON_PROJECTION_MANIFEST_PATH = "projection-manifest.json"
+COMPARISON_PROJECTION_MANIFEST_DIGEST = (
+    "sha256:38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea"
+)
+COMPARISON_CANONICAL_ORIGIN = "https://cometspectrum.io/"
+COMPARISON_REPORT_PATH = "reports/golden-specimen/comparison.json"
+COMPARISON_REPORT_DIGEST = "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c"
+COMPARISON_CLASSIFICATION_COUNTS = {
+    "agreement": 10,
+    "explainable_variation": 4,
+    "material_divergence": 3,
+}
+COMPARISON_MATERIAL_PATHS = [
+    "$.measurement.analyte",
+    "$.measurement.value",
+    "$.measurement.unit",
+]
+
+COMPARED_IMPLEMENTATION_RELEASE = {
+    "tag": "v0.3.2",
+    "tag_object": "c3db01079b88622f06e8714c8bcbdf0dc1803a10",
+    "source_commit": "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+    "source_tree": "eb8eadb27a9e07c6069a1946f115a0083d94af5c",
+    "git_archive_sha256": (
+        "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16"
+    ),
+}
+
 
 class ReceivedContractError(ValueError):
     """An accepted coordinate or receiving observation differs from its binding."""
@@ -160,10 +203,11 @@ def validate_coordinate_document(document: Any) -> dict[str, Any]:
             "program_contract",
             "governance",
             "selected_future",
+            "comparison_return",
         },
         "external contract coordinates",
     )
-    _require_equal(coordinates["schema_version"], "1.0.0", "coordinate schema")
+    _require_equal(coordinates["schema_version"], "1.1.0", "coordinate schema")
     _require_equal(
         coordinates["consumer"],
         "driftframestudios/lims-eln-enterprise-implementation",
@@ -315,6 +359,151 @@ def validate_coordinate_document(document: Any) -> dict[str, Any]:
         raise ReceivedContractError("selected-future sources require one ordered array")
     _require_equal(tuple(sources), SELECTED_FUTURE_SOURCES, "selected-future sources")
 
+    comparison_return = _require_mapping(coordinates["comparison_return"], "comparison return")
+    _require_exact_keys(
+        comparison_return,
+        {
+            "relation",
+            "repository",
+            "evidence_mode",
+            "assurance_stage",
+            "production_authorization_effect",
+            "compared_implementation_release",
+            "comparison_release",
+            "observation_carrier",
+            "golden_specimen_report",
+            "publication",
+        },
+        "comparison return",
+    )
+    for key, expected in {
+        "relation": "compares_implementation_release_to_selected_future",
+        "repository": COMPARISON_REPOSITORY,
+        "evidence_mode": "simulated",
+        "assurance_stage": "verified",
+        "production_authorization_effect": "none",
+    }.items():
+        _require_equal(comparison_return[key], expected, f"comparison return {key}")
+
+    implementation = _require_mapping(
+        comparison_return["compared_implementation_release"],
+        "compared implementation release",
+    )
+    _require_exact_keys(
+        implementation,
+        {"tag", "tag_object", "source_commit", "source_tree", "git_archive_sha256"},
+        "compared implementation release",
+    )
+    _require_equal(
+        implementation,
+        COMPARED_IMPLEMENTATION_RELEASE,
+        "compared implementation release",
+    )
+
+    comparison_release = _require_mapping(
+        comparison_return["comparison_release"], "comparison release"
+    )
+    _require_exact_keys(
+        comparison_release,
+        {
+            "release",
+            "tag_object",
+            "source_commit",
+            "source_tree",
+            "git_archive_sha256",
+        },
+        "comparison release",
+    )
+    _require_equal(
+        comparison_release,
+        {
+            "release": COMPARISON_RELEASE,
+            "tag_object": COMPARISON_TAG_OBJECT,
+            "source_commit": COMPARISON_RELEASE_COMMIT,
+            "source_tree": COMPARISON_RELEASE_TREE,
+            "git_archive_sha256": COMPARISON_ARCHIVE_DIGEST,
+        },
+        "comparison release",
+    )
+
+    observation = _require_mapping(
+        comparison_return["observation_carrier"], "comparison observation carrier"
+    )
+    _require_exact_keys(
+        observation,
+        {"source_commit", "receipt_path", "receipt_file_sha256"},
+        "comparison observation carrier",
+    )
+    _require_equal(
+        observation,
+        {
+            "source_commit": COMPARISON_OBSERVATION_COMMIT,
+            "receipt_path": COMPARISON_OBSERVATION_PATH,
+            "receipt_file_sha256": COMPARISON_OBSERVATION_FILE_DIGEST,
+        },
+        "comparison observation carrier",
+    )
+
+    report = _require_mapping(
+        comparison_return["golden_specimen_report"], "Golden Specimen report return"
+    )
+    _require_exact_keys(
+        report,
+        {
+            "report_path",
+            "report_digest",
+            "leaf_paths_compared",
+            "classification_counts",
+            "material_divergence_paths",
+            "material_divergence_receiver",
+        },
+        "Golden Specimen report return",
+    )
+    _require_equal(report["report_path"], COMPARISON_REPORT_PATH, "comparison report path")
+    _require_equal(report["report_digest"], COMPARISON_REPORT_DIGEST, "comparison report digest")
+    _require_equal(report["leaf_paths_compared"], 17, "comparison leaf count")
+    _require_equal(
+        report["classification_counts"],
+        COMPARISON_CLASSIFICATION_COUNTS,
+        "comparison classification counts",
+    )
+    _require_equal(
+        report["material_divergence_paths"],
+        COMPARISON_MATERIAL_PATHS,
+        "comparison material divergence paths",
+    )
+    _require_equal(
+        report["material_divergence_receiver"],
+        "accountable_scientific_mapping",
+        "comparison material divergence receiver",
+    )
+
+    publication = _require_mapping(comparison_return["publication"], "comparison publication")
+    _require_exact_keys(
+        publication,
+        {
+            "record_carrier_commit",
+            "source_revision",
+            "docs_revision",
+            "projection_manifest_path",
+            "projection_manifest_sha256",
+            "canonical_origin",
+        },
+        "comparison publication",
+    )
+    _require_equal(
+        publication,
+        {
+            "record_carrier_commit": COMPARISON_RECORD_COMMIT,
+            "source_revision": COMPARISON_OBSERVATION_COMMIT,
+            "docs_revision": COMPARISON_DOCS_COMMIT,
+            "projection_manifest_path": COMPARISON_PROJECTION_MANIFEST_PATH,
+            "projection_manifest_sha256": COMPARISON_PROJECTION_MANIFEST_DIGEST,
+            "canonical_origin": COMPARISON_CANONICAL_ORIGIN,
+        },
+        "comparison publication",
+    )
+
     return coordinates
 
 
@@ -399,6 +588,18 @@ def _canonical_json_digest(value: Mapping[str, Any]) -> str:
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=True,
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + sha256(payload).hexdigest()
+
+
+def _comparison_report_digest(value: Mapping[str, Any]) -> str:
+    """Reproduce Comparison's source-owned UTF-8 canonical JSON digest."""
+    payload = json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
         allow_nan=False,
     ).encode("utf-8")
     return "sha256:" + sha256(payload).hexdigest()
@@ -585,6 +786,253 @@ def validate_selected_future_source(
     )
 
 
+def _require_ancestor(root: Path, ancestor: str, descendant: str, label: str) -> None:
+    try:
+        subprocess.run(
+            ["git", "-C", str(root), "merge-base", "--is-ancestor", ancestor, descendant],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as error:
+        raise ReceivedContractError(f"{label} requires an ancestor relation") from error
+
+
+def validate_comparison_return_source(root: Path, coordinates: Mapping[str, Any]) -> None:
+    """Reproduce the accepted comparison return from local Git objects."""
+
+    comparison_return = _require_mapping(coordinates["comparison_return"], "comparison return")
+    release = _require_mapping(comparison_return["comparison_release"], "comparison release")
+    observation = _require_mapping(
+        comparison_return["observation_carrier"], "comparison observation carrier"
+    )
+    report_coordinate = _require_mapping(
+        comparison_return["golden_specimen_report"], "Golden Specimen report return"
+    )
+    publication = _require_mapping(comparison_return["publication"], "comparison publication")
+
+    _require_equal(
+        _run_git(root, "cat-file", "-t", release["tag_object"]),
+        "tag",
+        "comparison return release object type",
+    )
+    _require_equal(
+        _run_git(root, "rev-parse", f"refs/tags/{release['release']}"),
+        release["tag_object"],
+        "comparison return annotated tag object",
+    )
+    _require_equal(
+        _run_git(root, "rev-parse", f"{release['release']}^{{commit}}"),
+        release["source_commit"],
+        "comparison return release commit",
+    )
+    _require_equal(
+        _run_git(root, "rev-parse", f"{release['source_commit']}^{{tree}}"),
+        release["source_tree"],
+        "comparison return release tree",
+    )
+    archive = _run_git(root, "archive", "--format=tar", release["source_commit"], text=False)
+    assert isinstance(archive, bytes)
+    _require_equal(
+        "sha256:" + sha256(archive).hexdigest(),
+        release["git_archive_sha256"],
+        "comparison return archive digest",
+    )
+
+    _require_ancestor(
+        root,
+        release["source_commit"],
+        observation["source_commit"],
+        "comparison observation carrier",
+    )
+    _require_ancestor(
+        root,
+        observation["source_commit"],
+        publication["record_carrier_commit"],
+        "comparison record carrier",
+    )
+
+    receipt_bytes = _run_git(
+        root,
+        "show",
+        f"{observation['source_commit']}:{observation['receipt_path']}",
+        text=False,
+    )
+    assert isinstance(receipt_bytes, bytes)
+    _require_equal(
+        "sha256:" + sha256(receipt_bytes).hexdigest(),
+        observation["receipt_file_sha256"],
+        "comparison observation receipt file digest",
+    )
+    receipt = _strict_json_object_from_commit(
+        root,
+        commit=observation["source_commit"],
+        relative_path=observation["receipt_path"],
+        label="comparison observation receipt",
+    )
+    _require_equal(
+        receipt.get("repository"),
+        comparison_return["repository"],
+        "comparison observation repository",
+    )
+    _require_equal(
+        receipt.get("target_release"),
+        release["release"],
+        "comparison observation target release",
+    )
+    _require_equal(
+        receipt.get("promotion_state"),
+        "release_observed",
+        "comparison observation state",
+    )
+    receipt_release = _require_mapping(
+        receipt.get("release_coordinate"), "comparison observation release coordinate"
+    )
+    for receipt_key, source_key in {
+        "tag": "release",
+        "tag_object_oid": "tag_object",
+        "commit_oid": "source_commit",
+        "tree_oid": "source_tree",
+        "archive_digest": "git_archive_sha256",
+    }.items():
+        _require_equal(
+            receipt_release.get(receipt_key),
+            release[source_key],
+            f"comparison observation {receipt_key}",
+        )
+
+    lock = _strict_json_object_from_commit(
+        root,
+        commit=release["source_commit"],
+        relative_path="constellation.lock.json",
+        label="comparison release constellation lock",
+    )
+    implementation = _require_mapping(lock.get("implementation"), "comparison implementation lock")
+    compared = comparison_return["compared_implementation_release"]
+    for lock_key, source_key in {
+        "release": "tag",
+        "tag_object_oid": "tag_object",
+        "commit": "source_commit",
+        "archive_digest": "git_archive_sha256",
+    }.items():
+        _require_equal(
+            implementation.get(lock_key),
+            compared[source_key],
+            f"comparison implementation {lock_key}",
+        )
+    _require_equal(
+        implementation.get("digest"),
+        "git-tree-sha1:" + compared["source_tree"],
+        "comparison implementation tree",
+    )
+
+    record_role = _strict_json_object_from_commit(
+        root,
+        commit=publication["record_carrier_commit"],
+        relative_path="release/repository-role.json",
+        label="comparison record carrier",
+    )
+    _require_equal(record_role.get("repository_release"), "0.3.2", "comparison record release")
+    verification = _require_mapping(
+        record_role.get("golden_specimen_verification"),
+        "comparison record Golden Specimen verification",
+    )
+    for key in ("report_digest", "classification_counts"):
+        _require_equal(
+            verification.get(key),
+            report_coordinate[key],
+            f"comparison record {key}",
+        )
+    record_publication = _require_mapping(
+        record_role.get("publication_coordinates"), "comparison record publication"
+    )
+    for record_key, source_key in {
+        "source_revision": "source_revision",
+        "docs_revision": "docs_revision",
+        "projection_manifest_sha256": "projection_manifest_sha256",
+        "canonical_origin": "canonical_origin",
+    }.items():
+        _require_equal(
+            record_publication.get(record_key),
+            publication[source_key],
+            f"comparison record publication {record_key}",
+        )
+
+    manifest_bytes = _run_git(
+        root,
+        "show",
+        f"{publication['docs_revision']}:{publication['projection_manifest_path']}",
+        text=False,
+    )
+    assert isinstance(manifest_bytes, bytes)
+    _require_equal(
+        "sha256:" + sha256(manifest_bytes).hexdigest(),
+        publication["projection_manifest_sha256"],
+        "comparison projection manifest digest",
+    )
+    projection_manifest = _strict_json_object_from_commit(
+        root,
+        commit=publication["docs_revision"],
+        relative_path=publication["projection_manifest_path"],
+        label="comparison projection manifest",
+    )
+    _require_equal(
+        projection_manifest.get("sourceRevision"),
+        publication["source_revision"],
+        "comparison projection source revision",
+    )
+    _require_equal(
+        projection_manifest.get("goldenSpecimenReportDigest"),
+        report_coordinate["report_digest"],
+        "comparison projection Golden Specimen digest",
+    )
+    _require_equal(
+        projection_manifest.get("canonicalOrigin"),
+        publication["canonical_origin"],
+        "comparison projection canonical origin",
+    )
+
+    report = _strict_json_object_from_commit(
+        root,
+        commit=publication["docs_revision"],
+        relative_path=report_coordinate["report_path"],
+        label="comparison Golden Specimen report",
+    )
+    unsigned_report = dict(report)
+    declared_report_digest = unsigned_report.pop("report_digest", None)
+    _require_equal(
+        declared_report_digest,
+        report_coordinate["report_digest"],
+        "comparison Golden Specimen report digest",
+    )
+    _require_equal(
+        _comparison_report_digest(unsigned_report),
+        report_coordinate["report_digest"],
+        "comparison Golden Specimen reproduced digest",
+    )
+    summary = _require_mapping(report.get("summary"), "comparison report summary")
+    _require_equal(
+        summary.get("leaf_paths_compared"),
+        report_coordinate["leaf_paths_compared"],
+        "comparison report leaf count",
+    )
+    _require_equal(
+        summary.get("classification_counts"),
+        report_coordinate["classification_counts"],
+        "comparison report classification counts",
+    )
+    material_paths = [
+        item.get("path")
+        for item in report.get("comparisons", [])
+        if isinstance(item, dict) and item.get("classification") == "material_divergence"
+    ]
+    _require_equal(
+        material_paths,
+        report_coordinate["material_divergence_paths"],
+        "comparison report material divergence paths",
+    )
+
+
 def validate_installed_program(coordinates: Mapping[str, Any]) -> None:
     """Exercise the nine observations required by the Program publisher."""
     program = _require_mapping(coordinates["program_contract"], "program contract")
@@ -738,6 +1186,7 @@ def main() -> int:
             coordinates,
             role="comparative_evidence",
         )
+        validate_comparison_return_source(arguments.comparison_source, coordinates)
     if arguments.require_installed_program:
         validate_installed_program(coordinates)
 
@@ -749,7 +1198,12 @@ def main() -> int:
     if arguments.simulation_source is not None:
         observed.append("Simulation release identity")
     if arguments.comparison_source is not None:
-        observed.append("Comparative release identity")
+        observed.extend(
+            [
+                "Comparative selected-future identity",
+                "Comparison 0.3.2 return and publication record",
+            ]
+        )
     if arguments.require_installed_program:
         observed.append("installed Program consumer behavior")
     print("Received contracts valid: " + ", ".join(observed) + ".")

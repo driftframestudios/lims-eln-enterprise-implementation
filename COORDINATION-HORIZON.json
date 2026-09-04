@@ -2,9 +2,9 @@
   "horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
   "title": "LIMS/ELN Implementation Coordination Horizon",
   "objective": "Keep bounded authority, durable persistence and vendor seams, selected-future comparison, and observed successor evidence legible without coupling the collaboration to one planning cadence.",
-  "as_of": "2026-09-02T11:23:40Z",
+  "as_of": "2026-09-04T06:06:44Z",
   "current_item_ids": [
-    "HORIZON-SELECTED-FUTURE-COMPARISON"
+    "HORIZON-OBSERVED-SUCCESSORS"
   ],
   "work_items": [
     {
@@ -53,7 +53,7 @@
       "item_id": "HORIZON-SELECTED-FUTURE-COMPARISON",
       "horizon_label": "Selected-future implementation comparison",
       "sequence": 3,
-      "state": "active",
+      "state": "complete",
       "desired_state": "The implementation and selected future compare through versioned contracts, canonical receipt families, and independently reproducible evidence.",
       "entry_evidence": [
         "released implementation binding manifest",
@@ -61,9 +61,10 @@
         "independent comparator admission contract"
       ],
       "completion_evidence": [
-        "comparison records each source coordinate and digest",
-        "divergence is assigned to specification implementation simulation or evidence",
-        "simulated and observed authority postures remain distinct"
+        "Comparison release comparison-v0.3.2 records the accepted Implementation v0.3.2 and selected-future coordinates and digests",
+        "the Golden Specimen report compares 17 paths as 10 agreements, four explainable variations, and three material scientific mapping questions",
+        "the return routes the analyte, value, and unit differences to accountable scientific mapping while simulated and observed authority postures remain distinct",
+        "accepted observation carrier 2cca88982444ebc8280f9eb2891d97bf25dbeb95 and docs revision 6ccc087875b439eb70304771f534434acae3f01c preserve the release, report, and publication identities separately"
       ],
       "owner_role": "comparative evidence stewardship",
       "dependency_ids": [
@@ -75,7 +76,7 @@
       "horizon_label": "Observed successor evidence",
       "sequence": 4,
       "state": "waiting",
-      "desired_state": "Configured environments and accountable organizational roles can add observed qualification and acceptance without rewriting the selected-future baseline.",
+      "desired_state": "Configured environments and accountable organizational roles can add observed qualification and acceptance while preserving the selected-future baseline.",
       "entry_evidence": [
         "approved environment and intended-use scope",
         "versioned provider and vendor coordinates",
@@ -93,20 +94,21 @@
     }
   ],
   "reentry_capsule": {
-    "current_state": "The post-release development carrier preserves the signed Implementation 0.3.2 release subject and carries the separately observed Flyway 13.4.0 database artifacts.",
+    "current_state": "The post-release development carrier preserves the signed Implementation 0.3.2 release subject, the separately observed Flyway 13.4.0 database artifacts, and the accepted Comparison 0.3.2 return. The comparison closes the selected-future handoff and leaves three measurement differences with accountable scientific mapping.",
     "recent_decisions": [
       "DECISION-BOUNDED-CALLER-SERVICE-OWNED",
       "DECISION-SIMULATED-AND-OBSERVED-BRANCHES"
     ],
-    "next_safe_action": "Receive implementation v0.3.2 into comparative evidence by its exact tag object, commit, tree, and archive digest; inspect current Flyway 13.4.0 database artifacts through their exact hosted receipt; then record any material source divergence with its owning repository.",
-    "verification": "Confirm the reconciled closure digest, immutable 0.3.2 release subject, post-release development inventory, exact Flyway 13.4.0 receipt, Program and Governance coordinates, retained candidate and 0.3.1 receipts, credential hygiene, and the continuing environment-qualification boundaries."
+    "next_safe_action": "When an accountable receiver selects a bounded configured-environment encounter, bind its environment, time, performer, reviewer, artifacts, limitations, and acceptance route while preserving the selected-future baseline.",
+    "verification": "Confirm the immutable Implementation 0.3.2 subject, accepted Comparison 0.3.2 release and observation carrier, Golden report digest and 10/4/3 result, three scientific mapping questions, exact Flyway 13.4.0 receipt, Program and Governance coordinates, credential hygiene, and the continuing environment-qualification boundaries."
   },
   "retained_effects": [
     "Service-owned operations continue to determine caller authority, scope, budgets, approvals, effects, receipts, and recovery.",
     "The process-local and PostgreSQL workbench adapters keep one FastAPI contract; the PostgreSQL path rebuilds durable results from canonical V005 state.",
     "The selected future can fully close the four substantive receipt families using modeled roles and remains non-authorizing outside that simulation.",
     "Configured-environment observations and organizational acceptance remain available as independent successor evidence.",
-    "The historical Machine Node remains explicit seed lineage while the governance 2.0 Machine Node is canonical."
+    "The historical Machine Node remains explicit seed lineage while the governance 2.0 Machine Node is canonical.",
+    "The accepted Comparison 0.3.2 return preserves its release, observation, report, and publication coordinates while the Comparison 0.3.1 selected-future input remains historical closure evidence."
   ],
   "consequential_questions": [
     "Which PostgreSQL driver band and configured vendor SDK versions should enter the first qualified environment?",
@@ -116,7 +118,7 @@
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T11:23:40Z",
+    "updated_at": "2026-09-04T06:06:44Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-HORIZON",
       "display_name": "Implementation stewardship role",

@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RCP-IMPLEMENTATION-001",
   "machine_node_id": "NODE-LIMS-ELN-IMPLEMENTATION",
-  "as_of": "2026-09-02T11:23:40Z",
+  "as_of": "2026-09-04T06:06:44Z",
   "orientation_purpose": "Give a human or AI collaborator the minimum complete implementation state, authority boundary, evidence posture, invalidation conditions, and safe handoff needed to reproduce or extend this reference.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -49,6 +49,12 @@
       "status": "active"
     },
     {
+      "claim": "The accepted Comparison 0.3.2 return compares 17 Golden Specimen paths and routes three measurement differences to accountable scientific mapping.",
+      "mode": "simulated",
+      "assurance_stage": "verified",
+      "status": "active"
+    },
+    {
       "claim": "Configured-environment and accountable-role observation remains an independent successor evidence branch.",
       "mode": "observed",
       "assurance_stage": "specified",
@@ -56,7 +62,7 @@
     }
   ],
   "coordination_horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
-  "current_horizon_summary": "The post-release development carrier preserves the immutable Implementation 0.3.2 release subject and carries the separately observed Flyway 13.4.0 database artifacts.",
+  "current_horizon_summary": "The post-release development carrier preserves the immutable Implementation 0.3.2 release subject, the separately observed Flyway 13.4.0 database artifacts, and the accepted Comparison 0.3.2 return. Configured-environment successor evidence is the current horizon.",
   "open_receipts": [
     "RCP-OBSERVED-VENDORS-001",
     "RCP-OBSERVED-MIGRATION-RESTORE-001",
@@ -69,7 +75,8 @@
     "A bounded call escapes its declared tenant, resource, capability, budget, approval, or replay boundary.",
     "A simulated result appears as environment-observed qualification or production authorization.",
     "A production adapter dependency moves outside its qualified version band.",
-    "A governance schema release changes the required control surface."
+    "A governance schema release changes the required control surface.",
+    "The accepted Comparison release, observation carrier, Golden report, or publication coordinate changes without a successor return."
   ],
   "source_permissions": [
     {
@@ -91,17 +98,22 @@
       "source": "accountable approval and decision systems",
       "permission": "approve",
       "verification": "Verify authenticated role, exact operation and payload digest, bounded resources, intended use, evidence bundle, and expiry."
+    },
+    {
+      "source": "accepted Comparison 0.3.2 return",
+      "permission": "read",
+      "verification": "Resolve the signed release, accepted observation carrier, Golden report digest, 10/4/3 classification, material paths, and deterministic publication manifest before routing a change."
     }
   ],
   "handoff": {
-    "recipient_role": "comparative evidence stewardship",
-    "next_safe_action": "Compare the immutable implementation v0.3.2 release subject and the current post-release database artifacts with their separately named receiving coordinates, then return any material divergence to its source owner.",
-    "success_evidence": "The comparison records implementation v0.3.2 by tag object, commit, tree, and archive digest, records Flyway 13.4.0 through its exact hosted receipt, and keeps configured-environment and production-authorization successors on their own receipt paths."
+    "recipient_role": "implementation and assurance stewardship",
+    "next_safe_action": "When an approved configured-environment encounter is selected, bind its environment, time, performer, reviewer, artifacts, limitations, and acceptance route while preserving the selected-future and comparison baselines.",
+    "success_evidence": "The new receipt names its intended use and accountable roles, reproduces the applicable release and environment coordinates, and keeps scientific, Quality, Regulatory, and production-authorization decisions on their own accountable paths."
   },
   "metadata": {
     "schema_version": "2.1.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-02T11:23:40Z",
+    "updated_at": "2026-09-04T06:06:44Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-RECEIPT",
       "display_name": "Implementation stewardship role",

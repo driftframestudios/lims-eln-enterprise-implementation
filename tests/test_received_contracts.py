@@ -126,6 +126,25 @@ class ReceivedContractTests(unittest.TestCase):
                 ),
             },
         )
+        comparison_return = coordinates["comparison_return"]
+        self.assertEqual(
+            comparison_return["comparison_release"]["release"],
+            "comparison-v0.3.2",
+        )
+        self.assertEqual(
+            comparison_return["golden_specimen_report"]["classification_counts"],
+            {
+                "agreement": 10,
+                "explainable_variation": 4,
+                "material_divergence": 3,
+            },
+        )
+        self.assertEqual(
+            comparison_return["golden_specimen_report"][
+                "material_divergence_receiver"
+            ],
+            "accountable_scientific_mapping",
+        )
 
         changed = deepcopy(coordinates)
         changed["program_contract"]["source_commit"] = "0" * 40
@@ -136,6 +155,22 @@ class ReceivedContractTests(unittest.TestCase):
         changed["selected_future"]["canonical_closure_digest"] = "sha256:" + "0" * 64
         with self.assertRaisesRegex(
             ReceivedContractError, "selected future canonical_closure_digest"
+        ):
+            validate_coordinate_document(changed)
+
+        changed = deepcopy(coordinates)
+        changed["comparison_return"]["golden_specimen_report"][
+            "material_divergence_paths"
+        ].reverse()
+        with self.assertRaisesRegex(
+            ReceivedContractError, "comparison material divergence paths"
+        ):
+            validate_coordinate_document(changed)
+
+        changed = deepcopy(coordinates)
+        changed["comparison_return"]["publication"]["source_revision"] = "0" * 40
+        with self.assertRaisesRegex(
+            ReceivedContractError, "comparison publication"
         ):
             validate_coordinate_document(changed)
 

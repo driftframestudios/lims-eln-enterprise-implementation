@@ -177,6 +177,7 @@ CURRENT_EXTERNAL_COORDINATE_DIGEST = (
     "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1"
 )
 CURRENT_OBSERVATION_TIME = "2026-09-02T11:23:40Z"
+CURRENT_RECONCILIATION_TIME = "2026-09-04T06:06:44Z"
 ACCEPTED_PRIOR_HOSTED_COMMIT = "205401a530e984e031bb2c52a1654c6b5f82bc6d"
 HISTORICAL_PRIOR_HOSTED_COMMIT = "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
 CURRENT_DATABASE_HOSTED_COMMIT = "e15f0a37520b651cf83e856c3b9d67ab9f42cd9b"
@@ -717,23 +718,27 @@ def validate_promotion_lifecycle(
             "observed orientation requires both promotion receipts closed"
         )
 
+    if machine.get("metadata", {}).get("updated_at") != CURRENT_OBSERVATION_TIME:
+        raise AssertionError(
+            "Machine Node timestamp requires the immutable release observation time"
+        )
+
     if (
-        first_receipt.get("as_of") != CURRENT_OBSERVATION_TIME
+        first_receipt.get("as_of") != CURRENT_RECONCILIATION_TIME
         or first_receipt.get("metadata", {}).get("updated_at")
-        != CURRENT_OBSERVATION_TIME
-        or machine.get("metadata", {}).get("updated_at") != CURRENT_OBSERVATION_TIME
-        or horizon.get("as_of") != CURRENT_OBSERVATION_TIME
+        != CURRENT_RECONCILIATION_TIME
+        or horizon.get("as_of") != CURRENT_RECONCILIATION_TIME
         or horizon.get("metadata", {}).get("updated_at")
-        != CURRENT_OBSERVATION_TIME
+        != CURRENT_RECONCILIATION_TIME
     ):
-        raise AssertionError("observed orientation requires one reconciliation time")
+        raise AssertionError("living orientation requires one reconciliation time")
 
     horizon_items = {
         item["item_id"]: item for item in horizon.get("work_items", [])
     }
     if (
         horizon.get("current_item_ids")
-        != ["HORIZON-SELECTED-FUTURE-COMPARISON"]
+        != ["HORIZON-OBSERVED-SUCCESSORS"]
         or horizon_items.get("HORIZON-IMPLEMENTATION-SETTLING", {}).get("state")
         != "complete"
         or horizon_items.get("HORIZON-IMPLEMENTATION-CLOSURE-ALIGNMENT", {}).get(
@@ -741,10 +746,13 @@ def validate_promotion_lifecycle(
         )
         != "complete"
         or horizon_items.get("HORIZON-SELECTED-FUTURE-COMPARISON", {}).get("state")
-        != "active"
+        != "complete"
+        or horizon_items.get("HORIZON-OBSERVED-SUCCESSORS", {}).get("state")
+        != "waiting"
     ):
         raise AssertionError(
-            "Coordination Horizon requires the selected-future comparison handoff"
+            "Coordination Horizon requires the completed comparison and waiting "
+            "observed-successor route"
         )
     if (
         "post-release development carrier"
@@ -1258,6 +1266,30 @@ def validate_manifests() -> None:
     ):
         raise AssertionError(
             "release role requires the canonical selected-future closure"
+        )
+    comparison_return = coordinates["comparison_return"]
+    comparison_release = comparison_return["comparison_release"]
+    comparison_observation = comparison_return["observation_carrier"]
+    comparison_report = comparison_return["golden_specimen_report"]
+    comparison_publication = comparison_return["publication"]
+    if release.get("comparison_return") != {
+        "coordinate_state": "accepted_return",
+        "release": comparison_release["release"],
+        "release_commit": comparison_release["source_commit"],
+        "observation_carrier_commit": comparison_observation["source_commit"],
+        "report_digest": comparison_report["report_digest"],
+        "leaf_paths_compared": comparison_report["leaf_paths_compared"],
+        "classification_counts": comparison_report["classification_counts"],
+        "material_divergence_receiver": comparison_report[
+            "material_divergence_receiver"
+        ],
+        "docs_revision": comparison_publication["docs_revision"],
+        "projection_manifest_sha256": comparison_publication[
+            "projection_manifest_sha256"
+        ],
+    }:
+        raise AssertionError(
+            "release role requires the accepted Comparison 0.3.2 return"
         )
     validate_promotion_lifecycle(
         promotion=promotion,

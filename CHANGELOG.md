@@ -4,6 +4,10 @@
 
 ### Collaboration workbench
 
+- Receive the signed Comparison 0.3.2 result as a later return while retaining
+  Comparison 0.3.1 as the selected-future input. Bind its observation carrier,
+  Golden Specimen 10/4/3 result across 17 paths, public projection, and three
+  measurement questions for accountable scientific mapping.
 - Add repository-local orientation and five public-possible skills for
   re-entry, source authority, recovery routing, configured-environment evidence
   binding, and in-stride ordinary-language review.
