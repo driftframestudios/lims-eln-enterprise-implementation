@@ -271,8 +271,8 @@ class PublicInspectionManifestTests(unittest.TestCase):
         self.assertEqual(program["declared_release"], "0.3.1")
         governance = by_role["governance_schema"]
         self.assertEqual(governance["coordinate_state"], "accepted_release")
-        self.assertEqual(governance["declared_release"], "2.1.0")
-        self.assertEqual(governance["schema_release"], "2.1.0")
+        self.assertEqual(governance["declared_release"], "2.2.0")
+        self.assertEqual(governance["schema_release"], "2.2.0")
         expected_artifacts = {
             "simulated_final_state": "release/future-reality-2028-06-30-v1.json",
             "comparative_evidence": (

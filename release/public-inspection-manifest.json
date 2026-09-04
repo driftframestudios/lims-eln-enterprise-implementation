@@ -240,7 +240,7 @@
       "responsibility": "Flyway V001 through V005, its bounded identity, and deployment-shape database support."
     },
     {
-      "aggregate_sha256": "sha256:0c7cb90139f234e2638bc2d7476180507b405342b176c0e89db38e87c24fc508",
+      "aggregate_sha256": "sha256:628f2c255c6596e3b0ef9a8f19e1929c73f0f1d88bc620a3f192c762c5714f53",
       "artifacts": [
         {
           "path": "contracts/execution-receipt.v1.1.schema.json",
@@ -304,12 +304,12 @@
         },
         {
           "path": "release/bounded-caller-bindings.json",
-          "sha256": "sha256:d141061bf028fdd63cc879ab455b0a68853d369da98edbeb17421a35714ed796",
+          "sha256": "sha256:2e993316b59334071e5234cbb3d2c463a96f67e84550202a2df3f49d3c27a283",
           "size_bytes": 6236
         },
         {
           "path": "release/external-contract-coordinates.json",
-          "sha256": "sha256:c74a30a1196029fb4077718b84b2e80635c3cb1a0e2a8c355eaadb3dd3a93d28",
+          "sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
           "size_bytes": 6788
         }
       ],
@@ -364,7 +364,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:747efe9200429a29a2c9f648d667c0bedfa656a58c866306426eba62d8f24c8e",
+      "aggregate_sha256": "sha256:1412efdad194960d292d2920aa8450310964481dba37ee17fae909eda0a64e7c",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -408,12 +408,12 @@
         },
         {
           "path": "scripts/validate_received_contracts.py",
-          "sha256": "sha256:ecc63aa06400e5e704232f4a24607954d86022f9cba90eb30b1b09c3d1d41ae5",
+          "sha256": "sha256:88b8a28892d7cf7d0ad2b93078d76c9c7bde5dcff6b00ee46226943ed4e3876e",
           "size_bytes": 43121
         },
         {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:241c77793158ab7a40a0d009ab027f179245cceac228407823afd7cab36861e5",
+          "sha256": "sha256:b5a5ba03184d93c3d7eaa468ecaa41bd8e9a38e309244e0d758f0433ea603956",
           "size_bytes": 77485
         },
         {
@@ -493,12 +493,12 @@
         },
         {
           "path": "tests/test_public_inspection_manifest.py",
-          "sha256": "sha256:b395edcc8d9da161341584609be6e4d343f4c87b4617e4abb3dc68da8bdbf75f",
+          "sha256": "sha256:0837f8f007cd1a78e41248155a74488517528fdb616fe1179a6c27f9de6e8ce9",
           "size_bytes": 14495
         },
         {
           "path": "tests/test_received_contracts.py",
-          "sha256": "sha256:7caa6f1f831f1a81e76cace6d8c37fdfe87af8128351cb71c7752548a1a66ec1",
+          "sha256": "sha256:3caac4438d9673ba070e6b02bde35b560773d0d9b965ef7e60f12147f18a0094",
           "size_bytes": 23695
         },
         {
@@ -578,7 +578,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:9854b114b480b8ffb186face3d1a325630b6ad41e98752afe7b83159ad6e2857",
+      "aggregate_sha256": "sha256:8c23c3768ca14730d547743c573cd6f3ab2c9b598463f075d0156b5b13ac2623",
       "artifacts": [
         {
           "path": ".agents/skills/configured-environment-evidence-binding/SKILL.md",
@@ -637,8 +637,8 @@
         },
         {
           "path": "CHANGELOG.md",
-          "sha256": "sha256:d73b985cdbd7a41b2a59f82b37ada55b7c2d0e9a81022b17babe00e316cde864",
-          "size_bytes": 12370
+          "sha256": "sha256:f2fae05e30f0596839ac65f0b94a6f9ea808683127992895a22bb0c0532f862a",
+          "size_bytes": 12606
         },
         {
           "path": "CONTRIBUTING.md",
@@ -647,7 +647,7 @@
         },
         {
           "path": "COORDINATION-HORIZON.json",
-          "sha256": "sha256:0cc2deb0f6e2ec725f097bf675bddf53d76e100df2e3ead512cc91c83f6f4fea",
+          "sha256": "sha256:37bcedf4e2b1eb91d48c5a47c2ebda128210d324d3d5da21362cb556215257b3",
           "size_bytes": 7706
         },
         {
@@ -662,7 +662,7 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:d36bbf3d196395b33f7cd928eaf89eff36e40df1bb235b532644a8795abd3bf4",
+          "sha256": "sha256:0eec7d8b85302dac12b1b0ff00ee4d7a34a1a4f0e2377af42fde44b78f8b8b1c",
           "size_bytes": 22711
         },
         {
@@ -722,7 +722,7 @@
         },
         {
           "path": "first-receipt.json",
-          "sha256": "sha256:55f00a81697488df8ee751c9247976d90be31d26f973c34129265fd49fa8a54b",
+          "sha256": "sha256:13e64c8ad6f6a0125c605ee7eb71a51b0cda018dc52c953cc2d24364ae9c213f",
           "size_bytes": 6395
         },
         {
@@ -732,7 +732,7 @@
         },
         {
           "path": "machine-node.json",
-          "sha256": "sha256:e8a369679f69e070318559969f2c331b6d5ec058fb5e1a7d1a1d08127a20e92c",
+          "sha256": "sha256:a240f1e37e06df4fa753c2ba258bae71567bf716f0fb4adc6b0d9526096db2cb",
           "size_bytes": 5645
         },
         {
@@ -755,20 +755,20 @@
     {
       "accepted_revision": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:c74a30a1196029fb4077718b84b2e80635c3cb1a0e2a8c355eaadb3dd3a93d28",
+      "coordinate_manifest_sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
       "coordinate_state": "accepted_source_consumer_observed",
       "declared_release": "0.3.1",
       "role": "program_contract",
       "source_digest": "sha256:e4d7ef6aa1036b69395e9de3ab0064297dc80e5f697ab60de699a355e45f7674"
     },
     {
-      "accepted_revision": "8469c2a6b2c7f4445523cee262b961ffe3d2523b",
+      "accepted_revision": "c8d7150b8c4e6277bc504a7c69289cb5b949b0ee",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:c74a30a1196029fb4077718b84b2e80635c3cb1a0e2a8c355eaadb3dd3a93d28",
+      "coordinate_manifest_sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
       "coordinate_state": "accepted_release",
-      "declared_release": "2.1.0",
+      "declared_release": "2.2.0",
       "role": "governance_schema",
-      "schema_release": "2.1.0"
+      "schema_release": "2.2.0"
     },
     {
       "accepted_revision": "37c3861b5411db8e772feedf41e4abf1fb7829bc",
@@ -777,7 +777,7 @@
       "canonical_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
       "closure_artifact_path": "release/future-reality-2028-06-30-v1.json",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:c74a30a1196029fb4077718b84b2e80635c3cb1a0e2a8c355eaadb3dd3a93d28",
+      "coordinate_manifest_sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
       "coordinate_state": "accepted_release",
       "declared_release": "forecast-2028-FR-v1",
       "role": "simulated_final_state",
@@ -790,7 +790,7 @@
       "canonical_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
       "closure_artifact_path": "fixtures/simulated-closures/future-reality-2028-06-30-v1.json",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:c74a30a1196029fb4077718b84b2e80635c3cb1a0e2a8c355eaadb3dd3a93d28",
+      "coordinate_manifest_sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
       "coordinate_state": "accepted_release",
       "declared_release": "comparison-v0.3.1",
       "role": "comparative_evidence",
@@ -807,7 +807,7 @@
         "material_divergence": 3
       },
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:c74a30a1196029fb4077718b84b2e80635c3cb1a0e2a8c355eaadb3dd3a93d28",
+      "coordinate_manifest_sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
       "coordinate_state": "accepted_return",
       "declared_release": "comparison-v0.3.2",
       "docs_revision": "6ccc087875b439eb70304771f534434acae3f01c",
@@ -874,7 +874,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:bdc5fb9688ded6d262097b65e28ea840626d380b3851d6bce2205c34fea41f1f",
+    "aggregate_sha256": "sha256:0259cab3fef28ab1fdead518e69b58bf9bd2c08d5bd0bd89669617362e0f030d",
     "kind": "content_addressed_artifact_inventory"
   }
 }

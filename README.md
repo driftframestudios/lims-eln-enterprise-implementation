@@ -158,7 +158,7 @@ python3 scripts/build_public_inspection_manifest.py --check
 
 [`release/external-contract-coordinates.json`](release/external-contract-coordinates.json)
 binds the accepted Program package commit and scoped source digest together
-with the accepted Governance 2.1.0 tag object, commit, tree, and archive digest.
+with the accepted Governance 2.2.0 tag object, commit, tree, and archive digest.
 It also binds the accepted Simulation and Comparative annotated tags that
 reproduce the canonical selected-future closure digest.
 The Comparative 0.3.1 coordinate remains the historical input that helped
@@ -363,7 +363,7 @@ for adoption, probability framing, remaining gaps, and evidence gates.
 [`machine-node.json`](machine-node.json),
 [`first-receipt.json`](first-receipt.json), and
 [`COORDINATION-HORIZON.json`](COORDINATION-HORIZON.json) implement Site Reading
-governance schema release `2.1.0` and Control Plane Profile `0.3.0`. They orient
+governance schema release `2.2.0` and Control Plane Profile `0.3.0`. They orient
 collaborators while bounded operations and accountable runtime roles retain
 effect authority.
 

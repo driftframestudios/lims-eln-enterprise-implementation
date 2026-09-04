@@ -1,7 +1,7 @@
 {
   "binding_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
   "binding_version": "0.3.2",
-  "governance_schema_release": "2.1.0",
+  "governance_schema_release": "2.2.0",
   "control_plane_profile": "0.3.0",
   "python": ">=3.12",
   "source_artifacts": [
