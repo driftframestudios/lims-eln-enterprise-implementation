@@ -174,11 +174,11 @@ class PromotionLifecycleTests(unittest.TestCase):
         ):
             validate_promotion_lifecycle(**records)
 
-    def test_observed_orientation_uses_one_reconciliation_time(self) -> None:
+    def test_living_orientation_uses_one_reconciliation_time(self) -> None:
         records = self.records()
         records["first_receipt"] = deepcopy(records["first_receipt"])
         records["first_receipt"]["as_of"] = "2026-09-02T01:59:47Z"
-        with self.assertRaisesRegex(AssertionError, "one reconciliation time"):
+        with self.assertRaisesRegex(AssertionError, "living orientation"):
             validate_promotion_lifecycle(**records)
 
 

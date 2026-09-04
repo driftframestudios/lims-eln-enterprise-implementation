@@ -207,6 +207,7 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
     program = coordinates["program_contract"]
     governance = coordinates["governance"]
     selected_future = coordinates["selected_future"]
+    comparison_return = coordinates["comparison_return"]
     coordinate_digest = _digest(coordinate_path)
 
     promotion_path = _safe_file(root, PROMOTION_RECEIPT_PATH.as_posix())
@@ -328,6 +329,38 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
                 }
                 for source in selected_future["accepted_sources"]
             ],
+            {
+                "role": "comparison_return",
+                "coordinate_manifest": EXTERNAL_COORDINATE_PATH.as_posix(),
+                "coordinate_manifest_sha256": coordinate_digest,
+                "declared_release": comparison_return["comparison_release"]["release"],
+                "accepted_revision": comparison_return["comparison_release"]["source_commit"],
+                "accepted_tree": comparison_return["comparison_release"]["source_tree"],
+                "tag_object_oid": comparison_return["comparison_release"]["tag_object"],
+                "archive_digest": comparison_return["comparison_release"]["git_archive_sha256"],
+                "observation_carrier_revision": comparison_return["observation_carrier"][
+                    "source_commit"
+                ],
+                "record_carrier_revision": comparison_return["publication"][
+                    "record_carrier_commit"
+                ],
+                "report_digest": comparison_return["golden_specimen_report"]["report_digest"],
+                "classification_counts": comparison_return["golden_specimen_report"][
+                    "classification_counts"
+                ],
+                "material_divergence_paths": comparison_return["golden_specimen_report"][
+                    "material_divergence_paths"
+                ],
+                "material_divergence_receiver": comparison_return["golden_specimen_report"][
+                    "material_divergence_receiver"
+                ],
+                "docs_revision": comparison_return["publication"]["docs_revision"],
+                "projection_manifest_sha256": comparison_return["publication"][
+                    "projection_manifest_sha256"
+                ],
+                "canonical_origin": comparison_return["publication"]["canonical_origin"],
+                "coordinate_state": "accepted_return",
+            },
         ],
         "evidence_boundary": {
             "repository_owned_inspection": (

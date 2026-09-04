@@ -161,6 +161,15 @@ binds the accepted Program package commit and scoped source digest together
 with the accepted Governance 2.1.0 tag object, commit, tree, and archive digest.
 It also binds the accepted Simulation and Comparative annotated tags that
 reproduce the canonical selected-future closure digest.
+The Comparative 0.3.1 coordinate remains the historical input that helped
+select that future. A separate `comparison_return` records what the later
+Comparison 0.3.2 run found: 10 agreements, four explainable variations, and
+three measurement differences across 17 Golden Specimen paths. The analyte,
+value, and unit differences now belong to accountable scientific mapping; the
+comparison itself leaves their equivalence open. Its signed release, accepted
+observation carrier, Golden report, and deterministic Pages projection retain
+separate coordinates so each claim can be reproduced at the source that
+establishes it.
 The Program consumer observation uses a clean Python 3.12 environment, reads
 the installed distribution's PEP 610 record, and exercises the released
 catalog, scenario, example observations, and schemas. Reproduce that receiving

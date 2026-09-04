@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "consumer": "driftframestudios/lims-eln-enterprise-implementation",
   "coordinate_state": "accepted_and_consumer_observed",
   "program_contract": {
@@ -88,5 +88,55 @@
         "git_archive_sha256": "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e"
       }
     ]
+  },
+  "comparison_return": {
+    "relation": "compares_implementation_release_to_selected_future",
+    "repository": "driftframestudios/lims-eln-comparative-evidence",
+    "evidence_mode": "simulated",
+    "assurance_stage": "verified",
+    "production_authorization_effect": "none",
+    "compared_implementation_release": {
+      "tag": "v0.3.2",
+      "tag_object": "c3db01079b88622f06e8714c8bcbdf0dc1803a10",
+      "source_commit": "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+      "source_tree": "eb8eadb27a9e07c6069a1946f115a0083d94af5c",
+      "git_archive_sha256": "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16"
+    },
+    "comparison_release": {
+      "release": "comparison-v0.3.2",
+      "tag_object": "ccc4b206d9071933516863ee0eb3f5b091fc76b0",
+      "source_commit": "0289ff835c790693a769347e69da0abdcfaa47de",
+      "source_tree": "60c85e4206e2d487dac83d521401816dec0f34ae",
+      "git_archive_sha256": "sha256:5c1697f98655ce1979fcc6f4a85b719e0c44afde8a3004037d19dd1416d0720e"
+    },
+    "observation_carrier": {
+      "source_commit": "2cca88982444ebc8280f9eb2891d97bf25dbeb95",
+      "receipt_path": "receipts/promotion-observation-v0.3.2.json",
+      "receipt_file_sha256": "sha256:acccb507f0675cdc079aa56bc12299bd4ce533344cb150e42dba1c991c024fd4"
+    },
+    "golden_specimen_report": {
+      "report_path": "reports/golden-specimen/comparison.json",
+      "report_digest": "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c",
+      "leaf_paths_compared": 17,
+      "classification_counts": {
+        "agreement": 10,
+        "explainable_variation": 4,
+        "material_divergence": 3
+      },
+      "material_divergence_paths": [
+        "$.measurement.analyte",
+        "$.measurement.value",
+        "$.measurement.unit"
+      ],
+      "material_divergence_receiver": "accountable_scientific_mapping"
+    },
+    "publication": {
+      "record_carrier_commit": "c854a6f58c587a0b099efa24d2b745b2bd7187df",
+      "source_revision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95",
+      "docs_revision": "6ccc087875b439eb70304771f534434acae3f01c",
+      "projection_manifest_path": "projection-manifest.json",
+      "projection_manifest_sha256": "sha256:38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea",
+      "canonical_origin": "https://cometspectrum.io/"
+    }
   }
 }
