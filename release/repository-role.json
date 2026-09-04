@@ -4,15 +4,15 @@
   "repository_release": "0.3.2",
   "release_state": "post_release_development",
   "external_release": "implementation-v0.3.2",
-  "bounded_caller_binding_digest": "sha256:d141061bf028fdd63cc879ab455b0a68853d369da98edbeb17421a35714ed796",
+  "bounded_caller_binding_digest": "sha256:2e993316b59334071e5234cbb3d2c463a96f67e84550202a2df3f49d3c27a283",
   "database_flyway_release_digest": "sha256:e5c6daadf3f88df9a83195c7f977dd702c081c796e24e55d67704cfb965cf160",
   "database_hosted_evidence": {
     "receipt_path": "receipts/hosted-postgresql-proof.json",
     "coordinate_state": "current_database_artifacts_observed",
     "promotion_signal": "implementation-validation"
   },
-  "external_contract_coordinate_digest": "sha256:c74a30a1196029fb4077718b84b2e80635c3cb1a0e2a8c355eaadb3dd3a93d28",
-  "public_inspection_manifest_digest": "sha256:7a09e2b996e7012c7c56318a57a63231b5e8f6115fcd4fe01f4c6a85707a54a9",
+  "external_contract_coordinate_digest": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
+  "public_inspection_manifest_digest": "sha256:6a91364c81da3b77527c1733dceb662c2f312a9c1f6ebd099817fe8847493bd2",
   "open_receipt_ledger_digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad",
   "selected_future_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
   "comparison_return": {
@@ -66,8 +66,8 @@
     }
   ],
   "contract_bindings": {
-    "governance_schema": "2.1.0",
-    "governance_release": "2.1.0",
+    "governance_schema": "2.2.0",
+    "governance_release": "2.2.0",
     "program_contract_package": "0.3.1",
     "control_plane_profile": "0.3.0",
     "execution_receipt_schema": "1.1.0",

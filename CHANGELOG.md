@@ -4,6 +4,10 @@
 
 ### Collaboration workbench
 
+- Adopt the observed Governance 2.2.0 release across the living control
+  surface and bind its signed tag, accepted source, and reproducible archive
+  identity while the Implementation 0.3.2 release remains independently
+  recoverable.
 - Receive the signed Comparison 0.3.2 result as a later return while retaining
   Comparison 0.3.1 as the selected-future input. Bind its observation carrier,
   Golden Specimen 10/4/3 result across 17 paths, public projection, and three

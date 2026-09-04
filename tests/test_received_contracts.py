@@ -99,7 +99,7 @@ class ReceivedContractTests(unittest.TestCase):
             coordinates["program_contract"]["source_commit"],
             "4d06eeb7f96910311fbcb7f51547c978b6a07290",
         )
-        self.assertEqual(coordinates["governance"]["schema_release"], "2.1.0")
+        self.assertEqual(coordinates["governance"]["schema_release"], "2.2.0")
         self.assertEqual(
             coordinates["selected_future"]["canonical_closure_digest"],
             "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
@@ -243,9 +243,9 @@ class ReceivedContractTests(unittest.TestCase):
                     "git",
                     "tag",
                     "--annotate",
-                    "governance-v2.1.0",
+                    "governance-v2.2.0",
                     "--message",
-                    "Governance 2.1.0",
+                    "Governance 2.2.0",
                 ],
             ):
                 subprocess.run(command, cwd=root, check=True)
@@ -263,7 +263,7 @@ class ReceivedContractTests(unittest.TestCase):
             coordinates = json.loads((ROOT / COORDINATE_PATH).read_text())
             governance = coordinates["governance"]
             governance["tag_object"] = git(
-                "rev-parse", "refs/tags/governance-v2.1.0"
+                "rev-parse", "refs/tags/governance-v2.2.0"
             )
             governance["source_commit"] = git("rev-parse", "HEAD")
             governance["source_tree"] = git("rev-parse", "HEAD^{tree}")

@@ -177,7 +177,7 @@ CURRENT_EXTERNAL_COORDINATE_DIGEST = (
     "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1"
 )
 CURRENT_OBSERVATION_TIME = "2026-09-02T11:23:40Z"
-CURRENT_RECONCILIATION_TIME = "2026-09-04T06:06:44Z"
+CURRENT_RECONCILIATION_TIME = "2026-09-04T09:55:56Z"
 ACCEPTED_PRIOR_HOSTED_COMMIT = "205401a530e984e031bb2c52a1654c6b5f82bc6d"
 HISTORICAL_PRIOR_HOSTED_COMMIT = "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
 CURRENT_DATABASE_HOSTED_COMMIT = "e15f0a37520b651cf83e856c3b9d67ab9f42cd9b"
@@ -825,8 +825,8 @@ def validate_manifests() -> None:
             "runtime configuration source requires Systems Manager Parameter Store"
         )
     control_plane = manifest.get("control_plane", {})
-    if control_plane.get("governance_schema_release") != "2.1.0":
-        raise AssertionError("control plane requires governance schema release 2.1.0")
+    if control_plane.get("governance_schema_release") != "2.2.0":
+        raise AssertionError("control plane requires governance schema release 2.2.0")
     if control_plane.get("control_plane_profile") != "0.3.0":
         raise AssertionError("control plane requires profile 0.3.0")
 
@@ -1113,7 +1113,7 @@ def validate_manifests() -> None:
     observation = json.loads(
         (ROOT / CURRENT_PROMOTION_OBSERVATION_PATH).read_text(encoding="utf-8")
     )
-    if machine["schema_release"] != "2.1.0" or not machine["campaigns"]:
+    if machine["schema_release"] != "2.2.0" or not machine["campaigns"]:
         raise AssertionError(
             "canonical Machine Node requires governance schema v2 and campaigns"
         )
@@ -1135,12 +1135,12 @@ def validate_manifests() -> None:
     if first_receipt["coordination_horizon_id"] != horizon["horizon_id"]:
         raise AssertionError("first receipt requires the released Coordination Horizon")
     if (
-        machine.get("metadata", {}).get("schema_version") != "2.1.0"
-        or first_receipt.get("metadata", {}).get("schema_version") != "2.1.0"
-        or horizon.get("metadata", {}).get("schema_version") != "2.1.0"
+        machine.get("metadata", {}).get("schema_version") != "2.2.0"
+        or first_receipt.get("metadata", {}).get("schema_version") != "2.2.0"
+        or horizon.get("metadata", {}).get("schema_version") != "2.2.0"
     ):
         raise AssertionError(
-            "orientation metadata requires governance schema release 2.1.0"
+            "orientation metadata requires governance schema release 2.2.0"
         )
 
     historical_machine = json.loads(
@@ -1251,8 +1251,8 @@ def validate_manifests() -> None:
         raise AssertionError(
             "release role requires the external contract coordinate digest"
         )
-    if release.get("contract_bindings", {}).get("governance_release") != "2.1.0":
-        raise AssertionError("release role requires Governance release 2.1.0")
+    if release.get("contract_bindings", {}).get("governance_release") != "2.2.0":
+        raise AssertionError("release role requires Governance release 2.2.0")
     if (
         release.get("contract_bindings", {}).get("program_contract_package")
         != "0.3.1"

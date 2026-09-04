@@ -8,7 +8,7 @@
   "fixture_policy": "synthetic_only",
   "validation_command": "python3 scripts/validate_repository.py",
   "control_plane": {
-    "governance_schema_release": "2.1.0",
+    "governance_schema_release": "2.2.0",
     "control_plane_profile": "0.3.0",
     "machine_node": "machine-node.json",
     "first_receipt": "first-receipt.json",
@@ -17,13 +17,13 @@
   },
   "public_inspection": {
     "manifest": "release/public-inspection-manifest.json",
-    "manifest_digest": "sha256:7a09e2b996e7012c7c56318a57a63231b5e8f6115fcd4fe01f4c6a85707a54a9",
+    "manifest_digest": "sha256:6a91364c81da3b77527c1733dceb662c2f312a9c1f6ebd099817fe8847493bd2",
     "authority": "repository_owned_inspection_bytes",
     "cross_repository_coordinate_state": "accepted_and_consumer_observed"
   },
   "external_contracts": {
     "coordinate_manifest": "release/external-contract-coordinates.json",
-    "coordinate_manifest_digest": "sha256:c74a30a1196029fb4077718b84b2e80635c3cb1a0e2a8c355eaadb3dd3a93d28",
+    "coordinate_manifest_digest": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
     "coordinate_state": "accepted_and_consumer_observed"
   },
   "contract_versions": {
@@ -37,7 +37,7 @@
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:d141061bf028fdd63cc879ab455b0a68853d369da98edbeb17421a35714ed796",
+    "binding_digest": "sha256:2e993316b59334071e5234cbb3d2c463a96f67e84550202a2df3f49d3c27a283",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",

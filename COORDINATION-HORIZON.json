@@ -2,7 +2,7 @@
   "horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
   "title": "LIMS/ELN Implementation Coordination Horizon",
   "objective": "Keep bounded authority, durable persistence and vendor seams, selected-future comparison, and observed successor evidence legible without coupling the collaboration to one planning cadence.",
-  "as_of": "2026-09-04T06:06:44Z",
+  "as_of": "2026-09-04T09:55:56Z",
   "current_item_ids": [
     "HORIZON-OBSERVED-SUCCESSORS"
   ],
@@ -116,9 +116,9 @@
     "Which observed encounter would improve calibration enough to justify its qualification and evidence-retention cost?"
   ],
   "metadata": {
-    "schema_version": "2.1.0",
+    "schema_version": "2.2.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-04T06:06:44Z",
+    "updated_at": "2026-09-04T09:55:56Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-HORIZON",
       "display_name": "Implementation stewardship role",
