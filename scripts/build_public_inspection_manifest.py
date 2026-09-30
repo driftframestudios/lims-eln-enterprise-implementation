@@ -124,6 +124,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
             ".github/CODEOWNERS",
             ".github/dependabot.yml",
             ".github/pull_request_template.md",
+            ".agents/skills/README.md",
             ".agents/skills/*/SKILL.md",
         ),
     ),

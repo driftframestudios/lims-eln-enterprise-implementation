@@ -12,7 +12,7 @@
     "promotion_signal": "implementation-validation"
   },
   "external_contract_coordinate_digest": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
-  "public_inspection_manifest_digest": "sha256:6a91364c81da3b77527c1733dceb662c2f312a9c1f6ebd099817fe8847493bd2",
+  "public_inspection_manifest_digest": "sha256:786b7a83d4ae33a4a7ed6627d5bd8084aac7c7fefbac21f483dee1466d5db996",
   "open_receipt_ledger_digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad",
   "selected_future_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
   "comparison_return": {

@@ -20,7 +20,9 @@ surface needs to change.
   receipts as observations of their named source and environment.
 - Preserve unrelated work already present in the worktree.
 
-Use [`repository-reentry`](.agents/skills/repository-reentry/SKILL.md) when
+The [repository-local skill catalog](.agents/skills/README.md) groups the
+available routes by reader job. Use
+[`repository-reentry`](.agents/skills/repository-reentry/SKILL.md) when
 branch, release, living coordination, configured evidence, and current source
 need one reliable starting point.
 
@@ -116,5 +118,5 @@ they do not become evidence that the configured path ran.
 
 Return the changed source, the smallest observation that establishes its
 behavior, the observation's reach and limit, and the repository or accountable
-role that can make the next decision. Name the exact event that reopens a
-waiting route.
+role that can make the next decision. Name the exact event that makes the next
+action ready.

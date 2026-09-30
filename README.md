@@ -1,104 +1,65 @@
 # LIMS/ELN Enterprise Implementation
 
-This repository is the **actual-implementation member** of the comparative
-Site Reading constellation. It provides a principal-level Python reference
-system for specimen lifecycle, custody, instrument ingress, vendor projection,
-migration, recovery, evidence, security, and operational acceptance.
+## Intent
 
-Repository authorship and maintenance provenance is recorded in
-[`AUTHORS`](AUTHORS). Git history and reviewed pull requests preserve change
-chronology and contribution credit.
+This repository provides the comparative constellation's executable LIMS/ELN
+reference implementation. It owns Python application and domain source,
+synthetic fixtures, database evolution, configured engineering observations,
+and the Golden Specimen Workbench.
 
-The repository begins from the public architectural provenance of
-`driftframestudios/prototype-exemplars` pull request
-[#3](https://github.com/driftframestudios/prototype-exemplars/pull/3):
+The machine-readable evidence role `actual_implementation` means this source can
+run and be compared with the Program, Simulation, and Comparative members.
+Production qualification follows the configured-environment evidence and
+accountable acceptance route described in [Evidence and authority](#evidence-and-authority).
 
-- source head: `8be1e2c2ce239e51dcd5d1e19d1ff52e9d080b72`;
-- merged result: `613f524821a25389748a9cd98d1bb0d303de87cf`;
-- source validation floor: 69 synthetic tests on Python 3.12 and 3.13.
+## Current state and branch roles
 
-This implementation is independently evolved. Runtime code stays within this
-repository and consumes versioned contracts rather than simulation code.
+The [`repository role manifest`](release/repository-role.json) declares
+`enterprise_implementation`, repository release `0.3.2`, external release
+`implementation-v0.3.2`, and current state `post_release_development`. The
+signed `v0.3.2` subject remains the accepted release baseline while current
+`develop` source carries later, separately observed work.
 
-## Start here
+| Branch | Role | Evidence route |
+| --- | --- | --- |
+| `main` | Preserves the observed v0.3.2 release baseline | [`0.3.2 promotion observation`](receipts/promotion-observation-v0.3.2.json) |
+| `develop` | Integrates the post-release workbench, Flyway 13.4.0 database evidence, Governance 2.2.0 orientation, and Comparison 0.3.2 return | [`repository role manifest`](release/repository-role.json) and [`public-inspection manifest`](release/public-inspection-manifest.json) |
 
-The shortest orientation route is this README, followed by
-[`AGENTS.md`](AGENTS.md), [`release/repository-role.json`](release/repository-role.json),
-and the source, receipt, runbook, or test that owns the behavior being changed.
-Runnable source and tests define current behavior. Signed release records define
-the accepted baseline. Configured receipts describe only their named source and
-environment.
+The [`Coordination Horizon`](COORDINATION-HORIZON.json) identifies configured
+observed-successor evidence as the next available route. Work enters that route
+when an accountable receiver selects an approved environment and intended-use
+scope, then binds its time, performer, reviewer, artifacts, limitations, and
+acceptance path. The accepted Comparison return keeps its three measurement
+differences with accountable scientific mapping.
 
-Five repository-local skills support work that needs a repeatable route:
+## Choose your route
 
-- [`repository-reentry`](.agents/skills/repository-reentry/SKILL.md) recovers
-  current source, release, configured-environment evidence, and coordination
-  truth.
-- [`source-authority-mapping`](.agents/skills/source-authority-mapping/SKILL.md)
-  distinguishes contract, implementation, observation, acceptance, release,
-  and receiving roles.
-- [`proportionate-recovery-routing`](.agents/skills/proportionate-recovery-routing/SKILL.md)
-  selects the smallest useful recovery move after an observed problem.
-- [`configured-environment-evidence-binding`](.agents/skills/configured-environment-evidence-binding/SKILL.md)
-  admits a returned database, vendor, or runtime observation at exact
-  coordinates.
-- [`contextual-jargon-scan`](.agents/skills/contextual-jargon-scan/SKILL.md)
-  revises collaboration-local shorthand while retaining exact technical and
-  regulated language.
+| Reader job | Start here | What the route provides |
+| --- | --- | --- |
+| Understand this repository's purpose | [Intent](#intent) | The implementation role and its production-qualification boundary |
+| See the smallest executable system | [Quickest proof and workbench](#quickest-proof-and-workbench) | One synthetic journey across lifecycle, custody, instrument, vendor, and tenant boundaries |
+| Evaluate released and current source | [`release/repository-role.json`](release/repository-role.json) and [`release/public-inspection-manifest.json`](release/public-inspection-manifest.json) | Signed release identity, current development state, exact current-byte inventory, and evidence boundaries |
+| Find a technical capability | [Capability map by reader job](#capability-map-by-reader-job) | Grouped service-authority, laboratory-integrity, delivery, recovery, security, and assurance routes |
+| Inspect deployment-shaped infrastructure | [`infra/README.md`](infra/README.md) | Compose-versus-Terraform chooser, prerequisites, checks, and evidence ceiling |
+| Assess the strength of a claim | [Evidence and authority](#evidence-and-authority) | Distinct specified, verified, qualified, validated, and accepted states |
+| Contribute, return, or resume work | [`AGENTS.md`](AGENTS.md), the [skill catalog](.agents/skills/README.md), and [return route](#collaboration-and-return-routes) | Current-source, branch, validation, recovery, evidence-binding, and handoff routes |
 
-These skills begin as public-possible workbench material and can be refined in
-public view. The source band describes maturity rather than confidentiality:
-`public_ready` means a separate review has accepted the settled reader job and
-navigation route.
+## Quickest proof and workbench
 
-## What runs
-
-The focused test suite exercises:
-
-- a typed bounded caller with task-scoped identity, tenant, capability,
-  resource, request-budget, exact-approval, and replay boundaries;
-- registered read, idempotent narrow-write, approval-gated broad-write, and
-  bounded golden-journey operations whose services retain effect control;
-- durable PostgreSQL receipt persistence and version-banded vendor SDK seams;
-- Flyway Community migration ordering, locking, transactions, history,
-  validation, status, target selection, and no-op replay;
-- database-verified, short-lived signed tenant assertions for every row policy;
-- tenant-bound, attributable, revision-checked specimen transitions;
-- exact replay and changed-content collision handling;
-- custody compare-and-set transfer with append-only history, a schema-qualified
-  privileged routine, and an atomic full-payload outbox;
-- tenant-bound outbox claim, expired-lease reclaim, and exact confirmation with
-  database-principal attribution, rotating UUIDs, monotonic fencing, and
-  integer-second leases bounded to 15 minutes;
-- append-only delivery attempts, outcomes, tenant-unique transport receipts,
-  and separately attributable recovery release;
-- a shared 256-byte printable message identity bound across producer, claim,
-  completion, failure, and recovery paths;
-- byte-preserving instrument ingress with exact finite decimal quantities,
-  stored-scale coherence, complete inbox lineage, UCUM-coded units, and
-  explainable quarantine;
-- ambiguous vendor-write reconciliation through authoritative readback;
-- resumable migration, semantic reconciliation, rollback, restore, and data exit;
-- account-scoped Parameter Store configuration and Secrets Manager retrieval;
-- bounded secret caching, explicit rotation stages, and value-free failure events;
-- allowlisted telemetry with recursive sensitive-value replacement;
-- service-level indicators with explicit numerator and denominator;
-- scientific, Quality, and Regulatory acceptance as separate accountable acts.
-
-The Golden Specimen Workbench adds a small FastAPI application and dashboard
-over the same domain services. One synthetic run makes lifecycle events,
-custody, raw-byte instrument provenance, the readable normalized result and its
-digest, and reconciled vendor projection visible together. Its PostgreSQL
-composition carries the same FastAPI journey through the V001–V005 model and
-rebuilds the response from a fresh tenant-bound database read.
-
-Run the complete local proof:
+From a Python 3.12 environment with the test dependencies installed, run the
+complete source-owned proof:
 
 ```sh
 python3 scripts/validate_repository.py
 ```
 
-Run the workbench with Python 3.12 or newer:
+This command validates contracts and manifests, confirms the synthetic-fixture
+posture, checks credential-shaped material and authored language, runs the test
+suite, and emits a deterministic source digest. Configured database and vendor
+tests activate when their explicit environment coordinates are present; their
+receipts remain the authority for those environments.
+
+Run the process-local Golden Specimen Workbench with Python 3.12 or newer:
 
 ```sh
 python3 -m venv .venv
@@ -127,13 +88,67 @@ canonical custody and measurement records. See the
 [workbench guide](docs/golden-specimen-workbench.md) for its evidence boundary
 and API surface.
 
-The command validates JSON contracts and manifests, confirms fixture posture,
-runs all tests, applies the negation-aware language gate, and emits a
-deterministic source digest.
+## Capability map by reader job
+
+The focused proof exercises the following implementation families.
+
+### Govern service effects and replay
+
+- a typed bounded caller with task-scoped identity, tenant, capability,
+  resource, request-budget, exact-approval, and replay boundaries;
+- registered read, idempotent narrow-write, approval-gated broad-write, and
+  bounded golden-journey operations whose services retain effect control;
+- durable PostgreSQL receipt persistence and version-banded vendor SDK
+  compatibility boundaries;
+- exact replay and changed-content collision handling.
+
+The [bounded caller](#bounded-caller) section carries the operation and durable
+ledger detail.
+
+### Trace laboratory state and scientific lineage
+
+- database-verified, short-lived signed tenant assertions for every row policy;
+- tenant-bound, attributable, revision-checked specimen transitions;
+- custody compare-and-set transfer with append-only history, a schema-qualified
+  privileged routine, and an atomic full-payload outbox;
+- byte-preserving instrument ingress with exact finite decimal quantities,
+  stored-scale coherence, complete inbox lineage, UCUM-coded units, and
+  explainable quarantine.
+
+### Inspect delivery, migration, and recovery
+
+- Flyway Community migration ordering, locking, transactions, history,
+  validation, status, target selection, and no-op replay;
+- tenant-bound outbox claim, expired-lease reclaim, and exact confirmation with
+  database-principal attribution, rotating UUIDs, monotonic fencing, and
+  integer-second leases bounded to 15 minutes;
+- append-only delivery attempts, outcomes, tenant-unique transport receipts,
+  and separately attributable recovery release;
+- a shared 256-byte printable message identity bound across producer, claim,
+  completion, failure, and recovery paths;
+- ambiguous vendor-write reconciliation through authoritative readback; and
+- resumable migration, semantic reconciliation, rollback, restore, and data exit.
+
+Continue through [Database evolution](#database-evolution) or the
+[infrastructure reference](infra/README.md) when the deployment shape matters.
+
+### Inspect runtime protection and accountable assurance
+
+- account-scoped Parameter Store configuration and Secrets Manager retrieval;
+- bounded secret caching, explicit rotation stages, and value-free failure events;
+- allowlisted telemetry with recursive sensitive-value replacement;
+- service-level indicators with explicit numerator and denominator; and
+- scientific, Quality, and Regulatory acceptance as separate accountable acts.
+
+Continue through [AWS runtime settings](#aws-runtime-settings) and
+[Evidence and authority](#evidence-and-authority) for configuration and claim
+boundaries.
+
+## Evidence, release, and current inventory
 
 [`release/public-inspection-manifest.json`](release/public-inspection-manifest.json)
 gives a reviewer one deterministic inventory for the repository-owned
-post-release development carrier. The separate `release_subject` retains the
+post-release source state. The separate `release_subject` retains the
 immutable v0.3.2 tag object and accepted source coordinate. The current
 inventory includes the separately observed Flyway 13.4.0 database artifacts
 without recasting them as part of that signed release. It binds every current
@@ -167,7 +182,7 @@ Comparison 0.3.2 run found: 10 agreements, four explainable variations, and
 three measurement differences across 17 Golden Specimen paths. The analyte,
 value, and unit differences now belong to accountable scientific mapping; the
 comparison itself leaves their equivalence open. Its signed release, accepted
-observation carrier, Golden report, and deterministic Pages projection retain
+observation record, Golden report, and deterministic Pages projection retain
 separate coordinates so each claim can be reproduced at the source that
 establishes it.
 The Program consumer observation uses a clean Python 3.12 environment, reads
@@ -201,7 +216,7 @@ worker crash/reclaim, stale-fence rejection, and the durable FastAPI workbench's
 restart, exact replay, changed-content collision, tenant isolation, rollback,
 instrument recovery, and canonical-digest checks.
 
-## Evidence ladder
+## Evidence and authority
 
 | Stage | Meaning |
 |---|---|
@@ -211,9 +226,9 @@ instrument recovery, and canonical-digest checks.
 | `validated` | The configured system demonstrated fitness for its stated intended use. |
 | `accepted` | Named accountable owners approved the bounded use and residual risk. |
 
-Execution and acceptance remain separate dimensions. Local verification creates
-a strong proof floor. The constellation then retains two explicit receipt
-paths:
+Execution and acceptance remain separate dimensions. Local verification
+establishes source behavior with synthetic fixtures. The constellation then
+retains two explicit receipt paths:
 
 - a selected future reality fully closes configured vendor environments,
   representative migration and restore rehearsals, production security and
@@ -223,9 +238,10 @@ paths:
   environment and organizational evidence later without rewriting the
   selected-future baseline.
 
-The simulated closure grants no production authorization. The observed path
-remains separately unasserted until its own environment, time, performer,
-reviewer, artifacts, and decisions are recorded.
+The simulated closure establishes its selected-future evidence only. Production
+authorization comes from a configured observation whose environment, time,
+performer, reviewer, artifacts, limitations, and accountable decisions are
+recorded.
 
 ## Repository map
 
@@ -238,11 +254,43 @@ reviewer, artifacts, and decisions are recorded.
 - `database` — pinned Flyway release and artifact inventory plus separate
   cluster-role provisioning.
 - `flyway.conf` — reviewed Flyway safety and ordering controls.
-- `infra` — local production-shape services and an AWS recovery baseline.
-- `docs` — architecture, GitFlow-like delivery, qualification, and runbooks.
-- `receipts` — example manifests whose evidence mode is explicit.
-- `release` — digest-bound source, role, and promotion manifests.
-- `scripts` — one-command repository validation.
+- [`infra`](infra/README.md) — local deployment-shaped services and an AWS
+  recovery baseline.
+- [`docs`](docs) — architecture, GitFlow-like delivery, qualification, and
+  runbooks.
+- [`receipts`](receipts) — example manifests whose evidence mode is explicit.
+- [`release`](release) — digest-bound source, role, and promotion manifests.
+- [`scripts`](scripts) — one-command repository validation.
+
+## Collaboration and return routes
+
+The [repository-local skill catalog](.agents/skills/README.md) groups five
+repeatable routes by reader job:
+
+- [`repository-reentry`](.agents/skills/repository-reentry/SKILL.md) recovers
+  current source, release, configured-environment evidence, and coordination
+  truth.
+- [`source-authority-mapping`](.agents/skills/source-authority-mapping/SKILL.md)
+  distinguishes contract, implementation, observation, acceptance, release,
+  and receiving roles.
+- [`proportionate-recovery-routing`](.agents/skills/proportionate-recovery-routing/SKILL.md)
+  selects the smallest useful recovery move after an observed problem.
+- [`configured-environment-evidence-binding`](.agents/skills/configured-environment-evidence-binding/SKILL.md)
+  admits a returned database, vendor, or runtime observation at exact
+  coordinates.
+- [`contextual-jargon-scan`](.agents/skills/contextual-jargon-scan/SKILL.md)
+  revises collaboration-local shorthand while retaining exact technical and
+  regulated language.
+
+These skills currently carry the `public_possible` source band. That field
+describes a review stage: a separate public-ready review can accept a settled
+reader job and navigation route. Current user intent, repository evidence, and
+granted authority continue to govern each use.
+
+[`AGENTS.md`](AGENTS.md) owns the standing repository workflow. A complete
+return names the changed source, the smallest observation that establishes its
+behavior, the observation's reach and limit, and the role or repository that
+can make the next decision.
 
 ## Bounded caller
 
@@ -295,14 +343,15 @@ External vendor effects use a stable request identity, qualified SDK and API
 bands, response-identity checks, and authoritative readback for timeouts,
 cleanup ambiguity, or unexpected confirmation. Driver and SDK bands accept
 complete released `major.minor.patch` coordinates. Deployment qualification
-binds these seams to the service-owned transaction and recovery policy.
+binds these integration boundaries to the service-owned transaction and
+recovery policy.
 
 The credential-free LabKey JSON API exemplar adds tenant-scoped selection,
-identity and revision confirmation, bounded read retry, rate-gate seams, and
-cursor pagination. Its transport receives runtime credentials from the narrow
-consumer boundary. A configured LabKey environment remains responsible for
-qualifying container paths, schemas, permissions, API behavior, and version
-coordinates against the [documented LabKey APIs](https://www.labkey.org/Documentation/wiki-page.view?name=viewApis).
+identity and revision confirmation, bounded read retry, and rate-limit
+boundaries with cursor pagination. Its transport receives runtime credentials
+from the narrow consumer boundary. A configured LabKey environment remains
+responsible for qualifying container paths, schemas, permissions, API behavior,
+and version coordinates against the [documented LabKey APIs](https://www.labkey.org/Documentation/wiki-page.view?name=viewApis).
 
 The released source coordinates and digests live in
 [`release/bounded-caller-bindings.json`](release/bounded-caller-bindings.json).
@@ -398,3 +447,20 @@ and an exact-resource read policy. A protected deployment or rotation workflow
 supplies secret versions. Workloads use platform identity credentials. See the
 [AWS runtime configuration and secret rotation runbook](docs/runbooks/aws-runtime-configuration-and-secret-rotation.md)
 and the value-free [synthetic catalog](fixtures/synthetic/runtime-setting-catalog.v1.json).
+
+## Provenance and authorship
+
+Repository authorship and maintenance provenance is recorded in
+[`AUTHORS`](AUTHORS). Git history and reviewed pull requests preserve change
+chronology and contribution credit.
+
+The architectural starting point is `driftframestudios/prototype-exemplars`
+pull request [#3](https://github.com/driftframestudios/prototype-exemplars/pull/3):
+
+- source head: `8be1e2c2ce239e51dcd5d1e19d1ff52e9d080b72`;
+- merged result: `613f524821a25389748a9cd98d1bb0d303de87cf`;
+- source validation floor: 69 synthetic tests on Python 3.12 and 3.13.
+
+Runtime code is authored and maintained in this repository. Versioned
+contracts connect it to the constellation's other members, while simulation
+source retains its separate owner.

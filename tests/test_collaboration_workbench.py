@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 from pathlib import Path
+import re
 import shutil
 import sys
 import tempfile
@@ -83,6 +84,83 @@ class CollaborationWorkbenchTests(unittest.TestCase):
             set(validation.PUBLIC_POSSIBLE_SKILL_METADATA).issubset(paths)
         )
         self.assertIn("AGENTS.md", paths)
+        self.assertIn(".agents/skills/README.md", paths)
+
+    def test_root_orientation_exposes_current_state_and_reader_routes(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        role = json.loads(
+            (ROOT / "release/repository-role.json").read_text(encoding="utf-8")
+        )
+        first_screen = readme.split("## Capability map by reader job", 1)[0]
+        for current_value in (
+            role["repository_role"],
+            role["repository_release"],
+            role["external_release"],
+            role["release_state"],
+            role["promotion_coordinates"]["release_subject"]["tag"],
+        ):
+            self.assertIn(f"`{current_value}`", first_screen)
+        for route in (
+            "release/repository-role.json",
+            "release/public-inspection-manifest.json",
+            "infra/README.md",
+            ".agents/skills/README.md",
+        ):
+            self.assertIn(route, first_screen)
+        self.assertIn("`main`", first_screen)
+        self.assertIn("`develop`", first_screen)
+        self.assertNotIn("**actual-implementation member**", readme)
+        for heading in (
+            "## Intent",
+            "### Govern service effects and replay",
+            "### Trace laboratory state and scientific lineage",
+            "### Inspect delivery, migration, and recovery",
+            "### Inspect runtime protection and accountable assurance",
+        ):
+            self.assertIn(heading, readme)
+
+    def test_infrastructure_route_has_choice_evidence_and_return(self) -> None:
+        infrastructure = (ROOT / "infra/README.md").read_text(encoding="utf-8")
+        for heading in (
+            "## Reader job",
+            "## Choose Compose or Terraform",
+            "## Prerequisites",
+            "## Compose path",
+            "## Terraform path",
+            "## Validation",
+            "## Evidence boundary",
+            "## Return",
+        ):
+            self.assertIn(heading, infrastructure)
+        for route in (
+            "../README.md#current-state-and-branch-roles",
+            "docker-compose.yml",
+            "terraform",
+            "../docs/database-migrations.md",
+            "../docs/runbooks/aws-runtime-configuration-and-secret-rotation.md",
+        ):
+            self.assertIn(route, infrastructure)
+
+    def test_mutable_orientation_routes_resolve_locally(self) -> None:
+        documents = (
+            ROOT / "README.md",
+            ROOT / "AGENTS.md",
+            ROOT / "infra/README.md",
+            ROOT / ".agents/skills/README.md",
+        )
+        for document in documents:
+            for target in re.findall(
+                r"\[[^\]]+\]\(([^)]+)\)",
+                document.read_text(encoding="utf-8"),
+            ):
+                if target.startswith(("http://", "https://", "mailto:", "#")):
+                    continue
+                local_target = target.split("#", 1)[0]
+                if local_target:
+                    self.assertTrue(
+                        (document.parent / local_target).exists(),
+                        f"{document.relative_to(ROOT)} has missing route {target}",
+                    )
 
     def test_recovery_and_evidence_binding_keep_distinct_jobs(self) -> None:
         recovery = (

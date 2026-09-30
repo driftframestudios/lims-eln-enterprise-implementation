@@ -241,6 +241,19 @@ def validate_collaboration_workbench(root: Path = ROOT) -> list[str]:
             "public-possible skill inventory differs: expected "
             f"{sorted(expected_paths)!r}; received {sorted(actual_paths)!r}"
         )
+    catalog_path = skills_root / "README.md"
+    if not catalog_path.is_file():
+        findings.append(".agents/skills/README.md is required for skill discovery")
+    else:
+        catalog = catalog_path.read_text(encoding="utf-8")
+        for relative_path in expected_paths:
+            skill_name = Path(relative_path).parent.name
+            expected_route = f"({skill_name}/SKILL.md)"
+            if expected_route not in catalog:
+                findings.append(
+                    ".agents/skills/README.md must link the skill route "
+                    f"{expected_route}"
+                )
     for relative_path, expected in PUBLIC_POSSIBLE_SKILL_METADATA.items():
         path = root / relative_path
         if not path.is_file():
@@ -281,6 +294,10 @@ def validate_collaboration_workbench(root: Path = ROOT) -> list[str]:
             findings.append(f"{orientation_name} is required for workbench routing")
             continue
         orientation = orientation_path.read_text(encoding="utf-8")
+        if ".agents/skills/README.md" not in orientation:
+            findings.append(
+                f"{orientation_name} must link .agents/skills/README.md"
+            )
         for relative_path in expected_paths:
             if relative_path not in orientation:
                 findings.append(

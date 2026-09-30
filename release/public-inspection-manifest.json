@@ -364,7 +364,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:1412efdad194960d292d2920aa8450310964481dba37ee17fae909eda0a64e7c",
+      "aggregate_sha256": "sha256:10555704e8bd8874cd5a16e123c3ba7bbb2521f4b82285e38961dbf566b00071",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -388,8 +388,8 @@
         },
         {
           "path": "scripts/build_public_inspection_manifest.py",
-          "sha256": "sha256:6ca5af3441ee376de940e3826b8554d41fb088a91159ab1e59ffdf54393d2312",
-          "size_bytes": 22323
+          "sha256": "sha256:5ea4d14fb4ee0851647fea94868e19583d378cb2143e20ccd4de5f0f57d8e479",
+          "size_bytes": 22363
         },
         {
           "path": "scripts/check_automation_contract.py",
@@ -413,8 +413,8 @@
         },
         {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:b5a5ba03184d93c3d7eaa468ecaa41bd8e9a38e309244e0d758f0433ea603956",
-          "size_bytes": 77485
+          "sha256": "sha256:76844afe88765c9474a1ac5a625c0ce003ab4ba783157c06e77eb7153e3f01af",
+          "size_bytes": 78261
         },
         {
           "path": "tests/__init__.py",
@@ -443,8 +443,8 @@
         },
         {
           "path": "tests/test_collaboration_workbench.py",
-          "sha256": "sha256:7bc3ac26d2ca7d377deaebc5764f3a13fe003966a6b0c3d0233670a918dada0d",
-          "size_bytes": 4188
+          "sha256": "sha256:beb30c234cb74265a6f2a87ad1bb5f390a6fbd4ebf8df8076be8b89da6767d39",
+          "size_bytes": 7374
         },
         {
           "path": "tests/test_comparison_return.py",
@@ -578,8 +578,13 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:8c23c3768ca14730d547743c573cd6f3ab2c9b598463f075d0156b5b13ac2623",
+      "aggregate_sha256": "sha256:55a53fc1f33d96d4034f20b3496b2393f37309e323b8fa921418bc7afcb38c1c",
       "artifacts": [
+        {
+          "path": ".agents/skills/README.md",
+          "sha256": "sha256:7a36fcae0b6c3b59403a65500416a9e3f58745693ad7d2a86ce6ddd73ed04df7",
+          "size_bytes": 2259
+        },
         {
           "path": ".agents/skills/configured-environment-evidence-binding/SKILL.md",
           "sha256": "sha256:a2bfa641430d57da4482f2459e30dddec384d9f14f92d57d3106bcdf68808442",
@@ -627,8 +632,8 @@
         },
         {
           "path": "AGENTS.md",
-          "sha256": "sha256:94e33beb663098cd8437ae937d0e357d83da39a67e7799959d94b6fbac7f1c77",
-          "size_bytes": 5694
+          "sha256": "sha256:8ce924843760d9962896ae994656da56ed221f208fa475594b627d634e7ab294",
+          "size_bytes": 5804
         },
         {
           "path": "AUTHORS",
@@ -662,8 +667,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:0eec7d8b85302dac12b1b0ff00ee4d7a34a1a4f0e2377af42fde44b78f8b8b1c",
-          "size_bytes": 22711
+          "sha256": "sha256:5b9ba4e58b46844c9519b6a5eb96f10926df5612268a0be46867b52c631704a9",
+          "size_bytes": 26549
         },
         {
           "path": "SECURITY.md",
@@ -727,8 +732,8 @@
         },
         {
           "path": "infra/README.md",
-          "sha256": "sha256:079785eb5f940f9799495a0cbc6309284d00911a623becc73624d4e0d2d42360",
-          "size_bytes": 3745
+          "sha256": "sha256:e67f868b4e11769b4c219673f4f895690d072e6d6ff388b4314b238da02f1914",
+          "size_bytes": 6696
         },
         {
           "path": "machine-node.json",
@@ -874,7 +879,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:0259cab3fef28ab1fdead518e69b58bf9bd2c08d5bd0bd89669617362e0f030d",
+    "aggregate_sha256": "sha256:138a99675df5a0e212b15de0a7136f2d919faf3d2b1036573737017eced1c6fe",
     "kind": "content_addressed_artifact_inventory"
   }
 }
