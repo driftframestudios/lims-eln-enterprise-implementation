@@ -26,7 +26,7 @@
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
       "version": "1.0.0",
-      "digest": "sha256:e5c6daadf3f88df9a83195c7f977dd702c081c796e24e55d67704cfb965cf160"
+      "digest": "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f"
     },
     {
       "contract_id": "IMPLEMENTATION-OPEN-RECEIPTS-001",
@@ -67,9 +67,9 @@
     "digest": "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16"
   },
   "current_development_observation": {
-    "scope": "database_artifacts",
-    "coordinate_state": "current_database_artifacts_observed",
-    "flyway_version": "13.4.0",
+    "scope": "database_artifacts_successor_candidate",
+    "coordinate_state": "predecessor_observed_successor_candidate",
+    "flyway_version": "13.8.1",
     "receipt": "receipts/hosted-postgresql-proof.json"
   },
   "first_receipt_contract_id": "FIRST-RCP-IMPLEMENTATION-001",

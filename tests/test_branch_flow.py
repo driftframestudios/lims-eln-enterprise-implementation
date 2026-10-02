@@ -575,6 +575,17 @@ class BranchFlowTests(unittest.TestCase):
         self.assertIn("run_flyway validate", workflow)
         self.assertIn("run_flyway info", workflow)
         self.assertIn("FLYWAY_USER: laboratory_migrator", workflow)
+        self.assertIn("--file infra/migrator.Dockerfile", workflow)
+        self.assertIn(
+            "/run/secrets/postgres_migrator_password:ro",
+            workflow,
+        )
+        self.assertIn(
+            "command -v tr >/dev/null && command -v flyway >/dev/null "
+            "&& java -version && flyway -v",
+            workflow,
+        )
+        self.assertIn('"$migrator_image" info', workflow)
         self.assertIn("true:false:false:false:false:false", workflow)
         self.assertIn("false:false:true", workflow)
         self.assertIn("granted_role.rolname = 'laboratory_outbox_authority'", workflow)

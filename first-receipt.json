@@ -16,7 +16,7 @@
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
       "version": "1.0.0",
-      "digest": "sha256:e5c6daadf3f88df9a83195c7f977dd702c081c796e24e55d67704cfb965cf160"
+      "digest": "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f"
     },
     {
       "contract_id": "IMPLEMENTATION-OPEN-RECEIPTS-001",
@@ -37,7 +37,7 @@
       "status": "active"
     },
     {
-      "claim": "The post-release development carrier binds Flyway Community 13.4.0 to its exact hosted PostgreSQL receipt while the repository exercises signed tenant, durable Golden Specimen, custody, quantity, lineage, and outbox behavior in a synthetic live database.",
+      "claim": "The post-release development carrier selects Flyway Community 13.8.1 as the source candidate while the exact 13.4.0 hosted PostgreSQL receipt remains its observed predecessor. The configured successor proof is the named route for exercising signed tenant, durable Golden Specimen, custody, quantity, lineage, and outbox behavior in a synthetic live database.",
       "mode": "observed",
       "assurance_stage": "verified",
       "status": "active"
@@ -62,7 +62,7 @@
     }
   ],
   "coordination_horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
-  "current_horizon_summary": "The post-release development carrier preserves the immutable Implementation 0.3.2 release subject, the separately observed Flyway 13.4.0 database artifacts, and the accepted Comparison 0.3.2 return. Configured-environment successor evidence is the current horizon.",
+  "current_horizon_summary": "The post-release development carrier preserves the immutable Implementation 0.3.2 release subject, selects Flyway 13.8.1 as a successor candidate with the exact 13.4.0 hosted receipt as predecessor evidence, and retains the accepted Comparison 0.3.2 return. Configured-environment successor evidence is the current horizon.",
   "open_receipts": [
     "RCP-OBSERVED-VENDORS-001",
     "RCP-OBSERVED-MIGRATION-RESTORE-001",
