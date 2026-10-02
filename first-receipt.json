@@ -1,7 +1,7 @@
 {
   "first_receipt_id": "FIRST-RCP-IMPLEMENTATION-001",
   "machine_node_id": "NODE-LIMS-ELN-IMPLEMENTATION",
-  "as_of": "2026-09-04T09:55:56Z",
+  "as_of": "2026-10-02T22:14:32Z",
   "orientation_purpose": "Give a human or AI collaborator the minimum complete implementation state, authority boundary, evidence posture, invalidation conditions, and safe handoff needed to reproduce or extend this reference.",
   "authority_posture": {
     "mode": "orientation_only",
@@ -37,7 +37,7 @@
       "status": "active"
     },
     {
-      "claim": "The post-release development carrier selects Flyway Community 13.8.1 as the source candidate while the exact 13.4.0 hosted PostgreSQL receipt remains its observed predecessor. The configured successor proof is the named route for exercising signed tenant, durable Golden Specimen, custody, quantity, lineage, and outbox behavior in a synthetic live database.",
+      "claim": "The post-release development carrier's exact Flyway Community 13.8.1 coordinate has been observed in GitHub-hosted synthetic PostgreSQL 17 across migration replay, clean-upgrade convergence, signed tenant, durable Golden Specimen, custody, quantity, lineage, and outbox behavior.",
       "mode": "observed",
       "assurance_stage": "verified",
       "status": "active"
@@ -55,14 +55,14 @@
       "status": "active"
     },
     {
-      "claim": "Configured-environment and accountable-role observation remains an independent successor evidence branch.",
+      "claim": "Additional configured-environment qualification and accountable-role acceptance remain an independent successor evidence branch.",
       "mode": "observed",
       "assurance_stage": "specified",
       "status": "designed_but_unexercised"
     }
   ],
   "coordination_horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
-  "current_horizon_summary": "The post-release development carrier preserves the immutable Implementation 0.3.2 release subject, selects Flyway 13.8.1 as a successor candidate with the exact 13.4.0 hosted receipt as predecessor evidence, and retains the accepted Comparison 0.3.2 return. Configured-environment successor evidence is the current horizon.",
+  "current_horizon_summary": "The post-release development carrier preserves the immutable Implementation 0.3.2 release subject, carries the exact hosted PostgreSQL observation for the Flyway 13.8.1 source coordinate, and retains the accepted Comparison 0.3.2 return. Additional configured-environment qualification and accountable-role acceptance form the current horizon.",
   "open_receipts": [
     "RCP-OBSERVED-VENDORS-001",
     "RCP-OBSERVED-MIGRATION-RESTORE-001",
@@ -113,7 +113,7 @@
   "metadata": {
     "schema_version": "2.2.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-04T09:55:56Z",
+    "updated_at": "2026-10-02T22:14:32Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-RECEIPT",
       "display_name": "Implementation stewardship role",

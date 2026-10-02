@@ -173,10 +173,11 @@ CURRENT_EXTERNAL_COORDINATE_DIGEST = (
     "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1"
 )
 CURRENT_OBSERVATION_TIME = "2026-09-02T11:23:40Z"
-CURRENT_RECONCILIATION_TIME = "2026-09-04T09:55:56Z"
+CURRENT_RECONCILIATION_TIME = "2026-10-02T22:14:32Z"
 ACCEPTED_PRIOR_HOSTED_COMMIT = "205401a530e984e031bb2c52a1654c6b5f82bc6d"
 HISTORICAL_PRIOR_HOSTED_COMMIT = "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
-CURRENT_DATABASE_HOSTED_COMMIT = "e15f0a37520b651cf83e856c3b9d67ab9f42cd9b"
+PREDECESSOR_DATABASE_HOSTED_COMMIT = "e15f0a37520b651cf83e856c3b9d67ab9f42cd9b"
+CURRENT_DATABASE_HOSTED_COMMIT = "2d12b111edb86f1f16f02338933a827b767a687f"
 EXCLUDED_DIRECTORY_NAMES = {
     ".git",
     ".mypy_cache",
@@ -398,9 +399,15 @@ def classify_hosted_postgresql_receipt_binding(
 
     repository_version = hosted_bindings.get("repository")
     observed_commit = str(hosted_bindings.get("repository_commit", ""))
-    if repository_version == "0.3.1":
+    if repository_version == "0.3.2":
         if observed_commit == CURRENT_DATABASE_HOSTED_COMMIT:
             return "current_database_artifacts"
+        raise AssertionError(
+            "current 0.3.2 hosted receipt requires its exact observed commit"
+        )
+    if repository_version == "0.3.1":
+        if observed_commit == PREDECESSOR_DATABASE_HOSTED_COMMIT:
+            return "observed_predecessor"
         if observed_commit == ACCEPTED_PRIOR_HOSTED_COMMIT:
             return "accepted_prior"
         if observed_commit == HISTORICAL_PRIOR_HOSTED_COMMIT:
@@ -412,6 +419,107 @@ def classify_hosted_postgresql_receipt_binding(
         "hosted PostgreSQL receipt requires an exact retained observation; "
         "a later release receives its own accepted hosted commit coordinate"
     )
+
+
+def validate_hosted_postgresql_coordinate_state(
+    *,
+    binding_kind: str,
+    coordinate_state: str,
+) -> None:
+    """Keep the active database state aligned with its receipt generation."""
+
+    expected_states = {
+        "current_database_artifacts": "current_database_artifacts_observed",
+        "observed_predecessor": "predecessor_observed_successor_candidate",
+    }
+    if expected_states.get(binding_kind) != coordinate_state:
+        raise AssertionError(
+            "hosted PostgreSQL coordinate state requires its matching receipt binding"
+        )
+
+
+def validate_current_hosted_postgresql_receipt_contract(
+    hosted_receipt: dict,
+) -> None:
+    """Bind the complete current hosted receipt identity and evidence set."""
+
+    expected_identity = {
+        "schema_version": "1.1.0",
+        "receipt_id": "RECEIPT-HOSTED-POSTGRESQL-001",
+        "claim_id": "CLAIM-HOSTED-SYNTHETIC-DATABASE-BOUNDARIES",
+        "intended_use_id": "INTENDED-USE-SYNTHETIC-REFERENCE",
+        "release_claim_id": "RELEASE-CLAIM-IMPLEMENTATION-0.3.2",
+        "evidence_mode": "observed",
+        "assurance_stage": "verified",
+        "environment": "github-hosted-synthetic-postgresql",
+        "observed_at": "2026-10-02T22:14:32Z",
+        "performer_id": "GITHUB-ACTIONS-HOSTED-RUNNER",
+        "reviewer_id": "SYN-INDEPENDENT-DATABASE-CONVERGENCE-SUITE",
+    }
+    expected_scenarios = (
+        "SCN-DB-MIGRATION-CHECKSUM-REPLAY",
+        "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",
+        "SCN-DB-MIGRATION-004-PROVENANCE-GATE",
+        "SCN-DB-SIGNED-TENANT-BOUNDARY",
+        "SCN-DB-TENANT-CONTEXT-TAMPER-EXPIRY",
+        "SCN-DB-CUSTODY-CAS-AND-ATOMIC-OUTBOX",
+        "SCN-DB-SECURITY-DEFINER-TEMP-SHADOW",
+        "SCN-DB-OUTBOX-CONTENT-IMMUTABILITY",
+        "SCN-DB-OUTBOX-FENCED-CLAIM-RECLAIM-STALE-CONFIRM",
+        "SCN-DB-OUTBOX-LEASE-DURATION-INTEGER-BOUND",
+        "SCN-DB-OUTBOX-MESSAGE-IDENTITY-LIVENESS",
+        "SCN-DB-OUTBOX-TRANSITION-AUTHORITY",
+        "SCN-DB-OUTBOX-ATTEMPT-ACK-RECOVERY-EVIDENCE",
+        "SCN-DB-OUTBOX-TRANSPORT-RECEIPT-UNIQUENESS",
+        "SCN-DB-SCIENTIFIC-QUANTITY-EXACTNESS",
+        "SCN-DB-VERIFICATION-KEY-CONFIDENTIALITY",
+        "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",
+        "SCN-DB-FLYWAY-ARTIFACT-INVENTORY",
+        "SCN-DB-MIGRATION-CLEAN-UPGRADE-CONVERGENCE",
+        "SCN-DB-MEASUREMENT-COMPLETE-LINEAGE",
+        "SCN-DB-CUSTODY-COMPLETE-EVENT-BINDING",
+        "SCN-DB-WORKBENCH-RESTART-RELOAD",
+        "SCN-DB-WORKBENCH-REPLAY-COLLISION-ISOLATION",
+        "SCN-DB-WORKBENCH-ROLLBACK-RETRY",
+        "SCN-DB-WORKBENCH-INSTRUMENT-RECOVERY",
+        "SCN-DB-WORKBENCH-DECIMAL-SOURCE-SHAPE",
+        "SCN-DB-WORKBENCH-CANONICAL-DIGEST",
+    )
+    expected_artifact_digests = (
+        "sha256:2e993316b59334071e5234cbb3d2c463a96f67e84550202a2df3f49d3c27a283",
+        "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f",
+        "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a",
+    )
+    expected_limitations = (
+        "This receipt establishes the synthetic hosted PostgreSQL 17 migration, "
+        "durable workbench, and upgrade-replay paths for the named commit; "
+        "production authorization remains with accountable environment owners.",
+        "The independently signed v0.3.2 release subject retains its existing "
+        "promotion observation; this receipt binds only the named post-release "
+        "development commit.",
+        "PostgreSQL 18.6 compatibility was observed locally and remains outside "
+        "this hosted coordinate.",
+        "Representative populated migration and restore rehearsal retains its "
+        "independent successor receipt.",
+        "Production security and observability evidence retains its independent "
+        "successor receipt.",
+        "Accountable Scientific, Quality, and Regulatory acceptance retains its "
+        "independent successor receipt.",
+    )
+    if (
+        any(
+            hosted_receipt.get(key) != value
+            for key, value in expected_identity.items()
+        )
+        or tuple(hosted_receipt.get("scenario_ids", ())) != expected_scenarios
+        or tuple(hosted_receipt.get("artifact_digests", ()))
+        != expected_artifact_digests
+        or tuple(hosted_receipt.get("limitations", ())) != expected_limitations
+    ):
+        raise AssertionError(
+            "current hosted PostgreSQL receipt requires its exact identity and "
+            "complete evidence set"
+        )
 
 
 def validate_promotion_lifecycle(
@@ -712,8 +820,8 @@ def validate_promotion_lifecycle(
         "digest": CURRENT_ARCHIVE_DIGEST,
     }
     expected_development_observation = {
-        "scope": "database_artifacts_successor_candidate",
-        "coordinate_state": "predecessor_observed_successor_candidate",
+        "scope": "database_artifacts",
+        "coordinate_state": "current_database_artifacts_observed",
         "flyway_version": "13.8.1",
         "receipt": "receipts/hosted-postgresql-proof.json",
     }
@@ -1250,10 +1358,7 @@ def validate_manifests() -> None:
         or database_hosted_evidence.get("receipt_path")
         != "receipts/hosted-postgresql-proof.json"
         or database_hosted_evidence.get("coordinate_state")
-        not in {
-            "predecessor_observed_successor_candidate",
-            "current_database_artifacts_observed",
-        }
+        != "current_database_artifacts_observed"
         or database_hosted_evidence.get("promotion_signal")
         != "implementation-validation"
     ):
@@ -1514,14 +1619,12 @@ def validate_manifests() -> None:
             "hosted PostgreSQL receipt requires observed synthetic verification"
         )
     hosted_bindings = hosted_receipt.get("version_bindings", {})
-    observed_commit = str(hosted_bindings.get("repository_commit", ""))
-    observed_run = str(hosted_bindings.get("workflow_run", ""))
     binding_kind = classify_hosted_postgresql_receipt_binding(hosted_bindings)
-    historical_run = (
-        "https://github.com/driftframestudios/"
-        "lims-eln-enterprise-implementation/actions/runs/30933020047"
+    validate_hosted_postgresql_coordinate_state(
+        binding_kind=binding_kind,
+        coordinate_state=str(database_hosted_evidence.get("coordinate_state", "")),
     )
-    candidate_scenarios = {
+    flyway_generation_scenarios = {
         "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",
         "SCN-DB-FLYWAY-ARTIFACT-INVENTORY",
         "SCN-DB-MIGRATION-CLEAN-UPGRADE-CONVERGENCE",
@@ -1534,59 +1637,10 @@ def validate_manifests() -> None:
         "SCN-DB-WORKBENCH-DECIMAL-SOURCE-SHAPE",
         "SCN-DB-WORKBENCH-CANONICAL-DIGEST",
     }
-    if binding_kind == "accepted_prior":
-        accepted_prior_run = (
-            "https://github.com/driftframestudios/"
-            "lims-eln-enterprise-implementation/actions/runs/33581976426"
-        )
-        accepted_prior_digests = {
-            "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea",
-            migration_release_digest,
-            inventory_digest,
-        }
-        if (
-            observed_commit != ACCEPTED_PRIOR_HOSTED_COMMIT
-            or observed_run != accepted_prior_run
-            or hosted_bindings.get("database_migration_head") != "005"
-            or not accepted_prior_digests.issubset(
-                hosted_receipt["artifact_digests"]
-            )
-            or hosted_bindings.get("flyway") != migration_release["flyway_version"]
-            or hosted_bindings.get("flyway_image")
-            != migration_release["container_image"]
-            or hosted_bindings.get("migration_authenticated_login")
-            != migration_release["authenticated_login"]
-            or hosted_bindings.get("migration_role")
-            != migration_release["migration_role"]
-            or not candidate_scenarios.issubset(hosted_receipt["scenario_ids"])
-        ):
-            raise AssertionError(
-                "historical hosted receipt requires the accepted 0.3.1 bindings"
-            )
-    elif binding_kind == "historical_prior":
-        historical_digests = {
-            "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd",
-            "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81",
-        }
-        if (
-            observed_run != historical_run
-            or hosted_bindings.get("database_migration_head") != "004"
-            or not historical_digests.issubset(hosted_receipt["artifact_digests"])
-        ):
-            raise AssertionError(
-                "historical hosted PostgreSQL receipt requires its observed bindings"
-            )
-        if not any(
-            "superseded by the Flyway transition" in limitation
-            for limitation in hosted_receipt["limitations"]
-        ):
-            raise AssertionError(
-                "historical hosted PostgreSQL receipt requires its successor boundary"
-            )
-    elif binding_kind == "current_database_artifacts":
+    if binding_kind == "observed_predecessor":
         predecessor_bindings = {
             "repository": "0.3.1",
-            "repository_commit": CURRENT_DATABASE_HOSTED_COMMIT,
+            "repository_commit": PREDECESSOR_DATABASE_HOSTED_COMMIT,
             "workflow_run": (
                 "https://github.com/driftframestudios/"
                 "lims-eln-enterprise-implementation/actions/runs/33590735647"
@@ -1603,15 +1657,11 @@ def validate_manifests() -> None:
             "migration_authenticated_login": "laboratory_migrator",
             "migration_role": "laboratory_owner",
         }
-        current_digests = {
+        predecessor_digests = {
             "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea",
             "sha256:e5c6daadf3f88df9a83195c7f977dd702c081c796e24e55d67704cfb965cf160",
             "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a",
         }
-        successor_image = (
-            "flyway/flyway:13.8.1-alpine@"
-            "sha256:ca3c8eddac25811f84c9767c56a0610ce23cd4e61f59bb05778a78db42347b39"
-        )
         successor_pending_limitation = (
             "This receipt establishes the preceding Flyway 13.4.0 hosted "
             "coordinate. The Flyway 13.8.1 successor becomes the current hosted "
@@ -1620,39 +1670,50 @@ def validate_manifests() -> None:
         )
         if (
             hosted_bindings != predecessor_bindings
-            or set(hosted_receipt["artifact_digests"]) != current_digests
+            or set(hosted_receipt["artifact_digests"]) != predecessor_digests
             or hosted_receipt.get("observed_at") != "2026-09-02T04:27:12Z"
+            or not flyway_generation_scenarios.issubset(
+                hosted_receipt["scenario_ids"]
+            )
+            or successor_pending_limitation not in hosted_receipt["limitations"]
+        ):
+            raise AssertionError(
+                "predecessor hosted PostgreSQL receipt requires its exact Flyway 13.4 bindings"
+            )
+    elif binding_kind == "current_database_artifacts":
+        validate_current_hosted_postgresql_receipt_contract(hosted_receipt)
+        current_bindings = {
+            "repository": "0.3.2",
+            "repository_commit": CURRENT_DATABASE_HOSTED_COMMIT,
+            "workflow_run": (
+                "https://github.com/driftframestudios/"
+                "lims-eln-enterprise-implementation/actions/runs/37071257377"
+            ),
+            "python": "3.12.14",
+            "postgresql": "17.10-alpine",
+            "database_migration_head": "005",
+            "tenant_authority": "signed_short_lived_database_verified_context",
+            "flyway": "13.8.1",
+            "flyway_image": (
+                "flyway/flyway:13.8.1-alpine@"
+                "sha256:ca3c8eddac25811f84c9767c56a0610ce23cd4e61f59bb05778a78db42347b39"
+            ),
+            "migration_authenticated_login": "laboratory_migrator",
+            "migration_role": "laboratory_owner",
+        }
+        if (
+            hosted_bindings != current_bindings
+            or migration_release["flyway_version"] != "13.8.1"
+            or migration_release["container_image"]
+            != current_bindings["flyway_image"]
+            or migration_release_digest
+            != "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f"
             or inventory_digest
             != "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a"
-            or not candidate_scenarios.issubset(hosted_receipt["scenario_ids"])
         ):
             raise AssertionError(
-                "current hosted PostgreSQL receipt requires its exact Flyway 13.4 bindings"
-            )
-        if database_hosted_evidence["coordinate_state"] == (
-            "predecessor_observed_successor_candidate"
-        ):
-            if (
-                migration_release["flyway_version"] != "13.8.1"
-                or migration_release["container_image"] != successor_image
-                or migration_release_digest
-                != "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f"
-                or successor_pending_limitation
-                not in hosted_receipt["limitations"]
-            ):
-                raise AssertionError(
-                    "Flyway successor candidate requires its exact 13.4 predecessor "
-                    "and selected 13.8.1 source"
-                )
-        elif (
-            hosted_bindings.get("flyway") != migration_release["flyway_version"]
-            or hosted_bindings.get("flyway_image")
-            != migration_release["container_image"]
-            or migration_release_digest not in hosted_receipt["artifact_digests"]
-            or successor_pending_limitation in hosted_receipt["limitations"]
-        ):
-            raise AssertionError(
-                "current hosted PostgreSQL receipt requires the selected Flyway source"
+                "current hosted PostgreSQL receipt requires the exact observed "
+                "Flyway 13.8.1 source, run, and artifact bindings"
             )
     required_database_scenarios = {
         "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",

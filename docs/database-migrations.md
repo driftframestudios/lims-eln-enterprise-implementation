@@ -11,11 +11,11 @@ V001-through-V005 migration by individual SHA-256 plus an ordered aggregate
 SHA-256. The release manifest binds both the
 inventory file and aggregate, creating one independently reviewable release
 coordinate while Flyway continues to own applied history and mechanics.
-The exact 13.4.0 hosted receipt remains predecessor evidence while the selected
-13.8.1 source completes its configured PostgreSQL qualification. The configured
-proof builds the repository migrator image and exercises its shell,
-secret-reading entrypoint, Flyway CLI, and JRE before the PostgreSQL migration
-matrix runs.
+The exact 13.8.1 hosted receipt binds the selected source coordinate to its
+configured PostgreSQL proof. That proof builds the repository migrator image
+and exercises its shell, secret-reading entrypoint, Flyway CLI, JRE, JDBC
+connection, and connection callback before the PostgreSQL migration matrix
+runs.
 The aggregate canonicalization emits each inventory entry in listed order as
 UTF-8 `path`, one NUL byte, the lowercase hexadecimal SHA-256, and one LF byte,
 then hashes the complete byte stream.

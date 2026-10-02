@@ -364,7 +364,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:29a41f1d4ddadba5850f24516851c87f61097bbd539efacde0fc9fcad34ae711",
+      "aggregate_sha256": "sha256:4ec6096232b4ef0d6fc791a986b4b60377dc2094e36118c0ec265571073636f4",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -413,8 +413,8 @@
         },
         {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:42e1f4cfcd5e0a4e8a71f27a29f344d73f193adc595d2716c00e5da905f4be8d",
-          "size_bytes": 79945
+          "sha256": "sha256:72f54c67c3c2e01bdced760fac1b2de6db0c53a222e945480ca44a1119640bc2",
+          "size_bytes": 82593
         },
         {
           "path": "tests/__init__.py",
@@ -458,8 +458,8 @@
         },
         {
           "path": "tests/test_database_migrations.py",
-          "sha256": "sha256:81325ac3e7b25fba8ebd9f5e24c66a1cdd1052e8e33b709b57146bb7b36fcef9",
-          "size_bytes": 12660
+          "sha256": "sha256:9bd542107b97fcb0d5c20d9cab37b7190118814267e7e07d23092f237b9cb22f",
+          "size_bytes": 13372
         },
         {
           "path": "tests/test_labkey_adapter.py",
@@ -488,8 +488,8 @@
         },
         {
           "path": "tests/test_promotion_lifecycle.py",
-          "sha256": "sha256:0b5ac152c5a5f41a2bb37a5421004e3e22ba74580d723e2ab9086627d5acdaa9",
-          "size_bytes": 7866
+          "sha256": "sha256:f05d5c60ebb78eb8314eabeb47d4892b8f7f369ea4e0ec0134e6c4078337b091",
+          "size_bytes": 10027
         },
         {
           "path": "tests/test_public_inspection_manifest.py",
@@ -546,12 +546,12 @@
       "responsibility": "Repository validation and tests for tenant isolation, scientific correctness, replay, recovery, and delivery evidence."
     },
     {
-      "aggregate_sha256": "sha256:5ebcb8304dade6daa0ad7f228112598836633b620bab461e5d1452e52e81eaa2",
+      "aggregate_sha256": "sha256:4a640f69145855b6f68015986472fffb13337fb48aa1f4dd374f163dc331ba5e",
       "artifacts": [
         {
           "path": "receipts/hosted-postgresql-proof.json",
-          "sha256": "sha256:f3db86ed5ae59d50097cbc731b98a3e49b41300a9ac4f1a0028757f4d67ee2f8",
-          "size_bytes": 3576
+          "sha256": "sha256:6833e9072dcbbe6078970391f7df5829a0e70ce6b976e3431970f81bc7af3c52",
+          "size_bytes": 3507
         },
         {
           "path": "receipts/local-verification.example.json",
@@ -578,7 +578,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:17137dada277f6c698c3ad210c872a36acac8e77ae7cdf7390b95dd8ec6f4cc7",
+      "aggregate_sha256": "sha256:9ea2352cbb4d7a70dab6b2182ee1a30cba4b07435863200c1791502a75ab5a7e",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -642,8 +642,8 @@
         },
         {
           "path": "CHANGELOG.md",
-          "sha256": "sha256:e67d0f1ffc1e2db91e4f08e4f9706ebd39f1f0e219e0d65d81135c8889b68362",
-          "size_bytes": 12980
+          "sha256": "sha256:e40bd48fe610c3e6e6dc94b41d9de3e3a15870753653c5f4a92e61bbe72358cb",
+          "size_bytes": 12977
         },
         {
           "path": "CONTRIBUTING.md",
@@ -652,8 +652,8 @@
         },
         {
           "path": "COORDINATION-HORIZON.json",
-          "sha256": "sha256:d9e62b7affa86b2b7a562d757b2f00dd7aa3de8c44aadbd6b717d6bacbc1f7d1",
-          "size_bytes": 7805
+          "sha256": "sha256:7a96209e9564de7bfc7a25fc790cc1491d379e45b312ff441eb215987ad013eb",
+          "size_bytes": 7793
         },
         {
           "path": "LICENSE",
@@ -667,8 +667,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:35f2ae2ecb5fa2486363e7c0147125d69a485de26b1bd2cd7866f8d58da25eba",
-          "size_bytes": 26621
+          "sha256": "sha256:6211de0a39e86609f32430645f91684f864ff71942ab13286b60aa930bca60a1",
+          "size_bytes": 26681
         },
         {
           "path": "SECURITY.md",
@@ -682,18 +682,18 @@
         },
         {
           "path": "docs/branching-and-release.md",
-          "sha256": "sha256:5b809f415da5c31afc681d7249b8a606b441e4857defe64298a616cfe87f2c31",
-          "size_bytes": 8962
+          "sha256": "sha256:6ffd824bff2d0124bbe1d56d8591d29656111a3c867707d387d188bf4f45ed92",
+          "size_bytes": 8981
         },
         {
           "path": "docs/data-primitive-corrective-ledger.md",
-          "sha256": "sha256:524317373d4402b3b2b54c8f9d56110c9e867e3bb85e471f57e616c0654b0854",
-          "size_bytes": 34097
+          "sha256": "sha256:c71f01ebe91def959f8436f9af1face234cbae934c0567a13d5e2ec3e3b51ef7",
+          "size_bytes": 34151
         },
         {
           "path": "docs/database-migrations.md",
-          "sha256": "sha256:055117e1989fe761e058424e30fe5f68983bccfe506b4c77ec9a8846a8798cbb",
-          "size_bytes": 13750
+          "sha256": "sha256:9aafa8f82cb22493e922bc0068a4a15973641051790c52488a8c325713696272",
+          "size_bytes": 13738
         },
         {
           "path": "docs/golden-specimen-workbench.md",
@@ -727,18 +727,18 @@
         },
         {
           "path": "first-receipt.json",
-          "sha256": "sha256:0e8f4c69c06c0a2aed3ee83d861ea120e517bca30be85466e30a9514acfd7a27",
-          "size_bytes": 6558
+          "sha256": "sha256:e18e98c774925bd4736fdb786788c31eb54ccc68bee33063fff9d70d4c0a31c2",
+          "size_bytes": 6522
         },
         {
           "path": "infra/README.md",
-          "sha256": "sha256:34c1508d48abd01644e869fe525b082d32b4c726686ae3388e97b9cbbd2e5e61",
-          "size_bytes": 7007
+          "sha256": "sha256:c02cbe2490af006fc40046540821abfa82376abac5ae764ae19b7554b80f4269",
+          "size_bytes": 7005
         },
         {
           "path": "machine-node.json",
-          "sha256": "sha256:c1ad0eab02ac4e030a68a240fb7dbbfc406fbcbb539a58bd1b420e5eda08f41c",
-          "size_bytes": 5670
+          "sha256": "sha256:bc96869c3ba28928d52584e43f74a5f84c8d82fb83af959f5e6d71cca674d978",
+          "size_bytes": 5645
         },
         {
           "path": "provenance.json",
@@ -879,7 +879,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:56f01446516e9a1f033854c0d212900fab715d7275b4ae9443229ed81cf46a03",
+    "aggregate_sha256": "sha256:a121111a15c9a520bf50b1e56d7a8ffee5b096ea83959eb88fbc611bfb546a23",
     "kind": "content_addressed_artifact_inventory"
   }
 }

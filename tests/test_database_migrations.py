@@ -100,7 +100,7 @@ class DatabaseMigrationTests(unittest.TestCase):
         self.assertEqual(inventory["aggregate_sha256"], aggregate)
         self.assertEqual(inventory_reference["aggregate_sha256"], aggregate)
 
-    def test_hosted_receipt_tracks_selected_flyway_and_exact_predecessor(self) -> None:
+    def test_hosted_receipt_binds_the_observed_flyway_coordinate(self) -> None:
         release = json.loads(RELEASE_PATH.read_text(encoding="utf-8"))
         repository_role = json.loads(
             (ROOT / "release" / "repository-role.json").read_text(encoding="utf-8")
@@ -122,30 +122,47 @@ class DatabaseMigrationTests(unittest.TestCase):
         self.assertEqual(coordinate["promotion_signal"], "implementation-validation")
         self.assertEqual(
             coordinate["coordinate_state"],
-            "predecessor_observed_successor_candidate",
+            "current_database_artifacts_observed",
         )
-        self.assertEqual(bindings["repository"], "0.3.1")
+        self.assertEqual(
+            receipt["release_claim_id"],
+            "RELEASE-CLAIM-IMPLEMENTATION-0.3.2",
+        )
+        self.assertEqual(bindings["repository"], "0.3.2")
         self.assertEqual(
             bindings["repository_commit"],
-            "e15f0a37520b651cf83e856c3b9d67ab9f42cd9b",
+            "2d12b111edb86f1f16f02338933a827b767a687f",
         )
         self.assertEqual(
             bindings["workflow_run"],
             "https://github.com/driftframestudios/"
-            "lims-eln-enterprise-implementation/actions/runs/33590735647",
+            "lims-eln-enterprise-implementation/actions/runs/37071257377",
         )
-        self.assertEqual(bindings["flyway"], "13.4.0")
+        self.assertEqual(bindings["flyway"], release["flyway_version"])
         self.assertEqual(
             bindings["flyway_image"],
-            "flyway/flyway:13.4.0-alpine@"
-            "sha256:66c0278f4398dd46b84d4108919a015b6ca03657a3d44ff2b349ad0602ace956",
+            release["container_image"],
         )
-        self.assertEqual(release["flyway_version"], "13.8.1")
-        self.assertIn(
+        self.assertEqual(receipt["observed_at"], "2026-10-02T22:14:32Z")
+        self.assertEqual(
+            set(receipt["artifact_digests"]),
+            {
+                "sha256:2e993316b59334071e5234cbb3d2c463a96f67e84550202a2df3f49d3c27a283",
+                "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f",
+                "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a",
+            },
+        )
+        self.assertNotIn(
             "This receipt establishes the preceding Flyway 13.4.0 hosted "
             "coordinate. The Flyway 13.8.1 successor becomes the current hosted "
             "coordinate when its named implementation-validation run, commit, "
             "and artifact bindings are recorded.",
+            receipt["limitations"],
+        )
+        self.assertIn(
+            "The independently signed v0.3.2 release subject retains its existing "
+            "promotion observation; this receipt binds only the named post-release "
+            "development commit.",
             receipt["limitations"],
         )
 
