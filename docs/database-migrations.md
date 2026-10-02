@@ -2,7 +2,7 @@
 
 ## Ownership boundary
 
-Flyway Community 13.4.0 owns migration discovery, ordering, locking, transaction
+Flyway Community 13.8.1 owns migration discovery, ordering, locking, transaction
 boundaries, applied history, checksum validation, status, and replay behavior.
 `database/flyway-release.json` pins the exact open-source Alpine image by version
 and multi-architecture digest. `database/flyway-artifact-inventory.json` binds
@@ -11,6 +11,11 @@ V001-through-V005 migration by individual SHA-256 plus an ordered aggregate
 SHA-256. The release manifest binds both the
 inventory file and aggregate, creating one independently reviewable release
 coordinate while Flyway continues to own applied history and mechanics.
+The exact 13.4.0 hosted receipt remains predecessor evidence while the selected
+13.8.1 source completes its configured PostgreSQL qualification. The configured
+proof builds the repository migrator image and exercises its shell,
+secret-reading entrypoint, Flyway CLI, and JRE before the PostgreSQL migration
+matrix runs.
 The aggregate canonicalization emits each inventory entry in listed order as
 UTF-8 `path`, one NUL byte, the lowercase hexadecimal SHA-256, and one LF byte,
 then hashes the complete byte stream.
@@ -57,7 +62,7 @@ configuration:
 docker run --rm --network host \
   --volume "$PWD:/flyway/project:ro" \
   --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
-  flyway/flyway:13.4.0-alpine@sha256:66c0278f4398dd46b84d4108919a015b6ca03657a3d44ff2b349ad0602ace956 \
+  flyway/flyway:13.8.1-alpine@sha256:ca3c8eddac25811f84c9767c56a0610ce23cd4e61f59bb05778a78db42347b39 \
   -workingDirectory=/flyway/project \
   -configFiles=/flyway/project/flyway.conf migrate
 ```

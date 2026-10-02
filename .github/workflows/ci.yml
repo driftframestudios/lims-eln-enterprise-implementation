@@ -72,7 +72,7 @@ jobs:
       LIMS_TEST_POSTGRES_DSN: postgresql://laboratory_app:synthetic-ci-app-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_MIGRATOR_DSN: postgresql://laboratory_migrator:synthetic-ci-migrator-password@127.0.0.1:5432/laboratory
       LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-      FLYWAY_IMAGE: flyway/flyway:13.4.0-alpine@sha256:66c0278f4398dd46b84d4108919a015b6ca03657a3d44ff2b349ad0602ace956
+      FLYWAY_IMAGE: flyway/flyway:13.8.1-alpine@sha256:ca3c8eddac25811f84c9767c56a0610ce23cd4e61f59bb05778a78db42347b39
       FLYWAY_URL: jdbc:postgresql://127.0.0.1:5432/laboratory
       FLYWAY_USER: laboratory_migrator
       FLYWAY_PASSWORD: synthetic-ci-migrator-password
@@ -143,6 +143,23 @@ jobs:
           fi
           grep --fixed-strings --quiet \
             "permission denied for schema public" direct-migrator-ddl.log
+
+      - name: Build and exercise the repository migrator image
+        run: |
+          migrator_image="lims-eln-migrator:proof"
+          migrator_secret_file="$RUNNER_TEMP/postgres_migrator_password"
+          docker build \
+            --file infra/migrator.Dockerfile \
+            --tag "$migrator_image" \
+            .
+          docker run --rm --entrypoint /bin/sh "$migrator_image" \
+            -c 'command -v tr >/dev/null && command -v flyway >/dev/null && java -version && flyway -v'
+          printf '%s\n' "$FLYWAY_PASSWORD" > "$migrator_secret_file"
+          chmod 0444 "$migrator_secret_file"
+          docker run --rm --network host \
+            --volume "$migrator_secret_file:/run/secrets/postgres_migrator_password:ro" \
+            --env FLYWAY_URL --env FLYWAY_USER \
+            "$migrator_image" info
 
       - name: Apply, validate, inspect, and replay Flyway migrations
         run: |
@@ -257,7 +274,7 @@ jobs:
       LIMS_TEST_POSTGRES_UPGRADE_OUTBOX_DSN: postgresql://laboratory_outbox_worker:synthetic-ci-outbox-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_UPGRADE_RECOVERY_DSN: postgresql://laboratory_outbox_recovery_operator:synthetic-ci-recovery-password@127.0.0.1:5432/laboratory
       LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-      FLYWAY_IMAGE: flyway/flyway:13.4.0-alpine@sha256:66c0278f4398dd46b84d4108919a015b6ca03657a3d44ff2b349ad0602ace956
+      FLYWAY_IMAGE: flyway/flyway:13.8.1-alpine@sha256:ca3c8eddac25811f84c9767c56a0610ce23cd4e61f59bb05778a78db42347b39
       FLYWAY_URL: jdbc:postgresql://127.0.0.1:5432/laboratory
       FLYWAY_USER: laboratory_migrator
       FLYWAY_PASSWORD: synthetic-ci-migrator-password

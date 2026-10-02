@@ -33,7 +33,7 @@ class DatabaseMigrationTests(unittest.TestCase):
     def test_flyway_release_is_version_and_digest_pinned(self) -> None:
         release = json.loads(RELEASE_PATH.read_text(encoding="utf-8"))
         self.assertEqual(release["migration_product"], "Flyway Community")
-        self.assertEqual(release["flyway_version"], "13.4.0")
+        self.assertEqual(release["flyway_version"], "13.8.1")
         self.assertRegex(
             release["container_image"],
             rf"^flyway/flyway:{re.escape(release['flyway_version'])}"
@@ -100,7 +100,7 @@ class DatabaseMigrationTests(unittest.TestCase):
         self.assertEqual(inventory["aggregate_sha256"], aggregate)
         self.assertEqual(inventory_reference["aggregate_sha256"], aggregate)
 
-    def test_hosted_receipt_tracks_exact_active_flyway_coordinate(self) -> None:
+    def test_hosted_receipt_tracks_selected_flyway_and_exact_predecessor(self) -> None:
         release = json.loads(RELEASE_PATH.read_text(encoding="utf-8"))
         repository_role = json.loads(
             (ROOT / "release" / "repository-role.json").read_text(encoding="utf-8")
@@ -122,7 +122,7 @@ class DatabaseMigrationTests(unittest.TestCase):
         self.assertEqual(coordinate["promotion_signal"], "implementation-validation")
         self.assertEqual(
             coordinate["coordinate_state"],
-            "current_database_artifacts_observed",
+            "predecessor_observed_successor_candidate",
         )
         self.assertEqual(bindings["repository"], "0.3.1")
         self.assertEqual(
@@ -134,8 +134,20 @@ class DatabaseMigrationTests(unittest.TestCase):
             "https://github.com/driftframestudios/"
             "lims-eln-enterprise-implementation/actions/runs/33590735647",
         )
-        self.assertEqual(bindings["flyway"], release["flyway_version"])
-        self.assertEqual(bindings["flyway_image"], release["container_image"])
+        self.assertEqual(bindings["flyway"], "13.4.0")
+        self.assertEqual(
+            bindings["flyway_image"],
+            "flyway/flyway:13.4.0-alpine@"
+            "sha256:66c0278f4398dd46b84d4108919a015b6ca03657a3d44ff2b349ad0602ace956",
+        )
+        self.assertEqual(release["flyway_version"], "13.8.1")
+        self.assertIn(
+            "This receipt establishes the preceding Flyway 13.4.0 hosted "
+            "coordinate. The Flyway 13.8.1 successor becomes the current hosted "
+            "coordinate when its named implementation-validation run, commit, "
+            "and artifact bindings are recorded.",
+            receipt["limitations"],
+        )
 
     def test_flyway_safety_controls_are_explicit(self) -> None:
         config = load_properties(CONFIG_PATH)

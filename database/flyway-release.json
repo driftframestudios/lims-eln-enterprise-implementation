@@ -2,8 +2,8 @@
   "schema_version": "1.0.0",
   "engine": "postgresql",
   "migration_product": "Flyway Community",
-  "flyway_version": "13.4.0",
-  "container_image": "flyway/flyway:13.4.0-alpine@sha256:66c0278f4398dd46b84d4108919a015b6ca03657a3d44ff2b349ad0602ace956",
+  "flyway_version": "13.8.1",
+  "container_image": "flyway/flyway:13.8.1-alpine@sha256:ca3c8eddac25811f84c9767c56a0610ce23cd4e61f59bb05778a78db42347b39",
   "configuration": "flyway.conf",
   "locations": [
     "filesystem:sql"

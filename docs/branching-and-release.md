@@ -54,8 +54,9 @@ both long-lived branches retain the correction.
 `release/public-inspection-manifest.json` records the exact repository bytes
 in the post-release development carrier. Its `release_subject` names the
 immutable v0.3.2 tag object and accepted source coordinate separately. The
-current inventory carries the exact Flyway 13.4.0 database artifacts and their
-hosted receipt without adding those bytes to the signed release subject. The
+current inventory carries the Flyway 13.8.1 successor source and exact 13.4.0
+hosted predecessor receipt without adding those bytes to the signed release
+subject. The
 ordered inventory covers runtime source,
 Flyway V001 through V005, local contracts and synthetic inputs, consequential
 behavior proofs, operational configuration, evidence records, and public

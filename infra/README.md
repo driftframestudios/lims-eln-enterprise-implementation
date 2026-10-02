@@ -38,11 +38,16 @@ environment: PostgreSQL, S3-compatible object storage, and an OpenTelemetry
 collector with protected-attribute removal.
 
 The PostgreSQL path first provisions and verifies cluster roles through a
-separate privileged step. A one-shot, digest-pinned Flyway Community 13.4.0
+separate privileged step. A one-shot, digest-pinned Flyway Community 13.8.1
 container then applies versioned migrations, validates their checksums through
 Flyway history, and exits. A following secret-bound step configures synthetic
 local role passwords and the tenant-verification key. The application proof
 waits for all three stages to complete successfully.
+
+The exact 13.4.0 hosted receipt remains predecessor evidence while the selected
+13.8.1 source completes its configured PostgreSQL qualification. That proof
+builds the repository migrator image and exercises its shell, secret-reading
+entrypoint, Flyway CLI, and JRE before the PostgreSQL migration matrix runs.
 
 The Flyway image receives its JDBC URL and `laboratory_migrator` user as
 ordinary configuration. Its small entry adapter reads the migrator credential

@@ -158,7 +158,7 @@
       "responsibility": "FastAPI, domain, adapter, and package source that defines executable behavior."
     },
     {
-      "aggregate_sha256": "sha256:b6044f905f785b735dbd0c11788ec7996d1492a9379128479bb0decdf59e01ae",
+      "aggregate_sha256": "sha256:4d32dda6df9e96b5d58c316ad90e46b9c80b256d468da42256fa247b7332a87a",
       "artifacts": [
         {
           "path": "database/flyway-artifact-inventory.json",
@@ -167,7 +167,7 @@
         },
         {
           "path": "database/flyway-release.json",
-          "sha256": "sha256:e5c6daadf3f88df9a83195c7f977dd702c081c796e24e55d67704cfb965cf160",
+          "sha256": "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f",
           "size_bytes": 1287
         },
         {
@@ -187,7 +187,7 @@
         },
         {
           "path": "infra/migrator.Dockerfile",
-          "sha256": "sha256:d388b628e95d9f53b1fcb8d076dad474195b6be73362305eb6d1e88be51bd1b2",
+          "sha256": "sha256:e5a9f5518fd59b41235472bde18925f2a0cb3d1f8bc2a9ee6afb9ac501cd79c4",
           "size_bytes": 321
         },
         {
@@ -364,12 +364,12 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:10555704e8bd8874cd5a16e123c3ba7bbb2521f4b82285e38961dbf566b00071",
+      "aggregate_sha256": "sha256:2ba2de395332345e706996c2e6757307c41c2b4920be7ae4dced0c9b42cbafb0",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
-          "sha256": "sha256:7032c069f3071e32c724093544075bed87d88f57ca42c61025e5cb6118b1ae14",
-          "size_bytes": 33115
+          "sha256": "sha256:4f043e036280bbd1a67d1d7322c8c6f24313e1cf4612c21fdacb3b6207a249c5",
+          "size_bytes": 33944
         },
         {
           "path": ".github/workflows/pull-request.yml",
@@ -413,8 +413,8 @@
         },
         {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:76844afe88765c9474a1ac5a625c0ce003ab4ba783157c06e77eb7153e3f01af",
-          "size_bytes": 78261
+          "sha256": "sha256:0a2a47cc294d7bee6d7118572a9b805564e3ffd78d0de7d52bd8bc576686ff60",
+          "size_bytes": 79824
         },
         {
           "path": "tests/__init__.py",
@@ -438,8 +438,8 @@
         },
         {
           "path": "tests/test_branch_flow.py",
-          "sha256": "sha256:d7960ca6b170b2af140432a27107bf383a816de37604e6a8ff6b4a9711beb765",
-          "size_bytes": 26670
+          "sha256": "sha256:49119268d2039f34c85810cd201bd6c804443b0fdc3dfd97f853cde17f5c0f86",
+          "size_bytes": 27081
         },
         {
           "path": "tests/test_collaboration_workbench.py",
@@ -458,8 +458,8 @@
         },
         {
           "path": "tests/test_database_migrations.py",
-          "sha256": "sha256:8c0a3fd8905652eaa1a8bbe7f48793594c70594facf745d86c198519bc3d6dbc",
-          "size_bytes": 12121
+          "sha256": "sha256:81325ac3e7b25fba8ebd9f5e24c66a1cdd1052e8e33b709b57146bb7b36fcef9",
+          "size_bytes": 12660
         },
         {
           "path": "tests/test_labkey_adapter.py",
@@ -546,12 +546,12 @@
       "responsibility": "Repository validation and tests for tenant isolation, scientific correctness, replay, recovery, and delivery evidence."
     },
     {
-      "aggregate_sha256": "sha256:971d167d7cfef4d3a9baf363ae101e5b0304bdaa3652613097dbf74b941aa1ae",
+      "aggregate_sha256": "sha256:5ebcb8304dade6daa0ad7f228112598836633b620bab461e5d1452e52e81eaa2",
       "artifacts": [
         {
           "path": "receipts/hosted-postgresql-proof.json",
-          "sha256": "sha256:7bd6ddaa9aa81356ac8306c3ee46f3d6d9f13dfdc3816d34da553b2d857ca6b2",
-          "size_bytes": 3341
+          "sha256": "sha256:f3db86ed5ae59d50097cbc731b98a3e49b41300a9ac4f1a0028757f4d67ee2f8",
+          "size_bytes": 3576
         },
         {
           "path": "receipts/local-verification.example.json",
@@ -578,7 +578,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:55a53fc1f33d96d4034f20b3496b2393f37309e323b8fa921418bc7afcb38c1c",
+      "aggregate_sha256": "sha256:17137dada277f6c698c3ad210c872a36acac8e77ae7cdf7390b95dd8ec6f4cc7",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -642,8 +642,8 @@
         },
         {
           "path": "CHANGELOG.md",
-          "sha256": "sha256:f2fae05e30f0596839ac65f0b94a6f9ea808683127992895a22bb0c0532f862a",
-          "size_bytes": 12606
+          "sha256": "sha256:e67d0f1ffc1e2db91e4f08e4f9706ebd39f1f0e219e0d65d81135c8889b68362",
+          "size_bytes": 12980
         },
         {
           "path": "CONTRIBUTING.md",
@@ -652,8 +652,8 @@
         },
         {
           "path": "COORDINATION-HORIZON.json",
-          "sha256": "sha256:37bcedf4e2b1eb91d48c5a47c2ebda128210d324d3d5da21362cb556215257b3",
-          "size_bytes": 7706
+          "sha256": "sha256:d9e62b7affa86b2b7a562d757b2f00dd7aa3de8c44aadbd6b717d6bacbc1f7d1",
+          "size_bytes": 7805
         },
         {
           "path": "LICENSE",
@@ -667,8 +667,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:5b9ba4e58b46844c9519b6a5eb96f10926df5612268a0be46867b52c631704a9",
-          "size_bytes": 26549
+          "sha256": "sha256:35f2ae2ecb5fa2486363e7c0147125d69a485de26b1bd2cd7866f8d58da25eba",
+          "size_bytes": 26621
         },
         {
           "path": "SECURITY.md",
@@ -677,23 +677,23 @@
         },
         {
           "path": "docs/architecture.md",
-          "sha256": "sha256:977e613759b4d715626899b224bdfe881a5609a334d696d0a40b988529879636",
+          "sha256": "sha256:839e7ca907d664520a61818ed00a1a00968403a6b7531161831d3874d7e26e2a",
           "size_bytes": 14629
         },
         {
           "path": "docs/branching-and-release.md",
-          "sha256": "sha256:d7ad91cde216ceb68c2d26158f05325bd51f667a7c160c96f20b2a1109c4b825",
-          "size_bytes": 8951
+          "sha256": "sha256:5b809f415da5c31afc681d7249b8a606b441e4857defe64298a616cfe87f2c31",
+          "size_bytes": 8962
         },
         {
           "path": "docs/data-primitive-corrective-ledger.md",
-          "sha256": "sha256:3336205bb51a686b1a1a244a828986fd8b8de554ca194095cf7e1e065d172948",
-          "size_bytes": 34055
+          "sha256": "sha256:524317373d4402b3b2b54c8f9d56110c9e867e3bb85e471f57e616c0654b0854",
+          "size_bytes": 34097
         },
         {
           "path": "docs/database-migrations.md",
-          "sha256": "sha256:5819ecdeeec26d22589cc18a3761210129598e1311dae62f7e0915bbebb786df",
-          "size_bytes": 13430
+          "sha256": "sha256:055117e1989fe761e058424e30fe5f68983bccfe506b4c77ec9a8846a8798cbb",
+          "size_bytes": 13750
         },
         {
           "path": "docs/golden-specimen-workbench.md",
@@ -727,18 +727,18 @@
         },
         {
           "path": "first-receipt.json",
-          "sha256": "sha256:13e64c8ad6f6a0125c605ee7eb71a51b0cda018dc52c953cc2d24364ae9c213f",
-          "size_bytes": 6395
+          "sha256": "sha256:0e8f4c69c06c0a2aed3ee83d861ea120e517bca30be85466e30a9514acfd7a27",
+          "size_bytes": 6558
         },
         {
           "path": "infra/README.md",
-          "sha256": "sha256:e67f868b4e11769b4c219673f4f895690d072e6d6ff388b4314b238da02f1914",
-          "size_bytes": 6696
+          "sha256": "sha256:34c1508d48abd01644e869fe525b082d32b4c726686ae3388e97b9cbbd2e5e61",
+          "size_bytes": 7007
         },
         {
           "path": "machine-node.json",
-          "sha256": "sha256:a240f1e37e06df4fa753c2ba258bae71567bf716f0fb4adc6b0d9526096db2cb",
-          "size_bytes": 5645
+          "sha256": "sha256:c1ad0eab02ac4e030a68a240fb7dbbfc406fbcbb539a58bd1b420e5eda08f41c",
+          "size_bytes": 5670
         },
         {
           "path": "provenance.json",
@@ -879,7 +879,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:138a99675df5a0e212b15de0a7136f2d919faf3d2b1036573737017eced1c6fe",
+    "aggregate_sha256": "sha256:7ba323a8d663d53b451d045fdb912c8f46e24d0437b954eace42e993c45045d7",
     "kind": "content_addressed_artifact_inventory"
   }
 }

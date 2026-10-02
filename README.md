@@ -23,7 +23,7 @@ signed `v0.3.2` subject remains the accepted release baseline while current
 | Branch | Role | Evidence route |
 | --- | --- | --- |
 | `main` | Preserves the observed v0.3.2 release baseline | [`0.3.2 promotion observation`](receipts/promotion-observation-v0.3.2.json) |
-| `develop` | Integrates the post-release workbench, Flyway 13.4.0 database evidence, Governance 2.2.0 orientation, and Comparison 0.3.2 return | [`repository role manifest`](release/repository-role.json) and [`public-inspection manifest`](release/public-inspection-manifest.json) |
+| `develop` | Integrates the post-release workbench, the Flyway 13.8.1 successor candidate with exact 13.4.0 predecessor evidence, Governance 2.2.0 orientation, and Comparison 0.3.2 return | [`repository role manifest`](release/repository-role.json) and [`public-inspection manifest`](release/public-inspection-manifest.json) |
 
 The [`Coordination Horizon`](COORDINATION-HORIZON.json) identifies configured
 observed-successor evidence as the next available route. Work enters that route
@@ -150,8 +150,9 @@ boundaries.
 gives a reviewer one deterministic inventory for the repository-owned
 post-release source state. The separate `release_subject` retains the
 immutable v0.3.2 tag object and accepted source coordinate. The current
-inventory includes the separately observed Flyway 13.4.0 database artifacts
-without recasting them as part of that signed release. It binds every current
+inventory includes the Flyway 13.8.1 successor source and the separately
+observed 13.4.0 predecessor without recasting either as part of that signed
+release. It binds every current
 FastAPI and domain source, Flyway V001 through
 V005, local contract and synthetic input, operational configuration, behavior
 proof, evidence record, and public orientation file by path, byte length,
@@ -377,7 +378,7 @@ offers security-invoker workbench projections. A bounded recording routine
 accepts only quarantined sources and accepted or replayed replacements from the
 same tenant and specimen.
 Flyway
-Community 13.4.0 owns migration discovery, ordering, locking, transactions,
+Community 13.8.1 owns migration discovery, ordering, locking, transactions,
 history, validation, information, target selection, and replay. Cluster roles
 remain a separate privileged deployment concern. Flyway authenticates as the
 least-privilege `laboratory_migrator` login. Its released `afterConnect.sql`

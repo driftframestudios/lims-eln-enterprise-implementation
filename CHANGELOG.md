@@ -24,6 +24,12 @@
 
 ### Database toolchain
 
+- Select Flyway Community 13.8.1 as the active, digest-pinned successor
+  candidate and align its Dockerfile, release coordinate, configured-proof
+  workflow, tests, and current orientation on that source.
+- Retain the exact Flyway 13.4.0 hosted PostgreSQL receipt as predecessor
+  evidence until a configured 13.8.1 proof binds its run, commit, and artifact
+  coordinates.
 - Advance the active, digest-pinned Flyway Community image from 13.0.0 to
   13.4.0 and keep the Dockerfile, release coordinate, configured PostgreSQL
   proofs, tests, and current orientation on that shared source.

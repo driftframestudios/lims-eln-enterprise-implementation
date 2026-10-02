@@ -710,9 +710,9 @@ def validate_promotion_lifecycle(
         "digest": CURRENT_ARCHIVE_DIGEST,
     }
     expected_development_observation = {
-        "scope": "database_artifacts",
-        "coordinate_state": "current_database_artifacts_observed",
-        "flyway_version": "13.4.0",
+        "scope": "database_artifacts_successor_candidate",
+        "coordinate_state": "predecessor_observed_successor_candidate",
+        "flyway_version": "13.8.1",
         "receipt": "receipts/hosted-postgresql-proof.json",
     }
     if (
@@ -1248,7 +1248,10 @@ def validate_manifests() -> None:
         or database_hosted_evidence.get("receipt_path")
         != "receipts/hosted-postgresql-proof.json"
         or database_hosted_evidence.get("coordinate_state")
-        != "current_database_artifacts_observed"
+        not in {
+            "predecessor_observed_successor_candidate",
+            "current_database_artifacts_observed",
+        }
         or database_hosted_evidence.get("promotion_signal")
         != "implementation-validation"
     ):
@@ -1579,7 +1582,7 @@ def validate_manifests() -> None:
                 "historical hosted PostgreSQL receipt requires its successor boundary"
             )
     elif binding_kind == "current_database_artifacts":
-        current_bindings = {
+        predecessor_bindings = {
             "repository": "0.3.1",
             "repository_commit": CURRENT_DATABASE_HOSTED_COMMIT,
             "workflow_run": (
@@ -1603,21 +1606,51 @@ def validate_manifests() -> None:
             "sha256:e5c6daadf3f88df9a83195c7f977dd702c081c796e24e55d67704cfb965cf160",
             "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a",
         }
+        successor_image = (
+            "flyway/flyway:13.8.1-alpine@"
+            "sha256:ca3c8eddac25811f84c9767c56a0610ce23cd4e61f59bb05778a78db42347b39"
+        )
+        successor_pending_limitation = (
+            "This receipt establishes the preceding Flyway 13.4.0 hosted "
+            "coordinate. The Flyway 13.8.1 successor becomes the current hosted "
+            "coordinate when its named implementation-validation run, commit, "
+            "and artifact bindings are recorded."
+        )
         if (
-            hosted_bindings != current_bindings
+            hosted_bindings != predecessor_bindings
             or set(hosted_receipt["artifact_digests"]) != current_digests
             or hosted_receipt.get("observed_at") != "2026-09-02T04:27:12Z"
-            or migration_release["flyway_version"] != "13.4.0"
-            or migration_release["container_image"]
-            != current_bindings["flyway_image"]
-            or migration_release_digest
-            != "sha256:e5c6daadf3f88df9a83195c7f977dd702c081c796e24e55d67704cfb965cf160"
             or inventory_digest
             != "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a"
             or not candidate_scenarios.issubset(hosted_receipt["scenario_ids"])
         ):
             raise AssertionError(
                 "current hosted PostgreSQL receipt requires its exact Flyway 13.4 bindings"
+            )
+        if database_hosted_evidence["coordinate_state"] == (
+            "predecessor_observed_successor_candidate"
+        ):
+            if (
+                migration_release["flyway_version"] != "13.8.1"
+                or migration_release["container_image"] != successor_image
+                or migration_release_digest
+                != "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f"
+                or successor_pending_limitation
+                not in hosted_receipt["limitations"]
+            ):
+                raise AssertionError(
+                    "Flyway successor candidate requires its exact 13.4 predecessor "
+                    "and selected 13.8.1 source"
+                )
+        elif (
+            hosted_bindings.get("flyway") != migration_release["flyway_version"]
+            or hosted_bindings.get("flyway_image")
+            != migration_release["container_image"]
+            or migration_release_digest not in hosted_receipt["artifact_digests"]
+            or successor_pending_limitation in hosted_receipt["limitations"]
+        ):
+            raise AssertionError(
+                "current hosted PostgreSQL receipt requires the selected Flyway source"
             )
     required_database_scenarios = {
         "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",
