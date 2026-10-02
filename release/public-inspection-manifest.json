@@ -364,12 +364,12 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:2ba2de395332345e706996c2e6757307c41c2b4920be7ae4dced0c9b42cbafb0",
+      "aggregate_sha256": "sha256:29a41f1d4ddadba5850f24516851c87f61097bbd539efacde0fc9fcad34ae711",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
-          "sha256": "sha256:4f043e036280bbd1a67d1d7322c8c6f24313e1cf4612c21fdacb3b6207a249c5",
-          "size_bytes": 33944
+          "sha256": "sha256:46b33854870edc059049369751ed199173c89de16cef7fd60cef90d06a3b4d6a",
+          "size_bytes": 33950
         },
         {
           "path": ".github/workflows/pull-request.yml",
@@ -413,8 +413,8 @@
         },
         {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:0a2a47cc294d7bee6d7118572a9b805564e3ffd78d0de7d52bd8bc576686ff60",
-          "size_bytes": 79824
+          "sha256": "sha256:42e1f4cfcd5e0a4e8a71f27a29f344d73f193adc595d2716c00e5da905f4be8d",
+          "size_bytes": 79945
         },
         {
           "path": "tests/__init__.py",
@@ -438,8 +438,8 @@
         },
         {
           "path": "tests/test_branch_flow.py",
-          "sha256": "sha256:49119268d2039f34c85810cd201bd6c804443b0fdc3dfd97f853cde17f5c0f86",
-          "size_bytes": 27081
+          "sha256": "sha256:7b780962563e46bfef8b8c1207cef711718bb65a14a0f1237f0efe32d558e467",
+          "size_bytes": 27200
         },
         {
           "path": "tests/test_collaboration_workbench.py",
@@ -879,7 +879,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:7ba323a8d663d53b451d045fdb912c8f46e24d0437b954eace42e993c45045d7",
+    "aggregate_sha256": "sha256:56f01446516e9a1f033854c0d212900fab715d7275b4ae9443229ed81cf46a03",
     "kind": "content_addressed_artifact_inventory"
   }
 }

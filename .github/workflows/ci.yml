@@ -572,7 +572,7 @@ jobs:
           cache: ""
 
       - name: Validate package type surfaces schemas and secret patterns
-        run: python3 scripts/validate_implementation.py
+        run: python3 -I -S scripts/validate_implementation.py
 
       - name: Build and import-check dependency-free package archive
         run: >-

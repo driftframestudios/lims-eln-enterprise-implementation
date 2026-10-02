@@ -11,10 +11,6 @@ import re
 import sys
 import unittest
 
-from jsonschema import Draft202012Validator, FormatChecker
-from jsonschema.exceptions import SchemaError
-
-
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 sys.path.insert(0, str(SRC))
@@ -336,6 +332,9 @@ def validate_promotion_candidate_schema(
 ) -> None:
     """Execute the candidate's declared JSON Schema against its exact document."""
 
+    from jsonschema import Draft202012Validator, FormatChecker
+    from jsonschema.exceptions import SchemaError
+
     path = schema_path or (ROOT / CURRENT_PROMOTION_CANDIDATE_SCHEMA_PATH)
     try:
         schema = json.loads(path.read_text(encoding="utf-8"))
@@ -365,6 +364,9 @@ def validate_promotion_observation_schema(
     schema_path: Path | None = None,
 ) -> None:
     """Execute the observation's declared JSON Schema against its exact document."""
+
+    from jsonschema import Draft202012Validator, FormatChecker
+    from jsonschema.exceptions import SchemaError
 
     path = schema_path or (ROOT / CURRENT_PROMOTION_OBSERVATION_SCHEMA_PATH)
     try:

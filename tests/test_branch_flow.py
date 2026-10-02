@@ -604,6 +604,10 @@ class BranchFlowTests(unittest.TestCase):
             "python3 -m unittest tests.test_postgres_integration -v",
             workflow,
         )
+        self.assertIn(
+            "python3 -I -S scripts/validate_implementation.py",
+            workflow,
+        )
         self.assertNotIn("options=-c%20role%3D", workflow)
         self.assertIn("flyway_schema_history", workflow)
         self.assertIn('= "laboratory_owner"', workflow)
