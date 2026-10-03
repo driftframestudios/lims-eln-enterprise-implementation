@@ -54,17 +54,17 @@ both long-lived branches retain the correction.
 `release/public-inspection-manifest.json` records the exact repository bytes
 in the post-release development carrier. Its `release_subject` names the
 immutable v0.3.2 tag object and accepted source coordinate separately. The
-current inventory carries the Flyway 13.8.1 successor source and exact 13.4.0
-hosted predecessor receipt without adding those bytes to the signed release
-subject. The
+current inventory carries the exact Flyway 13.8.1 source and its observed
+hosted database receipt without adding those post-release bytes to the signed
+release subject. The
 ordered inventory covers runtime source,
 Flyway V001 through V005, local contracts and synthetic inputs, consequential
 behavior proofs, operational configuration, evidence records, and public
 orientation. The root manifest and release-role manifest carry the current
 inventory SHA-256. The immutable candidate receipt retains the earlier candidate
-inventory SHA-256 and remains outside the inventory. The observed receipt sits
-inside the current inventory and binds the accepted release to that candidate,
-so the content-addressed route stays acyclic.
+inventory SHA-256 and remains outside the inventory. The promotion-observation
+receipt sits inside the current inventory and binds the accepted release to
+that candidate, so the content-addressed route stays acyclic.
 
 Run `python3 scripts/build_public_inspection_manifest.py --check` to establish
 that every selected path, file size, file digest, group digest, and aggregate

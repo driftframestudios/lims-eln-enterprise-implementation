@@ -44,10 +44,11 @@ Flyway history, and exits. A following secret-bound step configures synthetic
 local role passwords and the tenant-verification key. The application proof
 waits for all three stages to complete successfully.
 
-The exact 13.4.0 hosted receipt remains predecessor evidence while the selected
-13.8.1 source completes its configured PostgreSQL qualification. That proof
-builds the repository migrator image and exercises its shell, secret-reading
-entrypoint, Flyway CLI, and JRE before the PostgreSQL migration matrix runs.
+The exact 13.8.1 hosted receipt binds the selected source coordinate to its
+configured PostgreSQL proof. That proof builds the repository migrator image
+and exercises its shell, secret-reading entrypoint, Flyway CLI, JRE, JDBC
+connection, and connection callback before the PostgreSQL migration matrix
+runs.
 
 The Flyway image receives its JDBC URL and `laboratory_migrator` user as
 ordinary configuration. Its small entry adapter reads the migrator credential

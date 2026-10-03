@@ -2,7 +2,7 @@
   "horizon_id": "COORD-HORIZON-IMPLEMENTATION-2026-Q3",
   "title": "LIMS/ELN Implementation Coordination Horizon",
   "objective": "Keep bounded authority, durable persistence and vendor seams, selected-future comparison, and observed successor evidence legible without coupling the collaboration to one planning cadence.",
-  "as_of": "2026-09-04T09:55:56Z",
+  "as_of": "2026-10-02T22:14:32Z",
   "current_item_ids": [
     "HORIZON-OBSERVED-SUCCESSORS"
   ],
@@ -94,13 +94,13 @@
     }
   ],
   "reentry_capsule": {
-    "current_state": "The post-release development carrier preserves the signed Implementation 0.3.2 release subject, selects Flyway 13.8.1 as a successor candidate with the exact 13.4.0 hosted receipt as predecessor evidence, and retains the accepted Comparison 0.3.2 return. The comparison closes the selected-future handoff and leaves three measurement differences with accountable scientific mapping.",
+    "current_state": "The post-release development carrier preserves the signed Implementation 0.3.2 release subject, carries the exact hosted PostgreSQL observation for the Flyway 13.8.1 source coordinate, and retains the accepted Comparison 0.3.2 return. The comparison closes the selected-future handoff and leaves three measurement differences with accountable scientific mapping.",
     "recent_decisions": [
       "DECISION-BOUNDED-CALLER-SERVICE-OWNED",
       "DECISION-SIMULATED-AND-OBSERVED-BRANCHES"
     ],
     "next_safe_action": "When an accountable receiver selects a bounded configured-environment encounter, bind its environment, time, performer, reviewer, artifacts, limitations, and acceptance route while preserving the selected-future baseline.",
-    "verification": "Confirm the immutable Implementation 0.3.2 subject, accepted Comparison 0.3.2 release and observation carrier, Golden report digest and 10/4/3 result, three scientific mapping questions, exact Flyway 13.8.1 successor source and 13.4.0 predecessor receipt, Program and Governance coordinates, credential hygiene, and the continuing environment-qualification boundaries."
+    "verification": "Confirm the immutable Implementation 0.3.2 subject, accepted Comparison 0.3.2 release and observation carrier, Golden report digest and 10/4/3 result, three scientific mapping questions, exact hosted PostgreSQL observation for the Flyway 13.8.1 source coordinate, Program and Governance coordinates, credential hygiene, and the continuing environment-qualification boundaries."
   },
   "retained_effects": [
     "Service-owned operations continue to determine caller authority, scope, budgets, approvals, effects, receipts, and recovery.",
@@ -118,7 +118,7 @@
   "metadata": {
     "schema_version": "2.2.0",
     "created_at": "2026-07-28T19:30:00Z",
-    "updated_at": "2026-09-04T09:55:56Z",
+    "updated_at": "2026-10-02T22:14:32Z",
     "owner": {
       "actor_id": "OWNER-IMPLEMENTATION-HORIZON",
       "display_name": "Implementation stewardship role",

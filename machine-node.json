@@ -67,8 +67,8 @@
     "digest": "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16"
   },
   "current_development_observation": {
-    "scope": "database_artifacts_successor_candidate",
-    "coordinate_state": "predecessor_observed_successor_candidate",
+    "scope": "database_artifacts",
+    "coordinate_state": "current_database_artifacts_observed",
     "flyway_version": "13.8.1",
     "receipt": "receipts/hosted-postgresql-proof.json"
   },

@@ -8,11 +8,11 @@
   "database_flyway_release_digest": "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f",
   "database_hosted_evidence": {
     "receipt_path": "receipts/hosted-postgresql-proof.json",
-    "coordinate_state": "predecessor_observed_successor_candidate",
+    "coordinate_state": "current_database_artifacts_observed",
     "promotion_signal": "implementation-validation"
   },
   "external_contract_coordinate_digest": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
-  "public_inspection_manifest_digest": "sha256:01450e72bf6cd045dfa0bfa609b657be76b14e61f567fee5ac26730d06afe5fa",
+  "public_inspection_manifest_digest": "sha256:524b809fd1c6f26890f3b4349cc7c11d4520bb9802ea2db170b42977f2f64dc9",
   "open_receipt_ledger_digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad",
   "selected_future_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
   "comparison_return": {
