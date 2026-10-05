@@ -83,8 +83,9 @@ next release; the signed release baseline retains its original scope.
 The [workbench guide](docs/golden-specimen-workbench.md) describes the API,
 stored-state behavior, and typed observations. The [container entry](docs/runbooks/local-container-entry.v0.1.md)
 adds protected retained credentials and the same PostgreSQL factory in a confined
-application image. Comparison export and complete journey acceptance continue
-under Enterprise #43.
+application image. The [local observation export](docs/runbooks/local-observation-export.v0.1.md)
+preserves typed comparison inputs in protected storage. Complete journey
+acceptance continues under Enterprise #43.
 
 ## Capability map by reader job
 

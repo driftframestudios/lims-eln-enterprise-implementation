@@ -255,3 +255,30 @@ def _contracts_module() -> Any:
             f"installed package exposes {contract_version}"
         )
     return contracts
+
+
+def validate_observation_bytes(payload: bytes, *, tenant_id: str, run_id: str) -> None:
+    """Validate the existing envelope and its requested workbench identity."""
+    for identity in (tenant_id, run_id):
+        if (
+            not isinstance(identity, str) or not 3 <= len(identity) <= 128
+            or not identity.isascii() or not identity[0].isalnum()
+            or not identity[-1].isalnum()
+            or any(not (character.isalnum() or character in "._:@/-") for character in identity)
+        ):
+            raise ValueError("observation identity requires the workbench identifier grammar")
+    contracts = _contracts_module()
+    observation = contracts.model_from_strict_json(
+        contracts.GoldenSpecimenObservation, payload.decode("utf-8")
+    )
+    expected_id = "OBS-WORKBENCH-" + sha256(run_id.encode("utf-8")).hexdigest()[:16].upper()
+    if (
+        observation.observation_id != expected_id
+        or observation.result.projection.tenant_id != tenant_id
+        or observation.scenario_coordinate() != (
+            contracts.GOLDEN_SPECIMEN_SCENARIO_ID,
+            contracts.GOLDEN_SPECIMEN_SCENARIO_VERSION,
+            contracts.GOLDEN_SPECIMEN_SCENARIO_DIGEST,
+        )
+    ):
+        raise ValueError("observation requires the requested run, tenant, and scenario")
