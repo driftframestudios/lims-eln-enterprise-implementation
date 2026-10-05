@@ -160,10 +160,14 @@ have exited. Remove only those stopped job containers, then let the existing
 dependency chain rerun preparation and start the application:
 
 ~~~sh
-docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench stop application
-docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench \
-  rm -f database-role-provisioner database-migrator database-role-bootstrap
-docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench up -d application
+(
+  set -e
+  : "${PROJECT:?Select the retained Compose project before resuming}"
+  docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench stop application
+  docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench \
+    rm -f database-role-provisioner database-migrator database-role-bootstrap
+  docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench up -d application
+)
 ~~~
 
 Continue after successful setup-job exits, application readiness, and exact
