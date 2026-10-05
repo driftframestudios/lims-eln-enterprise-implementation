@@ -16,6 +16,7 @@ services:
       retries: 20
 
   database-role-provisioner:
+    init: true
     image: postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
     depends_on:
       postgres:
@@ -35,6 +36,7 @@ services:
     restart: "no"
 
   database-migrator:
+    init: true
     build:
       context: ${LIMS_MIGRATOR_CONTEXT:-..}
       dockerfile: infra/migrator.Dockerfile
@@ -49,6 +51,7 @@ services:
     restart: "no"
 
   database-role-bootstrap:
+    init: true
     image: postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
     depends_on:
       database-migrator:
@@ -71,6 +74,7 @@ services:
     restart: "no"
 
   application-db-check:
+    init: true
     image: postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
     profiles: ["proof"]
     depends_on:

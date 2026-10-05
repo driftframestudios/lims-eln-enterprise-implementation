@@ -100,7 +100,7 @@ class LocalSecretPreparationTests(unittest.TestCase):
 
 
 FAKE_CLIENT = r'''
-import hashlib, json, os, pathlib, re, signal, stat, sys, time
+import hashlib, json, os, pathlib, re, signal, stat, subprocess, sys, time
 root = pathlib.Path(os.environ["LIMS_SECRET_DIR"])
 values = [p.read_text().strip() for p in root.iterdir()]
 args = sys.argv[1:]
@@ -124,6 +124,11 @@ if os.environ.get("FAKE_DATABASE") and data:
         pathlib.Path(os.environ["FAKE_DATABASE"]).write_text(
             hashlib.sha256(match[1].encode()).hexdigest()
         )
+if mode == "launcher":
+    child = subprocess.Popen(
+        [sys.executable, __file__], env={**os.environ, "FAKE_MODE": "stall"}
+    )
+    raise SystemExit(child.wait())
 if mode == "stall":
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
     time.sleep(60)
@@ -148,6 +153,9 @@ elif "select current_user" in query:
 '''
 
 
+SET_SID_CLIENT = "import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])"
+
+
 class LocalSecretTransportTests(unittest.TestCase):
     def test_clients_receive_protected_input_with_bounded_output_and_cleanup(self):
         scripts = (
@@ -169,9 +177,9 @@ class LocalSecretTransportTests(unittest.TestCase):
                         values.append(value)
                         (secret_dir / name).write_text(value + "\n")
                         (secret_dir / name).chmod(0o600)
-                    for name in ("psql", "flyway"):
+                    for name in ("psql", "flyway", "setsid"):
                         executable = binaries / name
-                        executable.write_text("#!" + sys.executable + "\n" + FAKE_CLIENT)
+                        executable.write_text("#!" + sys.executable + "\n" + (SET_SID_CLIENT if name == "setsid" else FAKE_CLIENT))
                         executable.chmod(0o700)
                     record = root / "record.jsonl"
                     environment = {
@@ -220,16 +228,16 @@ class LocalSecretTransportTests(unittest.TestCase):
                 secrets_dir.mkdir()
                 for name in NAMES:
                     (secrets_dir / name).write_text(secrets.token_hex(32) + "\n")
-                for name in ("psql", "flyway"):
+                for name in ("psql", "flyway", "setsid"):
                     target = binary / name
-                    target.write_text("#!" + sys.executable + "\n" + FAKE_CLIENT)
+                    target.write_text("#!" + sys.executable + "\n" + (SET_SID_CLIENT if name == "setsid" else FAKE_CLIENT))
                     target.chmod(0o700)
                 record = root / "record"
                 environment = {
                     "PATH": str(binary) + ":/usr/bin:/bin", "TMPDIR": str(scratch),
                     "LIMS_SECRET_DIR": str(secrets_dir),
                     "LIMS_SECRET_HELPER": str(ROOT / "infra/secret-files.sh"),
-                    "FAKE_MODE": "stall", "FAKE_RECORD": str(record),
+                    "FAKE_MODE": "launcher", "FAKE_RECORD": str(record),
                     "POSTGRES_USER": "laboratory_bootstrap", "POSTGRES_DB": "laboratory",
                 }
                 process = subprocess.Popen(
@@ -238,22 +246,28 @@ class LocalSecretTransportTests(unittest.TestCase):
                 )
                 try:
                     deadline = time.monotonic() + 5
-                    while not record.exists() and time.monotonic() < deadline:
+                    while time.monotonic() < deadline:
+                        if record.exists() and len(record.read_text().splitlines()) == 2:
+                            break
                         time.sleep(0.01)
-                    self.assertTrue(record.exists(), "client reached its controlled stall")
+                    self.assertTrue(record.exists(), "launcher reached its controlled stall")
+                    self.assertEqual(len(record.read_text().splitlines()), 2)
                     # The client installs its handler immediately after publishing the record.
                     time.sleep(0.05)
                     process.terminate()
-                    output, errors = process.communicate(timeout=5)
+                    output, errors = process.communicate(timeout=8)
                     self.assertEqual(process.returncode, 143, output + errors)
-                    observation = json.loads(record.read_text().splitlines()[0])
-                    with self.assertRaises(ProcessLookupError):
-                        os.kill(observation["pid"], 0)
+                    for row in record.read_text().splitlines():
+                        observation = json.loads(row)
+                        with self.assertRaises(ProcessLookupError):
+                            os.kill(observation["pid"], 0)
                     self.assertEqual(list(scratch.iterdir()), [])
                 finally:
                     if process.poll() is None:
                         process.kill()
                         process.wait(timeout=5)
+                    process.stdout.close()
+                    process.stderr.close()
 
     def test_uncertain_rotation_reapplies_prior_values_before_restart(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -264,6 +278,9 @@ class LocalSecretTransportTests(unittest.TestCase):
             executable = binary / "psql"
             executable.write_text("#!" + sys.executable + "\n" + FAKE_CLIENT)
             executable.chmod(0o700)
+            session = binary / "setsid"
+            session.write_text("#!" + sys.executable + "\n" + SET_SID_CLIENT)
+            session.chmod(0o700)
             database = root / "database-fingerprint"
             old_value, candidate_value = secrets.token_hex(32), secrets.token_hex(32)
             environment = {

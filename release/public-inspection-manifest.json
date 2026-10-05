@@ -173,7 +173,7 @@
       "responsibility": "FastAPI, domain, adapter, and package source that defines executable behavior."
     },
     {
-      "aggregate_sha256": "sha256:349cc3da4754bd99c876ade59e15f9aecd0dd282c05be06ec9ad029f39f80503",
+      "aggregate_sha256": "sha256:01425b23466f7641f48a185e4bd591da9a51fe1a8c050850ef0ed55634eae6ad",
       "artifacts": [
         {
           "path": "database/flyway-artifact-inventory.json",
@@ -207,8 +207,8 @@
         },
         {
           "path": "infra/docker-compose.yml",
-          "sha256": "sha256:8c7f7484066a0eaaaed2de78eda2ff0b311bcf286c06a39dacb8637470da4324",
-          "size_bytes": 5774
+          "sha256": "sha256:20a5369b7f5e6fbb1db47147492d1375098907fc35d7b4bd69754ece7d5e2f2a",
+          "size_bytes": 5834
         },
         {
           "path": "infra/migrator.Dockerfile",
@@ -232,8 +232,8 @@
         },
         {
           "path": "infra/secret-files.sh",
-          "sha256": "sha256:a878c366a4d1dbfa9a9559ab5f48f367c4d8a2adb4cab17c57546c8657cf91e7",
-          "size_bytes": 2592
+          "sha256": "sha256:befa069a00ddfcf6d3be3c29270c8404c71edfb580d7c0424024e4c8f04f73d4",
+          "size_bytes": 3369
         },
         {
           "path": "sql/V001__laboratory_core.sql",
@@ -394,7 +394,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:7e1e35310a13390272ca10aa5fd5a6018247192c7ceb58b95e69c74f73eb5a6a",
+      "aggregate_sha256": "sha256:6adb0949ba9840378f493c8eabad43f614e0d3ac3db113c24c956d6603e78a69",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -513,8 +513,8 @@
         },
         {
           "path": "tests/test_local_container_security.py",
-          "sha256": "sha256:fe581cb36a8b032140c8aa3405fdb83f7393ee481cda342ca41226034304d26f",
-          "size_bytes": 18968
+          "sha256": "sha256:6f8bad4bcfdb2db8ef99ed4a8745b2cf304790c90a89ac51e97b43871e0b44c8",
+          "size_bytes": 19807
         },
         {
           "path": "tests/test_migration.py",
@@ -628,7 +628,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:2dd619e769a68b116a31d5220fe2cb208f2954d8765d4bfa3603ee56ab6d8a4a",
+      "aggregate_sha256": "sha256:3310505d45f2976665c44225c6bda45316f580ab9e420b35b6a66f14dbe2a200",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -762,8 +762,8 @@
         },
         {
           "path": "docs/runbooks/local-container-entry.v0.1.md",
-          "sha256": "sha256:fbeeeec9db121ecdfd09a8f8cdb13f7c2c80d6b7b26dd50e02921c3e288218c6",
-          "size_bytes": 8704
+          "sha256": "sha256:967cd89817eee6b4e0ae8be5be67737a59fbf5425f476a83ed35fd49f2144d6e",
+          "size_bytes": 8916
         },
         {
           "path": "docs/runbooks/local-workbench-entry.v0.1.md",
@@ -944,7 +944,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:d42a4655f0aebbdfe09614583e9cf9a7bf2e760f24f951f725ff6b6a04d94024",
+    "aggregate_sha256": "sha256:2e35114a7c01ae80f571ab3459b5e5b8d1d659ac1dc9b926a9fcf5bbb43dfb88",
     "kind": "content_addressed_artifact_inventory"
   }
 }

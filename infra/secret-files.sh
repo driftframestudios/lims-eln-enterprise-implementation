@@ -9,44 +9,64 @@ export LC_ALL
 _secret_workspace=""
 _secret_value=""
 _active_client=""
+_cleanup_held=""
 PGCONNECT_TIMEOUT=5
 export PGCONNECT_TIMEOUT
 
 stop_active_client() {
     if test -n "$_active_client"; then
-        kill -TERM "$_active_client" 2>/dev/null || :
+        trap '' INT TERM
+        kill -TERM -- "-$_active_client" 2>/dev/null || kill -TERM "$_active_client" 2>/dev/null || :
         for _tick in 1 2 3 4 5 6 7 8 9 10; do
-            kill -0 "$_active_client" 2>/dev/null || break
+            kill -0 -- "-$_active_client" 2>/dev/null || break
             sleep 0.1
         done
+        kill -KILL -- "-$_active_client" 2>/dev/null || :
         kill -KILL "$_active_client" 2>/dev/null || :
         wait "$_active_client" 2>/dev/null || :
+        for _tick in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+            if ! kill -0 -- "-$_active_client" 2>/dev/null; then
+                _active_client=""
+                return 0
+            fi
+            sleep 0.1
+        done
         _active_client=""
+        _cleanup_held="group-exit-unconfirmed"
+        return 1
     fi
 }
 
 run_client() {
-    "$@" <&0 &
+    setsid "$@" <&0 &
     _active_client=$!
     if wait "$_active_client"; then
         _client_status=0
     else
         _client_status=$?
     fi
+    if kill -0 -- "-$_active_client" 2>/dev/null; then
+        stop_active_client || :
+        return 1
+    fi
     _active_client=""
     return "$_client_status"
 }
 
 secret_cleanup() {
-    stop_active_client
+    stop_active_client || :
+    if test -n "$_cleanup_held"; then
+        printf '%s\n' 'Client-group exit remains unconfirmed; protected temporary files await operator recovery.' >&2
+        return
+    fi
     if test -n "$_secret_workspace"; then
         rm -rf -- "$_secret_workspace"
     fi
     unset _secret_value
 }
 trap 'secret_cleanup' EXIT
-trap 'stop_active_client; exit 130' INT
-trap 'stop_active_client; exit 143' TERM
+trap 'stop_active_client || :; exit 130' INT
+trap 'stop_active_client || :; exit 143' TERM
 
 secret_failure() {
     printf '%s\n' 'Local credential preparation stopped; preserve state and use the recovery guide.' >&2

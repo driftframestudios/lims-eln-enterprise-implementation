@@ -76,9 +76,11 @@ retains its broader printable-ASCII contract. Other encodings receive an
 explicit adapter.
 
 Temporary files use a restrictive job-owned directory and cleanup on success,
-failure, SIGINT, and SIGTERM. Termination is forwarded to the active client;
-a one-second grace interval precedes forced termination and a completed wait,
-then temporary storage is cleaned. Forced host/process termination may retain
+failure, SIGINT, and SIGTERM. Each client runs in an owned session/process group. Termination reaches the
+launcher and its descendants; a one-second grace interval precedes forced
+group termination and a completed wait. Setup containers use an init process
+to reap orphaned descendants. Cleanup follows confirmed group exit. An
+unconfirmed exit retains protected temporary files for operator recovery. Forced host/process termination may retain
 protected temporary data; remove the named stopped job or temporary storage
 after preserving recovery evidence. Interrupted publication can retain a
 private `.pending-*` entry. Reconcile any same-inode pending link while keeping
