@@ -394,7 +394,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:bb807af137af8f78d87cee520e5ca27f1c2fd38838368c100e3a805b71105224",
+      "aggregate_sha256": "sha256:374014c15665b227cab687b7b4025756123ce3b701b280621aac75f8376512cf",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -433,8 +433,8 @@
         },
         {
           "path": "scripts/prepare_container_context.py",
-          "sha256": "sha256:1ed47578e261b41a0b344fecfa04c975fb0d4eeb58a611f245194cfa0130ca87",
-          "size_bytes": 6769
+          "sha256": "sha256:d30d3841128118319b46e1b8c448b18d9c3d4895e40ef1ff4be01ec6893821d1",
+          "size_bytes": 7265
         },
         {
           "path": "scripts/prepare_local_secrets.py",
@@ -513,8 +513,8 @@
         },
         {
           "path": "tests/test_local_container_security.py",
-          "sha256": "sha256:33c79d3eaa4b713790800bb3eb68e6cb1517f83183f1c06beede6b84d3018287",
-          "size_bytes": 12627
+          "sha256": "sha256:032d8cee9dce01c27e44930341125bb540298401e20297634c2d9e3283544b5b",
+          "size_bytes": 13666
         },
         {
           "path": "tests/test_migration.py",
@@ -944,7 +944,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:ae3c7da04e4a0916e4ba478472b03e1506020695cc97ad41b6d153458f048e45",
+    "aggregate_sha256": "sha256:993ad84e1f1f7a2982ee1bb64fdb70f48ecde29327e81e108ab8074e29933147",
     "kind": "content_addressed_artifact_inventory"
   }
 }

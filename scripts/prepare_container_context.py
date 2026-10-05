@@ -60,6 +60,18 @@ def member_digests(root: Path) -> dict[str, str]:
     return result
 
 
+def stage_wheels(source: Path, target: Path, expected: set[str]) -> None:
+    """Project declared wheels; builder housekeeping remains in the build workspace."""
+    candidates = {path.name: path for path in source.glob("*.whl")}
+    if set(candidates) != expected or any(
+        path.is_symlink() or not path.is_file() for path in candidates.values()
+    ):
+        raise ContextError("context requires the two declared regular package wheels")
+    target.mkdir(parents=True)
+    for name in sorted(expected):
+        shutil.copyfile(candidates[name], target / name)
+
+
 def prepare(target: Path, program: Path, *, root: Path = ROOT) -> dict[str, object]:
     target = target.absolute()
     if target.exists() or target.is_symlink() or target.resolve().is_relative_to(root.resolve()):
@@ -86,11 +98,11 @@ def prepare(target: Path, program: Path, *, root: Path = ROOT) -> dict[str, obje
             archive(program, program_head, program_source, log)
             context = scratch / "context"
             application = context / "application"
-            wheels = application / "wheels"
-            wheels.mkdir(parents=True)
+            built_wheels = scratch / "built-wheels"
+            built_wheels.mkdir()
             for source in (enterprise, program_source):
                 command(
-                    ["uv", "build", "--wheel", "--python", "3.12", "--out-dir", str(wheels), str(source)],
+                    ["uv", "build", "--wheel", "--python", "3.12", "--out-dir", str(built_wheels), str(source)],
                     cwd=scratch, log=log,
                 )
             requirements = command([
@@ -104,8 +116,7 @@ def prepare(target: Path, program: Path, *, root: Path = ROOT) -> dict[str, obje
                 "lims_eln_enterprise_implementation-0.3.2-py3-none-any.whl",
                 "lims_eln_program_specification-0.4.0-py3-none-any.whl",
             }
-            if {path.name for path in wheels.iterdir()} != expected_wheels:
-                raise ContextError("context requires the two declared package wheels")
+            stage_wheels(built_wheels, application / "wheels", expected_wheels)
             (application / "requirements.txt").write_text(requirements)
             shutil.copyfile(enterprise / "infra/application.Dockerfile", application / "Dockerfile")
             migrator = context / "migrator"

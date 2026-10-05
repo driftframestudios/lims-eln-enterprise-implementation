@@ -14,7 +14,7 @@ import unittest
 from unittest.mock import patch
 
 from scripts.prepare_local_secrets import NAMES, PreparationError, prepare
-from scripts.prepare_container_context import ContextError, member_digests, requirements_admitted
+from scripts.prepare_container_context import ContextError, member_digests, requirements_admitted, stage_wheels
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -228,6 +228,26 @@ class ContainerBuildBoundaryTests(unittest.TestCase):
             (root / "link").symlink_to(root / "requirements.txt")
             with self.assertRaises(ContextError):
                 member_digests(root)
+
+    def test_wheel_projection_excludes_housekeeping_and_rejects_surplus_wheels(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "build"
+            source.mkdir()
+            expected = {"first.whl", "second.whl"}
+            for name in expected:
+                (source / name).write_bytes(name.encode())
+            (source / ".gitignore").write_text("*\n")
+            (source / "private-build-note").write_text("local-only")
+            target = root / "context"
+            stage_wheels(source, target, expected)
+            self.assertEqual({path.name for path in target.iterdir()}, expected)
+            for name in expected:
+                self.assertEqual((target / name).read_bytes(), name.encode())
+            (source / "surplus.whl").write_bytes(b"extra")
+            with self.assertRaises(ContextError):
+                stage_wheels(source, root / "rejected", expected)
+            self.assertFalse((root / "rejected").exists())
 
     def test_application_profile_has_finite_runtime_grants(self):
         compose = (ROOT / "infra/docker-compose.yml").read_text()
