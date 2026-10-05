@@ -19,14 +19,14 @@ COORDINATE_PATH = Path("release/external-contract-coordinates.json")
 PROGRAM_REPOSITORY = "driftframestudios/lims-eln-program-specification"
 PROGRAM_DISTRIBUTION = "lims-eln-program-specification"
 PROGRAM_IMPORT = "lims_eln_contracts"
-PROGRAM_VERSION = "0.3.1"
+PROGRAM_VERSION = "0.4.0"
 PROGRAM_CONTRACT_VERSION = "1.0.0"
-PROGRAM_COMMIT = "4d06eeb7f96910311fbcb7f51547c978b6a07290"
+PROGRAM_COMMIT = "d8f41d0ce98a75120c99f0a23d00796ae8a8b913"
 PROGRAM_SOURCE_URL = (
     "https://github.com/driftframestudios/lims-eln-program-specification.git"
 )
 PROGRAM_SOURCE_DIGEST = (
-    "sha256:e4d7ef6aa1036b69395e9de3ab0064297dc80e5f697ab60de699a355e45f7674"
+    "sha256:41b46ebf96cff4192984b8b38f5fd4c4b55a312fda265d24f5329170ece5ab47"
 )
 PROGRAM_REQUIREMENT = (
     "lims-eln-program-specification @ git+https://github.com/"
@@ -38,14 +38,15 @@ PROGRAM_CONFORMANCE_COMMAND = (
     "--program-source ../lims-eln-program-specification"
 )
 PROGRAM_OBSERVATIONS = {
-    "installed distribution version is 0.3.1",
-    "lims_eln_contracts.__version__ is 0.3.1",
+    "installed distribution version is 0.4.0",
+    "lims_eln_contracts.__version__ is 0.4.0",
     "lims_eln_contracts.CONTRACT_VERSION is 1.0.0",
     "the PEP 610 source URL, requested revision, and commit match the reviewed source",
     "the scoped package source digest matches the reviewed binding",
     "the released operation catalog loads",
     "the Golden Specimen scenario loads",
     "the implementation and simulation shaped observations load",
+    "the canonical external administrative contract bundle and three examples load",
     "every released schema in SCHEMA_RESOURCE_NAMES loads as a JSON object",
 }
 PROGRAM_OBSERVED_VALUES = {
@@ -59,8 +60,27 @@ PROGRAM_OBSERVED_VALUES = {
     "operation_count": 3,
     "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
     "observation_producers": ["implementation", "simulation"],
-    "schema_count": 7,
+    "schema_count": 9,
+    "administrative_resources": ["canonical_bundle", "adapter", "independent_multilabel_policy", "counterfactual"],
 }
+
+PROGRAM_SCHEMA_NAMES = (
+    "bounded-call-receipt.v1.schema.json",
+    "bounded-call-request.v1.schema.json",
+    "external-administrative-contract-set.v1.schema.json",
+    "administrative-adapter-contract.v1.schema.json",
+    "golden-specimen-result-projection.v1.schema.json",
+    "observation-envelope.v1.schema.json",
+    "operation-catalog.v1.schema.json",
+    "scenario.v1.schema.json",
+    "specimen-command.v1.schema.json",
+)
+PROGRAM_ADMINISTRATIVE_LOADERS = (
+    ("canonical_bundle", "load_external_administrative_contract_set"),
+    ("adapter", "load_administrative_adapter_contract_example"),
+    ("independent_multilabel_policy", "load_independent_multilabel_policy_example"),
+    ("counterfactual", "load_administrative_counterfactual_example"),
+)
 
 GOVERNANCE_REPOSITORY = "driftframestudios/site-reading-governance"
 GOVERNANCE_RELEASE = "2.2.0"
@@ -1034,7 +1054,7 @@ def validate_comparison_return_source(root: Path, coordinates: Mapping[str, Any]
 
 
 def validate_installed_program(coordinates: Mapping[str, Any]) -> None:
-    """Exercise the nine observations required by the Program publisher."""
+    """Exercise the installed-package observations required by Program."""
     program = _require_mapping(coordinates["program_contract"], "program contract")
     try:
         distribution = metadata.distribution(program["distribution_name"])
@@ -1086,6 +1106,7 @@ def validate_installed_program(coordinates: Mapping[str, Any]) -> None:
         raise ReceivedContractError(
             "installed Program PEP 610 record requires valid JSON"
         ) from error
+    direct_url = _require_mapping(direct_url, "Program PEP 610 record")
     _require_equal(
         direct_url.get("url"),
         PROGRAM_SOURCE_URL,
@@ -1128,6 +1149,34 @@ def validate_installed_program(coordinates: Mapping[str, Any]) -> None:
         len(contracts.SCHEMA_RESOURCE_NAMES),
         observed_values["schema_count"],
         "Program schema inventory count",
+    )
+    _require_equal(
+        tuple(contracts.SCHEMA_RESOURCE_NAMES),
+        PROGRAM_SCHEMA_NAMES,
+        "Program schema inventory names",
+    )
+    loaded_resources = []
+    for resource_name, loader_name in PROGRAM_ADMINISTRATIVE_LOADERS:
+        loader = getattr(contracts, loader_name, None)
+        if not callable(loader):
+            raise ReceivedContractError(
+                f"Program administrative resource {resource_name} requires {loader_name}"
+            )
+        try:
+            resource = loader()
+        except (OSError, ValueError) as error:
+            raise ReceivedContractError(
+                f"Program administrative resource {resource_name} requires readable, valid content"
+            ) from error
+        if resource is None:
+            raise ReceivedContractError(
+                f"Program administrative resource {resource_name} requires populated content"
+            )
+        loaded_resources.append(resource_name)
+    _require_equal(
+        loaded_resources,
+        observed_values["administrative_resources"],
+        "Program administrative resource inventory",
     )
     for schema_name in contracts.SCHEMA_RESOURCE_NAMES:
         schema = contracts.load_generated_schema(schema_name)

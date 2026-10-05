@@ -4,15 +4,15 @@
   "repository_release": "0.3.2",
   "release_state": "post_release_development",
   "external_release": "implementation-v0.3.2",
-  "bounded_caller_binding_digest": "sha256:2e993316b59334071e5234cbb3d2c463a96f67e84550202a2df3f49d3c27a283",
+  "bounded_caller_binding_digest": "sha256:b329750351e0a0b8203d9eef794dc574e0d0eb77cea577ee5f09497063f1ec9a",
   "database_flyway_release_digest": "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f",
   "database_hosted_evidence": {
     "receipt_path": "receipts/hosted-postgresql-proof.json",
     "coordinate_state": "current_database_artifacts_observed",
     "promotion_signal": "implementation-validation"
   },
-  "external_contract_coordinate_digest": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
-  "public_inspection_manifest_digest": "sha256:524b809fd1c6f26890f3b4349cc7c11d4520bb9802ea2db170b42977f2f64dc9",
+  "external_contract_coordinate_digest": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
+  "public_inspection_manifest_digest": "sha256:c72453b5e62002be2c4eb6ae07b7dcac1be830c918f233a9ae68878491dfa087",
   "open_receipt_ledger_digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad",
   "selected_future_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
   "comparison_return": {
@@ -68,7 +68,7 @@
   "contract_bindings": {
     "governance_schema": "2.2.0",
     "governance_release": "2.2.0",
-    "program_contract_package": "0.3.1",
+    "program_contract_package": "0.4.0",
     "control_plane_profile": "0.3.0",
     "execution_receipt_schema": "1.1.0",
     "provenance_schema": "1.0.0",
@@ -91,8 +91,14 @@
   "promotion_controls": {
     "current_state": "standing_review_and_history_protection_with_observed_release_admission",
     "hosted_required_check_contexts": [],
-    "protected_branches": ["main"],
-    "allowed_merge_methods": ["merge", "squash", "rebase"],
+    "protected_branches": [
+      "main"
+    ],
+    "allowed_merge_methods": [
+      "merge",
+      "squash",
+      "rebase"
+    ],
     "review_observation": {
       "merge_admission": "configured_ordinary_bypass",
       "independent_review": "deputized_independent_review_completed",
@@ -126,19 +132,30 @@
   },
   "automation_controls": {
     "pull_request_workflow": ".github/workflows/pull-request.yml",
-    "pull_request_targets": ["develop", "main"],
+    "pull_request_targets": [
+      "develop",
+      "main"
+    ],
     "pull_request_runner": "ubuntu-24.04",
     "pull_request_python": "3.12",
     "pull_request_timeout_minutes": 10,
-    "pull_request_permissions": {"contents": "read"},
+    "pull_request_permissions": {
+      "contents": "read"
+    },
     "pull_request_concurrency_cancellation": true,
     "manual_full_proof_workflow": ".github/workflows/ci.yml",
     "dependabot_configuration": ".github/dependabot.yml",
     "dependabot_target": "develop",
     "dependabot_interval": "monthly",
     "dependabot_open_pull_requests_per_ecosystem": 2,
-    "dependabot_grouped_update_types": ["minor", "patch"],
-    "monthly_budget_minutes": {"minimum": 100, "maximum": 300},
+    "dependabot_grouped_update_types": [
+      "minor",
+      "patch"
+    ],
+    "monthly_budget_minutes": {
+      "minimum": 100,
+      "maximum": 300
+    },
     "settings_state": "repository_validation_observed_required_contexts_empty"
   },
   "promotion_coordinates": {

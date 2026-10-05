@@ -1,11 +1,11 @@
 {
   "artifact_groups": [
     {
-      "aggregate_sha256": "sha256:e68361f3c6b710ee448a6a9d391328765c67e50421b5ddac4cb1e6cade86b390",
+      "aggregate_sha256": "sha256:1b8bbee1a135097951569d6ac3a148e0b8c047a03735cc752d4f346754a2f28c",
       "artifacts": [
         {
           "path": "pyproject.toml",
-          "sha256": "sha256:c50f862a776a556895331e43bbd5db49899f958b57ca9ee33483f0e0715dc86f",
+          "sha256": "sha256:7fc4810e0ba5ee8941848598bac5d240e2898053b1120bdbb3e81538a5cb8563",
           "size_bytes": 1250
         },
         {
@@ -135,7 +135,7 @@
         },
         {
           "path": "src/lims_eln_implementation/workbench/shared_contracts.py",
-          "sha256": "sha256:e6e1483ce92566972eac9deb92b08a225f189cc4034e02853bde3f619fdbcec2",
+          "sha256": "sha256:41df85c3294923eff90e524b6e2cff8149133f90bd207bc1ccab39cab72d76cd",
           "size_bytes": 10094
         },
         {
@@ -240,7 +240,7 @@
       "responsibility": "Flyway V001 through V005, its bounded identity, and deployment-shape database support."
     },
     {
-      "aggregate_sha256": "sha256:628f2c255c6596e3b0ef9a8f19e1929c73f0f1d88bc620a3f192c762c5714f53",
+      "aggregate_sha256": "sha256:cef9411a525b877c90cf5beec98f45403e94a4d4a48d73c1d736ac6c4e28b52d",
       "artifacts": [
         {
           "path": "contracts/execution-receipt.v1.1.schema.json",
@@ -304,13 +304,13 @@
         },
         {
           "path": "release/bounded-caller-bindings.json",
-          "sha256": "sha256:2e993316b59334071e5234cbb3d2c463a96f67e84550202a2df3f49d3c27a283",
+          "sha256": "sha256:b329750351e0a0b8203d9eef794dc574e0d0eb77cea577ee5f09497063f1ec9a",
           "size_bytes": 6236
         },
         {
           "path": "release/external-contract-coordinates.json",
-          "sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
-          "size_bytes": 6788
+          "sha256": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
+          "size_bytes": 7047
         }
       ],
       "name": "contracts_and_synthetic_inputs",
@@ -364,7 +364,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:4ec6096232b4ef0d6fc791a986b4b60377dc2094e36118c0ec265571073636f4",
+      "aggregate_sha256": "sha256:8db95c85706b9dae8e77ca0acb264e693cab9eae46be1f75809d351c16d4362c",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -408,12 +408,12 @@
         },
         {
           "path": "scripts/validate_received_contracts.py",
-          "sha256": "sha256:88b8a28892d7cf7d0ad2b93078d76c9c7bde5dcff6b00ee46226943ed4e3876e",
-          "size_bytes": 43121
+          "sha256": "sha256:dfb0a2f2281afe216b305722ed4a6727bf5b72cb326ee4a4642eb14f85e60156",
+          "size_bytes": 45273
         },
         {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:72f54c67c3c2e01bdced760fac1b2de6db0c53a222e945480ca44a1119640bc2",
+          "sha256": "sha256:7eed1f1eea1be9a6a324b317b0df7f0f6536e94e912119873ad6b281c9934986",
           "size_bytes": 82593
         },
         {
@@ -493,13 +493,13 @@
         },
         {
           "path": "tests/test_public_inspection_manifest.py",
-          "sha256": "sha256:0837f8f007cd1a78e41248155a74488517528fdb616fe1179a6c27f9de6e8ce9",
+          "sha256": "sha256:677a163f9914915099a6da4d745e7948aaa146ef681e463d7f33d10fc1707f72",
           "size_bytes": 14495
         },
         {
           "path": "tests/test_received_contracts.py",
-          "sha256": "sha256:3caac4438d9673ba070e6b02bde35b560773d0d9b965ef7e60f12147f18a0094",
-          "size_bytes": 23695
+          "sha256": "sha256:eb852485285de3877cda18a969ed1ed9bf6c6053a1d9b4df5a33e139912a89cb",
+          "size_bytes": 29081
         },
         {
           "path": "tests/test_runtime_configuration.py",
@@ -513,7 +513,7 @@
         },
         {
           "path": "tests/test_shared_contract_binding.py",
-          "sha256": "sha256:0de22fdfae74d4958738bdea6dd0ffed802c944793664508d6e0de49d4b1539f",
+          "sha256": "sha256:cfbd6a8022704f512ac38a8dc0c99dd14ee31a49c7bd4a2485bc5cd6bb5f5af1",
           "size_bytes": 8004
         },
         {
@@ -578,7 +578,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:9ea2352cbb4d7a70dab6b2182ee1a30cba4b07435863200c1791502a75ab5a7e",
+      "aggregate_sha256": "sha256:9e1902d2f097358be98aca4b638472daeecbdaf6bdeede692c52eb4d5a8f95a9",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -667,8 +667,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:6211de0a39e86609f32430645f91684f864ff71942ab13286b60aa930bca60a1",
-          "size_bytes": 26681
+          "sha256": "sha256:6900cc21543f39125d01bc553e69adc5a12a2ebd5bf6f55943b5482c7c5787a2",
+          "size_bytes": 26868
         },
         {
           "path": "SECURITY.md",
@@ -697,7 +697,7 @@
         },
         {
           "path": "docs/golden-specimen-workbench.md",
-          "sha256": "sha256:e6b4b2883218eb9ace405166d4ac19624bc3fecef58a4e2804f42bb442a8cf9a",
+          "sha256": "sha256:77d8d1a17d851c35d197d5370e99cb150b23d96a6f1eca17e40ab1b379ac0a9b",
           "size_bytes": 7819
         },
         {
@@ -716,6 +716,11 @@
           "size_bytes": 3306
         },
         {
+          "path": "docs/runbooks/program-package-handoff.v0.1.md",
+          "sha256": "sha256:f0d7b1943d1ea880881b58596393e2edca9a07ebadeb466a7ecd995b8c772f54",
+          "size_bytes": 4324
+        },
+        {
           "path": "docs/runbooks/security-observability-incident.md",
           "sha256": "sha256:5c08b27deb7d284294c49e64cbde37762874cff02f754ca01f1e7a1c9b74593e",
           "size_bytes": 1447
@@ -727,7 +732,7 @@
         },
         {
           "path": "first-receipt.json",
-          "sha256": "sha256:e18e98c774925bd4736fdb786788c31eb54ccc68bee33063fff9d70d4c0a31c2",
+          "sha256": "sha256:aa26aef33bc7a62c4af15cb22ece6341ba4211e7c8fc9db6b7ebaf9d7ced81a7",
           "size_bytes": 6522
         },
         {
@@ -737,7 +742,7 @@
         },
         {
           "path": "machine-node.json",
-          "sha256": "sha256:bc96869c3ba28928d52584e43f74a5f84c8d82fb83af959f5e6d71cca674d978",
+          "sha256": "sha256:b95738a4e2f46de448b121d6fe596086be2e736cdb8222610a1b79da93efa638",
           "size_bytes": 5645
         },
         {
@@ -758,18 +763,18 @@
   "canonicalization": "ordered-path-nul-sha256-lf-v1",
   "coordinate_boundaries": [
     {
-      "accepted_revision": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+      "accepted_revision": "d8f41d0ce98a75120c99f0a23d00796ae8a8b913",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
+      "coordinate_manifest_sha256": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
       "coordinate_state": "accepted_source_consumer_observed",
-      "declared_release": "0.3.1",
+      "declared_release": "0.4.0",
       "role": "program_contract",
-      "source_digest": "sha256:e4d7ef6aa1036b69395e9de3ab0064297dc80e5f697ab60de699a355e45f7674"
+      "source_digest": "sha256:41b46ebf96cff4192984b8b38f5fd4c4b55a312fda265d24f5329170ece5ab47"
     },
     {
       "accepted_revision": "c8d7150b8c4e6277bc504a7c69289cb5b949b0ee",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
+      "coordinate_manifest_sha256": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
       "coordinate_state": "accepted_release",
       "declared_release": "2.2.0",
       "role": "governance_schema",
@@ -782,7 +787,7 @@
       "canonical_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
       "closure_artifact_path": "release/future-reality-2028-06-30-v1.json",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
+      "coordinate_manifest_sha256": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
       "coordinate_state": "accepted_release",
       "declared_release": "forecast-2028-FR-v1",
       "role": "simulated_final_state",
@@ -795,7 +800,7 @@
       "canonical_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
       "closure_artifact_path": "fixtures/simulated-closures/future-reality-2028-06-30-v1.json",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
+      "coordinate_manifest_sha256": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
       "coordinate_state": "accepted_release",
       "declared_release": "comparison-v0.3.1",
       "role": "comparative_evidence",
@@ -812,7 +817,7 @@
         "material_divergence": 3
       },
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:817251b57cb21abeb49ef34284a39aa272928c6c6bfdea9b916c53151b7ffe68",
+      "coordinate_manifest_sha256": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
       "coordinate_state": "accepted_return",
       "declared_release": "comparison-v0.3.2",
       "docs_revision": "6ccc087875b439eb70304771f534434acae3f01c",
@@ -879,7 +884,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:a121111a15c9a520bf50b1e56d7a8ffee5b096ea83959eb88fbc611bfb546a23",
+    "aggregate_sha256": "sha256:deaefb7d194cf15aed7cf303fb4f6f375b3bae1c6e1342fcf579a1c680b323f7",
     "kind": "content_addressed_artifact_inventory"
   }
 }
