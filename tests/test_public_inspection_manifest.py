@@ -85,6 +85,9 @@ class PublicInspectionManifestTests(unittest.TestCase):
         self.assertTrue(
             {
                 "src/lims_eln_implementation/workbench/api.py",
+                "src/lims_eln_implementation/workbench/runtime.py",
+                "uv.lock",
+                ".python-version",
                 "src/lims_eln_implementation/workbench/postgres.py",
                 "src/lims_eln_implementation/workbench/service.py",
                 "src/lims_eln_implementation/workbench/shared_contracts.py",

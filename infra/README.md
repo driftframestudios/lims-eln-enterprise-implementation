@@ -137,3 +137,12 @@ Return to the [root orientation](../README.md) for current branch and release
 state, the [migration guide](../docs/database-migrations.md) for database
 evolution, or the [AWS runbook](../docs/runbooks/aws-runtime-configuration-and-secret-rotation.md)
 for configuration and secret-rotation operations.
+
+## Native workbench receiver
+
+The [local entry runbook](../docs/runbooks/local-workbench-entry.v0.1.md) uses
+this prepared database with the explicit PostgreSQL launcher and dependency
+readiness probe. The current Compose file supplies supporting services; the
+application image and complete container journey continue under Enterprise #43.
+The native application and future container service share the same runtime
+composition rather than separate implementations of tenant binding or replay.

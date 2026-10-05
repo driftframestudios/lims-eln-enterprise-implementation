@@ -17,7 +17,7 @@
   },
   "public_inspection": {
     "manifest": "release/public-inspection-manifest.json",
-    "manifest_digest": "sha256:c72453b5e62002be2c4eb6ae07b7dcac1be830c918f233a9ae68878491dfa087",
+    "manifest_digest": "sha256:803ad85a5da0f9c9f0c68c7f71e6c9f2ace17669520068a2eec191747b0540ae",
     "authority": "repository_owned_inspection_bytes",
     "cross_repository_coordinate_state": "accepted_and_consumer_observed"
   },
@@ -37,7 +37,7 @@
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:b329750351e0a0b8203d9eef794dc574e0d0eb77cea577ee5f09497063f1ec9a",
+    "binding_digest": "sha256:8eb860a4e35d1ada83612aacc6af9df03b719ac760b571fc65fce2e100ac48e7",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",

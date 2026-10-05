@@ -194,6 +194,31 @@ class PostgresWorkbenchService:
         )
         self._failure_probe = failure_probe or (lambda _: None)
 
+    def check_ready(self) -> None:
+        """Exercise tenant binding, application identity, and V005 read permissions.
+
+        LIMIT 0 checks relation shape and access without materializing specimen
+        rows. Transaction ownership and resource release stay with the adapter.
+        """
+        with self._bound_transaction(self._tenant_id) as cursor:
+            cursor.execute("set transaction read only")
+            cursor.execute(
+                "select session_user, current_user, rolsuper, rolbypassrls "
+                "from pg_catalog.pg_roles where rolname = current_user"
+            )
+            if cursor.fetchone() != ("laboratory_app", "laboratory_app", False, False):
+                raise TenantSessionBindingError(
+                    "workbench readiness requires the ordinary laboratory_app identity"
+                )
+            cursor.execute(
+                "select 1 from public.specimen_workbench_snapshot "
+                "where tenant_id = %s limit 0", (self._tenant_id,),
+            )
+            cursor.execute(
+                "select 1 from public.bounded_call_invocation "
+                "where tenant_id = %s limit 0", (self._tenant_id,),
+            )
+
     def run_golden_specimen(
         self,
         *,

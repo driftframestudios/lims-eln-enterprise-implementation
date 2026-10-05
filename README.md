@@ -60,34 +60,29 @@ suite, and emits a deterministic source digest. Configured database and vendor
 tests activate when their explicit environment coordinates are present; their
 receipts remain the authority for those environments.
 
-Run the process-local Golden Specimen Workbench with Python 3.12 or newer:
+Run the process-local Golden Specimen Workbench from the isolated application
+lock:
 
 ```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install -e ".[test]"
-lims-eln-workbench
+uv sync --locked --extra contracts --extra postgres --extra test --no-editable
+.venv/bin/lims-eln-workbench --adapter process_local
 ```
 
-An adjacent checkout can add the shared observation boundary from
-`lims-eln-program-specification` reviewed package `0.4.0` with
-`python -m pip install -e ../lims-eln-program-specification` before starting the
-workbench. The optional `contracts` dependency pins the reviewed Program source
-commit exactly. The runtime keeps the package and contract identities visible
-at the observation boundary.
+Open `http://127.0.0.1:8000/workbench`. The process-local adapter begins a fresh
+encounter after restart. The explicit `--adapter postgresql` route reuses
+`PostgresWorkbenchService` and retained database state after the database,
+roles, tenant, and verifier key have been prepared. Its readiness probe checks
+the selected dependency and ordinary database identity.
 
-Open `http://127.0.0.1:8000/workbench`. The default CLI uses the process-local
-adapter for a fast synthetic encounter that resets on restart. The injectable
-FastAPI composition also accepts `PostgresWorkbenchService`; its configured
-proof creates a specimen, starts a fresh service instance, and reloads the same
-released state from PostgreSQL. When the independently distributed accepted
-Program contract package is installed, that durable read also produces and
-reloads the exact typed observation. Flyway successor migration
-[`sql/V005__golden_specimen_workbench.sql`](sql/V005__golden_specimen_workbench.sql)
-adds tenant-and-specimen-bound review resolution and workbench views over the
-canonical custody and measurement records. See the
-[workbench guide](docs/golden-specimen-workbench.md) for its evidence boundary
-and API surface.
+The [local entry runbook](docs/runbooks/local-workbench-entry.v0.1.md) supplies
+configuration, isolation, first-download versus repeat execution, and recovery.
+The [package handoff](docs/runbooks/program-package-handoff.v0.1.md) owns exact
+Program 0.4.0 receiving evidence. This `develop` entry is a candidate for the
+next release; the signed release baseline retains its original scope.
+
+The [workbench guide](docs/golden-specimen-workbench.md) describes the API,
+stored-state behavior, and typed observations. The complete container
+application and comparison-export journey continue under Enterprise #43.
 
 ## Capability map by reader job
 

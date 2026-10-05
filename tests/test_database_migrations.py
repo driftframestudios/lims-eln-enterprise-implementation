@@ -30,6 +30,15 @@ def load_properties(path: Path) -> dict[str, str]:
 
 
 class DatabaseMigrationTests(unittest.TestCase):
+    def test_direct_container_entrypoints_are_executable(self) -> None:
+        for relative in (
+            "infra/provision-migrator-identity.sh",
+            "infra/run-flyway-with-secret.sh",
+            "infra/postgres-init/010_application_password.sh",
+        ):
+            with self.subTest(entrypoint=relative):
+                self.assertTrue((ROOT / relative).stat().st_mode & 0o100)
+
     def test_flyway_release_is_version_and_digest_pinned(self) -> None:
         release = json.loads(RELEASE_PATH.read_text(encoding="utf-8"))
         self.assertEqual(release["migration_product"], "Flyway Community")
