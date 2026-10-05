@@ -137,7 +137,7 @@ preserves exact typed comparison inputs and their accepted-file recovery.
 ## Reconcile an uncertain commit
 
 A lost response leaves the transaction outcome unresolved. Retain the original
-request bytes, tenant, run/specimen identities, event time, source coordinate,
+request method and endpoint, exact bytes, tenant, run/specimen identities, event time, source coordinate,
 and any accepted observation in protected local storage. Keep the existing
 database and credentials available while restoring dependency readiness.
 
@@ -152,8 +152,10 @@ database and credentials available while restoring dependency readiness.
 3. A missing observation establishes only that this read returned no matching
    observation. Completion, rollback, and observation construction remain
    separate questions. After dependency recovery and completion of the prior
-   attempt, submit the original bytes once to
-   `POST /api/workbench/golden-runs` with the original tenant header. The durable
+   attempt, submit the original method, endpoint, and bytes once with the
+   original tenant header. Golden Specimen loads use
+   `POST /api/workbench/golden-runs`; instrument-review recovery retains its
+   original recovery endpoint. The durable
    ledger can return the accepted result or admit a fresh attempt under that
    same operation identity.
 4. A successful replay and matching observation settle the local operation.

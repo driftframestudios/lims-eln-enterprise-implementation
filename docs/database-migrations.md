@@ -56,9 +56,12 @@ credential through a read-only file. The prepared repository migrator image
 passes that value to Flyway through protected standard-input configuration.
 Use the [local container entry](runbooks/local-container-entry.v0.1.md) to select
 the exact source/context pair, retained secrets, and existing Compose project.
-With its preparation variables exported, invoke the protected entrypoint:
+With its preparation variables exported, select the retained project explicitly
+and invoke the protected entrypoint. The example uses `lims-local`; set that
+value to the project whose database and credentials are being recovered:
 
 ```sh
+PROJECT=lims-local
 docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench \
   run --rm --no-deps database-migrator migrate
 ```

@@ -399,7 +399,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:f49959722073027c6408babf20880eef6a311c9e333b724b781dbb2e0e92ca6d",
+      "aggregate_sha256": "sha256:7eb4c9b5b2418cc2f6d729951d6a22ffe0d08c29bb8d8dcbfdd3b5843781461c",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -552,6 +552,11 @@
           "size_bytes": 29081
         },
         {
+          "path": "tests/test_recovery_runbooks.py",
+          "sha256": "sha256:8b5ecf598f42ad1d3dec1f98b2d7e1c3b8fb5a9fad4d2eeb5222e1e611cebfdf",
+          "size_bytes": 2035
+        },
+        {
           "path": "tests/test_runtime_configuration.py",
           "sha256": "sha256:7227ecf378ef856ea5baf13ed69c5c0abc3629b5abb820e3d7aec8188f461ee0",
           "size_bytes": 16673
@@ -643,7 +648,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:1f4f5ca77d7859ad7c7d8b6756f48c222ae662cbe263dfa03793642fad7c9f0f",
+      "aggregate_sha256": "sha256:fe0678656b402765f63e96e3ec86fd5f8a7557416fb2fd9da406a2a60dc3952d",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -757,8 +762,8 @@
         },
         {
           "path": "docs/database-migrations.md",
-          "sha256": "sha256:a3de990fe67fe881c7410b6bdb7310795165bfb41cb4ff049c34be289ad0ce0a",
-          "size_bytes": 14231
+          "sha256": "sha256:5afd0b5585699b15ed44c75901ed99cb13c4f8fd942a43e9641199cfbed49e15",
+          "size_bytes": 14406
         },
         {
           "path": "docs/golden-specimen-workbench.md",
@@ -777,8 +782,8 @@
         },
         {
           "path": "docs/runbooks/local-container-entry.v0.1.md",
-          "sha256": "sha256:51bc20bb4fdafb0c30d45ddf01618f95222c3ae5d8bc571092e245913ca4d7e3",
-          "size_bytes": 13801
+          "sha256": "sha256:972262ed0a532d3f546e1ec51d0daadf3263d7b6890a49ffedea13cb036718b6",
+          "size_bytes": 13892
         },
         {
           "path": "docs/runbooks/local-observation-export.v0.1.md",
@@ -787,8 +792,8 @@
         },
         {
           "path": "docs/runbooks/local-workbench-entry.v0.1.md",
-          "sha256": "sha256:9ccbdda6314b7a062edb578dd76873a55b020e827e241d8f4f61600170b79c14",
-          "size_bytes": 11862
+          "sha256": "sha256:e8ed001df10ef038f84d7620f753a8b5d21e6996944809a6c90c45f885d275d4",
+          "size_bytes": 12008
         },
         {
           "path": "docs/runbooks/migration-cutover-and-restore.md",
@@ -964,7 +969,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:8595832999c38b1b74a131e1a1d98ffb4c42b1b84b09427e4c8384feba17f2c2",
+    "aggregate_sha256": "sha256:a226ecc55a124d381445269fc5ae111e54db634fc0e9e59a1fb204caec6dcb83",
     "kind": "content_addressed_artifact_inventory"
   }
 }
