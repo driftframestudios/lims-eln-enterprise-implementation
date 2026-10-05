@@ -142,7 +142,8 @@ for configuration and secret-rotation operations.
 
 The [local entry runbook](../docs/runbooks/local-workbench-entry.v0.1.md) uses
 this prepared database with the explicit PostgreSQL launcher and dependency
-readiness probe. The current Compose file supplies supporting services; the
-application image and complete container journey continue under Enterprise #43.
-The native application and future container service share the same runtime
-composition rather than separate implementations of tenant binding or replay.
+readiness probe. The [container entry](../docs/runbooks/local-container-entry.v0.1.md)
+adds the `workbench` profile, allowlisted contexts, retained external credentials,
+and a confined application service. Native and container services share runtime
+composition, tenant binding, and replay. Optional services have named profiles.
+Enterprise #43 owns complete journey and comparison-export acceptance.

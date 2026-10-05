@@ -30,12 +30,13 @@ services:
     volumes:
       - ../database/provision_cluster_roles.sql:/workspace/provision_cluster_roles.sql:ro
       - ./provision-migrator-identity.sh:/usr/local/bin/provision-migrator-identity:ro
+      - ./secret-files.sh:/usr/local/lib/lims/secret-files.sh:ro
     entrypoint: ["/usr/local/bin/provision-migrator-identity"]
     restart: "no"
 
   database-migrator:
     build:
-      context: ..
+      context: ${LIMS_MIGRATOR_CONTEXT:-..}
       dockerfile: infra/migrator.Dockerfile
     depends_on:
       database-role-provisioner:
@@ -65,6 +66,7 @@ services:
       - postgres_tenant_hmac_key
     volumes:
       - ./postgres-init/010_application_password.sh:/usr/local/bin/configure-database-identities:ro
+      - ./secret-files.sh:/usr/local/lib/lims/secret-files.sh:ro
     entrypoint: ["/usr/local/bin/configure-database-identities"]
     restart: "no"
 
@@ -80,14 +82,46 @@ services:
       PGUSER: laboratory_app
     secrets:
       - postgres_app_password
-    entrypoint: ["/bin/sh", "-eu", "-c"]
-    command:
-      - >-
-        export PGPASSWORD="$$(cat /run/secrets/postgres_app_password)";
-        psql --set=ON_ERROR_STOP=1
-        --command="select current_user, rolsuper, rolbypassrls from pg_roles where rolname = current_user"
+    volumes:
+      - ./secret-files.sh:/usr/local/lib/lims/secret-files.sh:ro
+      - ./check-application-identity.sh:/usr/local/bin/check-application-identity:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/check-application-identity"]
+
+  application:
+    profiles: ["workbench"]
+    build:
+      context: ${LIMS_APPLICATION_CONTEXT:-./prepared-application}
+      dockerfile: Dockerfile
+    depends_on:
+      database-role-bootstrap:
+        condition: service_completed_successfully
+    user: "${LIMS_RUNTIME_UID:-10001}:${LIMS_RUNTIME_GID:-10001}"
+    read_only: true
+    init: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,mode=1777
+    environment:
+      LIMS_WORKBENCH_ADAPTER: postgresql
+      LIMS_WORKBENCH_DB_HOST: postgres
+      LIMS_WORKBENCH_DB_PASSWORD_FILE: /run/secrets/postgres_app_password
+      LIMS_WORKBENCH_TENANT_KEY_FILE: /run/secrets/postgres_tenant_hmac_key
+    secrets:
+      - postgres_app_password
+      - postgres_tenant_hmac_key
+    ports:
+      - "127.0.0.1:${LIMS_WORKBENCH_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=6).close()"]
+      interval: 10s
+      timeout: 8s
+      retries: 12
 
   object-store:
+    profiles: ["object-storage"]
     image: minio/minio:RELEASE.2025-07-23T15-54-02Z@sha256:d249d1fb6966de4d8ad26c04754b545205ff15a62e4fd19ebd0f26fa5baacbc0
     command: server /data --console-address ":9001"
     environment:
@@ -99,6 +133,7 @@ services:
       - object-data:/data
 
   telemetry:
+    profiles: ["telemetry"]
     image: otel/opentelemetry-collector-contrib:0.130.1@sha256:9c247564e65ca19f97d891cca19a1a8d291ce631b890885b44e3503c5fdb3895
     command: ["--config=/etc/otel/config.yaml"]
     volumes:
@@ -109,21 +144,21 @@ services:
 
 secrets:
   postgres_password:
-    file: ./secrets/postgres_password.txt
+    file: ${LIMS_SECRET_DIR:-./secrets}/postgres_password.txt
   minio_password:
-    file: ./secrets/minio_password.txt
+    file: ${LIMS_SECRET_DIR:-./secrets}/minio_password.txt
   postgres_app_password:
-    file: ./secrets/postgres_app_password.txt
+    file: ${LIMS_SECRET_DIR:-./secrets}/postgres_app_password.txt
   postgres_outbox_password:
-    file: ./secrets/postgres_outbox_password.txt
+    file: ${LIMS_SECRET_DIR:-./secrets}/postgres_outbox_password.txt
   postgres_recovery_password:
-    file: ./secrets/postgres_recovery_password.txt
+    file: ${LIMS_SECRET_DIR:-./secrets}/postgres_recovery_password.txt
   postgres_evidence_password:
-    file: ./secrets/postgres_evidence_password.txt
+    file: ${LIMS_SECRET_DIR:-./secrets}/postgres_evidence_password.txt
   postgres_migrator_password:
-    file: ./secrets/postgres_migrator_password.txt
+    file: ${LIMS_SECRET_DIR:-./secrets}/postgres_migrator_password.txt
   postgres_tenant_hmac_key:
-    file: ./secrets/postgres_tenant_hmac_key.txt
+    file: ${LIMS_SECRET_DIR:-./secrets}/postgres_tenant_hmac_key.txt
 
 volumes:
   postgres-data:

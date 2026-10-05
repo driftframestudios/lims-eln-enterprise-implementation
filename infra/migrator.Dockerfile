@@ -5,5 +5,7 @@ COPY flyway.conf ./flyway.conf
 COPY sql ./sql
 COPY infra/run-flyway-with-secret.sh /usr/local/bin/run-flyway-with-secret
 
+COPY infra/secret-files.sh /usr/local/lib/lims/secret-files.sh
+
 ENTRYPOINT ["/usr/local/bin/run-flyway-with-secret"]
 CMD ["migrate"]
