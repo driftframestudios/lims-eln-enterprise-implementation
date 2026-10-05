@@ -77,6 +77,20 @@ and raw secret-bearing output with their protected owner. A public or
 public-possible receipt carries enough information to reproduce the evidence
 route without carrying the secret material itself.
 
+### Rule: Follow authority across process boundaries
+
+Map each secret through build context, image layers, arguments, environment,
+standard input, mounted files, logs, temporary storage, and receiving evidence.
+Inspect ordinary and failure paths. A file-backed secret establishes its mount
+boundary; each child process needs its own transport observation. Generated
+canaries support presence/absence outcomes while values stay in local fixtures.
+
+Bind confinement claims to the actual process user, mounts, writable paths,
+capabilities, database role, and cleanup. Distinguish repository-owned jobs
+from pinned upstream initialization, and local operator trust from remote
+identity. Restart, rotation, key rollover, independent experiments, and reset
+have separate state transitions and recovery owners.
+
 ### Rule: Preserve lineage in both directions
 
 Retain an earlier admitted receipt at its original evidence and assurance

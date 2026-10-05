@@ -17,7 +17,7 @@
   },
   "public_inspection": {
     "manifest": "release/public-inspection-manifest.json",
-    "manifest_digest": "sha256:803ad85a5da0f9c9f0c68c7f71e6c9f2ace17669520068a2eec191747b0540ae",
+    "manifest_digest": "sha256:27783b886aa5f0ab0173abe32ff5fc253f60e21cad63b5e03170bbe8182912c2",
     "authority": "repository_owned_inspection_bytes",
     "cross_repository_coordinate_state": "accepted_and_consumer_observed"
   },

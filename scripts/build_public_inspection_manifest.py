@@ -49,6 +49,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
             "sql/*.sql",
             "infra/docker-compose.yml",
             "infra/migrator.Dockerfile",
+            "infra/application.Dockerfile",
             "infra/*.sh",
             "infra/postgres-init/*.sh",
         ),

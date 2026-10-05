@@ -12,7 +12,7 @@
     "promotion_signal": "implementation-validation"
   },
   "external_contract_coordinate_digest": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
-  "public_inspection_manifest_digest": "sha256:803ad85a5da0f9c9f0c68c7f71e6c9f2ace17669520068a2eec191747b0540ae",
+  "public_inspection_manifest_digest": "sha256:27783b886aa5f0ab0173abe32ff5fc253f60e21cad63b5e03170bbe8182912c2",
   "open_receipt_ledger_digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad",
   "selected_future_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
   "comparison_return": {
@@ -90,7 +90,9 @@
   },
   "promotion_controls": {
     "current_state": "standing_review_and_history_protection_with_observed_release_admission",
-    "hosted_required_check_contexts": [],
+    "hosted_required_check_contexts": [
+
+    ],
     "protected_branches": [
       "main"
     ],
@@ -124,7 +126,9 @@
     },
     "hosted_check_activation": {
       "state": "repository_validation_observed",
-      "required_check_contexts": [],
+      "required_check_contexts": [
+
+      ],
       "run_id": "33623991109",
       "job_id": "100227324662",
       "conclusion": "success"

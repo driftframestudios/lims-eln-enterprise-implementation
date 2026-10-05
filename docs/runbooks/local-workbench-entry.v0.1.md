@@ -111,9 +111,10 @@ key identifier, tenant, migration head, and reachability. Preserve the database
 and existing secret files during recovery. Database reset remains an explicitly
 scoped operator operation.
 
-The complete container application, retained-secret setup command, comparison
-export, and first-run/restart/reset journey remain the next acceptance slice
-under Enterprise #43. This entry provides their shared runtime composition.
+The [container entry](local-container-entry.v0.1.md) supplies the application
+image, retained-secret preparation, and rotation/recovery route. Enterprise #43
+owns complete journey and comparison-export acceptance. Both entries share
+this runtime composition.
 
 ## Secret ownership and audience-fitting evidence
 
@@ -133,8 +134,8 @@ Consider what timing, identifiers, paths, neighboring metadata, and retained
 history reveal together. Keep exact private lineage with its source owner;
 preserve reproducibility through reviewed source, dependency, input, and
 artifact identities. Secret values stay out of command arguments, image build
-inputs, and public diagnostics. Existing container bootstrap transport receives
-its dedicated repair and canary observations under Enterprise #45.
+inputs, and public diagnostics. The container entry supplies protected-file
+and standard-input transport plus focused canary observations under Enterprise #45.
 
 This applies the Field Guide's Leakage Modeling, AI as Bounded Caller,
 Acquire-Release Spine, and Publication Boundaries and Proportionate Review.

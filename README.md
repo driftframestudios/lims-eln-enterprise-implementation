@@ -81,8 +81,10 @@ Program 0.4.0 receiving evidence. This `develop` entry is a candidate for the
 next release; the signed release baseline retains its original scope.
 
 The [workbench guide](docs/golden-specimen-workbench.md) describes the API,
-stored-state behavior, and typed observations. The complete container
-application and comparison-export journey continue under Enterprise #43.
+stored-state behavior, and typed observations. The [container entry](docs/runbooks/local-container-entry.v0.1.md)
+adds protected retained credentials and the same PostgreSQL factory in a confined
+application image. Comparison export and complete journey acceptance continue
+under Enterprise #43.
 
 ## Capability map by reader job
 
