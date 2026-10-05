@@ -76,7 +76,9 @@ retains its broader printable-ASCII contract. Other encodings receive an
 explicit adapter.
 
 Temporary files use a restrictive job-owned directory and cleanup on success,
-failure, SIGINT, and SIGTERM. Forced host/process termination may retain
+failure, SIGINT, and SIGTERM. Termination is forwarded to the active client;
+a one-second grace interval precedes forced termination and a completed wait,
+then temporary storage is cleaned. Forced host/process termination may retain
 protected temporary data; remove the named stopped job or temporary storage
 after preserving recovery evidence. Interrupted publication can retain a
 private `.pending-*` entry. Reconcile any same-inode pending link while keeping
@@ -106,9 +108,12 @@ directory. Keep bootstrap, migrator, and `local-compose-v1` key files unchanged:
 3. Select the candidate via `LIMS_SECRET_DIR` and run only
    `docker compose ... run --rm --no-deps database-role-bootstrap`.
    Password updates and verifier admission share one database transaction.
-4. A failed transaction retains database passwords. Select the previous
-   directory and recreate the application.
-5. A successful transaction followed by application failure has an explicit
+4. A confirmed transaction rollback retains database passwords. A lost commit
+   acknowledgement has an uncertain outcome. For either unsuccessful setup
+   result, select the previous directory and reapply its passwords through the
+   same bootstrap job using the retained administrator credential. Require a
+   successful reconciliation before recreating the application.
+5. A confirmed successful transaction followed by application failure has an explicit
    rollback: select the previous directory, rerun bootstrap, recreate the
    application, and observe readiness.
 6. Readiness plus retained-state replay admits the candidate directory.

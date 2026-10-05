@@ -7,7 +7,7 @@ printf 'flyway.password=%s\n' "$_secret_value" > "$_secret_workspace/flyway.conf
 unset _secret_value
 exec 3< "$_secret_workspace/flyway.conf"
 rm -- "$_secret_workspace/flyway.conf"
-if flyway -workingDirectory=/flyway/project \
+if run_client flyway -workingDirectory=/flyway/project \
     -configFiles=/flyway/project/flyway.conf,- "$@" <&3 3<&- > /dev/null 2>&1; then
     printf '%s\n' 'Migration command completed.'
 else

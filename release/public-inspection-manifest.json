@@ -173,7 +173,7 @@
       "responsibility": "FastAPI, domain, adapter, and package source that defines executable behavior."
     },
     {
-      "aggregate_sha256": "sha256:505544cab96d88256ec14761511d68491adc41bcc025b4db14259d4a6de5396f",
+      "aggregate_sha256": "sha256:349cc3da4754bd99c876ade59e15f9aecd0dd282c05be06ec9ad029f39f80503",
       "artifacts": [
         {
           "path": "database/flyway-artifact-inventory.json",
@@ -202,8 +202,8 @@
         },
         {
           "path": "infra/check-application-identity.sh",
-          "sha256": "sha256:c7123b078a05b13a50fd3d7cf793d2497d36488ff8814ccec1fc61c990debd58",
-          "size_bytes": 400
+          "sha256": "sha256:1e1e822e26fae15894e2ccc6b98a16e065703df6afbf8dd58615d63877d07160",
+          "size_bytes": 413
         },
         {
           "path": "infra/docker-compose.yml",
@@ -222,18 +222,18 @@
         },
         {
           "path": "infra/provision-migrator-identity.sh",
-          "sha256": "sha256:6109a1d198944129fd9eaad0abe349b17d75e8a9598fd6f1b33bcc1ac1e30cf2",
-          "size_bytes": 3277
+          "sha256": "sha256:0a25dfd78ec2dc97a576d0197cea5b8cb704fb90f8349a0f962246ae15696f5f",
+          "size_bytes": 3284
         },
         {
           "path": "infra/run-flyway-with-secret.sh",
-          "sha256": "sha256:1f603e349cf2b796113851bacbba0781a979a8cc7178e70154b6e34f62d675b6",
-          "size_bytes": 652
+          "sha256": "sha256:1ffa15a75f4cc47c1181a91d1cca5a97d4228623733555d493ff5c9cd8b4abc3",
+          "size_bytes": 663
         },
         {
           "path": "infra/secret-files.sh",
-          "sha256": "sha256:c39ccb42a28d1796a5801850f9966360773afd86d06500adbe0955aede8776f1",
-          "size_bytes": 1824
+          "sha256": "sha256:a878c366a4d1dbfa9a9559ab5f48f367c4d8a2adb4cab17c57546c8657cf91e7",
+          "size_bytes": 2592
         },
         {
           "path": "sql/V001__laboratory_core.sql",
@@ -394,7 +394,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:374014c15665b227cab687b7b4025756123ce3b701b280621aac75f8376512cf",
+      "aggregate_sha256": "sha256:7e1e35310a13390272ca10aa5fd5a6018247192c7ceb58b95e69c74f73eb5a6a",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -513,8 +513,8 @@
         },
         {
           "path": "tests/test_local_container_security.py",
-          "sha256": "sha256:032d8cee9dce01c27e44930341125bb540298401e20297634c2d9e3283544b5b",
-          "size_bytes": 13666
+          "sha256": "sha256:fe581cb36a8b032140c8aa3405fdb83f7393ee481cda342ca41226034304d26f",
+          "size_bytes": 18968
         },
         {
           "path": "tests/test_migration.py",
@@ -628,7 +628,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:c951a7a075667d7a9eb623bf62da5a292e304c0820d8de7f08f90d9c6963dd37",
+      "aggregate_sha256": "sha256:2dd619e769a68b116a31d5220fe2cb208f2954d8765d4bfa3603ee56ab6d8a4a",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -762,8 +762,8 @@
         },
         {
           "path": "docs/runbooks/local-container-entry.v0.1.md",
-          "sha256": "sha256:21d604c69db635183514ad6369fe02d29372fa9878b22eb04bb63fa923e5778c",
-          "size_bytes": 8276
+          "sha256": "sha256:fbeeeec9db121ecdfd09a8f8cdb13f7c2c80d6b7b26dd50e02921c3e288218c6",
+          "size_bytes": 8704
         },
         {
           "path": "docs/runbooks/local-workbench-entry.v0.1.md",
@@ -944,7 +944,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:993ad84e1f1f7a2982ee1bb64fdb70f48ecde29327e81e108ab8074e29933147",
+    "aggregate_sha256": "sha256:d42a4655f0aebbdfe09614583e9cf9a7bf2e760f24f951f725ff6b6a04d94024",
     "kind": "content_addressed_artifact_inventory"
   }
 }

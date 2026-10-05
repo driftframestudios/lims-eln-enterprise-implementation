@@ -8,16 +8,45 @@ LC_ALL=C
 export LC_ALL
 _secret_workspace=""
 _secret_value=""
+_active_client=""
+PGCONNECT_TIMEOUT=5
+export PGCONNECT_TIMEOUT
+
+stop_active_client() {
+    if test -n "$_active_client"; then
+        kill -TERM "$_active_client" 2>/dev/null || :
+        for _tick in 1 2 3 4 5 6 7 8 9 10; do
+            kill -0 "$_active_client" 2>/dev/null || break
+            sleep 0.1
+        done
+        kill -KILL "$_active_client" 2>/dev/null || :
+        wait "$_active_client" 2>/dev/null || :
+        _active_client=""
+    fi
+}
+
+run_client() {
+    "$@" <&0 &
+    _active_client=$!
+    if wait "$_active_client"; then
+        _client_status=0
+    else
+        _client_status=$?
+    fi
+    _active_client=""
+    return "$_client_status"
+}
 
 secret_cleanup() {
+    stop_active_client
     if test -n "$_secret_workspace"; then
         rm -rf -- "$_secret_workspace"
     fi
     unset _secret_value
 }
 trap 'secret_cleanup' EXIT
-trap 'exit 130' INT
-trap 'exit 143' TERM
+trap 'stop_active_client; exit 130' INT
+trap 'stop_active_client; exit 143' TERM
 
 secret_failure() {
     printf '%s\n' 'Local credential preparation stopped; preserve state and use the recovery guide.' >&2
@@ -60,13 +89,11 @@ emit_secret_setting() {
 }
 
 private_psql() {
-    psql --no-psqlrc --set=ON_ERROR_STOP=1 "$@" > /dev/null 2>&1 || secret_failure
+    run_client psql --no-psqlrc --set=ON_ERROR_STOP=1 "$@" > /dev/null 2>&1 || secret_failure
 }
 
 public_psql() {
-    if _public_result="$(psql --no-psqlrc --set=ON_ERROR_STOP=1 "$@" 2>/dev/null)"; then
-        printf '%s\n' "$_public_result"
-    else
-        secret_failure
-    fi
+    run_client psql --no-psqlrc --set=ON_ERROR_STOP=1 "$@" \
+        > "$_secret_workspace/public.out" 2>/dev/null || secret_failure
+    _public_result="$(cat -- "$_secret_workspace/public.out")"
 }

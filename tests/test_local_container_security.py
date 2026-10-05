@@ -11,6 +11,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import time
+from hashlib import sha256
 from unittest.mock import patch
 
 from scripts.prepare_local_secrets import NAMES, PreparationError, prepare
@@ -98,7 +100,7 @@ class LocalSecretPreparationTests(unittest.TestCase):
 
 
 FAKE_CLIENT = r'''
-import json, os, pathlib, signal, stat, sys
+import hashlib, json, os, pathlib, re, signal, stat, sys, time
 root = pathlib.Path(os.environ["LIMS_SECRET_DIR"])
 values = [p.read_text().strip() for p in root.iterdir()]
 args = sys.argv[1:]
@@ -107,6 +109,7 @@ transport = json.dumps({"args": args, "env": dict(os.environ)})
 password_path = os.environ.get("PGPASSFILE")
 password = pathlib.Path(password_path).read_text() if password_path else ""
 record = {
+    "pid": os.getpid(),
     "argv_environment_clear": all(value not in transport for value in values),
     "stdin_received": sum(value in data for value in values),
     "password_file_received": sum(value in password for value in values),
@@ -115,7 +118,16 @@ record = {
 with open(os.environ["FAKE_RECORD"], "a") as target:
     target.write(json.dumps(record) + "\n")
 mode = os.environ["FAKE_MODE"]
-if mode == "failure":
+if os.environ.get("FAKE_DATABASE") and data:
+    match = re.search(r"\\set application_password '([a-f0-9]{64})'", data)
+    if match:
+        pathlib.Path(os.environ["FAKE_DATABASE"]).write_text(
+            hashlib.sha256(match[1].encode()).hexdigest()
+        )
+if mode == "stall":
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    time.sleep(60)
+if mode in ("failure", "failure-after-commit"):
     print(values[0])
     print(values[0], file=sys.stderr)
     raise SystemExit(17)
@@ -190,6 +202,96 @@ class LocalSecretTransportTests(unittest.TestCase):
                     for value in values:
                         self.assertNotIn(value, result.stdout + result.stderr + record.read_text())
                     self.assertEqual(list(scratch.iterdir()), [])
+
+    def test_parent_termination_reaps_a_stalled_client_before_cleanup(self):
+        for script in (
+            "infra/provision-migrator-identity.sh",
+            "infra/postgres-init/010_application_password.sh",
+            "infra/run-flyway-with-secret.sh",
+            "infra/check-application-identity.sh",
+        ):
+            with self.subTest(script=script), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                binary = root / "bin"
+                binary.mkdir()
+                scratch = root / "scratch"
+                scratch.mkdir()
+                secrets_dir = root / "secrets"
+                secrets_dir.mkdir()
+                for name in NAMES:
+                    (secrets_dir / name).write_text(secrets.token_hex(32) + "\n")
+                for name in ("psql", "flyway"):
+                    target = binary / name
+                    target.write_text("#!" + sys.executable + "\n" + FAKE_CLIENT)
+                    target.chmod(0o700)
+                record = root / "record"
+                environment = {
+                    "PATH": str(binary) + ":/usr/bin:/bin", "TMPDIR": str(scratch),
+                    "LIMS_SECRET_DIR": str(secrets_dir),
+                    "LIMS_SECRET_HELPER": str(ROOT / "infra/secret-files.sh"),
+                    "FAKE_MODE": "stall", "FAKE_RECORD": str(record),
+                    "POSTGRES_USER": "laboratory_bootstrap", "POSTGRES_DB": "laboratory",
+                }
+                process = subprocess.Popen(
+                    ["/bin/sh", str(ROOT / script)], env=environment,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                )
+                try:
+                    deadline = time.monotonic() + 5
+                    while not record.exists() and time.monotonic() < deadline:
+                        time.sleep(0.01)
+                    self.assertTrue(record.exists(), "client reached its controlled stall")
+                    # The client installs its handler immediately after publishing the record.
+                    time.sleep(0.05)
+                    process.terminate()
+                    output, errors = process.communicate(timeout=5)
+                    self.assertEqual(process.returncode, 143, output + errors)
+                    observation = json.loads(record.read_text().splitlines()[0])
+                    with self.assertRaises(ProcessLookupError):
+                        os.kill(observation["pid"], 0)
+                    self.assertEqual(list(scratch.iterdir()), [])
+                finally:
+                    if process.poll() is None:
+                        process.kill()
+                        process.wait(timeout=5)
+
+    def test_uncertain_rotation_reapplies_prior_values_before_restart(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            binary, scratch = root / "bin", root / "scratch"
+            binary.mkdir()
+            scratch.mkdir()
+            executable = binary / "psql"
+            executable.write_text("#!" + sys.executable + "\n" + FAKE_CLIENT)
+            executable.chmod(0o700)
+            database = root / "database-fingerprint"
+            old_value, candidate_value = secrets.token_hex(32), secrets.token_hex(32)
+            environment = {
+                "PATH": str(binary) + ":/usr/bin:/bin", "TMPDIR": str(scratch),
+                "LIMS_SECRET_HELPER": str(ROOT / "infra/secret-files.sh"),
+                "FAKE_RECORD": str(root / "record"), "FAKE_DATABASE": str(database),
+                "POSTGRES_USER": "laboratory_bootstrap", "POSTGRES_DB": "laboratory",
+            }
+            for name, value, mode, expected_status in (
+                ("candidate", candidate_value, "failure-after-commit", 1),
+                ("previous", old_value, "success", 0),
+            ):
+                directory = root / name
+                directory.mkdir()
+                for stem in NAMES:
+                    (directory / stem).write_text(
+                        (value if stem == "postgres_app_password" else "a" * 64) + "\n"
+                    )
+                result = subprocess.run(
+                    ["/bin/sh", str(ROOT / "infra/postgres-init/010_application_password.sh")],
+                    env={**environment, "LIMS_SECRET_DIR": str(directory), "FAKE_MODE": mode},
+                    text=True, capture_output=True, timeout=10,
+                )
+                self.assertEqual(result.returncode, expected_status)
+                self.assertEqual(database.read_text(), sha256(value.encode()).hexdigest())
+                self.assertNotIn(value, result.stdout + result.stderr)
+                self.assertEqual(list(scratch.iterdir()), [])
+            self.assertEqual(database.read_text(), sha256(old_value.encode()).hexdigest())
 
     def test_malformed_secret_stops_before_a_client_runs(self):
         for value in ("", "a" * 130, "with space", "with\nnewline", "quote'", "\\escape"):
