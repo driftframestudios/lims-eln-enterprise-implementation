@@ -70,7 +70,7 @@ lims-eln-workbench
 ```
 
 An adjacent checkout can add the shared observation boundary from
-`lims-eln-program-specification` release `0.3.1` with
+`lims-eln-program-specification` reviewed package `0.4.0` with
 `python -m pip install -e ../lims-eln-program-specification` before starting the
 workbench. The optional `contracts` dependency pins the reviewed Program source
 commit exactly. The runtime keeps the package and contract identities visible
@@ -189,7 +189,9 @@ separate coordinates so each claim can be reproduced at the source that
 establishes it.
 The Program consumer observation uses a clean Python 3.12 environment, reads
 the installed distribution's PEP 610 record, and exercises the released
-catalog, scenario, example observations, and schemas. Reproduce that receiving
+catalog, scenario, example observations, four administrative resources, and nine
+schemas. The [Program package handoff](docs/runbooks/program-package-handoff.v0.1.md)
+provides the isolated receiving route and its recovery boundary. Reproduce that receiving
 proof from adjacent accepted checkouts after installing the `contracts` extra:
 
 ```sh

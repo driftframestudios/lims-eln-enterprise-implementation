@@ -45,7 +45,7 @@ python -m pip install -e ../lims-eln-program-specification
 ```
 
 Release conformance uses the optional `contracts` extra, which resolves the
-reviewed Program 0.3.1 commit through the repository's configured Git
+reviewed Program 0.4.0 commit through the repository's configured Git
 credentials:
 
 ```sh
@@ -104,7 +104,7 @@ Workbench API calls carry `X-Tenant-ID`. The header and requested tenant form
 one exact identity. Raw instrument content travels as base64 so the service can
 hash the submitted bytes before normalization.
 
-When the reviewed `lims-eln-program-specification` 0.3.1 package is installed,
+When the reviewed `lims-eln-program-specification` 0.4.0 package is installed,
 each successful run validates an exact `GoldenSpecimenObservation` at contract
 revision 1.0.0. The observation names the shared
 `SCN-GOLDEN-SPECIMEN-001` scenario, preserves raw and normalized digests, and
