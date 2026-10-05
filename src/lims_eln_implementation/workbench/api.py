@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from ..bounded_caller import CallDenied
-from ..idempotency import IdempotencyError
+from ..idempotency import IdempotencyError, TransactionRetryRequired
 from ..model import DomainError
 from ..ports import VendorRevisionConflict
 from ..vendors import AmbiguousOutcomePending
@@ -121,6 +121,10 @@ def create_app(service: WorkbenchPort | None = None) -> FastAPI:
     @app.exception_handler(CallDenied)
     async def call_denied(request: Request, error: CallDenied) -> JSONResponse:
         return _problem(request, 403, error.reason_code, str(error))
+
+    @app.exception_handler(TransactionRetryRequired)
+    async def transaction_retry(request: Request, error: TransactionRetryRequired) -> JSONResponse:
+        return _problem(request, 409, "transaction_retry", str(error))
 
     for error_type in (
         DomainError,

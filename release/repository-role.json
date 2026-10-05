@@ -4,7 +4,7 @@
   "repository_release": "0.3.2",
   "release_state": "post_release_development",
   "external_release": "implementation-v0.3.2",
-  "bounded_caller_binding_digest": "sha256:4ba14af7ccb8b9eb80d9953e9a82ca0d2cd80ceb55f09610545194418a51c483",
+  "bounded_caller_binding_digest": "sha256:f9d780cc765ddcf5b18d078d5ee451c7f93f49cb91f94032e775c0d88041db50",
   "database_flyway_release_digest": "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f",
   "database_hosted_evidence": {
     "receipt_path": "receipts/hosted-postgresql-proof.json",
@@ -12,7 +12,7 @@
     "promotion_signal": "implementation-validation"
   },
   "external_contract_coordinate_digest": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
-  "public_inspection_manifest_digest": "sha256:01c40f510f9b207363eef694739031e63deacc3ef9ba1c7cd16c012b8cb21497",
+  "public_inspection_manifest_digest": "sha256:33e9e11d0694e6d2d121280b141e07d24e35533e6f0ba8ab106b48e1ebe964ae",
   "open_receipt_ledger_digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad",
   "selected_future_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
   "comparison_return": {

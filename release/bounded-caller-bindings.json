@@ -32,12 +32,12 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/api.py",
-      "sha256": "a14d399e07012ff832b7fd1d618ed41893881d5d23f31d357729db25ef624f1d",
+      "sha256": "9c84cdf10a8b341961db3324883af8588917a336b54bbf42a3dd61ba35b09715",
       "responsibility": "injectable FastAPI delivery boundary with state-adapter readiness and typed authority decisions"
     },
     {
       "path": "src/lims_eln_implementation/workbench/postgres.py",
-      "sha256": "fb373e9f2c5997c37ce3bf2dde7c84dbb8a5b6e107522d1bbb45d8977fb69b0f",
+      "sha256": "8a34bce87d72e122e9fd050aba5f6475b46891378fed5574fd94fe5dba904e90",
       "responsibility": "repeatable-read PostgreSQL Golden Specimen composition with tenant binding, lease-and-fence completion, exact replay evidence, and authenticated recovery"
     },
     {
