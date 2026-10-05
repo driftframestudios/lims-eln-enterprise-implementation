@@ -16,16 +16,16 @@ export PGCONNECT_TIMEOUT
 stop_active_client() {
     if test -n "$_active_client"; then
         trap '' INT TERM
-        kill -TERM -- "-$_active_client" 2>/dev/null || kill -TERM "$_active_client" 2>/dev/null || :
+        kill -s TERM -- "-$_active_client" 2>/dev/null || kill -s TERM "$_active_client" 2>/dev/null || :
         for _tick in 1 2 3 4 5 6 7 8 9 10; do
-            kill -0 -- "-$_active_client" 2>/dev/null || break
+            kill -s 0 -- "-$_active_client" 2>/dev/null || break
             sleep 0.1
         done
-        kill -KILL -- "-$_active_client" 2>/dev/null || :
-        kill -KILL "$_active_client" 2>/dev/null || :
+        kill -s KILL -- "-$_active_client" 2>/dev/null || :
+        kill -s KILL "$_active_client" 2>/dev/null || :
         wait "$_active_client" 2>/dev/null || :
         for _tick in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-            if ! kill -0 -- "-$_active_client" 2>/dev/null; then
+            if ! kill -s 0 -- "-$_active_client" 2>/dev/null; then
                 _active_client=""
                 return 0
             fi
@@ -47,7 +47,7 @@ run_client() {
     else
         _client_status=$?
     fi
-    if kill -0 -- "-$_active_client" 2>/dev/null; then
+    if kill -s 0 -- "-$_active_client" 2>/dev/null; then
         stop_active_client || :
         return 1
     fi

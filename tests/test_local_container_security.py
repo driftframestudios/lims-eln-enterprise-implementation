@@ -474,6 +474,7 @@ class PinnedClientTransportTests(unittest.TestCase):
         images = (
             "postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193",
             "flyway/flyway:13.8.1-alpine@sha256:ca3c8eddac25811f84c9767c56a0610ce23cd4e61f59bb05778a78db42347b39",
+            "python:3.12.15-slim-bookworm@sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
         )
         for image in images:
             with self.subTest(image=image):

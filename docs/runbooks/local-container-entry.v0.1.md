@@ -141,7 +141,7 @@ LIMS_CONTAINER_TRANSPORT_CHECKS=1 \
 ~~~
 
 The opt-in image checks use Docker's selected context (`DOCKER_CONTEXT` may select
-an existing context). Both pinned images must be available, and the engine must
+an existing context). All three pinned images must be available, and the engine must
 be able to read the repository helper file. Credential-free direct/nested input,
 caller-descriptor retention, and stalled-descendant checks exercise the real
 shells; ordinary unit runs retain their host-shell coverage.
