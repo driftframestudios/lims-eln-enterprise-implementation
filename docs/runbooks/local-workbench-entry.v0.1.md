@@ -100,6 +100,23 @@ replay. The durable operation ledger decides completed replay, changed-content
 collision, and in-progress/recovery state. A new independent experiment uses
 new run and specimen identities. Application restart retains PostgreSQL state.
 
+Overlapping transactions can receive HTTP 409 with problem type
+`urn:lims-eln:problem:transaction_retry`. The database has aborted that attempt
+with a serialization or deadlock decision. After the competing work settles,
+retry the complete request using its original run identity, event time, and
+input bytes. The durable ledger then returns the accepted result or performs
+a fresh admitted attempt. Changed-content collisions retain their separate
+decision. Connection loss and uncertain commit acknowledgement retain their
+reconciliation route.
+
+The server performs one attempt per request. Each fresh attempt retains the
+existing authorization and budget checks; contention can consume a local
+attempt budget even when database work rolls back. A repeated conflict invites
+inspection of the contention and remaining budget before another request.
+
+This follows [PostgreSQL transaction-retry guidance](https://www.postgresql.org/docs/17/mvcc-serialization-failure-handling.html).
+
+
 The existing reference grant admits fresh operations for one hour after
 service construction. Restart renews that local grant; completed replay retains
 its existing operation identity. Wider grant lifecycle policy belongs to the
