@@ -51,21 +51,25 @@ semantic reconciliation, and accountable acceptance.
 
 ## Runtime invocation
 
-The repository stores zero deployable database credentials. A workload identity
-or secret delivery boundary supplies `FLYWAY_URL`, the released
-`laboratory_migrator` login, and its runtime credential; hosted tests use
-conspicuously synthetic isolated values.
-The container invocation mounts the project read-only and uses the released
-configuration:
+The secret delivery boundary supplies the released `laboratory_migrator`
+credential through a read-only file. The prepared repository migrator image
+passes that value to Flyway through protected standard-input configuration.
+Use the [local container entry](runbooks/local-container-entry.v0.1.md) to select
+the exact source/context pair, retained secrets, and existing Compose project.
+With its preparation variables exported, invoke the protected entrypoint:
 
 ```sh
-docker run --rm --network host \
-  --volume "$PWD:/flyway/project:ro" \
-  --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
-  flyway/flyway:13.8.1-alpine@sha256:ca3c8eddac25811f84c9767c56a0610ce23cd4e61f59bb05778a78db42347b39 \
-  -workingDirectory=/flyway/project \
-  -configFiles=/flyway/project/flyway.conf migrate
+docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench \
+  run --rm --no-deps database-migrator migrate
 ```
+
+This direct invocation follows admitted cluster-role preparation and a reachable
+database; the normal first-run Compose chain supplies that ordering. Reuse the
+[protected inspection and resume route](runbooks/local-container-entry.v0.1.md#inspect-and-resume-a-stopped-migration)
+for a failed or interrupted setup job. It retains the database, Flyway history,
+credentials, and migration bytes while routing status and checksum evidence to
+the operator. Other deployment profiles deliver credentials through their
+reviewed secret receiver. Hosted tests use isolated synthetic values.
 
 Release automation follows `migrate`, `validate`, and `info`. A second
 `migrate` proves that the released head is a no-op. Flyway's

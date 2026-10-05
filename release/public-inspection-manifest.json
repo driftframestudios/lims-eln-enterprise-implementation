@@ -643,7 +643,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:8f3d436ee4b23e76b7a1107a852f5624bb2d67150303f898c8a00b0b844b8308",
+      "aggregate_sha256": "sha256:1f4f5ca77d7859ad7c7d8b6756f48c222ae662cbe263dfa03793642fad7c9f0f",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -757,8 +757,8 @@
         },
         {
           "path": "docs/database-migrations.md",
-          "sha256": "sha256:9aafa8f82cb22493e922bc0068a4a15973641051790c52488a8c325713696272",
-          "size_bytes": 13738
+          "sha256": "sha256:a3de990fe67fe881c7410b6bdb7310795165bfb41cb4ff049c34be289ad0ce0a",
+          "size_bytes": 14231
         },
         {
           "path": "docs/golden-specimen-workbench.md",
@@ -777,8 +777,8 @@
         },
         {
           "path": "docs/runbooks/local-container-entry.v0.1.md",
-          "sha256": "sha256:723cf00d41fbee8f21ef7f01239a3ca88683c90fcff6be169ca7e2f1befc567a",
-          "size_bytes": 9686
+          "sha256": "sha256:51bc20bb4fdafb0c30d45ddf01618f95222c3ae5d8bc571092e245913ca4d7e3",
+          "size_bytes": 13801
         },
         {
           "path": "docs/runbooks/local-observation-export.v0.1.md",
@@ -787,8 +787,8 @@
         },
         {
           "path": "docs/runbooks/local-workbench-entry.v0.1.md",
-          "sha256": "sha256:b8fbddabd370cffe370082d86f710b1f84dd304da43db45b711bdf5833c729e1",
-          "size_bytes": 9723
+          "sha256": "sha256:9ccbdda6314b7a062edb578dd76873a55b020e827e241d8f4f61600170b79c14",
+          "size_bytes": 11862
         },
         {
           "path": "docs/runbooks/migration-cutover-and-restore.md",
@@ -964,7 +964,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:920b484d62c741d2b11de64858f17ba358afa5d8acef475c08330db2dc70edd7",
+    "aggregate_sha256": "sha256:8595832999c38b1b74a131e1a1d98ffb4c42b1b84b09427e4c8384feba17f2c2",
     "kind": "content_addressed_artifact_inventory"
   }
 }
