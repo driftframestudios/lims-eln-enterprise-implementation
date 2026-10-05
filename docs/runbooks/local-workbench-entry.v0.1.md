@@ -106,8 +106,8 @@ with a serialization or deadlock decision. After the competing work settles,
 retry the complete request using its original run identity, event time, and
 input bytes. The durable ledger then returns the accepted result or performs
 a fresh admitted attempt. Changed-content collisions retain their separate
-decision. Connection loss and uncertain commit acknowledgement retain their
-reconciliation route.
+decision. Connection loss and uncertain commit acknowledgement use the
+original-request reconciliation route below.
 
 The server performs one attempt per request. Each fresh attempt retains the
 existing authorization and budget checks; contention can consume a local
@@ -133,6 +133,40 @@ image, retained-secret preparation, and rotation/recovery route. Enterprise #43
 owns complete journey acceptance. Both entries share this runtime composition
 and the [local observation export](local-observation-export.v0.1.md), which
 preserves exact typed comparison inputs and their accepted-file recovery.
+
+## Reconcile an uncertain commit
+
+A lost response leaves the transaction outcome unresolved. Retain the original
+request bytes, tenant, run/specimen identities, event time, source coordinate,
+and any accepted observation in protected local storage. Keep the existing
+database and credentials available while restoring dependency readiness.
+
+1. Confirm the selected service reports ready and the original request is no
+   longer executing. Readiness establishes dependency access; the operation
+   result comes from its own durable record.
+2. Read `GET /api/workbench/observations/{original_run_id}` with the original
+   `tenant_id` query parameter and matching `X-Tenant-ID` header. A successful
+   result must match the original tenant, run, scenario, and available accepted
+   observation. The [protected export](local-observation-export.v0.1.md) admits
+   and preserves the typed result for comparison.
+3. A missing observation establishes only that this read returned no matching
+   observation. Completion, rollback, and observation construction remain
+   separate questions. After dependency recovery and completion of the prior
+   attempt, submit the original bytes once to
+   `POST /api/workbench/golden-runs` with the original tenant header. The durable
+   ledger can return the accepted result or admit a fresh attempt under that
+   same operation identity.
+4. A successful replay and matching observation settle the local operation.
+   A content collision, authorization/budget rejection, unresolved in-progress
+   state, inconsistent readback, or repeated uncertain result goes to the
+   workbench/database owner. Retain the original identity until that owner
+   resolves the outcome. A confirmed `transaction_retry` follows the bounded
+   contention route above after the competing work settles.
+
+Recovery changes the dependency or diagnostic condition before another attempt.
+Keep exact requests and detailed readback local; the shared return names the
+source, normalized outcome, coverage, and remaining decision. New experiment
+identities and destructive reset belong to their separate operator choices.
 
 ## Secret ownership and audience-fitting evidence
 

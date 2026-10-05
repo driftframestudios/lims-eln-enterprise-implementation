@@ -65,7 +65,7 @@ and relations. Optional profiles are `object-storage` and `telemetry`.
 | Preparation | External 0700 directory; 0600 files; serialized, exclusive atomic publication | Retain existing files and complete missing entries. |
 | Build | Exact archives; two wheels; hash-checked registry dependencies; allowlisted contexts | Reuse a matching context or prepare a new named context. |
 | Role setup | Protected temporary password file and SQL standard input; normalized output | Finite bootstrap job with retained administrative credential. |
-| Migration | Flyway standard-input configuration; input file unlinked before execution | Inspect migration status while retaining Flyway history. |
+| Migration | Flyway standard-input configuration; input file unlinked before execution | Use the protected inspection and resume route below; retain Flyway history. |
 | Application | Two files read at construction; ordinary login; fixed-tenant issuer | Coordinate rotation and recreation. |
 | Public return | Source/profile and named normalized outcomes | Receiving PR; detailed diagnostics remain local. |
 
@@ -92,6 +92,84 @@ privileged instrumentation, and managed providers retain separate inspection
 boundaries. The pinned PostgreSQL image owns initial cluster setup; that
 upstream lifecycle remains distinct from repository-owned setup and the
 running application.
+
+## Inspect and resume a stopped migration
+
+Retain the selected Compose project, exact prepared contexts, source checkout,
+database volumes, and secret directory. Confirm that the original setup job has
+exited before inspecting its outcome. Select the existing project below; retain
+the same Docker context and exported preparation variables used at startup.
+
+The wrapper accepts Flyway commands and keeps ordinary output value-free.
+For a local inspection, Flyway's `outputFile` writes its report inside one named
+diagnostic container. Copy that report into an operator-owned 0700 directory
+before removing that container. The database stays in place. Run this block
+from the repository root after PostgreSQL is reachable:
+
+~~~sh
+PROJECT=lims-local
+(
+  umask 077
+  recovery_dir="$(mktemp -d "$STATE_ROOT/migration-review.XXXXXXXX")" || exit 1
+  recovery_job="lims-$(basename "$recovery_dir")"
+  if docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench \
+      run --name "$recovery_job" --no-deps database-migrator \
+      -outputType=json -outputFile=/tmp/migration-review.json info \
+      > "$recovery_dir/command.log" 2>&1; then
+    inspection_status=0
+  else
+    inspection_status=$?
+  fi
+  if docker cp "$recovery_job:/tmp/migration-review.json" \
+      "$recovery_dir/status.json" >> "$recovery_dir/command.log" 2>&1; then
+    chmod 600 "$recovery_dir/status.json" || exit 1
+    docker rm "$recovery_job" >> "$recovery_dir/command.log" 2>&1 || exit 1
+  else
+    printf '%s\n' 'Inspection remains held; retain the named diagnostic container and local log.'
+    exit 1
+  fi
+  printf 'Inspection exit status: %s; review the protected local report.\n' "$inspection_status"
+  exit "$inspection_status"
+)
+~~~
+
+The local report and command log belong to the operator. Keep their paths,
+database coordinates, and detailed error text with that owner. A failed copy
+leaves the named container available; recover its report and confirm its exit
+before removing that container. The `info` result describes migration status;
+checksum admission belongs to `validate`:
+
+~~~sh
+docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench \
+  run --rm --no-deps database-migrator validate
+~~~
+
+Resume after the observed prerequisite has changed and validation succeeds.
+Examples include restored database reachability, delivery of the retained
+credential, or restoration of the reviewed source/context pair. Pending
+migrations follow the accepted version sequence. A failed migration, checksum
+disagreement, unexpected applied version, or unresolved transaction outcome
+goes to the database/migration owner with the protected report and exact source
+coordinate. Keep history and migration bytes intact; `repair`, `baseline`,
+`clean`, manual history edits, and volume reset require their own reviewed
+disposition. V004's historical-data rejection follows the explicit disposition
+in [database evolution](../database-migrations.md#fresh-and-successor-paths).
+
+After that admission, stop the application and confirm all three setup jobs
+have exited. Remove only those stopped job containers, then let the existing
+dependency chain rerun preparation and start the application:
+
+~~~sh
+docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench stop application
+docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench \
+  rm -f database-role-provisioner database-migrator database-role-bootstrap
+docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench up -d application
+~~~
+
+Continue after successful setup-job exits, application readiness, and exact
+retained-request replay. An unchanged failure remains held for its named owner.
+For a lost application commit acknowledgement, use the
+[original-request reconciliation route](local-workbench-entry.v0.1.md#reconcile-an-uncertain-commit).
 
 ## Restart, independent experiment, rotation, and reset
 
@@ -161,5 +239,8 @@ Sources: [Compose secrets](https://docs.docker.com/compose/how-tos/use-secrets/)
 [Compose trust model](https://docs.docker.com/compose/trust-model/),
 [PostgreSQL password files](https://www.postgresql.org/docs/17/libpq-pgpass.html),
 [Flyway standard-input configuration](https://documentation.red-gate.com/fd/config-files-parameter-277578859.html).
+Protected inspection uses Flyway's
+[output-file parameter](https://documentation.red-gate.com/fd/output-file-306939921.html)
+and [migration-status command](https://documentation.red-gate.com/flyway/reference/commands/info).
 Return to [native entry](local-workbench-entry.v0.1.md) or
 [infrastructure orientation](../../infra/README.md).
