@@ -157,6 +157,34 @@ SET_SID_CLIENT = "import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1
 
 
 class LocalSecretTransportTests(unittest.TestCase):
+    def test_host_launcher_preserves_direct_and_nested_input(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            session = root / "setsid"
+            session.write_text("#!" + sys.executable + "\n" + SET_SID_CLIENT)
+            session.chmod(0o700)
+            probe = """
+. "$LIMS_SECRET_HELPER"
+run_client cat < "$INPUT" > "$DIRECT"
+nested_client() { run_client cat; }
+nested_client < "$INPUT" > "$NESTED"
+"""
+            expected = b"first input line\nsecond input line\n"
+            (root / "input").write_bytes(expected)
+            result = subprocess.run(
+                ["/bin/sh", "-c", probe],
+                env={
+                    "PATH": str(root) + ":/usr/bin:/bin",
+                    "LIMS_SECRET_HELPER": str(ROOT / "infra/secret-files.sh"),
+                    "INPUT": str(root / "input"), "DIRECT": str(root / "direct"),
+                    "NESTED": str(root / "nested"),
+                },
+                text=True, capture_output=True, timeout=10,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((root / "direct").read_bytes(), expected)
+            self.assertEqual((root / "nested").read_bytes(), expected)
+
     def test_clients_receive_protected_input_with_bounded_output_and_cleanup(self):
         scripts = (
             "infra/provision-migrator-identity.sh",
@@ -385,3 +413,80 @@ class ContainerBuildBoundaryTests(unittest.TestCase):
         self.assertIn("--require-hashes --only-binary=:all:", dockerfile)
         self.assertIn("--no-access-log", dockerfile)
         self.assertNotIn("COPY . ", dockerfile)
+
+
+PINNED_SHELL_PROBE = r"""
+set -eu
+. /secret-files.sh
+printf '%s\n' 'first input line' 'second input line' >/tmp/expected
+printf '%s\n' 'retained descriptor' >/tmp/descriptor-expected
+exec 9>/tmp/descriptor-observed
+run_client cat </tmp/expected >/tmp/direct
+nested_client() { run_client cat; }
+nested_client </tmp/expected >/tmp/nested
+printf '%s\n' 'retained descriptor' >&9
+exec 9>&-
+cmp /tmp/expected /tmp/direct
+cmp /tmp/expected /tmp/nested
+cmp /tmp/descriptor-expected /tmp/descriptor-observed
+cat >/tmp/descendant.sh <<'CHILD'
+trap '' TERM INT
+printf '%s\n' "$$" >/tmp/descendant.pid
+exec sleep 60
+CHILD
+cat >/tmp/launcher.sh <<'LAUNCHER'
+printf '%s\n' "$$" >/tmp/launcher.pid
+/bin/sh /tmp/descendant.sh &
+wait "$!"
+LAUNCHER
+cat >/tmp/supervisor.sh <<'SUPERVISOR'
+. /secret-files.sh
+secret_workspace
+printf '%s\n' "$_secret_workspace" >/tmp/scratch.path
+run_client /bin/sh /tmp/launcher.sh
+SUPERVISOR
+/bin/sh /tmp/supervisor.sh >/tmp/supervisor.out 2>&1 &
+supervisor=$!
+ready=0
+for tick in $(seq 1 100); do
+    if test -s /tmp/descendant.pid; then ready=1; break; fi
+    sleep 0.05
+done
+test "$ready" = 1
+kill -TERM "$supervisor"
+client_status=0
+wait "$supervisor" || client_status=$?
+test "$client_status" = 143
+for record in /tmp/launcher.pid /tmp/descendant.pid; do
+    if kill -0 "$(cat "$record")" 2>/dev/null; then exit 1; fi
+done
+test ! -e "$(cat /tmp/scratch.path)"
+printf '%s\n' 'transport-and-descendant-check=passed'
+"""
+
+
+class PinnedClientTransportTests(unittest.TestCase):
+    @unittest.skipUnless(
+        os.environ.get("LIMS_CONTAINER_TRANSPORT_CHECKS") == "1",
+        "select pinned-image transport checks with an available Docker context",
+    )
+    def test_pinned_shells_preserve_input_and_reap_descendants(self):
+        images = (
+            "postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193",
+            "flyway/flyway:13.8.1-alpine@sha256:ca3c8eddac25811f84c9767c56a0610ce23cd4e61f59bb05778a78db42347b39",
+        )
+        for image in images:
+            with self.subTest(image=image):
+                result = subprocess.run(
+                    [
+                        "docker", "run", "--rm", "--init", "--network", "none",
+                        "--read-only", "--cap-drop", "ALL",
+                        "--security-opt", "no-new-privileges:true", "--pids-limit", "32",
+                        "--tmpfs", "/tmp:rw,noexec,nosuid,size=8m",
+                        "--mount", f"type=bind,src={ROOT / 'infra/secret-files.sh'},dst=/secret-files.sh,readonly",
+                        "--entrypoint", "/bin/sh", "-i", image, "-s",
+                    ],
+                    input=PINNED_SHELL_PROBE, text=True, capture_output=True, timeout=20,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(result.stdout.strip(), "transport-and-descendant-check=passed")

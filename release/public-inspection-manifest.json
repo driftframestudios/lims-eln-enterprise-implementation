@@ -173,7 +173,7 @@
       "responsibility": "FastAPI, domain, adapter, and package source that defines executable behavior."
     },
     {
-      "aggregate_sha256": "sha256:01425b23466f7641f48a185e4bd591da9a51fe1a8c050850ef0ed55634eae6ad",
+      "aggregate_sha256": "sha256:6b6b29b7328e4c12da5052c1456a410bd5378592b7809fd4d45838f726c6fa08",
       "artifacts": [
         {
           "path": "database/flyway-artifact-inventory.json",
@@ -232,8 +232,8 @@
         },
         {
           "path": "infra/secret-files.sh",
-          "sha256": "sha256:befa069a00ddfcf6d3be3c29270c8404c71edfb580d7c0424024e4c8f04f73d4",
-          "size_bytes": 3369
+          "sha256": "sha256:8e57463d3d74732b307038f205c3e737fc0f26202f9915f02e43c5dd9d8a9a0f",
+          "size_bytes": 3399
         },
         {
           "path": "sql/V001__laboratory_core.sql",
@@ -394,7 +394,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:6adb0949ba9840378f493c8eabad43f614e0d3ac3db113c24c956d6603e78a69",
+      "aggregate_sha256": "sha256:45c1adfbb5849895506c4a51fa3ffc790b375f1277f05770d00a43fcc30819ce",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -513,8 +513,8 @@
         },
         {
           "path": "tests/test_local_container_security.py",
-          "sha256": "sha256:6f8bad4bcfdb2db8ef99ed4a8745b2cf304790c90a89ac51e97b43871e0b44c8",
-          "size_bytes": 19807
+          "sha256": "sha256:51e854eeae264de0af7feee03d09b2b7d2101a8473fcb14b660d9b7924a68991",
+          "size_bytes": 24000
         },
         {
           "path": "tests/test_migration.py",
@@ -628,7 +628,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:3310505d45f2976665c44225c6bda45316f580ab9e420b35b6a66f14dbe2a200",
+      "aggregate_sha256": "sha256:58a1f44387d014cfab9dca533f4e3f752fbd90e17617f7869d7403aba2695ae9",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -762,8 +762,8 @@
         },
         {
           "path": "docs/runbooks/local-container-entry.v0.1.md",
-          "sha256": "sha256:967cd89817eee6b4e0ae8be5be67737a59fbf5425f476a83ed35fd49f2144d6e",
-          "size_bytes": 8916
+          "sha256": "sha256:b09b2520e45ba861f5c5d6159df0d70ae22e1bea5b9d4b35f1c8276946a5da17",
+          "size_bytes": 9604
         },
         {
           "path": "docs/runbooks/local-workbench-entry.v0.1.md",
@@ -944,7 +944,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:2e35114a7c01ae80f571ab3459b5e5b8d1d659ac1dc9b926a9fcf5bbb43dfb88",
+    "aggregate_sha256": "sha256:f1dae35cc29b3c4548aff6f82e52ee00b4a2b3706245c75963afb0856f6d98bf",
     "kind": "content_addressed_artifact_inventory"
   }
 }

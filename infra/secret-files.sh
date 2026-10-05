@@ -38,8 +38,10 @@ stop_active_client() {
 }
 
 run_client() {
-    setsid "$@" <&0 &
-    _active_client=$!
+    {
+        setsid "$@" <&9 9<&- &
+        _active_client=$!
+    } 9<&0
     if wait "$_active_client"; then
         _client_status=0
     else

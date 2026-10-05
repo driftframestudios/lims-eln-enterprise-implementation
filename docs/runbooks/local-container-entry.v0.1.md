@@ -76,7 +76,7 @@ retains its broader printable-ASCII contract. Other encodings receive an
 explicit adapter.
 
 Temporary files use a restrictive job-owned directory and cleanup on success,
-failure, SIGINT, and SIGTERM. Each client runs in an owned session/process group. Termination reaches the
+failure, SIGINT, and SIGTERM. Each client receives standard input through a scoped descriptor and runs in an owned session/process group. The descriptor preserves exact input bytes across the pinned shells and restores any caller-owned descriptor after launch. Termination reaches the
 launcher and its descendants; a one-second grace interval precedes forced
 group termination and a completed wait. Setup containers use an init process
 to reap orphaned descendants. Cleanup follows confirmed group exit. An
@@ -136,7 +136,15 @@ Failed export retains the previous accepted artifact and its input identity.
 ~~~sh
 .venv/bin/python -m unittest discover -s tests -p 'test_local_container_security.py' -v
 .venv/bin/python -m unittest discover -s tests -p 'test_database_migrations.py' -v
+LIMS_CONTAINER_TRANSPORT_CHECKS=1 \
+  .venv/bin/python -m unittest discover -s tests -p 'test_local_container_security.py' -v
 ~~~
+
+The opt-in image checks use Docker's selected context (`DOCKER_CONTEXT` may select
+an existing context). Both pinned images must be available, and the engine must
+be able to read the repository helper file. Credential-free direct/nested input,
+caller-descriptor retention, and stalled-descendant checks exercise the real
+shells; ordinary unit runs retain their host-shell coverage.
 
 Canary checks cover child arguments/environments, protected input, output,
 termination cleanup, malformed files, partial setup, and context admission
