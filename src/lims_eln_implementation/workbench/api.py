@@ -57,6 +57,8 @@ class TenantContextMismatch(DomainError):
 class WorkbenchPort(Protocol):
     state_adapter: str
 
+    def check_ready(self) -> None: ...
+
     def summary(self, tenant_id: str) -> dict[str, Any]: ...
 
     def specimen(self, tenant_id: str, specimen_id: str) -> dict[str, Any]: ...
@@ -133,8 +135,22 @@ def create_app(service: WorkbenchPort | None = None) -> FastAPI:
         return {"status": "live"}
 
     @app.get("/health/ready", include_in_schema=False)
-    def readiness() -> dict[str, str]:
-        return {"status": "ready", "state_adapter": workbench.state_adapter}
+    def readiness() -> JSONResponse:
+        try:
+            workbench.check_ready()
+        except Exception:  # Adapter failures keep process liveness independently observable.
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "waiting_for_dependencies",
+                    "state_adapter": workbench.state_adapter,
+                },
+                headers={"Cache-Control": "no-store"},
+            )
+        return JSONResponse(
+            content={"status": "ready", "state_adapter": workbench.state_adapter},
+            headers={"Cache-Control": "no-store"},
+        )
 
     @app.get("/workbench", include_in_schema=False)
     def workbench_page(request: Request) -> Any:

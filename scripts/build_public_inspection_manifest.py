@@ -32,6 +32,8 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
         "FastAPI, domain, adapter, and package source that defines executable behavior.",
         (
             "pyproject.toml",
+            "uv.lock",
+            ".python-version",
             "src/lims_eln_implementation/**/*.py",
             "src/lims_eln_implementation/workbench/static/*",
             "src/lims_eln_implementation/workbench/templates/*",
