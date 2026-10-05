@@ -1,7 +1,7 @@
 {
   "artifact_groups": [
     {
-      "aggregate_sha256": "sha256:8a548dffe1a818785e622abee9168b02a170278ec7ea64cd456d296330077954",
+      "aggregate_sha256": "sha256:487dfddcb79b8bab826d3cd46cf59874917dc7f430eac295387bba9fb7f74dd9",
       "artifacts": [
         {
           "path": ".python-version",
@@ -129,6 +129,11 @@
           "size_bytes": 1277
         },
         {
+          "path": "src/lims_eln_implementation/workbench/export.py",
+          "sha256": "sha256:780f59332bd6807044694ca51c43d7ab39d538dcd9dd709d3445eeb749c425e5",
+          "size_bytes": 5781
+        },
+        {
           "path": "src/lims_eln_implementation/workbench/postgres.py",
           "sha256": "sha256:fb373e9f2c5997c37ce3bf2dde7c84dbb8a5b6e107522d1bbb45d8977fb69b0f",
           "size_bytes": 76469
@@ -145,8 +150,8 @@
         },
         {
           "path": "src/lims_eln_implementation/workbench/shared_contracts.py",
-          "sha256": "sha256:41df85c3294923eff90e524b6e2cff8149133f90bd207bc1ccab39cab72d76cd",
-          "size_bytes": 10094
+          "sha256": "sha256:ef12cf0be131e496d015997aa090e80f9c781bab0a1c00c1786156a51c3a93b0",
+          "size_bytes": 11401
         },
         {
           "path": "src/lims_eln_implementation/workbench/static/workbench.css",
@@ -270,7 +275,7 @@
       "responsibility": "Flyway V001 through V005, its bounded identity, and deployment-shape database support."
     },
     {
-      "aggregate_sha256": "sha256:4ab26b1d488021c7c1b995913ee7831cc0e7e494a2dbd8f555ab8d61be8ac045",
+      "aggregate_sha256": "sha256:752c852def0f91e8dd66aa10e4f83eda58430a8fcdac3e5e751548f10b137d2e",
       "artifacts": [
         {
           "path": "contracts/execution-receipt.v1.1.schema.json",
@@ -334,7 +339,7 @@
         },
         {
           "path": "release/bounded-caller-bindings.json",
-          "sha256": "sha256:8eb860a4e35d1ada83612aacc6af9df03b719ac760b571fc65fce2e100ac48e7",
+          "sha256": "sha256:4ba14af7ccb8b9eb80d9953e9a82ca0d2cd80ceb55f09610545194418a51c483",
           "size_bytes": 6805
         },
         {
@@ -394,7 +399,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:5f4721279418f6e0c95f027fa1bb1866696caca7723fba8d4a00206b55ff9494",
+      "aggregate_sha256": "sha256:f40941f4f74b65c93137d309cb223b941aa9ae31d045415648aef5c81ad438ba",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -577,6 +582,11 @@
           "size_bytes": 5282
         },
         {
+          "path": "tests/test_workbench_export.py",
+          "sha256": "sha256:0b05912f0c00706cae49310baf86fbaa2740e488c38ac5177a85020402781e1f",
+          "size_bytes": 14794
+        },
+        {
           "path": "tests/test_workbench_postgres_adapter.py",
           "sha256": "sha256:c3ae9fc92b1a6f11d52487ee8770868a1b9be88b762de71fe4a29326f40757b5",
           "size_bytes": 13210
@@ -628,7 +638,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:ff9e64b7bcc16bde3967d9cd4aa8e089f062a859945eea6c0f23989c23deb5b5",
+      "aggregate_sha256": "sha256:f028fed720cd81b6d7fffbef825c3c822dc7f33d96dfda7c8381e1e8a1077563",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -717,8 +727,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:ca8c86e68fc2edb726545bca1c0669194abfbb64f61827034fcea5c2f29becb1",
-          "size_bytes": 26803
+          "sha256": "sha256:32c613d1377dd035b48eeeee60aa8a6d94a861509f807e23648f7b332884fa3b",
+          "size_bytes": 26917
         },
         {
           "path": "SECURITY.md",
@@ -762,13 +772,18 @@
         },
         {
           "path": "docs/runbooks/local-container-entry.v0.1.md",
-          "sha256": "sha256:de519ebdfac921177fd3e7e4219c32fbe8366d899c8c57dbd68b82a6d605a207",
-          "size_bytes": 9609
+          "sha256": "sha256:723cf00d41fbee8f21ef7f01239a3ca88683c90fcff6be169ca7e2f1befc567a",
+          "size_bytes": 9686
+        },
+        {
+          "path": "docs/runbooks/local-observation-export.v0.1.md",
+          "sha256": "sha256:19023bd7a421d30f19d118d2de28eadd71bee52e011cf34efa5a0ffd02e59977",
+          "size_bytes": 5501
         },
         {
           "path": "docs/runbooks/local-workbench-entry.v0.1.md",
-          "sha256": "sha256:f466da8e6320b4fd7f9b5f014cb29fc91492c93d177cbef8e6efb1411ce990f4",
-          "size_bytes": 8612
+          "sha256": "sha256:9df9c6a1f1e70e05a2dc9eed3dd9de6b546e3e00e7e91f3db60a52f7e0930116",
+          "size_bytes": 8739
         },
         {
           "path": "docs/runbooks/migration-cutover-and-restore.md",
@@ -792,7 +807,7 @@
         },
         {
           "path": "first-receipt.json",
-          "sha256": "sha256:95a555e21e14fbbf52061294bc906bc391ea2a0bc40e943a16fc73787daf88b4",
+          "sha256": "sha256:4428a0f25f0f7883b235e18ded5fe6f117eaeee7226640e0214367efc64009d7",
           "size_bytes": 6522
         },
         {
@@ -802,7 +817,7 @@
         },
         {
           "path": "machine-node.json",
-          "sha256": "sha256:e15c22a5f3e9e6b1f2676f4bb887f3106a6e9e6b3a53c9d833350dc99e305d06",
+          "sha256": "sha256:f21b50883ce7498f4f0018ad4155d082666592a55e59871963c0105c010df257",
           "size_bytes": 5645
         },
         {
@@ -944,7 +959,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:186c59323c59e81df8d5d75a11f89b3db802b9b66e0d69fe062317fb45a19c29",
+    "aggregate_sha256": "sha256:42227ec5379530f750689208bd5ed79ba7ce1bf6abb70c3e3a3c61fda4eb27ea",
     "kind": "content_addressed_artifact_inventory"
   }
 }

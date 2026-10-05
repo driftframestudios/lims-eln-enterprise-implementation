@@ -127,9 +127,10 @@ their initialized administrator password; a replaced file changes its mounted
 input.
 
 Reset is a distinct operator action naming one project and its volumes.
-Ordinary stop preserves volumes. Comparison export belongs to #43: write a
-protected temporary artifact, flush and validate it, then publish atomically.
-Failed export retains the previous accepted artifact and its input identity.
+Ordinary stop preserves volumes. The [local observation export](local-observation-export.v0.1.md)
+validates the existing typed contract and publishes exact bytes atomically to
+protected storage. Identical bytes reuse the accepted file; a conflict preserves
+it. Complete journey acceptance remains with #43.
 
 ## Focused observations and handback
 

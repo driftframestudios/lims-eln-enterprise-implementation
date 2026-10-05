@@ -113,8 +113,9 @@ scoped operator operation.
 
 The [container entry](local-container-entry.v0.1.md) supplies the application
 image, retained-secret preparation, and rotation/recovery route. Enterprise #43
-owns complete journey and comparison-export acceptance. Both entries share
-this runtime composition.
+owns complete journey acceptance. Both entries share this runtime composition
+and the [local observation export](local-observation-export.v0.1.md), which
+preserves exact typed comparison inputs and their accepted-file recovery.
 
 ## Secret ownership and audience-fitting evidence
 
