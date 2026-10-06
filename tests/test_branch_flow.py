@@ -514,6 +514,8 @@ class BranchFlowTests(unittest.TestCase):
     def test_codeowners_cover_branch_and_authority_control_surfaces(self) -> None:
         owners = (ROOT / ".github" / "CODEOWNERS").read_text(encoding="utf-8")
         for path in (
+            "/AGENTS.md",
+            "/.agents/skills/",
             "/.github/dependabot.yml",
             "/.github/workflows/",
             "/.gitignore",
@@ -559,15 +561,31 @@ class BranchFlowTests(unittest.TestCase):
             workflow,
             r"image: postgres:17\.10-alpine@sha256:[a-f0-9]{64}",
         )
-        self.assertRegex(
-            workflow,
-            r"FLYWAY_IMAGE: flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}",
+        flyway_release = json.loads(
+            (ROOT / "database" / "flyway-release.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            re.findall(r"(?m)^\s*FLYWAY_IMAGE:\s*(\S+)\s*$", workflow),
+            [flyway_release["container_image"], flyway_release["container_image"]],
         )
         self.assertIn("-target=003 migrate", workflow)
         self.assertIn("migration 003 through 005", workflow.lower())
         self.assertIn("run_flyway validate", workflow)
         self.assertIn("run_flyway info", workflow)
         self.assertIn("FLYWAY_USER: laboratory_migrator", workflow)
+        self.assertIn("--file infra/migrator.Dockerfile", workflow)
+        self.assertIn(
+            "/run/secrets/postgres_migrator_password:ro",
+            workflow,
+        )
+        self.assertIn(
+            "command -v tr >/dev/null && command -v flyway >/dev/null "
+            "&& java -version && flyway -v",
+            workflow,
+        )
+        self.assertIn('"$migrator_image" info', workflow)
         self.assertIn("true:false:false:false:false:false", workflow)
         self.assertIn("false:false:true", workflow)
         self.assertIn("granted_role.rolname = 'laboratory_outbox_authority'", workflow)
@@ -584,6 +602,10 @@ class BranchFlowTests(unittest.TestCase):
         )
         self.assertIn(
             "python3 -m unittest tests.test_postgres_integration -v",
+            workflow,
+        )
+        self.assertIn(
+            "python3 -I -S scripts/validate_implementation.py",
             workflow,
         )
         self.assertNotIn("options=-c%20role%3D", workflow)

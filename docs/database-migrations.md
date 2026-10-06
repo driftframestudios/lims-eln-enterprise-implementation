@@ -2,7 +2,7 @@
 
 ## Ownership boundary
 
-Flyway Community 13.0.0 owns migration discovery, ordering, locking, transaction
+Flyway Community 13.8.1 owns migration discovery, ordering, locking, transaction
 boundaries, applied history, checksum validation, status, and replay behavior.
 `database/flyway-release.json` pins the exact open-source Alpine image by version
 and multi-architecture digest. `database/flyway-artifact-inventory.json` binds
@@ -11,6 +11,11 @@ V001-through-V005 migration by individual SHA-256 plus an ordered aggregate
 SHA-256. The release manifest binds both the
 inventory file and aggregate, creating one independently reviewable release
 coordinate while Flyway continues to own applied history and mechanics.
+The exact 13.8.1 hosted receipt binds the selected source coordinate to its
+configured PostgreSQL proof. That proof builds the repository migrator image
+and exercises its shell, secret-reading entrypoint, Flyway CLI, JRE, JDBC
+connection, and connection callback before the PostgreSQL migration matrix
+runs.
 The aggregate canonicalization emits each inventory entry in listed order as
 UTF-8 `path`, one NUL byte, the lowercase hexadecimal SHA-256, and one LF byte,
 then hashes the complete byte stream.
@@ -46,21 +51,28 @@ semantic reconciliation, and accountable acceptance.
 
 ## Runtime invocation
 
-The repository stores zero deployable database credentials. A workload identity
-or secret delivery boundary supplies `FLYWAY_URL`, the released
-`laboratory_migrator` login, and its runtime credential; hosted tests use
-conspicuously synthetic isolated values.
-The container invocation mounts the project read-only and uses the released
-configuration:
+The secret delivery boundary supplies the released `laboratory_migrator`
+credential through a read-only file. The prepared repository migrator image
+passes that value to Flyway through protected standard-input configuration.
+Use the [local container entry](runbooks/local-container-entry.v0.1.md) to select
+the exact source/context pair, retained secrets, and existing Compose project.
+With its preparation variables exported, select the retained project explicitly
+and invoke the protected entrypoint. The example uses `lims-local`; set that
+value to the project whose database and credentials are being recovered:
 
 ```sh
-docker run --rm --network host \
-  --volume "$PWD:/flyway/project:ro" \
-  --env FLYWAY_URL --env FLYWAY_USER --env FLYWAY_PASSWORD \
-  flyway/flyway:13.0.0-alpine@sha256:f3c8433401abf859ef9022584c8e6111684363ec490f737e749e9a4705ea32d0 \
-  -workingDirectory=/flyway/project \
-  -configFiles=/flyway/project/flyway.conf migrate
+PROJECT=lims-local
+docker compose -p "$PROJECT" -f infra/docker-compose.yml --profile workbench \
+  run --rm --no-deps database-migrator migrate
 ```
+
+This direct invocation follows admitted cluster-role preparation and a reachable
+database; the normal first-run Compose chain supplies that ordering. Reuse the
+[protected inspection and resume route](runbooks/local-container-entry.v0.1.md#inspect-and-resume-a-stopped-migration)
+for a failed or interrupted setup job. It retains the database, Flyway history,
+credentials, and migration bytes while routing status and checksum evidence to
+the operator. Other deployment profiles deliver credentials through their
+reviewed secret receiver. Hosted tests use isolated synthetic values.
 
 Release automation follows `migrate`, `validate`, and `info`. A second
 `migrate` proves that the released head is a no-op. Flyway's

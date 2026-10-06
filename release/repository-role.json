@@ -2,14 +2,35 @@
   "manifest_version": "2.0.0",
   "repository_role": "enterprise_implementation",
   "repository_release": "0.3.2",
-  "release_state": "release_observed",
+  "release_state": "post_release_development",
   "external_release": "implementation-v0.3.2",
-  "bounded_caller_binding_digest": "sha256:d141061bf028fdd63cc879ab455b0a68853d369da98edbeb17421a35714ed796",
-  "database_flyway_release_digest": "sha256:a4fafe7ebb50da1efbad47df24d6d7af741130039ba8c90b8d6457e9d1d107b9",
-  "external_contract_coordinate_digest": "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1",
-  "public_inspection_manifest_digest": "sha256:bfc1349b89c9ea71f09fda62cec0efb2acd5c7ac71c0374acb06878301207721",
+  "bounded_caller_binding_digest": "sha256:f9d780cc765ddcf5b18d078d5ee451c7f93f49cb91f94032e775c0d88041db50",
+  "database_flyway_release_digest": "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f",
+  "database_hosted_evidence": {
+    "receipt_path": "receipts/hosted-postgresql-proof.json",
+    "coordinate_state": "current_database_artifacts_observed",
+    "promotion_signal": "implementation-validation"
+  },
+  "external_contract_coordinate_digest": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
+  "public_inspection_manifest_digest": "sha256:fc07794c4c39ce251c0e5782a70645e7fb624a460a37b127853b36a6c7156996",
   "open_receipt_ledger_digest": "sha256:41fabadcf31d22439f410575af3bb041b37ac0124927508484aca0818ecaefad",
   "selected_future_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
+  "comparison_return": {
+    "coordinate_state": "accepted_return",
+    "release": "comparison-v0.3.2",
+    "release_commit": "0289ff835c790693a769347e69da0abdcfaa47de",
+    "observation_carrier_commit": "2cca88982444ebc8280f9eb2891d97bf25dbeb95",
+    "report_digest": "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c",
+    "leaf_paths_compared": 17,
+    "classification_counts": {
+      "agreement": 10,
+      "explainable_variation": 4,
+      "material_divergence": 3
+    },
+    "material_divergence_receiver": "accountable_scientific_mapping",
+    "docs_revision": "6ccc087875b439eb70304771f534434acae3f01c",
+    "projection_manifest_sha256": "sha256:38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea"
+  },
   "first_receipt_contract": {
     "path": "first-receipt.json",
     "authority_mode": "orientation_only",
@@ -45,9 +66,9 @@
     }
   ],
   "contract_bindings": {
-    "governance_schema": "2.1.0",
-    "governance_release": "2.1.0",
-    "program_contract_package": "0.3.1",
+    "governance_schema": "2.2.0",
+    "governance_release": "2.2.0",
+    "program_contract_package": "0.4.0",
     "control_plane_profile": "0.3.0",
     "execution_receipt_schema": "1.1.0",
     "provenance_schema": "1.0.0",
@@ -70,8 +91,14 @@
   "promotion_controls": {
     "current_state": "standing_review_and_history_protection_with_observed_release_admission",
     "hosted_required_check_contexts": [],
-    "protected_branches": ["main"],
-    "allowed_merge_methods": ["merge", "squash", "rebase"],
+    "protected_branches": [
+      "main"
+    ],
+    "allowed_merge_methods": [
+      "merge",
+      "squash",
+      "rebase"
+    ],
     "review_observation": {
       "merge_admission": "configured_ordinary_bypass",
       "independent_review": "deputized_independent_review_completed",
@@ -105,19 +132,30 @@
   },
   "automation_controls": {
     "pull_request_workflow": ".github/workflows/pull-request.yml",
-    "pull_request_targets": ["develop", "main"],
+    "pull_request_targets": [
+      "develop",
+      "main"
+    ],
     "pull_request_runner": "ubuntu-24.04",
     "pull_request_python": "3.12",
     "pull_request_timeout_minutes": 10,
-    "pull_request_permissions": {"contents": "read"},
+    "pull_request_permissions": {
+      "contents": "read"
+    },
     "pull_request_concurrency_cancellation": true,
     "manual_full_proof_workflow": ".github/workflows/ci.yml",
     "dependabot_configuration": ".github/dependabot.yml",
     "dependabot_target": "develop",
     "dependabot_interval": "monthly",
     "dependabot_open_pull_requests_per_ecosystem": 2,
-    "dependabot_grouped_update_types": ["minor", "patch"],
-    "monthly_budget_minutes": {"minimum": 100, "maximum": 300},
+    "dependabot_grouped_update_types": [
+      "minor",
+      "patch"
+    ],
+    "monthly_budget_minutes": {
+      "minimum": 100,
+      "maximum": 300
+    },
     "settings_state": "repository_validation_observed_required_contexts_empty"
   },
   "promotion_coordinates": {

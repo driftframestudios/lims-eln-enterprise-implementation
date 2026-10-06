@@ -1,7 +1,7 @@
 {
   "binding_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
   "binding_version": "0.3.2",
-  "governance_schema_release": "2.1.0",
+  "governance_schema_release": "2.2.0",
   "control_plane_profile": "0.3.0",
   "python": ">=3.12",
   "source_artifacts": [
@@ -32,22 +32,22 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/api.py",
-      "sha256": "ef49fc60fbb9f68e7e48e65f9c6d1663b1f2c8aea58ae46748d1d9f1e1b9123b",
+      "sha256": "9c84cdf10a8b341961db3324883af8588917a336b54bbf42a3dd61ba35b09715",
       "responsibility": "injectable FastAPI delivery boundary with state-adapter readiness and typed authority decisions"
     },
     {
       "path": "src/lims_eln_implementation/workbench/postgres.py",
-      "sha256": "04180ebe2361a0217d48b2e007474acca1af3c72ddd5fdbbd81b9b4e5844706e",
+      "sha256": "8a34bce87d72e122e9fd050aba5f6475b46891378fed5574fd94fe5dba904e90",
       "responsibility": "repeatable-read PostgreSQL Golden Specimen composition with tenant binding, lease-and-fence completion, exact replay evidence, and authenticated recovery"
     },
     {
       "path": "src/lims_eln_implementation/workbench/service.py",
-      "sha256": "57df0794cb6a9888734482267c82f918f5d72a5ab2359bf6629c19ab8b235d69",
+      "sha256": "fa843248807842f30f46d78ae9e36ed257e21888a5ff44bf6151d62a15666230",
       "responsibility": "process-local workbench composition and the shared visitor-facing result shape"
     },
     {
       "path": "src/lims_eln_implementation/workbench/shared_contracts.py",
-      "sha256": "e6e1483ce92566972eac9deb92b08a225f189cc4034e02853bde3f619fdbcec2",
+      "sha256": "ef12cf0be131e496d015997aa090e80f9c781bab0a1c00c1786156a51c3a93b0",
       "responsibility": "optional exact projection from workbench state into the independently distributed Program observation contract"
     },
     {
@@ -79,6 +79,16 @@
       "path": "sql/V005__golden_specimen_workbench.sql",
       "sha256": "6366a6093992c6fa42770cb5e6706a9109cbbcf2c0828f14bfe8af9288e0ed6e",
       "responsibility": "specimen-bound instrument inbox facts, tenant-and-specimen-bound review resolution, and canonical workbench projections"
+    },
+    {
+      "path": "src/lims_eln_implementation/workbench/runtime.py",
+      "sha256": "7d1b9b58b8f97e3111b0d2c2b249a7e4c69cb520cdc86cbd7480a64e1297916c",
+      "responsibility": "explicit local state-adapter composition, bounded secret-file admission, and single-tenant signed assertions"
+    },
+    {
+      "path": "src/lims_eln_implementation/workbench/cli.py",
+      "sha256": "7c40607ccfb45f32f0392b96f4bbc205c9ae3c85e93dd71686ca697d2e61ee70",
+      "responsibility": "loopback-default launcher with explicit adapter and process-owned application factory"
     }
   ],
   "operation_bindings": [

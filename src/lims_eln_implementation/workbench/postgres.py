@@ -31,7 +31,7 @@ from ..bounded_caller import (
     CallRequest,
     InMemoryBudgetLedger,
 )
-from ..idempotency import ContentCollision, IdempotencyInProgress
+from ..idempotency import ContentCollision, IdempotencyInProgress, TransactionRetryRequired
 from ..instrument import IngressDisposition, IngressResult, InstrumentEnvelope, InstrumentIngress
 from ..lifecycle import LifecycleService
 from ..model import (
@@ -102,6 +102,12 @@ def _transaction(connection_factory: ConnectionFactory) -> Iterator[Cursor]:
                 "PostgreSQL rollback also failed with "
                 f"{type(rollback_error).__name__}; the primary error remains authoritative"
             )
+        sqlstate = getattr(error, "sqlstate", None)
+        if isinstance(sqlstate, str) and sqlstate in {"40001", "40P01"}:
+            raise TransactionRetryRequired(
+                "Concurrent database work changed this transaction. "
+                "Retry the complete request with its original identity and inputs."
+            ) from error
         raise
     finally:
         release_error: Exception | None = None
@@ -193,6 +199,31 @@ class PostgresWorkbenchService:
             )
         )
         self._failure_probe = failure_probe or (lambda _: None)
+
+    def check_ready(self) -> None:
+        """Exercise tenant binding, application identity, and V005 read permissions.
+
+        LIMIT 0 checks relation shape and access without materializing specimen
+        rows. Transaction ownership and resource release stay with the adapter.
+        """
+        with self._bound_transaction(self._tenant_id) as cursor:
+            cursor.execute("set transaction read only")
+            cursor.execute(
+                "select session_user, current_user, rolsuper, rolbypassrls "
+                "from pg_catalog.pg_roles where rolname = current_user"
+            )
+            if cursor.fetchone() != ("laboratory_app", "laboratory_app", False, False):
+                raise TenantSessionBindingError(
+                    "workbench readiness requires the ordinary laboratory_app identity"
+                )
+            cursor.execute(
+                "select 1 from public.specimen_workbench_snapshot "
+                "where tenant_id = %s limit 0", (self._tenant_id,),
+            )
+            cursor.execute(
+                "select 1 from public.bounded_call_invocation "
+                "where tenant_id = %s limit 0", (self._tenant_id,),
+            )
 
     def run_golden_specimen(
         self,

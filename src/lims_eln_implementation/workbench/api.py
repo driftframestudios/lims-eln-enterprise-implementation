@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from ..bounded_caller import CallDenied
-from ..idempotency import IdempotencyError
+from ..idempotency import IdempotencyError, TransactionRetryRequired
 from ..model import DomainError
 from ..ports import VendorRevisionConflict
 from ..vendors import AmbiguousOutcomePending
@@ -56,6 +56,8 @@ class TenantContextMismatch(DomainError):
 
 class WorkbenchPort(Protocol):
     state_adapter: str
+
+    def check_ready(self) -> None: ...
 
     def summary(self, tenant_id: str) -> dict[str, Any]: ...
 
@@ -120,6 +122,10 @@ def create_app(service: WorkbenchPort | None = None) -> FastAPI:
     async def call_denied(request: Request, error: CallDenied) -> JSONResponse:
         return _problem(request, 403, error.reason_code, str(error))
 
+    @app.exception_handler(TransactionRetryRequired)
+    async def transaction_retry(request: Request, error: TransactionRetryRequired) -> JSONResponse:
+        return _problem(request, 409, "transaction_retry", str(error))
+
     for error_type in (
         DomainError,
         IdempotencyError,
@@ -133,8 +139,22 @@ def create_app(service: WorkbenchPort | None = None) -> FastAPI:
         return {"status": "live"}
 
     @app.get("/health/ready", include_in_schema=False)
-    def readiness() -> dict[str, str]:
-        return {"status": "ready", "state_adapter": workbench.state_adapter}
+    def readiness() -> JSONResponse:
+        try:
+            workbench.check_ready()
+        except Exception:  # Adapter failures keep process liveness independently observable.
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "waiting_for_dependencies",
+                    "state_adapter": workbench.state_adapter,
+                },
+                headers={"Cache-Control": "no-store"},
+            )
+        return JSONResponse(
+            content={"status": "ready", "state_adapter": workbench.state_adapter},
+            headers={"Cache-Control": "no-store"},
+        )
 
     @app.get("/workbench", include_in_schema=False)
     def workbench_page(request: Request) -> Any:

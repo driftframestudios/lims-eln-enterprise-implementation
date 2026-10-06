@@ -11,6 +11,8 @@ import unittest
 
 from scripts.validate_repository import (
     classify_hosted_postgresql_receipt_binding,
+    validate_current_hosted_postgresql_receipt_contract,
+    validate_hosted_postgresql_coordinate_state,
     validate_promotion_candidate_schema,
     validate_promotion_lifecycle,
     validate_promotion_observation_schema,
@@ -97,7 +99,7 @@ class PromotionLifecycleTests(unittest.TestCase):
     def test_hosted_receipt_version_and_commit_stay_bound(self) -> None:
         hosted = load("receipts/hosted-postgresql-proof.json")["version_bindings"]
         self.assertEqual(
-            "accepted_prior",
+            "current_database_artifacts",
             classify_hosted_postgresql_receipt_binding(hosted),
         )
 
@@ -112,10 +114,62 @@ class PromotionLifecycleTests(unittest.TestCase):
             classify_hosted_postgresql_receipt_binding(changed_release)
 
         correlated_drift = deepcopy(hosted)
-        correlated_drift["repository"] = "0.3.2"
-        correlated_drift["repository_commit"] = "2" * 40
-        with self.assertRaisesRegex(AssertionError, "exact retained observation"):
+        correlated_drift["repository_commit"] = (
+            "e15f0a37520b651cf83e856c3b9d67ab9f42cd9b"
+        )
+        with self.assertRaisesRegex(AssertionError, "exact observed commit"):
             classify_hosted_postgresql_receipt_binding(correlated_drift)
+
+        predecessor = deepcopy(hosted)
+        predecessor["repository"] = "0.3.1"
+        predecessor["repository_commit"] = (
+            "e15f0a37520b651cf83e856c3b9d67ab9f42cd9b"
+        )
+        self.assertEqual(
+            "observed_predecessor",
+            classify_hosted_postgresql_receipt_binding(predecessor),
+        )
+
+        validate_hosted_postgresql_coordinate_state(
+            binding_kind="current_database_artifacts",
+            coordinate_state="current_database_artifacts_observed",
+        )
+        for binding_kind in (
+            "observed_predecessor",
+            "accepted_prior",
+            "historical_prior",
+        ):
+            with self.subTest(binding_kind=binding_kind):
+                with self.assertRaisesRegex(
+                    AssertionError,
+                    "matching receipt binding",
+                ):
+                    validate_hosted_postgresql_coordinate_state(
+                        binding_kind=binding_kind,
+                        coordinate_state="current_database_artifacts_observed",
+                    )
+
+    def test_current_hosted_receipt_requires_complete_exact_evidence(self) -> None:
+        receipt = load("receipts/hosted-postgresql-proof.json")
+        validate_current_hosted_postgresql_receipt_contract(receipt)
+
+        mutations = {
+            "performer identity": lambda item: item.__setitem__(
+                "performer_id",
+                "SYN-UNBOUND-PERFORMER",
+            ),
+            "scenario coverage": lambda item: item["scenario_ids"].pop(),
+            "limitation coverage": lambda item: item["limitations"].pop(),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                changed = deepcopy(receipt)
+                mutate(changed)
+                with self.assertRaisesRegex(
+                    AssertionError,
+                    "exact identity and complete evidence set",
+                ):
+                    validate_current_hosted_postgresql_receipt_contract(changed)
 
     def test_candidate_coordinate_drift_is_visible(self) -> None:
         records = self.records()
@@ -174,11 +228,11 @@ class PromotionLifecycleTests(unittest.TestCase):
         ):
             validate_promotion_lifecycle(**records)
 
-    def test_observed_orientation_uses_one_reconciliation_time(self) -> None:
+    def test_living_orientation_uses_one_reconciliation_time(self) -> None:
         records = self.records()
         records["first_receipt"] = deepcopy(records["first_receipt"])
         records["first_receipt"]["as_of"] = "2026-09-02T01:59:47Z"
-        with self.assertRaisesRegex(AssertionError, "one reconciliation time"):
+        with self.assertRaisesRegex(AssertionError, "living orientation"):
             validate_promotion_lifecycle(**records)
 
 

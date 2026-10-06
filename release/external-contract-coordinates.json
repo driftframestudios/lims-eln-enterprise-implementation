@@ -1,65 +1,72 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "consumer": "driftframestudios/lims-eln-enterprise-implementation",
   "coordinate_state": "accepted_and_consumer_observed",
   "program_contract": {
     "repository": "driftframestudios/lims-eln-program-specification",
     "distribution_name": "lims-eln-program-specification",
     "import_name": "lims_eln_contracts",
-    "package_version": "0.3.1",
+    "package_version": "0.4.0",
     "contract_version": "1.0.0",
-    "source_commit": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+    "source_commit": "d8f41d0ce98a75120c99f0a23d00796ae8a8b913",
     "source_identity": {
       "scope": [
         "pyproject.toml",
         "src/lims_eln_contracts"
       ],
       "algorithm": "path-length-bytes-sha256-v1",
-      "digest": "sha256:e4d7ef6aa1036b69395e9de3ab0064297dc80e5f697ab60de699a355e45f7674"
+      "digest": "sha256:41b46ebf96cff4192984b8b38f5fd4c4b55a312fda265d24f5329170ece5ab47"
     },
-    "requirement": "lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@4d06eeb7f96910311fbcb7f51547c978b6a07290",
+    "requirement": "lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@d8f41d0ce98a75120c99f0a23d00796ae8a8b913",
     "consumer_conformance": {
       "state": "observed",
       "environment": "clean Python 3.12 environment",
       "command": "python3 scripts/validate_received_contracts.py --require-installed-program --program-source ../lims-eln-program-specification",
       "observed_values": {
-        "distribution_version": "0.3.1",
-        "import_version": "0.3.1",
+        "distribution_version": "0.4.0",
+        "import_version": "0.4.0",
         "contract_version": "1.0.0",
         "direct_url": "https://github.com/driftframestudios/lims-eln-program-specification.git",
-        "direct_url_requested_revision": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
-        "direct_url_commit": "4d06eeb7f96910311fbcb7f51547c978b6a07290",
-        "source_digest": "sha256:e4d7ef6aa1036b69395e9de3ab0064297dc80e5f697ab60de699a355e45f7674",
+        "direct_url_requested_revision": "d8f41d0ce98a75120c99f0a23d00796ae8a8b913",
+        "direct_url_commit": "d8f41d0ce98a75120c99f0a23d00796ae8a8b913",
+        "source_digest": "sha256:41b46ebf96cff4192984b8b38f5fd4c4b55a312fda265d24f5329170ece5ab47",
         "operation_count": 3,
         "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
         "observation_producers": [
           "implementation",
           "simulation"
         ],
-        "schema_count": 7
+        "schema_count": 9,
+        "administrative_resources": [
+          "canonical_bundle",
+          "adapter",
+          "independent_multilabel_policy",
+          "counterfactual"
+        ]
       },
       "observations": [
-        "installed distribution version is 0.3.1",
-        "lims_eln_contracts.__version__ is 0.3.1",
+        "installed distribution version is 0.4.0",
+        "lims_eln_contracts.__version__ is 0.4.0",
         "lims_eln_contracts.CONTRACT_VERSION is 1.0.0",
         "the PEP 610 source URL, requested revision, and commit match the reviewed source",
         "the scoped package source digest matches the reviewed binding",
         "the released operation catalog loads",
         "the Golden Specimen scenario loads",
         "the implementation and simulation shaped observations load",
+        "the canonical external administrative contract bundle and three examples load",
         "every released schema in SCHEMA_RESOURCE_NAMES loads as a JSON object"
       ]
     }
   },
   "governance": {
     "repository": "driftframestudios/site-reading-governance",
-    "release": "2.1.0",
-    "schema_release": "2.1.0",
-    "annotated_tag": "governance-v2.1.0",
-    "tag_object": "1c77396e44b71719ccab138fecd02e525089e39d",
-    "source_commit": "8469c2a6b2c7f4445523cee262b961ffe3d2523b",
-    "source_tree": "aed5d57120e15ceabe77d7bba700a43097200b19",
-    "git_archive_sha256": "sha256:469ae49fca7d5ad6e1766080b3c39d76c46a840366b217f3839b9d34f2e77d32"
+    "release": "2.2.0",
+    "schema_release": "2.2.0",
+    "annotated_tag": "governance-v2.2.0",
+    "tag_object": "6acdf4c7e7c200972ee3d7b257f5bc828bde753b",
+    "source_commit": "c8d7150b8c4e6277bc504a7c69289cb5b949b0ee",
+    "source_tree": "451c2e67fa15958ea537dc367fe196467c1e60e5",
+    "git_archive_sha256": "sha256:2da503b695252fde152f2f7765776e4c784b9afeec463dae592a7a6012126a58"
   },
   "selected_future": {
     "closure_id": "CLOSURE-SIM-SUBSTANTIVE-2028-V1",
@@ -88,5 +95,55 @@
         "git_archive_sha256": "sha256:92c2d57bd9e75c650365db4b481a22a6580b201926ba1c666fcf8cb8c9311a2e"
       }
     ]
+  },
+  "comparison_return": {
+    "relation": "compares_implementation_release_to_selected_future",
+    "repository": "driftframestudios/lims-eln-comparative-evidence",
+    "evidence_mode": "simulated",
+    "assurance_stage": "verified",
+    "production_authorization_effect": "none",
+    "compared_implementation_release": {
+      "tag": "v0.3.2",
+      "tag_object": "c3db01079b88622f06e8714c8bcbdf0dc1803a10",
+      "source_commit": "fe0bd2a08ac1697ce18ca583d9631faae7db7132",
+      "source_tree": "eb8eadb27a9e07c6069a1946f115a0083d94af5c",
+      "git_archive_sha256": "sha256:0ea3db3099e3485f65d238fb2e194c6bfd9b9a90f6642431c4a96974ebcc3c16"
+    },
+    "comparison_release": {
+      "release": "comparison-v0.3.2",
+      "tag_object": "ccc4b206d9071933516863ee0eb3f5b091fc76b0",
+      "source_commit": "0289ff835c790693a769347e69da0abdcfaa47de",
+      "source_tree": "60c85e4206e2d487dac83d521401816dec0f34ae",
+      "git_archive_sha256": "sha256:5c1697f98655ce1979fcc6f4a85b719e0c44afde8a3004037d19dd1416d0720e"
+    },
+    "observation_carrier": {
+      "source_commit": "2cca88982444ebc8280f9eb2891d97bf25dbeb95",
+      "receipt_path": "receipts/promotion-observation-v0.3.2.json",
+      "receipt_file_sha256": "sha256:acccb507f0675cdc079aa56bc12299bd4ce533344cb150e42dba1c991c024fd4"
+    },
+    "golden_specimen_report": {
+      "report_path": "reports/golden-specimen/comparison.json",
+      "report_digest": "sha256:a2f92ae4acb9fb7d835d0a9b126bb1932ae69b06b094303180dd9fea7217b77c",
+      "leaf_paths_compared": 17,
+      "classification_counts": {
+        "agreement": 10,
+        "explainable_variation": 4,
+        "material_divergence": 3
+      },
+      "material_divergence_paths": [
+        "$.measurement.analyte",
+        "$.measurement.value",
+        "$.measurement.unit"
+      ],
+      "material_divergence_receiver": "accountable_scientific_mapping"
+    },
+    "publication": {
+      "record_carrier_commit": "c854a6f58c587a0b099efa24d2b745b2bd7187df",
+      "source_revision": "2cca88982444ebc8280f9eb2891d97bf25dbeb95",
+      "docs_revision": "6ccc087875b439eb70304771f534434acae3f01c",
+      "projection_manifest_path": "projection-manifest.json",
+      "projection_manifest_sha256": "sha256:38d01a78be6804d04bc4f24c412777b8cb08fe2c65372e278480c106b4bcbeea",
+      "canonical_origin": "https://cometspectrum.io/"
+    }
   }
 }

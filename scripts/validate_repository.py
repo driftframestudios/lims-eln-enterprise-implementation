@@ -11,15 +11,80 @@ import re
 import sys
 import unittest
 
-from jsonschema import Draft202012Validator, FormatChecker
-from jsonschema.exceptions import SchemaError
-
-
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 sys.path.insert(0, str(SRC))
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tests"))
+
+PUBLIC_POSSIBLE_SKILL_METADATA = {
+    ".agents/skills/configured-environment-evidence-binding/SKILL.md": {
+        "name": "configured-environment-evidence-binding",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "origin": "repository_native",
+    },
+    ".agents/skills/contextual-jargon-scan/SKILL.md": {
+        "name": "contextual-jargon-scan",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "upstream_repository": "driftframestudios/human-ai-systems-exemplars",
+        "upstream_path": ".agents/skills/contextual-jargon-scan/SKILL.md",
+        "upstream_revision": "0c023343e46cd9b1333a63c2d509787352fbad14",
+        "upstream_blob_sha1": "3c3a94db99152385253e0281c8afa8fea8208ac5",
+        "upstream_sha256": (
+            "da383f99eaff364d7e17c3bff93d8da618ec95894a45ff78a9620d8d7fc81523"
+        ),
+        "adaptation_relation": "repository_local_derivative",
+    },
+    ".agents/skills/proportionate-recovery-routing/SKILL.md": {
+        "name": "proportionate-recovery-routing",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "upstream_repository": "driftframestudios/lims-eln-program-specification",
+        "upstream_path": ".agents/skills/proportionate-recovery-routing/SKILL.md",
+        "upstream_revision": "05357fbed16a5b5aca80c239e4c7535f67d5654b",
+        "upstream_blob_sha1": "2756ae9630c5016b13eb9b7158718d0b03e1d3cc",
+        "upstream_sha256": (
+            "a3e4a7b558793a54558c945034a5199631103cdd69435e3f3720b062b8b9cb9d"
+        ),
+        "adaptation_relation": "repository_local_derivative",
+    },
+    ".agents/skills/repository-reentry/SKILL.md": {
+        "name": "repository-reentry",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "upstream_repository": "driftframestudios/human-ai-systems-exemplars",
+        "upstream_path": ".agents/skills/repository-reentry/SKILL.md",
+        "upstream_revision": "0c023343e46cd9b1333a63c2d509787352fbad14",
+        "upstream_blob_sha1": "ac2c3732826c515b236598af10e0a204dbe14ace",
+        "upstream_sha256": (
+            "c60bb1bac3a993c78d94b1d05aaa7a97761b99275fc9acdc8285acba6f688f02"
+        ),
+        "adaptation_relation": "repository_local_derivative",
+    },
+    ".agents/skills/source-authority-mapping/SKILL.md": {
+        "name": "source-authority-mapping",
+        "source_band": "public_possible",
+        "skill_version": "0.1.0",
+        "upstream_repository": "driftframestudios/human-ai-systems-exemplars",
+        "upstream_path": ".agents/skills/source-authority-mapping/SKILL.md",
+        "upstream_revision": "0c023343e46cd9b1333a63c2d509787352fbad14",
+        "upstream_blob_sha1": "112830e9b70540b0bc9a8535ab77c7a04c1a5926",
+        "upstream_sha256": (
+            "1420eaee7f6d58805c29eaff23644d4982fdf1f12d2f6ce3cc39c65791939aff"
+        ),
+        "adaptation_relation": "repository_local_derivative",
+    },
+}
+_SKILL_REQUIRED_SECTIONS = (
+    "## Contract",
+    "## Rules",
+    "## Operating sequence",
+    "## Completion",
+)
+_GIT_OID = re.compile(r"[0-9a-f]{40}")
+_SHA256 = re.compile(r"[0-9a-f]{64}")
 
 PUBLISHED_SUFFIXES = {
     ".py",
@@ -108,8 +173,11 @@ CURRENT_EXTERNAL_COORDINATE_DIGEST = (
     "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1"
 )
 CURRENT_OBSERVATION_TIME = "2026-09-02T11:23:40Z"
+CURRENT_RECONCILIATION_TIME = "2026-10-02T22:14:32Z"
 ACCEPTED_PRIOR_HOSTED_COMMIT = "205401a530e984e031bb2c52a1654c6b5f82bc6d"
 HISTORICAL_PRIOR_HOSTED_COMMIT = "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
+PREDECESSOR_DATABASE_HOSTED_COMMIT = "e15f0a37520b651cf83e856c3b9d67ab9f42cd9b"
+CURRENT_DATABASE_HOSTED_COMMIT = "2d12b111edb86f1f16f02338933a827b767a687f"
 EXCLUDED_DIRECTORY_NAMES = {
     ".git",
     ".mypy_cache",
@@ -132,6 +200,108 @@ def is_generated_or_external(path: Path) -> bool:
 
 def file_digest(path: Path) -> str:
     return f"sha256:{sha256(path.read_bytes()).hexdigest()}"
+
+
+def parse_skill_source(path: Path) -> tuple[dict[str, str], str]:
+    """Return simple scalar front matter and the complete skill source."""
+
+    content = path.read_text(encoding="utf-8")
+    lines = content.splitlines()
+    if not lines or lines[0] != "---":
+        raise ValueError(f"{path} requires YAML front matter")
+    try:
+        closing = lines.index("---", 1)
+    except ValueError as error:
+        raise ValueError(f"{path} has unclosed YAML front matter") from error
+    metadata: dict[str, str] = {}
+    for line in lines[1:closing]:
+        if not line.strip():
+            continue
+        if ":" not in line:
+            raise ValueError(f"{path} has unsupported front-matter line {line!r}")
+        key, value = line.split(":", 1)
+        metadata[key.strip()] = value.strip().strip('"')
+    return metadata, content
+
+
+def validate_collaboration_workbench(root: Path = ROOT) -> list[str]:
+    """Validate the exact repository-local skill workbench and its orientation."""
+
+    findings: list[str] = []
+    skills_root = root / ".agents" / "skills"
+    actual_paths = {
+        str(path.relative_to(root)) for path in skills_root.glob("*/SKILL.md")
+    }
+    expected_paths = set(PUBLIC_POSSIBLE_SKILL_METADATA)
+    if actual_paths != expected_paths:
+        findings.append(
+            "public-possible skill inventory differs: expected "
+            f"{sorted(expected_paths)!r}; received {sorted(actual_paths)!r}"
+        )
+    catalog_path = skills_root / "README.md"
+    if not catalog_path.is_file():
+        findings.append(".agents/skills/README.md is required for skill discovery")
+    else:
+        catalog = catalog_path.read_text(encoding="utf-8")
+        for relative_path in expected_paths:
+            skill_name = Path(relative_path).parent.name
+            expected_route = f"({skill_name}/SKILL.md)"
+            if expected_route not in catalog:
+                findings.append(
+                    ".agents/skills/README.md must link the skill route "
+                    f"{expected_route}"
+                )
+    for relative_path, expected in PUBLIC_POSSIBLE_SKILL_METADATA.items():
+        path = root / relative_path
+        if not path.is_file():
+            continue
+        try:
+            metadata, content = parse_skill_source(path)
+        except ValueError as error:
+            findings.append(str(error))
+            continue
+        observed = {key: metadata.get(key) for key in expected}
+        if observed != expected:
+            findings.append(
+                f"{relative_path} metadata differs: expected {expected!r}; "
+                f"received {observed!r}"
+            )
+        if path.parent.name != metadata.get("name"):
+            findings.append(f"{relative_path} directory and skill name must match")
+        if not metadata.get("description", "").strip():
+            findings.append(f"{relative_path} requires a discovery description")
+        if metadata.get("adaptation_relation") == "repository_local_derivative":
+            if not _GIT_OID.fullmatch(metadata.get("upstream_revision", "")):
+                findings.append(f"{relative_path} requires a full upstream revision")
+            if not _GIT_OID.fullmatch(metadata.get("upstream_blob_sha1", "")):
+                findings.append(f"{relative_path} requires an upstream blob identity")
+            if not _SHA256.fullmatch(metadata.get("upstream_sha256", "")):
+                findings.append(f"{relative_path} requires an upstream SHA-256 identity")
+        for heading in _SKILL_REQUIRED_SECTIONS:
+            if heading not in content:
+                findings.append(f"{relative_path} requires {heading}")
+        if "notion.so" in content or "app.notion.com" in content:
+            findings.append(
+                f"{relative_path} must remain usable through repository-local "
+                "guidance; private workspace locator found"
+            )
+    for orientation_name in ("README.md", "AGENTS.md"):
+        orientation_path = root / orientation_name
+        if not orientation_path.is_file():
+            findings.append(f"{orientation_name} is required for workbench routing")
+            continue
+        orientation = orientation_path.read_text(encoding="utf-8")
+        if ".agents/skills/README.md" not in orientation:
+            findings.append(
+                f"{orientation_name} must link .agents/skills/README.md"
+            )
+        for relative_path in expected_paths:
+            if relative_path not in orientation:
+                findings.append(
+                    f"{orientation_name} must link the exact skill path {relative_path}"
+                )
+
+    return findings
 
 
 def load_json_files() -> list[Path]:
@@ -163,6 +333,9 @@ def validate_promotion_candidate_schema(
 ) -> None:
     """Execute the candidate's declared JSON Schema against its exact document."""
 
+    from jsonschema import Draft202012Validator, FormatChecker
+    from jsonschema.exceptions import SchemaError
+
     path = schema_path or (ROOT / CURRENT_PROMOTION_CANDIDATE_SCHEMA_PATH)
     try:
         schema = json.loads(path.read_text(encoding="utf-8"))
@@ -192,6 +365,9 @@ def validate_promotion_observation_schema(
     schema_path: Path | None = None,
 ) -> None:
     """Execute the observation's declared JSON Schema against its exact document."""
+
+    from jsonschema import Draft202012Validator, FormatChecker
+    from jsonschema.exceptions import SchemaError
 
     path = schema_path or (ROOT / CURRENT_PROMOTION_OBSERVATION_SCHEMA_PATH)
     try:
@@ -223,7 +399,15 @@ def classify_hosted_postgresql_receipt_binding(
 
     repository_version = hosted_bindings.get("repository")
     observed_commit = str(hosted_bindings.get("repository_commit", ""))
+    if repository_version == "0.3.2":
+        if observed_commit == CURRENT_DATABASE_HOSTED_COMMIT:
+            return "current_database_artifacts"
+        raise AssertionError(
+            "current 0.3.2 hosted receipt requires its exact observed commit"
+        )
     if repository_version == "0.3.1":
+        if observed_commit == PREDECESSOR_DATABASE_HOSTED_COMMIT:
+            return "observed_predecessor"
         if observed_commit == ACCEPTED_PRIOR_HOSTED_COMMIT:
             return "accepted_prior"
         if observed_commit == HISTORICAL_PRIOR_HOSTED_COMMIT:
@@ -235,6 +419,107 @@ def classify_hosted_postgresql_receipt_binding(
         "hosted PostgreSQL receipt requires an exact retained observation; "
         "a later release receives its own accepted hosted commit coordinate"
     )
+
+
+def validate_hosted_postgresql_coordinate_state(
+    *,
+    binding_kind: str,
+    coordinate_state: str,
+) -> None:
+    """Keep the active database state aligned with its receipt generation."""
+
+    expected_states = {
+        "current_database_artifacts": "current_database_artifacts_observed",
+        "observed_predecessor": "predecessor_observed_successor_candidate",
+    }
+    if expected_states.get(binding_kind) != coordinate_state:
+        raise AssertionError(
+            "hosted PostgreSQL coordinate state requires its matching receipt binding"
+        )
+
+
+def validate_current_hosted_postgresql_receipt_contract(
+    hosted_receipt: dict,
+) -> None:
+    """Bind the complete current hosted receipt identity and evidence set."""
+
+    expected_identity = {
+        "schema_version": "1.1.0",
+        "receipt_id": "RECEIPT-HOSTED-POSTGRESQL-001",
+        "claim_id": "CLAIM-HOSTED-SYNTHETIC-DATABASE-BOUNDARIES",
+        "intended_use_id": "INTENDED-USE-SYNTHETIC-REFERENCE",
+        "release_claim_id": "RELEASE-CLAIM-IMPLEMENTATION-0.3.2",
+        "evidence_mode": "observed",
+        "assurance_stage": "verified",
+        "environment": "github-hosted-synthetic-postgresql",
+        "observed_at": "2026-10-02T22:14:32Z",
+        "performer_id": "GITHUB-ACTIONS-HOSTED-RUNNER",
+        "reviewer_id": "SYN-INDEPENDENT-DATABASE-CONVERGENCE-SUITE",
+    }
+    expected_scenarios = (
+        "SCN-DB-MIGRATION-CHECKSUM-REPLAY",
+        "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",
+        "SCN-DB-MIGRATION-004-PROVENANCE-GATE",
+        "SCN-DB-SIGNED-TENANT-BOUNDARY",
+        "SCN-DB-TENANT-CONTEXT-TAMPER-EXPIRY",
+        "SCN-DB-CUSTODY-CAS-AND-ATOMIC-OUTBOX",
+        "SCN-DB-SECURITY-DEFINER-TEMP-SHADOW",
+        "SCN-DB-OUTBOX-CONTENT-IMMUTABILITY",
+        "SCN-DB-OUTBOX-FENCED-CLAIM-RECLAIM-STALE-CONFIRM",
+        "SCN-DB-OUTBOX-LEASE-DURATION-INTEGER-BOUND",
+        "SCN-DB-OUTBOX-MESSAGE-IDENTITY-LIVENESS",
+        "SCN-DB-OUTBOX-TRANSITION-AUTHORITY",
+        "SCN-DB-OUTBOX-ATTEMPT-ACK-RECOVERY-EVIDENCE",
+        "SCN-DB-OUTBOX-TRANSPORT-RECEIPT-UNIQUENESS",
+        "SCN-DB-SCIENTIFIC-QUANTITY-EXACTNESS",
+        "SCN-DB-VERIFICATION-KEY-CONFIDENTIALITY",
+        "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",
+        "SCN-DB-FLYWAY-ARTIFACT-INVENTORY",
+        "SCN-DB-MIGRATION-CLEAN-UPGRADE-CONVERGENCE",
+        "SCN-DB-MEASUREMENT-COMPLETE-LINEAGE",
+        "SCN-DB-CUSTODY-COMPLETE-EVENT-BINDING",
+        "SCN-DB-WORKBENCH-RESTART-RELOAD",
+        "SCN-DB-WORKBENCH-REPLAY-COLLISION-ISOLATION",
+        "SCN-DB-WORKBENCH-ROLLBACK-RETRY",
+        "SCN-DB-WORKBENCH-INSTRUMENT-RECOVERY",
+        "SCN-DB-WORKBENCH-DECIMAL-SOURCE-SHAPE",
+        "SCN-DB-WORKBENCH-CANONICAL-DIGEST",
+    )
+    expected_artifact_digests = (
+        "sha256:2e993316b59334071e5234cbb3d2c463a96f67e84550202a2df3f49d3c27a283",
+        "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f",
+        "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a",
+    )
+    expected_limitations = (
+        "This receipt establishes the synthetic hosted PostgreSQL 17 migration, "
+        "durable workbench, and upgrade-replay paths for the named commit; "
+        "production authorization remains with accountable environment owners.",
+        "The independently signed v0.3.2 release subject retains its existing "
+        "promotion observation; this receipt binds only the named post-release "
+        "development commit.",
+        "PostgreSQL 18.6 compatibility was observed locally and remains outside "
+        "this hosted coordinate.",
+        "Representative populated migration and restore rehearsal retains its "
+        "independent successor receipt.",
+        "Production security and observability evidence retains its independent "
+        "successor receipt.",
+        "Accountable Scientific, Quality, and Regulatory acceptance retains its "
+        "independent successor receipt.",
+    )
+    if (
+        any(
+            hosted_receipt.get(key) != value
+            for key, value in expected_identity.items()
+        )
+        or tuple(hosted_receipt.get("scenario_ids", ())) != expected_scenarios
+        or tuple(hosted_receipt.get("artifact_digests", ()))
+        != expected_artifact_digests
+        or tuple(hosted_receipt.get("limitations", ())) != expected_limitations
+    ):
+        raise AssertionError(
+            "current hosted PostgreSQL receipt requires its exact identity and "
+            "complete evidence set"
+        )
 
 
 def validate_promotion_lifecycle(
@@ -534,11 +819,22 @@ def validate_promotion_lifecycle(
         "commit": CURRENT_RELEASE_COMMIT,
         "digest": CURRENT_ARCHIVE_DIGEST,
     }
+    expected_development_observation = {
+        "scope": "database_artifacts",
+        "coordinate_state": "current_database_artifacts_observed",
+        "flyway_version": "13.8.1",
+        "receipt": "receipts/hosted-postgresql-proof.json",
+    }
     if (
-        machine.get("lifecycle_state") != "reference_ready"
+        machine.get("lifecycle_state") != "post_release_development"
         or machine.get("current_provenance") != expected_release_provenance
+        or machine.get("current_development_observation")
+        != expected_development_observation
     ):
-        raise AssertionError("Machine Node requires the observed v0.3.2 provenance")
+        raise AssertionError(
+            "Machine Node requires the v0.3.2 release subject and current "
+            "development observation"
+        )
     if machine.get("open_receipts") != first_receipt.get("open_receipts"):
         raise AssertionError("Machine Node and first receipt require one open-receipt set")
     if (
@@ -549,23 +845,27 @@ def validate_promotion_lifecycle(
             "observed orientation requires both promotion receipts closed"
         )
 
+    if machine.get("metadata", {}).get("updated_at") != CURRENT_OBSERVATION_TIME:
+        raise AssertionError(
+            "Machine Node timestamp requires the immutable release observation time"
+        )
+
     if (
-        first_receipt.get("as_of") != CURRENT_OBSERVATION_TIME
+        first_receipt.get("as_of") != CURRENT_RECONCILIATION_TIME
         or first_receipt.get("metadata", {}).get("updated_at")
-        != CURRENT_OBSERVATION_TIME
-        or machine.get("metadata", {}).get("updated_at") != CURRENT_OBSERVATION_TIME
-        or horizon.get("as_of") != CURRENT_OBSERVATION_TIME
+        != CURRENT_RECONCILIATION_TIME
+        or horizon.get("as_of") != CURRENT_RECONCILIATION_TIME
         or horizon.get("metadata", {}).get("updated_at")
-        != CURRENT_OBSERVATION_TIME
+        != CURRENT_RECONCILIATION_TIME
     ):
-        raise AssertionError("observed orientation requires one reconciliation time")
+        raise AssertionError("living orientation requires one reconciliation time")
 
     horizon_items = {
         item["item_id"]: item for item in horizon.get("work_items", [])
     }
     if (
         horizon.get("current_item_ids")
-        != ["HORIZON-SELECTED-FUTURE-COMPARISON"]
+        != ["HORIZON-OBSERVED-SUCCESSORS"]
         or horizon_items.get("HORIZON-IMPLEMENTATION-SETTLING", {}).get("state")
         != "complete"
         or horizon_items.get("HORIZON-IMPLEMENTATION-CLOSURE-ALIGNMENT", {}).get(
@@ -573,14 +873,27 @@ def validate_promotion_lifecycle(
         )
         != "complete"
         or horizon_items.get("HORIZON-SELECTED-FUTURE-COMPARISON", {}).get("state")
-        != "active"
+        != "complete"
+        or horizon_items.get("HORIZON-OBSERVED-SUCCESSORS", {}).get("state")
+        != "waiting"
     ):
         raise AssertionError(
-            "Coordination Horizon requires the selected-future comparison handoff"
+            "Coordination Horizon requires the completed comparison and waiting "
+            "observed-successor route"
+        )
+    if (
+        "post-release development carrier"
+        not in first_receipt.get("current_horizon_summary", "")
+        or "post-release development carrier"
+        not in horizon.get("reentry_capsule", {}).get("current_state", "")
+    ):
+        raise AssertionError(
+            "orientation requires the release subject and development carrier split"
         )
 
     if (
-        inspection_manifest.get("release_state") != "release_observation_carrier"
+        inspection_manifest.get("release_state")
+        != "post_release_development_carrier"
         or inspection_manifest.get("release_subject") != expected_current_release
         or inspection_manifest.get("prior_release_subject")
         != expected_prior_release
@@ -589,7 +902,7 @@ def validate_promotion_lifecycle(
 
     promotion_coordinates = release.get("promotion_coordinates", {})
     if (
-        release.get("release_state") != "release_observed"
+        release.get("release_state") != "post_release_development"
         or promotion_coordinates.get("status") != "release_observed"
         or promotion_coordinates.get("settled_receipt_id")
         != CURRENT_PROMOTION_RECEIPT_ID
@@ -639,8 +952,8 @@ def validate_manifests() -> None:
             "runtime configuration source requires Systems Manager Parameter Store"
         )
     control_plane = manifest.get("control_plane", {})
-    if control_plane.get("governance_schema_release") != "2.1.0":
-        raise AssertionError("control plane requires governance schema release 2.1.0")
+    if control_plane.get("governance_schema_release") != "2.2.0":
+        raise AssertionError("control plane requires governance schema release 2.2.0")
     if control_plane.get("control_plane_profile") != "0.3.0":
         raise AssertionError("control plane requires profile 0.3.0")
 
@@ -654,13 +967,13 @@ def validate_manifests() -> None:
     inspection_manifest_digest = file_digest(inspection_manifest_path)
     if (
         public_inspection.get("manifest_digest") != inspection_manifest_digest
-        or public_inspection.get("authority") != "repository_owned_observation_bytes"
+        or public_inspection.get("authority") != "repository_owned_inspection_bytes"
         or public_inspection.get("cross_repository_coordinate_state")
         != "accepted_and_consumer_observed"
         or inspection_manifest.get("repository_release") != manifest["version"]
     ):
         raise AssertionError(
-            "release manifest requires the exact repository-owned observation carrier"
+            "release manifest requires the exact repository-owned inspection carrier"
         )
 
     coordinates = load_coordinates(ROOT)
@@ -692,16 +1005,44 @@ def validate_manifests() -> None:
         raise AssertionError("Flyway release requires schema release 1.0.0")
     if migration_release.get("engine") != "postgresql":
         raise AssertionError("Flyway release requires PostgreSQL")
+    flyway_version = str(migration_release.get("flyway_version", ""))
     if (
         migration_release.get("migration_product") != "Flyway Community"
-        or migration_release.get("flyway_version") != "13.0.0"
+        or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", flyway_version) is None
     ):
-        raise AssertionError("database migrations require Flyway Community 13.0.0")
+        raise AssertionError(
+            "database migrations require one exact Flyway Community release"
+        )
+    container_image = str(migration_release.get("container_image", ""))
     if re.fullmatch(
-        r"flyway/flyway:13\.0\.0-alpine@sha256:[a-f0-9]{64}",
-        str(migration_release.get("container_image", "")),
+        rf"flyway/flyway:{re.escape(flyway_version)}-alpine@sha256:[a-f0-9]{{64}}",
+        container_image,
     ) is None:
         raise AssertionError("Flyway container requires its released immutable digest")
+    if (
+        database.get("migration_product") != migration_release["migration_product"]
+        or database.get("migration_product_version") != flyway_version
+    ):
+        raise AssertionError(
+            "release manifest requires the selected Flyway product coordinate"
+        )
+    dockerfile = (ROOT / "infra" / "migrator.Dockerfile").read_text(
+        encoding="utf-8"
+    )
+    if dockerfile.splitlines()[0] != f"FROM {container_image}":
+        raise AssertionError(
+            "migrator image requires the selected Flyway release coordinate"
+        )
+    manual_workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(
+        encoding="utf-8"
+    )
+    workflow_flyway_images = re.findall(
+        r"(?m)^\s*FLYWAY_IMAGE:\s*(\S+)\s*$", manual_workflow
+    )
+    if workflow_flyway_images != [container_image, container_image]:
+        raise AssertionError(
+            "configured PostgreSQL proofs require the selected Flyway image"
+        )
     if migration_release.get("credentials") != "runtime_environment_only":
         raise AssertionError("Flyway credentials require runtime-only resolution")
     if migration_release.get("baseline_policy") != "explicit_attested_baseline_only":
@@ -899,7 +1240,7 @@ def validate_manifests() -> None:
     observation = json.loads(
         (ROOT / CURRENT_PROMOTION_OBSERVATION_PATH).read_text(encoding="utf-8")
     )
-    if machine["schema_release"] != "2.1.0" or not machine["campaigns"]:
+    if machine["schema_release"] != "2.2.0" or not machine["campaigns"]:
         raise AssertionError(
             "canonical Machine Node requires governance schema v2 and campaigns"
         )
@@ -921,12 +1262,12 @@ def validate_manifests() -> None:
     if first_receipt["coordination_horizon_id"] != horizon["horizon_id"]:
         raise AssertionError("first receipt requires the released Coordination Horizon")
     if (
-        machine.get("metadata", {}).get("schema_version") != "2.1.0"
-        or first_receipt.get("metadata", {}).get("schema_version") != "2.1.0"
-        or horizon.get("metadata", {}).get("schema_version") != "2.1.0"
+        machine.get("metadata", {}).get("schema_version") != "2.2.0"
+        or first_receipt.get("metadata", {}).get("schema_version") != "2.2.0"
+        or horizon.get("metadata", {}).get("schema_version") != "2.2.0"
     ):
         raise AssertionError(
-            "orientation metadata requires governance schema release 2.1.0"
+            "orientation metadata requires governance schema release 2.2.0"
         )
 
     historical_machine = json.loads(
@@ -1010,6 +1351,20 @@ def validate_manifests() -> None:
         raise AssertionError("release role requires the bounded-caller binding digest")
     if release.get("database_flyway_release_digest") != migration_release_digest:
         raise AssertionError("release role requires the Flyway release digest")
+    database_hosted_evidence = release.get("database_hosted_evidence", {})
+    if (
+        set(database_hosted_evidence)
+        != {"receipt_path", "coordinate_state", "promotion_signal"}
+        or database_hosted_evidence.get("receipt_path")
+        != "receipts/hosted-postgresql-proof.json"
+        or database_hosted_evidence.get("coordinate_state")
+        != "current_database_artifacts_observed"
+        or database_hosted_evidence.get("promotion_signal")
+        != "implementation-validation"
+    ):
+        raise AssertionError(
+            "release role requires the hosted database evidence coordinate"
+        )
     if release["open_receipt_ledger_digest"] != ledger_digest:
         raise AssertionError("release role requires the open receipt ledger digest")
     if (
@@ -1023,13 +1378,13 @@ def validate_manifests() -> None:
         raise AssertionError(
             "release role requires the external contract coordinate digest"
         )
-    if release.get("contract_bindings", {}).get("governance_release") != "2.1.0":
-        raise AssertionError("release role requires Governance release 2.1.0")
+    if release.get("contract_bindings", {}).get("governance_release") != "2.2.0":
+        raise AssertionError("release role requires Governance release 2.2.0")
     if (
         release.get("contract_bindings", {}).get("program_contract_package")
-        != "0.3.1"
+        != "0.4.0"
     ):
-        raise AssertionError("release role requires Program contract package 0.3.1")
+        raise AssertionError("release role requires Program contract package 0.4.0")
     if tuple(release["receipt_families"]) != CANONICAL_RECEIPT_FAMILIES:
         raise AssertionError("release role requires canonical receipt-family order")
     if (
@@ -1038,6 +1393,30 @@ def validate_manifests() -> None:
     ):
         raise AssertionError(
             "release role requires the canonical selected-future closure"
+        )
+    comparison_return = coordinates["comparison_return"]
+    comparison_release = comparison_return["comparison_release"]
+    comparison_observation = comparison_return["observation_carrier"]
+    comparison_report = comparison_return["golden_specimen_report"]
+    comparison_publication = comparison_return["publication"]
+    if release.get("comparison_return") != {
+        "coordinate_state": "accepted_return",
+        "release": comparison_release["release"],
+        "release_commit": comparison_release["source_commit"],
+        "observation_carrier_commit": comparison_observation["source_commit"],
+        "report_digest": comparison_report["report_digest"],
+        "leaf_paths_compared": comparison_report["leaf_paths_compared"],
+        "classification_counts": comparison_report["classification_counts"],
+        "material_divergence_receiver": comparison_report[
+            "material_divergence_receiver"
+        ],
+        "docs_revision": comparison_publication["docs_revision"],
+        "projection_manifest_sha256": comparison_publication[
+            "projection_manifest_sha256"
+        ],
+    }:
+        raise AssertionError(
+            "release role requires the accepted Comparison 0.3.2 return"
         )
     validate_promotion_lifecycle(
         promotion=promotion,
@@ -1240,14 +1619,12 @@ def validate_manifests() -> None:
             "hosted PostgreSQL receipt requires observed synthetic verification"
         )
     hosted_bindings = hosted_receipt.get("version_bindings", {})
-    observed_commit = str(hosted_bindings.get("repository_commit", ""))
-    observed_run = str(hosted_bindings.get("workflow_run", ""))
     binding_kind = classify_hosted_postgresql_receipt_binding(hosted_bindings)
-    historical_run = (
-        "https://github.com/driftframestudios/"
-        "lims-eln-enterprise-implementation/actions/runs/30933020047"
+    validate_hosted_postgresql_coordinate_state(
+        binding_kind=binding_kind,
+        coordinate_state=str(database_hosted_evidence.get("coordinate_state", "")),
     )
-    candidate_scenarios = {
+    flyway_generation_scenarios = {
         "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",
         "SCN-DB-FLYWAY-ARTIFACT-INVENTORY",
         "SCN-DB-MIGRATION-CLEAN-UPGRADE-CONVERGENCE",
@@ -1260,54 +1637,83 @@ def validate_manifests() -> None:
         "SCN-DB-WORKBENCH-DECIMAL-SOURCE-SHAPE",
         "SCN-DB-WORKBENCH-CANONICAL-DIGEST",
     }
-    if binding_kind == "accepted_prior":
-        accepted_prior_run = (
-            "https://github.com/driftframestudios/"
-            "lims-eln-enterprise-implementation/actions/runs/33581976426"
-        )
-        accepted_prior_digests = {
+    if binding_kind == "observed_predecessor":
+        predecessor_bindings = {
+            "repository": "0.3.1",
+            "repository_commit": PREDECESSOR_DATABASE_HOSTED_COMMIT,
+            "workflow_run": (
+                "https://github.com/driftframestudios/"
+                "lims-eln-enterprise-implementation/actions/runs/33590735647"
+            ),
+            "python": "3.12.14",
+            "postgresql": "17.10-alpine",
+            "database_migration_head": "005",
+            "tenant_authority": "signed_short_lived_database_verified_context",
+            "flyway": "13.4.0",
+            "flyway_image": (
+                "flyway/flyway:13.4.0-alpine@"
+                "sha256:66c0278f4398dd46b84d4108919a015b6ca03657a3d44ff2b349ad0602ace956"
+            ),
+            "migration_authenticated_login": "laboratory_migrator",
+            "migration_role": "laboratory_owner",
+        }
+        predecessor_digests = {
             "sha256:8ebb58455b8db070c8f13b871401bcea9bb630af57a94605e61105f5d89ff1ea",
-            migration_release_digest,
-            inventory_digest,
+            "sha256:e5c6daadf3f88df9a83195c7f977dd702c081c796e24e55d67704cfb965cf160",
+            "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a",
+        }
+        successor_pending_limitation = (
+            "This receipt establishes the preceding Flyway 13.4.0 hosted "
+            "coordinate. The Flyway 13.8.1 successor becomes the current hosted "
+            "coordinate when its named implementation-validation run, commit, "
+            "and artifact bindings are recorded."
+        )
+        if (
+            hosted_bindings != predecessor_bindings
+            or set(hosted_receipt["artifact_digests"]) != predecessor_digests
+            or hosted_receipt.get("observed_at") != "2026-09-02T04:27:12Z"
+            or not flyway_generation_scenarios.issubset(
+                hosted_receipt["scenario_ids"]
+            )
+            or successor_pending_limitation not in hosted_receipt["limitations"]
+        ):
+            raise AssertionError(
+                "predecessor hosted PostgreSQL receipt requires its exact Flyway 13.4 bindings"
+            )
+    elif binding_kind == "current_database_artifacts":
+        validate_current_hosted_postgresql_receipt_contract(hosted_receipt)
+        current_bindings = {
+            "repository": "0.3.2",
+            "repository_commit": CURRENT_DATABASE_HOSTED_COMMIT,
+            "workflow_run": (
+                "https://github.com/driftframestudios/"
+                "lims-eln-enterprise-implementation/actions/runs/37071257377"
+            ),
+            "python": "3.12.14",
+            "postgresql": "17.10-alpine",
+            "database_migration_head": "005",
+            "tenant_authority": "signed_short_lived_database_verified_context",
+            "flyway": "13.8.1",
+            "flyway_image": (
+                "flyway/flyway:13.8.1-alpine@"
+                "sha256:ca3c8eddac25811f84c9767c56a0610ce23cd4e61f59bb05778a78db42347b39"
+            ),
+            "migration_authenticated_login": "laboratory_migrator",
+            "migration_role": "laboratory_owner",
         }
         if (
-            observed_commit != ACCEPTED_PRIOR_HOSTED_COMMIT
-            or observed_run != accepted_prior_run
-            or hosted_bindings.get("database_migration_head") != "005"
-            or not accepted_prior_digests.issubset(
-                hosted_receipt["artifact_digests"]
-            )
-            or hosted_bindings.get("flyway") != migration_release["flyway_version"]
-            or hosted_bindings.get("flyway_image")
-            != migration_release["container_image"]
-            or hosted_bindings.get("migration_authenticated_login")
-            != migration_release["authenticated_login"]
-            or hosted_bindings.get("migration_role")
-            != migration_release["migration_role"]
-            or not candidate_scenarios.issubset(hosted_receipt["scenario_ids"])
+            hosted_bindings != current_bindings
+            or migration_release["flyway_version"] != "13.8.1"
+            or migration_release["container_image"]
+            != current_bindings["flyway_image"]
+            or migration_release_digest
+            != "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f"
+            or inventory_digest
+            != "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a"
         ):
             raise AssertionError(
-                "historical hosted receipt requires the accepted 0.3.1 bindings"
-            )
-    elif binding_kind == "historical_prior":
-        historical_digests = {
-            "sha256:2097329ecaf796b0927571fbbce8ee809c039a2488ddf1aab7d5c7ece80244bd",
-            "sha256:9e9cd9a640473166f51e209077284d982bcb224ad2e95dd02900727e54646d81",
-        }
-        if (
-            observed_run != historical_run
-            or hosted_bindings.get("database_migration_head") != "004"
-            or not historical_digests.issubset(hosted_receipt["artifact_digests"])
-        ):
-            raise AssertionError(
-                "historical hosted PostgreSQL receipt requires its observed bindings"
-            )
-        if not any(
-            "superseded by the Flyway transition" in limitation
-            for limitation in hosted_receipt["limitations"]
-        ):
-            raise AssertionError(
-                "historical hosted PostgreSQL receipt requires its successor boundary"
+                "current hosted PostgreSQL receipt requires the exact observed "
+                "Flyway 13.8.1 source, run, and artifact bindings"
             )
     required_database_scenarios = {
         "SCN-DB-MIGRATION-003-TO-004-UPGRADE-REPLAY",
@@ -1480,6 +1886,9 @@ def run_tests() -> unittest.result.TestResult:
 def main() -> int:
     json_paths = load_json_files()
     validate_contracts()
+    collaboration_findings = validate_collaboration_workbench()
+    if collaboration_findings:
+        raise AssertionError("\n".join(collaboration_findings))
     validate_manifests()
     validate_synthetic_fixtures()
     validate_runtime_setting_catalog()
@@ -1491,6 +1900,7 @@ def main() -> int:
     report = {
         "status": "passed",
         "repository_role": "enterprise_implementation",
+        "collaboration_skills": len(PUBLIC_POSSIBLE_SKILL_METADATA),
         "json_files_validated": len(json_paths),
         "tests_run": result.testsRun,
         "source_digest": source_digest(),

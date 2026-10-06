@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build or verify the repository-owned 0.3.2 observation-carrier inventory."""
+"""Build or verify the repository-owned post-release development inventory."""
 
 from __future__ import annotations
 
@@ -32,6 +32,8 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
         "FastAPI, domain, adapter, and package source that defines executable behavior.",
         (
             "pyproject.toml",
+            "uv.lock",
+            ".python-version",
             "src/lims_eln_implementation/**/*.py",
             "src/lims_eln_implementation/workbench/static/*",
             "src/lims_eln_implementation/workbench/templates/*",
@@ -47,6 +49,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
             "sql/*.sql",
             "infra/docker-compose.yml",
             "infra/migrator.Dockerfile",
+            "infra/application.Dockerfile",
             "infra/*.sh",
             "infra/postgres-init/*.sh",
         ),
@@ -106,6 +109,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
         "Public orientation, release guidance, ownership, provenance, and operational runbooks.",
         (
             "README.md",
+            "AGENTS.md",
             "AUTHORS",
             "CHANGELOG.md",
             "CONTRIBUTING.md",
@@ -123,6 +127,8 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
             ".github/CODEOWNERS",
             ".github/dependabot.yml",
             ".github/pull_request_template.md",
+            ".agents/skills/README.md",
+            ".agents/skills/*/SKILL.md",
         ),
     ),
 )
@@ -205,6 +211,7 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
     program = coordinates["program_contract"]
     governance = coordinates["governance"]
     selected_future = coordinates["selected_future"]
+    comparison_return = coordinates["comparison_return"]
     coordinate_digest = _digest(coordinate_path)
 
     promotion_path = _safe_file(root, PROMOTION_RECEIPT_PATH.as_posix())
@@ -274,7 +281,7 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
         "schema_version": "1.0.0",
         "repository": "lims-eln-enterprise-implementation",
         "repository_release": "0.3.2",
-        "release_state": "release_observation_carrier",
+        "release_state": "post_release_development_carrier",
         "canonicalization": CANONICALIZATION,
         "source_identity": {
             "kind": "content_addressed_artifact_inventory",
@@ -326,11 +333,44 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
                 }
                 for source in selected_future["accepted_sources"]
             ],
+            {
+                "role": "comparison_return",
+                "coordinate_manifest": EXTERNAL_COORDINATE_PATH.as_posix(),
+                "coordinate_manifest_sha256": coordinate_digest,
+                "declared_release": comparison_return["comparison_release"]["release"],
+                "accepted_revision": comparison_return["comparison_release"]["source_commit"],
+                "accepted_tree": comparison_return["comparison_release"]["source_tree"],
+                "tag_object_oid": comparison_return["comparison_release"]["tag_object"],
+                "archive_digest": comparison_return["comparison_release"]["git_archive_sha256"],
+                "observation_carrier_revision": comparison_return["observation_carrier"][
+                    "source_commit"
+                ],
+                "record_carrier_revision": comparison_return["publication"][
+                    "record_carrier_commit"
+                ],
+                "report_digest": comparison_return["golden_specimen_report"]["report_digest"],
+                "classification_counts": comparison_return["golden_specimen_report"][
+                    "classification_counts"
+                ],
+                "material_divergence_paths": comparison_return["golden_specimen_report"][
+                    "material_divergence_paths"
+                ],
+                "material_divergence_receiver": comparison_return["golden_specimen_report"][
+                    "material_divergence_receiver"
+                ],
+                "docs_revision": comparison_return["publication"]["docs_revision"],
+                "projection_manifest_sha256": comparison_return["publication"][
+                    "projection_manifest_sha256"
+                ],
+                "canonical_origin": comparison_return["publication"]["canonical_origin"],
+                "coordinate_state": "accepted_return",
+            },
         ],
         "evidence_boundary": {
-            "repository_owned_observation": (
-                "The inventory establishes the exact post-tag carrier bytes that record "
-                "the observed 0.3.2 release coordinate and its retained evidence."
+            "repository_owned_inspection": (
+                "The inventory establishes the exact post-release development bytes "
+                "carried above the observed 0.3.2 release coordinate and its retained "
+                "evidence."
             ),
             "configured_environment": (
                 "Environment receipts retain their named system, time, performer, reviewer, "

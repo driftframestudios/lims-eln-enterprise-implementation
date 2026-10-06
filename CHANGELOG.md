@@ -1,5 +1,42 @@
 # Changelog
 
+## Unreleased
+
+### Collaboration workbench
+
+- Adopt the observed Governance 2.2.0 release across the living control
+  surface and bind its signed tag, accepted source, and reproducible archive
+  identity while the Implementation 0.3.2 release remains independently
+  recoverable.
+- Receive the signed Comparison 0.3.2 result as a later return while retaining
+  Comparison 0.3.1 as the selected-future input. Bind its observation carrier,
+  Golden Specimen 10/4/3 result across 17 paths, public projection, and three
+  measurement questions for accountable scientific mapping.
+- Add repository-local orientation and five public-possible skills for
+  re-entry, source authority, recovery routing, configured-environment evidence
+  binding, and in-stride ordinary-language review.
+- Keep recovery selection and configured-observation admission as separate
+  jobs, with exact lineage, changed-signal retry, material-scenario, secret
+  boundary, and assurance-stage guidance.
+- Align contributor orientation with the executable branch families and add
+  focused checks for skill inventory, lineage, route visibility, and the
+  distinction between open publication and public-ready maturity.
+
+### Database toolchain
+
+- Select Flyway Community 13.8.1 as the active, digest-pinned source and align
+  its Dockerfile, release coordinate, configured-proof workflow, tests, and
+  current orientation on that coordinate.
+- Record the exact Flyway 13.8.1 hosted PostgreSQL proof with its run, source
+  commit, migrator image, migration release, inventory, and bounded-caller
+  artifact bindings.
+- Advance the active, digest-pinned Flyway Community image from 13.0.0 to
+  13.4.0 and keep the Dockerfile, release coordinate, configured PostgreSQL
+  proofs, tests, and current orientation on that shared source.
+- Record the exact Flyway 13.4.0 hosted PostgreSQL proof while retaining the
+  signed v0.3.2 release as the immutable release subject beneath the active
+  post-release development carrier.
+
 ## 0.3.2 — 2026-09-02
 
 - Bind the canonical selected-future closure to the accepted Simulation and

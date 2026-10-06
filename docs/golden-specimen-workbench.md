@@ -28,41 +28,28 @@ creating a second custody or measurement truth.
 
 ## Run locally
 
-Use Python 3.12 or newer:
+Use the application lock in an isolated Python 3.12 environment:
 
 ```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install -e ".[test]"
-lims-eln-workbench
+uv sync --locked --extra contracts --extra postgres --extra test --no-editable
+.venv/bin/lims-eln-workbench --adapter process_local
 ```
 
-Within a sibling constellation checkout, install the shared contract package to
-emit and retrieve the versioned observation envelope:
+The dashboard is available at `http://127.0.0.1:8000/workbench`; the OpenAPI
+description is at `http://127.0.0.1:8000/api/docs`. The `contracts` extra
+resolves the exact reviewed Program 0.4.0 commit through configured Git access.
+An editable sibling package remains an explicit development choice; installed
+conformance uses the immutable receiving route.
 
-```sh
-python -m pip install -e ../lims-eln-program-specification
-```
-
-Release conformance uses the optional `contracts` extra, which resolves the
-reviewed Program 0.3.1 commit through the repository's configured Git
-credentials:
-
-```sh
-python -m pip install -e ".[test,contracts]"
-```
-
-The dashboard is available at `http://127.0.0.1:8000/workbench`. The OpenAPI
-description is available at `http://127.0.0.1:8000/api/docs`.
+The [local entry runbook](runbooks/local-workbench-entry.v0.1.md) covers
+`--adapter postgresql`, local secret-file configuration, dependency readiness,
+retained-state recovery, and installed versus editable use.
 
 ## Compose the PostgreSQL adapter
 
-Install the bounded PostgreSQL dependency when the durable composition enters
-the encounter:
-
-```sh
-python -m pip install -e ".[test,postgres]"
-```
+The locked environment above includes the PostgreSQL driver. A prepared local
+database can use the explicit launcher; another deployment composes the adapter
+through its existing injected boundaries.
 
 `PostgresWorkbenchService` receives a DB-API connection factory and a signed
 `TenantContextProvider` from its deployment boundary. Passing that service to
@@ -104,7 +91,7 @@ Workbench API calls carry `X-Tenant-ID`. The header and requested tenant form
 one exact identity. Raw instrument content travels as base64 so the service can
 hash the submitted bytes before normalization.
 
-When the reviewed `lims-eln-program-specification` 0.3.1 package is installed,
+When the reviewed `lims-eln-program-specification` 0.4.0 package is installed,
 each successful run validates an exact `GoldenSpecimenObservation` at contract
 revision 1.0.0. The observation names the shared
 `SCN-GOLDEN-SPECIMEN-001` scenario, preserves raw and normalized digests, and

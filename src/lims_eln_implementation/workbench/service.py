@@ -150,6 +150,9 @@ class WorkbenchService:
         ] = {}
         self._resolved_quarantines: set[tuple[str, str]] = set()
 
+    def check_ready(self) -> None:
+        """Process-local state is ready once its composition has been constructed."""
+
     def run_golden_specimen(
         self,
         *,

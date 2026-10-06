@@ -14,6 +14,10 @@ class IdempotencyError(ValueError):
     """Base class for idempotency decisions."""
 
 
+class TransactionRetryRequired(IdempotencyError):
+    """A database-aborted attempt admits a fresh whole-request retry."""
+
+
 class ContentCollision(IdempotencyError):
     """A stable key arrived with different semantic content."""
 

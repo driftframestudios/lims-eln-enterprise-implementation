@@ -8,7 +8,7 @@
   "fixture_policy": "synthetic_only",
   "validation_command": "python3 scripts/validate_repository.py",
   "control_plane": {
-    "governance_schema_release": "2.1.0",
+    "governance_schema_release": "2.2.0",
     "control_plane_profile": "0.3.0",
     "machine_node": "machine-node.json",
     "first_receipt": "first-receipt.json",
@@ -17,13 +17,13 @@
   },
   "public_inspection": {
     "manifest": "release/public-inspection-manifest.json",
-    "manifest_digest": "sha256:bfc1349b89c9ea71f09fda62cec0efb2acd5c7ac71c0374acb06878301207721",
-    "authority": "repository_owned_observation_bytes",
+    "manifest_digest": "sha256:fc07794c4c39ce251c0e5782a70645e7fb624a460a37b127853b36a6c7156996",
+    "authority": "repository_owned_inspection_bytes",
     "cross_repository_coordinate_state": "accepted_and_consumer_observed"
   },
   "external_contracts": {
     "coordinate_manifest": "release/external-contract-coordinates.json",
-    "coordinate_manifest_digest": "sha256:ad699b5d7cb6c24e0d86b2dfbae5d3104d03fec8ee08cdd04c33f444376bcde1",
+    "coordinate_manifest_digest": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
     "coordinate_state": "accepted_and_consumer_observed"
   },
   "contract_versions": {
@@ -37,7 +37,7 @@
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:d141061bf028fdd63cc879ab455b0a68853d369da98edbeb17421a35714ed796",
+    "binding_digest": "sha256:f9d780cc765ddcf5b18d078d5ee451c7f93f49cb91f94032e775c0d88041db50",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",
@@ -63,9 +63,9 @@
     "qualified_major": 17,
     "migration_head": "005",
     "migration_product": "Flyway Community",
-    "migration_product_version": "13.0.0",
+    "migration_product_version": "13.8.1",
     "migration_release": "database/flyway-release.json",
-    "migration_release_digest": "sha256:a4fafe7ebb50da1efbad47df24d6d7af741130039ba8c90b8d6457e9d1d107b9",
+    "migration_release_digest": "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f",
     "migration_configuration": "flyway.conf",
     "migration_transaction_policy": "one_transaction_per_migration",
     "tenant_authority": "signed_short_lived_database_verified_context",

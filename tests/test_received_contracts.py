@@ -10,7 +10,7 @@ import subprocess
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from scripts.validate_received_contracts import (
     COORDINATE_PATH,
@@ -36,7 +36,7 @@ class ReceivedContractTests(unittest.TestCase):
         direct_url_text: str | None = None,
         operation_count: int = 3,
         scenario_id: str = "SCN-GOLDEN-SPECIMEN-001",
-        schema_count: int = 7,
+        schema_count: int = 9,
         schema_is_object: bool = True,
         shadow_import: bool = False,
     ) -> tuple[SimpleNamespace, SimpleNamespace]:
@@ -60,26 +60,36 @@ class ReceivedContractTests(unittest.TestCase):
                     "vcs_info": {
                         "vcs": "git",
                         "requested_revision": (
-                            "4d06eeb7f96910311fbcb7f51547c978b6a07290"
+                            "d8f41d0ce98a75120c99f0a23d00796ae8a8b913"
                         ),
                         "commit_id": (
-                            "4d06eeb7f96910311fbcb7f51547c978b6a07290"
+                            "d8f41d0ce98a75120c99f0a23d00796ae8a8b913"
                         ),
                     },
                 }
             )
 
         distribution = SimpleNamespace(
-            version="0.3.1",
+            version="0.4.0",
             files=[Path("lims_eln_contracts/__init__.py")],
             locate_file=lambda relative_path: root / "site-packages" / relative_path,
             read_text=lambda name: direct_url_text if name == "direct_url.json" else None,
         )
         scenario = SimpleNamespace(scenario_id=scenario_id)
-        schema_names = [f"schema-{index}.json" for index in range(schema_count)]
+        schema_names = [
+            "bounded-call-receipt.v1.schema.json",
+            "bounded-call-request.v1.schema.json",
+            "external-administrative-contract-set.v1.schema.json",
+            "administrative-adapter-contract.v1.schema.json",
+            "golden-specimen-result-projection.v1.schema.json",
+            "observation-envelope.v1.schema.json",
+            "operation-catalog.v1.schema.json",
+            "scenario.v1.schema.json",
+            "specimen-command.v1.schema.json",
+        ][:schema_count]
         contracts = SimpleNamespace(
             __file__=str(module_path),
-            __version__="0.3.1",
+            __version__="0.4.0",
             CONTRACT_VERSION="1.0.0",
             SCHEMA_RESOURCE_NAMES=schema_names,
             load_operation_catalog=lambda: SimpleNamespace(
@@ -90,6 +100,10 @@ class ReceivedContractTests(unittest.TestCase):
                 scenario_id=scenario.scenario_id
             ),
             load_generated_schema=lambda name: {} if schema_is_object else [],
+            load_external_administrative_contract_set=Mock(return_value=object()),
+            load_administrative_adapter_contract_example=Mock(return_value=object()),
+            load_independent_multilabel_policy_example=Mock(return_value=object()),
+            load_administrative_counterfactual_example=Mock(return_value=object()),
         )
         return distribution, contracts
 
@@ -97,9 +111,9 @@ class ReceivedContractTests(unittest.TestCase):
         coordinates = load_coordinates(ROOT)
         self.assertEqual(
             coordinates["program_contract"]["source_commit"],
-            "4d06eeb7f96910311fbcb7f51547c978b6a07290",
+            "d8f41d0ce98a75120c99f0a23d00796ae8a8b913",
         )
-        self.assertEqual(coordinates["governance"]["schema_release"], "2.1.0")
+        self.assertEqual(coordinates["governance"]["schema_release"], "2.2.0")
         self.assertEqual(
             coordinates["selected_future"]["canonical_closure_digest"],
             "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
@@ -126,6 +140,25 @@ class ReceivedContractTests(unittest.TestCase):
                 ),
             },
         )
+        comparison_return = coordinates["comparison_return"]
+        self.assertEqual(
+            comparison_return["comparison_release"]["release"],
+            "comparison-v0.3.2",
+        )
+        self.assertEqual(
+            comparison_return["golden_specimen_report"]["classification_counts"],
+            {
+                "agreement": 10,
+                "explainable_variation": 4,
+                "material_divergence": 3,
+            },
+        )
+        self.assertEqual(
+            comparison_return["golden_specimen_report"][
+                "material_divergence_receiver"
+            ],
+            "accountable_scientific_mapping",
+        )
 
         changed = deepcopy(coordinates)
         changed["program_contract"]["source_commit"] = "0" * 40
@@ -136,6 +169,22 @@ class ReceivedContractTests(unittest.TestCase):
         changed["selected_future"]["canonical_closure_digest"] = "sha256:" + "0" * 64
         with self.assertRaisesRegex(
             ReceivedContractError, "selected future canonical_closure_digest"
+        ):
+            validate_coordinate_document(changed)
+
+        changed = deepcopy(coordinates)
+        changed["comparison_return"]["golden_specimen_report"][
+            "material_divergence_paths"
+        ].reverse()
+        with self.assertRaisesRegex(
+            ReceivedContractError, "comparison material divergence paths"
+        ):
+            validate_coordinate_document(changed)
+
+        changed = deepcopy(coordinates)
+        changed["comparison_return"]["publication"]["source_revision"] = "0" * 40
+        with self.assertRaisesRegex(
+            ReceivedContractError, "comparison publication"
         ):
             validate_coordinate_document(changed)
 
@@ -208,9 +257,9 @@ class ReceivedContractTests(unittest.TestCase):
                     "git",
                     "tag",
                     "--annotate",
-                    "governance-v2.1.0",
+                    "governance-v2.2.0",
                     "--message",
-                    "Governance 2.1.0",
+                    "Governance 2.2.0",
                 ],
             ):
                 subprocess.run(command, cwd=root, check=True)
@@ -228,7 +277,7 @@ class ReceivedContractTests(unittest.TestCase):
             coordinates = json.loads((ROOT / COORDINATE_PATH).read_text())
             governance = coordinates["governance"]
             governance["tag_object"] = git(
-                "rev-parse", "refs/tags/governance-v2.1.0"
+                "rev-parse", "refs/tags/governance-v2.2.0"
             )
             governance["source_commit"] = git("rev-parse", "HEAD")
             governance["source_tree"] = git("rev-parse", "HEAD^{tree}")
@@ -550,6 +599,86 @@ class ReceivedContractTests(unittest.TestCase):
                         return_value=contracts,
                     ),
                     self.assertRaisesRegex(ReceivedContractError, case["message"]),
+                ):
+                    validate_installed_program(coordinates)
+
+
+    def test_administrative_loaders_are_each_exercised(self) -> None:
+        coordinates = load_coordinates(ROOT)
+        loader_names = (
+            "load_external_administrative_contract_set",
+            "load_administrative_adapter_contract_example",
+            "load_independent_multilabel_policy_example",
+            "load_administrative_counterfactual_example",
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            distribution, contracts = self._installed_fixture(Path(directory))
+            with (
+                patch("scripts.validate_received_contracts.metadata.distribution", return_value=distribution),
+                patch("scripts.validate_received_contracts.import_module", return_value=contracts),
+            ):
+                validate_installed_program(coordinates)
+            for name in loader_names:
+                with self.subTest(loader=name):
+                    getattr(contracts, name).assert_called_once_with()
+
+    def test_administrative_resources_have_named_recovery_boundaries(self) -> None:
+        coordinates = load_coordinates(ROOT)
+        resources = (
+            ("canonical_bundle", "load_external_administrative_contract_set"),
+            ("adapter", "load_administrative_adapter_contract_example"),
+            ("independent_multilabel_policy", "load_independent_multilabel_policy_example"),
+            ("counterfactual", "load_administrative_counterfactual_example"),
+        )
+        for resource, loader in resources:
+            for failure in ("missing", "unreadable", "invalid", "empty"):
+                with self.subTest(resource=resource, failure=failure), tempfile.TemporaryDirectory() as directory:
+                    distribution, contracts = self._installed_fixture(Path(directory))
+                    if failure == "missing":
+                        delattr(contracts, loader)
+                    elif failure == "empty":
+                        getattr(contracts, loader).return_value = None
+                    else:
+                        getattr(contracts, loader).side_effect = (
+                            FileNotFoundError("fixture resource")
+                            if failure == "unreadable"
+                            else ValueError("fixture contract")
+                        )
+                    with (
+                        patch("scripts.validate_received_contracts.metadata.distribution", return_value=distribution),
+                        patch("scripts.validate_received_contracts.import_module", return_value=contracts),
+                        self.assertRaisesRegex(ReceivedContractError, f"administrative resource {resource}"),
+                    ):
+                        validate_installed_program(coordinates)
+
+    def test_equal_length_schema_inventory_retains_exact_names(self) -> None:
+        coordinates = load_coordinates(ROOT)
+        for replacement in ("duplicate", "unknown"):
+            with self.subTest(replacement=replacement), tempfile.TemporaryDirectory() as directory:
+                distribution, contracts = self._installed_fixture(Path(directory))
+                contracts.SCHEMA_RESOURCE_NAMES[-1] = (
+                    contracts.SCHEMA_RESOURCE_NAMES[0]
+                    if replacement == "duplicate"
+                    else "unreviewed.schema.json"
+                )
+                with (
+                    patch("scripts.validate_received_contracts.metadata.distribution", return_value=distribution),
+                    patch("scripts.validate_received_contracts.import_module", return_value=contracts),
+                    self.assertRaisesRegex(ReceivedContractError, "schema inventory names"),
+                ):
+                    validate_installed_program(coordinates)
+
+    def test_pep_610_requires_an_object_before_field_access(self) -> None:
+        coordinates = load_coordinates(ROOT)
+        for value in (None, [], "text", 1, True):
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as directory:
+                distribution, contracts = self._installed_fixture(
+                    Path(directory), direct_url_text=json.dumps(value)
+                )
+                with (
+                    patch("scripts.validate_received_contracts.metadata.distribution", return_value=distribution),
+                    patch("scripts.validate_received_contracts.import_module", return_value=contracts),
+                    self.assertRaisesRegex(ReceivedContractError, "PEP 610 record requires one object"),
                 ):
                     validate_installed_program(coordinates)
 
