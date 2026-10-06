@@ -648,7 +648,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:fe0678656b402765f63e96e3ec86fd5f8a7557416fb2fd9da406a2a60dc3952d",
+      "aggregate_sha256": "sha256:a2b4fbb3b7981a8937078f7e3ee59033f227f270925825c8e14b5127df2c0b88",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -737,13 +737,18 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:32c613d1377dd035b48eeeee60aa8a6d94a861509f807e23648f7b332884fa3b",
-          "size_bytes": 26917
+          "sha256": "sha256:e3227a10185fbc26d7df2fe109a4c486bfe4730582e2a6aac94a524ce8cf47b5",
+          "size_bytes": 27928
         },
         {
           "path": "SECURITY.md",
           "sha256": "sha256:274fd3099c88e8d96d73985a55ecffcfaa680b7d49dc07821c3cdc18a53a306f",
           "size_bytes": 1404
+        },
+        {
+          "path": "docs/README.md",
+          "sha256": "sha256:ed21771fcc4c22e449a22b923dd55f21603108e2834c7ddc95a9d5a77fe24525",
+          "size_bytes": 4589
         },
         {
           "path": "docs/architecture.md",
@@ -969,7 +974,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:a226ecc55a124d381445269fc5ae111e54db634fc0e9e59a1fb204caec6dcb83",
+    "aggregate_sha256": "sha256:28bcfa6ab1e10355f0e463ee9d0a2d27262afcbb53005f042d3b70c33d339b1a",
     "kind": "content_addressed_artifact_inventory"
   }
 }
