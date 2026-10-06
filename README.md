@@ -12,6 +12,22 @@ run and be compared with the Program, Simulation, and Comparative members.
 Production qualification follows the configured-environment evidence and
 accountable acceptance route described in [Evidence and authority](#evidence-and-authority).
 
+## Start with the workbench
+
+[Launch a process-local session](docs/README.md#start-with-a-process-local-session)
+to explore laboratory records and the Golden Specimen flow. Start with a fresh
+in-memory session, choose PostgreSQL when state should survive a restart, or use
+the container route for a repeatable environment.
+
+The [workbench starting guide](docs/README.md) connects those choices with
+observation exports, comparison, and recovery. For example, load the Golden
+Specimen, inspect its resulting state, then carry a selected run into an
+observation export.
+
+Insurance and administrative contracts are available through the accepted
+Program package. [Explore the example and service boundaries](docs/README.md#explore-administrative-and-insurance-context)
+before choosing the adapter or classification implementation work.
+
 ## Current state and branch roles
 
 The [`repository role manifest`](release/repository-role.json) declares
@@ -84,8 +100,9 @@ The [workbench guide](docs/golden-specimen-workbench.md) describes the API,
 stored-state behavior, and typed observations. The [container entry](docs/runbooks/local-container-entry.v0.1.md)
 adds protected retained credentials and the same PostgreSQL factory in a confined
 application image. The [local observation export](docs/runbooks/local-observation-export.v0.1.md)
-preserves typed comparison inputs in protected storage. Complete journey
-acceptance continues under Enterprise #43.
+preserves typed comparison inputs in protected storage. The native and container
+journey has completed acceptance under [Enterprise #43](https://github.com/driftframestudios/lims-eln-enterprise-implementation/issues/43).
+The linked entry runbooks carry the current startup and recovery steps.
 
 ## Capability map by reader job
 
