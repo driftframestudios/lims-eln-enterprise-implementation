@@ -48,7 +48,7 @@ project and secret-recovery steps.
 Enterprise already receives an exact Program package and its administrative
 resources through the [package handoff](runbooks/program-package-handoff.v0.1.md).
 That handoff establishes installed contract availability. Program's
-[administrative example](https://github.com/driftframestudios/lims-eln-program-specification/blob/develop/docs/README.md#try-the-administrative-contract-kit)
+[administrative example](https://github.com/driftframestudios/lims-eln-program-specification/blob/main/docs/README.md#try-the-administrative-contract-kit)
 can be used now to inspect classifications, policy records, provenance, and an
 administrative-only counterfactual.
 
@@ -73,4 +73,4 @@ each retain their own decision. Choose the smallest existing check that covers
 the changed behavior and carry its result to the receiving PR.
 
 Return to the [Enterprise overview](../README.md) or the
-[constellation starting guide](https://github.com/driftframestudios/lims-eln-program-specification/blob/develop/docs/README.md).
+[constellation starting guide](https://github.com/driftframestudios/lims-eln-program-specification/blob/main/docs/README.md).
