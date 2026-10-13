@@ -269,9 +269,9 @@ class PublicInspectionManifestTests(unittest.TestCase):
         self.assertEqual(program["coordinate_state"], "accepted_source_consumer_observed")
         self.assertEqual(
             program["accepted_revision"],
-            "d8f41d0ce98a75120c99f0a23d00796ae8a8b913",
+            "43a687464b3803a7bcb88d1dcdc4ea39009904de",
         )
-        self.assertEqual(program["declared_release"], "0.4.0")
+        self.assertEqual(program["declared_release"], "0.5.0")
         governance = by_role["governance_schema"]
         self.assertEqual(governance["coordinate_state"], "accepted_release")
         self.assertEqual(governance["declared_release"], "2.2.0")

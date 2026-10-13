@@ -19,14 +19,14 @@ COORDINATE_PATH = Path("release/external-contract-coordinates.json")
 PROGRAM_REPOSITORY = "driftframestudios/lims-eln-program-specification"
 PROGRAM_DISTRIBUTION = "lims-eln-program-specification"
 PROGRAM_IMPORT = "lims_eln_contracts"
-PROGRAM_VERSION = "0.4.0"
+PROGRAM_VERSION = "0.5.0"
 PROGRAM_CONTRACT_VERSION = "1.0.0"
-PROGRAM_COMMIT = "d8f41d0ce98a75120c99f0a23d00796ae8a8b913"
+PROGRAM_COMMIT = "43a687464b3803a7bcb88d1dcdc4ea39009904de"
 PROGRAM_SOURCE_URL = (
     "https://github.com/driftframestudios/lims-eln-program-specification.git"
 )
 PROGRAM_SOURCE_DIGEST = (
-    "sha256:41b46ebf96cff4192984b8b38f5fd4c4b55a312fda265d24f5329170ece5ab47"
+    "sha256:d0c407564024f68dd24ca3f6ddb8bea1d04283b06edb5eedbc146a525df51bf7"
 )
 PROGRAM_REQUIREMENT = (
     "lims-eln-program-specification @ git+https://github.com/"
@@ -38,8 +38,8 @@ PROGRAM_CONFORMANCE_COMMAND = (
     "--program-source ../lims-eln-program-specification"
 )
 PROGRAM_OBSERVATIONS = {
-    "installed distribution version is 0.4.0",
-    "lims_eln_contracts.__version__ is 0.4.0",
+    "installed distribution version is 0.5.0",
+    "lims_eln_contracts.__version__ is 0.5.0",
     "lims_eln_contracts.CONTRACT_VERSION is 1.0.0",
     "the PEP 610 source URL, requested revision, and commit match the reviewed source",
     "the scoped package source digest matches the reviewed binding",
@@ -60,11 +60,13 @@ PROGRAM_OBSERVED_VALUES = {
     "operation_count": 3,
     "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
     "observation_producers": ["implementation", "simulation"],
-    "schema_count": 9,
+    "schema_count": 11,
     "administrative_resources": ["canonical_bundle", "adapter", "independent_multilabel_policy", "counterfactual"],
 }
 
 PROGRAM_SCHEMA_NAMES = (
+    "administrative-study.v1.schema.json",
+    "administrative-study-comparison.v1.schema.json",
     "bounded-call-receipt.v1.schema.json",
     "bounded-call-request.v1.schema.json",
     "external-administrative-contract-set.v1.schema.json",
@@ -661,7 +663,11 @@ def program_source_digest_from_git(root: Path, commit: str) -> str:
             observed_metadata = True
         elif relative_path.startswith("src/lims_eln_contracts/"):
             parts = relative_path.removeprefix("src/lims_eln_contracts/").split("/")
-            if "__pycache__" in parts or relative_path.endswith((".pyc", ".pyo")):
+            if (
+                parts == ["README.md"]
+                or "__pycache__" in parts
+                or relative_path.endswith((".pyc", ".pyo"))
+            ):
                 continue
             observed_package_file = True
         else:
