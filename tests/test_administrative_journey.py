@@ -39,6 +39,19 @@ class CountingAdapter:
         return OfflineProposal(self.identity).propose(run, assessment)
 
 
+class IdentityChangingAdapter(CountingAdapter):
+    def __init__(self, failure=None, *, change_after=1):
+        super().__init__(failure)
+        self.change_after = change_after
+
+    def propose(self, run, assessment):
+        try:
+            return super().propose(run, assessment)
+        finally:
+            if len(self.calls) == self.change_after:
+                self.identity = self.identity.model_copy(update={"model_id": "changed-local-model"})
+
+
 class PreparedPolicyTests(unittest.TestCase):
     def setUp(self):
         self.bundle = load_independent_multilabel_policy_example()
@@ -180,6 +193,92 @@ class OfflineJourneyTests(unittest.TestCase):
         self.assertEqual(len(adapter.calls), 4)
         self.assertEqual(len(second["classification_proposals"]), 4)
         self.assertEqual(len(second["reviewed_policy_evaluations"]), 4)
+        self.assertTrue(all(
+            observation["execution"] == adapter.identity.model_dump(mode="json")
+            for observation in second["study"]["observations"]
+        ))
+
+    def test_identity_drift_during_proposal_holds_successful_output_for_recovery(self):
+        ledger, adapter = OfflineReplayLedger(), IdentityChangingAdapter()
+        with self.assertRaisesRegex(AdministrativeBoundaryError, "^proposal_identity_changed$"):
+            self.run_journey(ledger=ledger, proposal=adapter)
+        self.assertEqual(len(adapter.calls), 1)
+        stable = CountingAdapter()
+        with self.assertRaisesRegex(AdministrativeBoundaryError, "^replay_attempt_unsettled$"):
+            self.run_journey(ledger=ledger, proposal=stable)
+        self.assertEqual(stable.calls, [])
+
+    def test_identity_drift_on_exception_keeps_the_attempt_unsettled(self):
+        for failure in (
+            TimeoutError("private identity failure"),
+            CancelledError("private identity failure"),
+            ProposalAbstained("private identity failure"),
+            RuntimeError("private identity failure"),
+        ):
+            with self.subTest(failure=type(failure).__name__):
+                ledger = OfflineReplayLedger()
+                adapter = IdentityChangingAdapter(failure, change_after=2)
+                with self.assertRaisesRegex(AdministrativeBoundaryError, "^proposal_identity_changed$"):
+                    self.run_journey(ledger=ledger, proposal=adapter)
+                self.assertEqual(len(adapter.calls), 2)
+                stable = CountingAdapter()
+                with self.assertRaisesRegex(AdministrativeBoundaryError, "^replay_attempt_unsettled$"):
+                    self.run_journey(ledger=ledger, proposal=stable)
+                self.assertEqual(stable.calls, [])
+
+    def test_identity_drift_between_calls_stops_the_next_proposal(self):
+        ledger, adapter = OfflineReplayLedger(), CountingAdapter()
+        ticks = 0
+
+        def clock():
+            nonlocal ticks
+            ticks += 1
+            if ticks == 2:
+                adapter.identity = adapter.identity.model_copy(update={"model_id": "changed-local-model"})
+            return NOW
+
+        with patch.object(ledger, "begin", wraps=ledger.begin) as begin, patch.object(ledger, "retain", wraps=ledger.retain) as retain:
+            with self.assertRaisesRegex(AdministrativeBoundaryError, "^proposal_identity_changed$"):
+                run_offline_journey(clock=clock, ledger=ledger, proposal=adapter)
+        self.assertEqual(len(adapter.calls), 1)
+        self.assertEqual([call.args[1] for call in begin.call_args_list], ["run-0-a", "run-0-b"])
+        self.assertEqual([call.args[1] for call in retain.call_args_list], ["run-0-a"])
+        self.assertEqual(ledger.begin(*begin.call_args_list[0].args), retain.call_args.args[-1])
+        with self.assertRaisesRegex(AdministrativeBoundaryError, "^replay_attempt_unsettled$"):
+            ledger.begin(*begin.call_args_list[1].args)
+        stable = CountingAdapter()
+        with self.assertRaisesRegex(AdministrativeBoundaryError, "^replay_attempt_unsettled$"):
+            self.run_journey(ledger=ledger, proposal=stable)
+        self.assertEqual(stable.calls, [])
+
+    def test_identity_drift_preserves_escaping_interruption_and_held_attempt(self):
+        for interruption in (KeyboardInterrupt(), SystemExit(23)):
+            with self.subTest(interruption=type(interruption).__name__):
+                ledger = OfflineReplayLedger()
+                adapter = IdentityChangingAdapter(interruption, change_after=2)
+                with patch.object(ledger, "begin", wraps=ledger.begin) as begin, patch.object(ledger, "retain", wraps=ledger.retain) as retain:
+                    with self.assertRaises(type(interruption)) as caught:
+                        self.run_journey(ledger=ledger, proposal=adapter)
+                self.assertIs(caught.exception, interruption)
+                self.assertEqual(adapter.calls, ["run-0-a", "run-0-b"])
+                self.assertEqual([call.args[1] for call in begin.call_args_list], ["run-0-a", "run-0-b"])
+                self.assertEqual([call.args[1] for call in retain.call_args_list], ["run-0-a"])
+                self.assertEqual(ledger.begin(*begin.call_args_list[0].args), retain.call_args.args[-1])
+                with self.assertRaisesRegex(AdministrativeBoundaryError, "^replay_attempt_unsettled$"):
+                    ledger.begin(*begin.call_args_list[1].args)
+                stable = CountingAdapter()
+                with self.assertRaisesRegex(AdministrativeBoundaryError, "^replay_attempt_unsettled$"):
+                    self.run_journey(ledger=ledger, proposal=stable)
+                self.assertEqual(stable.calls, [])
+
+    def test_invalid_initial_identity_has_a_bounded_error_before_execution(self):
+        for identity in (None, CountingAdapter().identity.model_copy(update={"model_id": None})):
+            with self.subTest(identity=type(identity).__name__):
+                adapter = CountingAdapter()
+                adapter.identity = identity
+                with self.assertRaisesRegex(AdministrativeBoundaryError, "^proposal_identity_unavailable$"):
+                    self.run_journey(proposal=adapter)
+                self.assertEqual(adapter.calls, [])
 
     def test_failure_variants_replay_the_original_attempt(self):
         for failure, status in (

@@ -160,10 +160,25 @@ def _output(text: str) -> StudyOutput:
     return StudyOutput(text=text, digest=canonical_sha256(text), completeness="complete")
 
 
+def _execution_identity(adapter: ProposalPort) -> StudyExecution:
+    """Own a validated identity snapshot and keep adapter details caller-local."""
+    try:
+        return StudyExecution.model_validate_json(adapter.identity.model_dump_json(), strict=True)
+    except Exception:
+        raise AdministrativeBoundaryError("proposal_identity_unavailable") from None
+
+
+def _require_execution_identity(adapter: ProposalPort, identity: StudyExecution) -> None:
+    """Require the same declared execution identity throughout one journey."""
+    if _execution_identity(adapter) != identity:
+        raise AdministrativeBoundaryError("proposal_identity_changed")
+
+
 def _observe(run: StudyRunPlan, assessment: PolicyAssessment, adapter: ProposalPort, identity: StudyExecution, spec_digest: str, order: int, start: str, clock: Callable[[], datetime]) -> StudyRunObservation:
     """Retain one attempt's fixed-code outcome, including adapter exceptions."""
     scientific = administrative = None
     status, reason = "completed", None
+    _require_execution_identity(adapter, identity)
     try:
         result = adapter.propose(run, assessment)
     except TimeoutError:
@@ -182,6 +197,7 @@ def _observe(run: StudyRunPlan, assessment: PolicyAssessment, adapter: ProposalP
         except (ValueError, TypeError, UnicodeError, ValidationError):
             status, reason = "invalid_response", "adapter_output_boundary"
             scientific = administrative = None
+    _require_execution_identity(adapter, identity)
     finish = _timestamp(clock)
     return StudyRunObservation(observation_id="observation-" + run.run_id, run_id=run.run_id, attempt=1, specification_digest=spec_digest, input_digest=canonical_sha256(run), status=status, reason_code=reason, execution=identity, execution_order=order, started_at=start, finished_at=finish, scientific_output=scientific, administrative_output=administrative)
 
@@ -196,7 +212,7 @@ def run_offline_journey(*, tenant_id: str = "synthetic-tenant", ledger: OfflineR
         raise AdministrativeBoundaryError("offline_tenant_boundary")
     plan, contexts, prepared = _prepare()
     adapter = proposal if proposal is not None else OfflineProposal(plan.specification.expected_execution)
-    identity = StudyExecution.model_validate_json(adapter.identity.model_dump_json(), strict=True)
+    identity = _execution_identity(adapter)
     store = ledger if ledger is not None else OfflineReplayLedger()
     spec_digest = canonical_sha256(plan.specification)
     results = []
