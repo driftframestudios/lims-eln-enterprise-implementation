@@ -17,13 +17,13 @@
   },
   "public_inspection": {
     "manifest": "release/public-inspection-manifest.json",
-    "manifest_digest": "sha256:fc07794c4c39ce251c0e5782a70645e7fb624a460a37b127853b36a6c7156996",
+    "manifest_digest": "sha256:d6590bffb0276a01c2230a733c7332134c2f4e0bfafb9f7caefe4194c300a2b8",
     "authority": "repository_owned_inspection_bytes",
     "cross_repository_coordinate_state": "accepted_and_consumer_observed"
   },
   "external_contracts": {
     "coordinate_manifest": "release/external-contract-coordinates.json",
-    "coordinate_manifest_digest": "sha256:6f5f3cf4a466d391aedb20efdb933aafa8cd87225fc2b79918ff65fe7511cc90",
+    "coordinate_manifest_digest": "sha256:ef3bb27784e75c3ea06ab23e6cdb8dc54f1d8a5a54d34726d060757916725c44",
     "coordinate_state": "accepted_and_consumer_observed"
   },
   "contract_versions": {
@@ -37,7 +37,7 @@
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:f9d780cc765ddcf5b18d078d5ee451c7f93f49cb91f94032e775c0d88041db50",
+    "binding_digest": "sha256:618cef39aa26b2ff993dabf8566d91c89c1e39ee7eb7626ebd491bfb5d13fb6c",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",
