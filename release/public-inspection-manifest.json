@@ -419,7 +419,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:8089411742053dd5387fe745bd05042557b024823d9b2d47b47e4901f6694123",
+      "aggregate_sha256": "sha256:4c02582fbfa0fcc1168c3d22e53d23917feba5f80668d9e3a97ac30871966ff1",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -493,13 +493,13 @@
         },
         {
           "path": "tests/test_administrative_core.py",
-          "sha256": "sha256:1fdd73f80016681e1314ef0a1f2aa830ccd146102d9235eff58eb7454b2fa6f5",
-          "size_bytes": 6717
+          "sha256": "sha256:fb18382bb4984d08dd326d654b280ab8f400672e77d8f7d8d08258c64086820e",
+          "size_bytes": 6880
         },
         {
           "path": "tests/test_administrative_journey.py",
-          "sha256": "sha256:58f88b66436fd89ce4326cd6edb9e150ea892998df95ba613c4f213d343d01c5",
-          "size_bytes": 16293
+          "sha256": "sha256:4c66ed57141c9a3da233efc39285e67d961be44294b8cdd5734bfb25e09b110b",
+          "size_bytes": 16456
         },
         {
           "path": "tests/test_attribution_boundary.py",
@@ -1009,7 +1009,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:c465173bbbcc4807b2c7d38854521c001aec727be253392019e1d4ee297174a1",
+    "aggregate_sha256": "sha256:5ab622a74cfb5a523f0f3941e5a1a9e3efade56bbdf7d791eaf1c24ff7567c7a",
     "kind": "content_addressed_artifact_inventory"
   }
 }

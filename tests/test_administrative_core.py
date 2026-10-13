@@ -1,10 +1,14 @@
 """Independent examples for the offline administrative lookup boundary."""
 
 from dataclasses import FrozenInstanceError
+from importlib.util import find_spec
 import json
 import unittest
 
 from pydantic import ValidationError
+
+if find_spec("lims_eln_contracts") is None:
+    raise unittest.SkipTest("administrative checks require the contracts extra")
 
 from lims_eln_contracts.external_administrative import PredicateOperator
 from lims_eln_implementation.administrative.core import (

@@ -3,9 +3,13 @@
 from concurrent.futures import CancelledError
 from dataclasses import FrozenInstanceError
 from datetime import date, datetime, timedelta, timezone
+from importlib.util import find_spec
 import json
 import unittest
 from unittest.mock import patch
+
+if find_spec("lims_eln_contracts") is None:
+    raise unittest.SkipTest("administrative checks require the contracts extra")
 
 from lims_eln_contracts import canonical_sha256, load_independent_multilabel_policy_example
 from lims_eln_contracts.external_administrative import PolicyRuleSet
