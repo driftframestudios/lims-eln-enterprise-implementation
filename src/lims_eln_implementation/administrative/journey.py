@@ -197,8 +197,7 @@ def _observe(run: StudyRunPlan, assessment: PolicyAssessment, adapter: ProposalP
         except (ValueError, TypeError, UnicodeError, ValidationError):
             status, reason = "invalid_response", "adapter_output_boundary"
             scientific = administrative = None
-    finally:
-        _require_execution_identity(adapter, identity)
+    _require_execution_identity(adapter, identity)
     finish = _timestamp(clock)
     return StudyRunObservation(observation_id="observation-" + run.run_id, run_id=run.run_id, attempt=1, specification_digest=spec_digest, input_digest=canonical_sha256(run), status=status, reason_code=reason, execution=identity, execution_order=order, started_at=start, finished_at=finish, scientific_output=scientific, administrative_output=administrative)
 

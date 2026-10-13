@@ -237,13 +237,39 @@ class OfflineJourneyTests(unittest.TestCase):
                 adapter.identity = adapter.identity.model_copy(update={"model_id": "changed-local-model"})
             return NOW
 
-        with self.assertRaisesRegex(AdministrativeBoundaryError, "^proposal_identity_changed$"):
-            run_offline_journey(clock=clock, ledger=ledger, proposal=adapter)
+        with patch.object(ledger, "begin", wraps=ledger.begin) as begin, patch.object(ledger, "retain", wraps=ledger.retain) as retain:
+            with self.assertRaisesRegex(AdministrativeBoundaryError, "^proposal_identity_changed$"):
+                run_offline_journey(clock=clock, ledger=ledger, proposal=adapter)
         self.assertEqual(len(adapter.calls), 1)
+        self.assertEqual([call.args[1] for call in begin.call_args_list], ["run-0-a", "run-0-b"])
+        self.assertEqual([call.args[1] for call in retain.call_args_list], ["run-0-a"])
+        self.assertEqual(ledger.begin(*begin.call_args_list[0].args), retain.call_args.args[-1])
+        with self.assertRaisesRegex(AdministrativeBoundaryError, "^replay_attempt_unsettled$"):
+            ledger.begin(*begin.call_args_list[1].args)
         stable = CountingAdapter()
         with self.assertRaisesRegex(AdministrativeBoundaryError, "^replay_attempt_unsettled$"):
             self.run_journey(ledger=ledger, proposal=stable)
         self.assertEqual(stable.calls, [])
+
+    def test_identity_drift_preserves_escaping_interruption_and_held_attempt(self):
+        for interruption in (KeyboardInterrupt(), SystemExit(23)):
+            with self.subTest(interruption=type(interruption).__name__):
+                ledger = OfflineReplayLedger()
+                adapter = IdentityChangingAdapter(interruption, change_after=2)
+                with patch.object(ledger, "begin", wraps=ledger.begin) as begin, patch.object(ledger, "retain", wraps=ledger.retain) as retain:
+                    with self.assertRaises(type(interruption)) as caught:
+                        self.run_journey(ledger=ledger, proposal=adapter)
+                self.assertIs(caught.exception, interruption)
+                self.assertEqual(adapter.calls, ["run-0-a", "run-0-b"])
+                self.assertEqual([call.args[1] for call in begin.call_args_list], ["run-0-a", "run-0-b"])
+                self.assertEqual([call.args[1] for call in retain.call_args_list], ["run-0-a"])
+                self.assertEqual(ledger.begin(*begin.call_args_list[0].args), retain.call_args.args[-1])
+                with self.assertRaisesRegex(AdministrativeBoundaryError, "^replay_attempt_unsettled$"):
+                    ledger.begin(*begin.call_args_list[1].args)
+                stable = CountingAdapter()
+                with self.assertRaisesRegex(AdministrativeBoundaryError, "^replay_attempt_unsettled$"):
+                    self.run_journey(ledger=ledger, proposal=stable)
+                self.assertEqual(stable.calls, [])
 
     def test_invalid_initial_identity_has_a_bounded_error_before_execution(self):
         for identity in (None, CountingAdapter().identity.model_copy(update={"model_id": None})):

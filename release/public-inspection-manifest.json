@@ -1,7 +1,7 @@
 {
   "artifact_groups": [
     {
-      "aggregate_sha256": "sha256:d794566ec348572d15b6db6c02f43be2c83db9a0e4fe633afff7b1a6483dd984",
+      "aggregate_sha256": "sha256:ffc7e35b8238899ec46a4f378946a07e633332690fc64d98d5d4bbcc3f509d9b",
       "artifacts": [
         {
           "path": ".python-version",
@@ -40,8 +40,8 @@
         },
         {
           "path": "src/lims_eln_implementation/administrative/journey.py",
-          "sha256": "sha256:448f18618c7ec01176fd24e425aa59ecdd024e8cd308cc701d585da645945feb",
-          "size_bytes": 14698
+          "sha256": "sha256:0d5dfad6238355ffb7b80b490ecb62684036c94bc9d96ebd69775abdb0dbde78",
+          "size_bytes": 14681
         },
         {
           "path": "src/lims_eln_implementation/application.py",
@@ -419,7 +419,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:2c68fb417b375c8759943269029f9154091dddfb1040e0a79e7408fb6c7ebdc0",
+      "aggregate_sha256": "sha256:1f92d0caef6ece881375ae7019ddb36de6f2aeed4c977eb65e6bbab6e805329e",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -498,8 +498,8 @@
         },
         {
           "path": "tests/test_administrative_journey.py",
-          "sha256": "sha256:09770e83fcdb2c4dfd3302a08c3e966903d4e4d78c2a0aee8330bd0c048a74ec",
-          "size_bytes": 20121
+          "sha256": "sha256:eb5a3de79532925601141686b5553d33f88b4279421bc4e82117ce7cf73819b0",
+          "size_bytes": 22220
         },
         {
           "path": "tests/test_attribution_boundary.py",
@@ -678,7 +678,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:9ed8ce820bdfa05adfa3b6f9be949069dce76dd3c2ca0eda66a736c274f18954",
+      "aggregate_sha256": "sha256:18d3ec03e25dabf6d24f8e1bb02045adf18f293506183f840091e39db15e0b78",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -807,8 +807,8 @@
         },
         {
           "path": "docs/offline-administrative-journey.md",
-          "sha256": "sha256:f04c0450b964ee0b5c16ed4c86de7eb60d84af2768a3a3194361d2e6fdd480ac",
-          "size_bytes": 4830
+          "sha256": "sha256:0936d1425a64466bbc41ed3b82c3f0a35a2523ced030f2f3d2cf4a04bd501006",
+          "size_bytes": 4987
         },
         {
           "path": "docs/qualification-boundaries.md",
@@ -1009,7 +1009,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:8fc1e7cffd68b77cb4e8a7d2fb87655df0ced716976005af5c21a754419768c7",
+    "aggregate_sha256": "sha256:9d3dfb303c005ac3bf88367f2e222c100fffbab49401f4daaa0adefc18ab5660",
     "kind": "content_addressed_artifact_inventory"
   }
 }

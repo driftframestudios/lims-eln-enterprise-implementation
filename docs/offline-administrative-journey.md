@@ -56,7 +56,9 @@ before and after each proposal call, including handled failures. Observable
 identity drift stops the journey with `proposal_identity_changed`; an unreadable
 or invalid identity uses `proposal_identity_unavailable`. The affected reserved
 attempt remains held for explicit recovery, and earlier retained results remain
-available. These guards establish declared identity stability; execution-specific
+available. Escaping interruptions retain their original exception and exit status;
+their reserved attempts stay held for explicit recovery. These guards establish
+declared identity stability for completed call handling; execution-specific
 provider evidence belongs to the separately authorized adapter route. The command
 chooses only the offline implementation and has no endpoint or credential
 settings. External execution remains held.
