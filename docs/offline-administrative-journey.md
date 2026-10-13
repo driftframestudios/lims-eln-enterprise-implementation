@@ -51,8 +51,15 @@ rules retain declaration order; the policy's precedence selects a winner when
 its conflict behavior permits assignment.
 
 `ProposalPort` allows a later local or approved provider adapter to receive the
-same immutable run. The command chooses only the offline implementation and has
-no endpoint or credential settings. External execution remains held.
+same immutable run. One journey uses a fixed declared execution identity, checked
+before and after each proposal call, including handled failures. Observable
+identity drift stops the journey with `proposal_identity_changed`; an unreadable
+or invalid identity uses `proposal_identity_unavailable`. The affected reserved
+attempt remains held for explicit recovery, and earlier retained results remain
+available. These guards establish declared identity stability; execution-specific
+provider evidence belongs to the separately authorized adapter route. The command
+chooses only the offline implementation and has no endpoint or credential
+settings. External execution remains held.
 
 `OfflineReplayLedger` is bounded and owned by one executor. Reusing a ledger
 preserves complete results, including classification and policy companions.
