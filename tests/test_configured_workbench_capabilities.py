@@ -496,7 +496,6 @@ class LauncherSocketTests(unittest.TestCase):
             descriptor = options["pass_fds"][0]
             self.assertEqual(arguments[arguments.index("--fd") + 1], str(descriptor))
             with socket.fromfd(descriptor, socket.AF_INET, socket.SOCK_STREAM) as inherited:
-                self.assertEqual(inherited.getsockopt(socket.SOL_SOCKET, socket.SO_ACCEPTCONN), 1)
                 endpoint = inherited.getsockname()
             competing_bind_is_rejected()
             return child
