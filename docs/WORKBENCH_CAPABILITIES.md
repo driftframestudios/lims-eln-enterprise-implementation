@@ -51,8 +51,9 @@ the version-compatibility observation and supplies the template context.
 
 Focused fixtures exercise the schema, input boundaries, alias isolation, actual
 route correspondence, and both adapters' authored wording. They model adapter
-selection; configured PostgreSQL execution remains the next persistence and
-recovery observation under
-[Enterprise #60](https://github.com/driftframestudios/lims-eln-enterprise-implementation/issues/60).
+selection. The [configured capability proof](runbooks/configured-capability-proof.v0.1.md)
+prepares actual launcher, readiness and Golden Specimen persistence evidence
+under Enterprise #68. Its source checks precede the separately activated local
+journey. Enterprise #60 retains administrative durability and lifecycle modes.
 The broader shell and navigation continue under
 [Enterprise #62](https://github.com/driftframestudios/lims-eln-enterprise-implementation/issues/62).
