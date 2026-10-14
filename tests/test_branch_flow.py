@@ -602,7 +602,7 @@ class BranchFlowTests(unittest.TestCase):
         )
         self.assertIn(
             "python3 -m unittest tests.test_postgres_integration "
-            "tests.test_durable_invocation_postgres -v",
+            "tests.test_durable_invocation_postgres tests.test_pending_outbox_postgres -v",
             workflow,
         )
         self.assertIn(

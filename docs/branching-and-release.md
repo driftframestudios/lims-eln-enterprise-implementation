@@ -58,7 +58,7 @@ current inventory carries the exact Flyway 13.8.1 source and its observed
 hosted database receipt without adding those post-release bytes to the signed
 release subject. The
 ordered inventory covers runtime source,
-Flyway V001 through V006, local contracts and synthetic inputs, consequential
+Flyway V001 through V007, local contracts and synthetic inputs, consequential
 behavior proofs, operational configuration, evidence records, and public
 orientation. The root manifest and release-role manifest carry the current
 inventory SHA-256. The immutable candidate receipt retains the earlier candidate
