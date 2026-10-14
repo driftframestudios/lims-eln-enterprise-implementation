@@ -114,7 +114,7 @@ def prepare(target: Path, program: Path, *, root: Path = ROOT) -> dict[str, obje
                 raise ContextError("image dependencies require hash-locked registry requirements")
             expected_wheels = {
                 "lims_eln_enterprise_implementation-0.3.2-py3-none-any.whl",
-                "lims_eln_program_specification-0.6.0-py3-none-any.whl",
+                "lims_eln_program_specification-0.6.1-py3-none-any.whl",
             }
             stage_wheels(built_wheels, application / "wheels", expected_wheels)
             (application / "requirements.txt").write_text(requirements)

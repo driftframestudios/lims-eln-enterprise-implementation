@@ -157,3 +157,21 @@ administrative implementation modules. A changed adapter or implementation
 therefore receives a different replay fingerprint. These hashes establish
 source identity for the local example; the receiving environment retains
 responsibility for its installed package and reviewer authority.
+
+## Select a recovery by failure type
+
+The review transition raises `ReviewConflictError` for changed source bindings,
+`ReviewSelectionError` for term-selection or disposition choices,
+`ReviewEffectivityError` for decision context and time boundaries, and
+`ReviewValidationError` for a proposed accepted value that needs contract
+reconciliation. Each remains an `AdministrativeBoundaryError`; existing `.code`
+and string comparisons retain their fixed values. The `.message`, `.stage`, and
+`.recovery` attributes provide authored feedback for a receiving interface.
+
+An expected Pydantic validation failure is translated at accepted-value
+construction. Programming failures and interruption retain their original types.
+The caller keeps the previous accepted snapshot and can present the relevant
+recovery guidance before submitting a fresh request. Automatic retry requires a
+separate idempotency and ownership decision. Select fixed feedback for public
+returns; complete exceptions and their retained context belong with an authorized
+diagnostic receiver.

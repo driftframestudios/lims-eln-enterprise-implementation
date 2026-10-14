@@ -1382,9 +1382,9 @@ def validate_manifests() -> None:
         raise AssertionError("release role requires Governance release 2.2.0")
     if (
         release.get("contract_bindings", {}).get("program_contract_package")
-        != "0.6.0"
+        != "0.6.1"
     ):
-        raise AssertionError("release role requires Program contract package 0.6.0")
+        raise AssertionError("release role requires Program contract package 0.6.1")
     if tuple(release["receipt_families"]) != CANONICAL_RECEIPT_FAMILIES:
         raise AssertionError("release role requires canonical receipt-family order")
     if (

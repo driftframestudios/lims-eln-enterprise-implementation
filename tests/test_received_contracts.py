@@ -60,17 +60,17 @@ class ReceivedContractTests(unittest.TestCase):
                     "vcs_info": {
                         "vcs": "git",
                         "requested_revision": (
-                            "b3e63ff9126a28ff959761d4d959426c00d39192"
+                            "83a97deb76b9a5636cc7da484d350d5556c51661"
                         ),
                         "commit_id": (
-                            "b3e63ff9126a28ff959761d4d959426c00d39192"
+                            "83a97deb76b9a5636cc7da484d350d5556c51661"
                         ),
                     },
                 }
             )
 
         distribution = SimpleNamespace(
-            version="0.6.0",
+            version="0.6.1",
             files=[Path("lims_eln_contracts/__init__.py")],
             locate_file=lambda relative_path: root / "site-packages" / relative_path,
             read_text=lambda name: direct_url_text if name == "direct_url.json" else None,
@@ -92,7 +92,7 @@ class ReceivedContractTests(unittest.TestCase):
         ][:schema_count]
         contracts = SimpleNamespace(
             __file__=str(module_path),
-            __version__="0.6.0",
+            __version__="0.6.1",
             CONTRACT_VERSION="1.0.0",
             SCHEMA_RESOURCE_NAMES=schema_names,
             load_operation_catalog=lambda: SimpleNamespace(
@@ -114,7 +114,7 @@ class ReceivedContractTests(unittest.TestCase):
         coordinates = load_coordinates(ROOT)
         self.assertEqual(
             coordinates["program_contract"]["source_commit"],
-            "b3e63ff9126a28ff959761d4d959426c00d39192",
+            "83a97deb76b9a5636cc7da484d350d5556c51661",
         )
         self.assertEqual(coordinates["governance"]["schema_release"], "2.2.0")
         self.assertEqual(
