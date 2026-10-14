@@ -87,7 +87,7 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/cli.py",
-      "sha256": "7c40607ccfb45f32f0392b96f4bbc205c9ae3c85e93dd71686ca697d2e61ee70",
+      "sha256": "19ad991a50b6fac41a647b252f393609fd5a1219989691abb1aac2327aa16a04",
       "responsibility": "loopback-default launcher with explicit adapter and process-owned application factory"
     }
   ],

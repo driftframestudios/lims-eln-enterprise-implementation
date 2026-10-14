@@ -310,7 +310,7 @@
       "responsibility": "Flyway V001 through V005, its bounded identity, and deployment-shape database support."
     },
     {
-      "aggregate_sha256": "sha256:6bb2a794bd6bac5a914a1513e395f9d0a89981903cedce713d89db512102b62a",
+      "aggregate_sha256": "sha256:ed9b42b1bc8f59d379ad493b1e060577c97e18b606454211867c73bcb4c8ee4d",
       "artifacts": [
         {
           "path": "contracts/execution-receipt.v1.1.schema.json",
@@ -384,7 +384,7 @@
         },
         {
           "path": "release/bounded-caller-bindings.json",
-          "sha256": "sha256:762a150c94531d968af5c7e23bbd2d7d156016c9a302c6dde1fc9b7efaa95cb7",
+          "sha256": "sha256:6131dae47a5c1e9b661fe41024b8d1cf96164f1524ba7b7200e79ca122fdd3a8",
           "size_bytes": 6805
         },
         {
@@ -723,7 +723,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:87403bb4fe33f1e606614822354d82cf8bbc1aa6189e7db4d31bc6dd325a17e5",
+      "aggregate_sha256": "sha256:9da4c52f8815e9c121a9351a96a0007077e252d0c4fbb9bc4895cc1428b7f312",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -912,7 +912,7 @@
         },
         {
           "path": "first-receipt.json",
-          "sha256": "sha256:3ef98df244d738437b69f1303f226be684153fe11b50ba4c429a06a95c4c05c0",
+          "sha256": "sha256:d2fbfa081cd7f73b34d08305f8f31dc12783d2eebccae4f49b7780c993582dbb",
           "size_bytes": 6522
         },
         {
@@ -922,7 +922,7 @@
         },
         {
           "path": "machine-node.json",
-          "sha256": "sha256:3166f634097c2ac27ce0cbc851ce951d85b1d45554a211d4ab2b4109eb8bec8d",
+          "sha256": "sha256:bc01339ac911d95f5a44e115e05ed3816c8cd7a30b70fe1bf0100f08f3898dfb",
           "size_bytes": 5645
         },
         {
@@ -1064,7 +1064,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:71e3bb2795c6115cb133b989399714de6774ffe2a1ff90bfd921abd939abedbf",
+    "aggregate_sha256": "sha256:6d357c60d57f9a82d8a6291a6c68049b8540b752bac2a3a62f84e8da0b629962",
     "kind": "content_addressed_artifact_inventory"
   }
 }
