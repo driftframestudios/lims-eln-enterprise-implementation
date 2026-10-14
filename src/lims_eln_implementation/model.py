@@ -80,6 +80,13 @@ def immutable_json(value: Any) -> Any:
     return value
 
 
+def _owned_json_object(value: Mapping[str, Any]) -> Mapping[str, Any]:
+    """Own finite JSON content before immutable domain values share it."""
+    if not isinstance(value, Mapping):
+        raise DomainError("domain content requires a JSON object")
+    return immutable_json(json.loads(canonical_json(value)))
+
+
 @dataclass(frozen=True, slots=True)
 class Command:
     command_id: str
@@ -151,6 +158,9 @@ class DomainEvent:
     payload: Mapping[str, Any]
     reason_code: str | None = None
 
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "payload", _owned_json_object(self.payload))
+
 
 @dataclass(frozen=True, slots=True)
 class SpecimenAggregate:
@@ -160,6 +170,13 @@ class SpecimenAggregate:
     version: int
     attributes: Mapping[str, Any] = field(default_factory=dict)
     events: tuple[DomainEvent, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "attributes", _owned_json_object(self.attributes))
+        events = tuple(self.events)
+        if any(not isinstance(event, DomainEvent) for event in events):
+            raise DomainError("specimen events require immutable domain events")
+        object.__setattr__(self, "events", events)
 
     def assert_version(self, expected_version: int) -> None:
         if self.version != expected_version:

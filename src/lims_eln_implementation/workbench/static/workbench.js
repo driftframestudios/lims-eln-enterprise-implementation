@@ -92,7 +92,7 @@ function renderSpecimen(document, observation) {
     "Shared observation",
     observation
       ? `${observation.observation_id} · contract ${observation.envelope_version}`
-      : "Install the reviewed contract package 0.3.1 for the shared envelope",
+      : "Use the compatible package listed in application capabilities for the shared envelope",
   );
   resultPanel.hidden = false;
   resultPanel.focus({ preventScroll: true });

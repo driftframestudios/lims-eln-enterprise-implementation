@@ -32,17 +32,17 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/api.py",
-      "sha256": "9c84cdf10a8b341961db3324883af8588917a336b54bbf42a3dd61ba35b09715",
+      "sha256": "ba8ec2010d8ec9fda83f0d010ad24923c11bf4ee5b5d1c7e72cf9430169618c5",
       "responsibility": "injectable FastAPI delivery boundary with state-adapter readiness and typed authority decisions"
     },
     {
       "path": "src/lims_eln_implementation/workbench/postgres.py",
-      "sha256": "8a34bce87d72e122e9fd050aba5f6475b46891378fed5574fd94fe5dba904e90",
+      "sha256": "5fdd8bfba4fb3fbf7d5710192c02c384e2d34fdeeed600b5bf29b4aca76410ae",
       "responsibility": "repeatable-read PostgreSQL Golden Specimen composition with tenant binding, lease-and-fence completion, exact replay evidence, and authenticated recovery"
     },
     {
       "path": "src/lims_eln_implementation/workbench/service.py",
-      "sha256": "fa843248807842f30f46d78ae9e36ed257e21888a5ff44bf6151d62a15666230",
+      "sha256": "8c03c1125498ac213f14af55da9a0e58776be08f5298051b12af3f155c1c53f0",
       "responsibility": "process-local workbench composition and the shared visitor-facing result shape"
     },
     {
@@ -87,7 +87,7 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/cli.py",
-      "sha256": "7c40607ccfb45f32f0392b96f4bbc205c9ae3c85e93dd71686ca697d2e61ee70",
+      "sha256": "19ad991a50b6fac41a647b252f393609fd5a1219989691abb1aac2327aa16a04",
       "responsibility": "loopback-default launcher with explicit adapter and process-owned application factory"
     },
     {
