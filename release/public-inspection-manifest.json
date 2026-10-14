@@ -444,7 +444,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:e8a50e5252f68874fcf7e01e5b4feb370fc22f3d9a85f8051083dc63a437dc27",
+      "aggregate_sha256": "sha256:4d2c0e4463a3f727d6abc264df819336504d88eb778901aa616b9fa0f6dc500a",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -550,6 +550,11 @@
           "path": "tests/test_comparison_return.py",
           "sha256": "sha256:11cdff0e479009c97af8ad7d2679be59cd32655d01a2784838a1cb54213c6bcd",
           "size_bytes": 10117
+        },
+        {
+          "path": "tests/test_configured_workbench_capabilities.py",
+          "sha256": "sha256:9278e160b0617173279bd134c5427f4d445f0a123c1b95af703a0e00ab867951",
+          "size_bytes": 21094
         },
         {
           "path": "tests/test_custody_instrument.py",
@@ -718,7 +723,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:d610bf8d08cd14a4452be32cedc7e91873da498d6c99a4f368d33bc38e05d7da",
+      "aggregate_sha256": "sha256:1398400ba02f944df1ee3e98a1c9f3cfcc4103c23ded5bb0fcbf5c7900cab98e",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -822,8 +827,8 @@
         },
         {
           "path": "docs/WORKBENCH_CAPABILITIES.md",
-          "sha256": "sha256:bb09e75c167e9f9f410539179ade28dd6922730180b816db7638bd2d9d9e0d9e",
-          "size_bytes": 3405
+          "sha256": "sha256:743c5941be5b59f8268ba7fa776610b6829dda1e7683972fa8a10bc7ced2683e",
+          "size_bytes": 3527
         },
         {
           "path": "docs/architecture.md",
@@ -864,6 +869,11 @@
           "path": "docs/runbooks/aws-runtime-configuration-and-secret-rotation.md",
           "sha256": "sha256:0aae94d0c3bfb17080105c820584102f5de6d422ba13ba6776da29207559f420",
           "size_bytes": 7625
+        },
+        {
+          "path": "docs/runbooks/configured-capability-proof.v0.1.md",
+          "sha256": "sha256:498adcf19ceba235da80fbdd3a2fe3404a44654d3776bd328273a0260f55bc54",
+          "size_bytes": 9561
         },
         {
           "path": "docs/runbooks/local-container-entry.v0.1.md",
@@ -1054,7 +1064,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:2209b9c752c3ba9673cfe03ca7bbb413f29acf5c319f31fe7b143c9125300535",
+    "aggregate_sha256": "sha256:5dc65e5e18e7cbc1d73a180e9bbb4b8bd8d5a95cd59737eb32e7fc4db01b30b7",
     "kind": "content_addressed_artifact_inventory"
   }
 }
