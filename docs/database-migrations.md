@@ -258,14 +258,16 @@ invocation digest, current lease token, fencing token, in-progress state and
 server-observed expiry before releasing one pre-effect reservation. Completed,
 recovery and stale ownership retain their canonical evidence.
 
-The retained hosted receipt records PostgreSQL 17 and Flyway 13.8.1 through
-V005 at its exact historical source. Current V007 source is a successor
-candidate. Configured ordinary-role tests in
-`tests/test_durable_invocation_postgres.py` cover release, stale ownership,
+The [V007 hosted receipt](../receipts/hosted-postgresql-v007-proof.json) records
+the successful PostgreSQL 17.10/Flyway 13.8.1 clean and upgrade jobs at exact
+source `83889fa87b740d824e82f5c9ffb0c515e6823148`. Configured ordinary-role tests
+in `tests/test_durable_invocation_postgres.py` cover release, stale ownership,
 completed/recovery retention, canonical replay and temporary relation shadows.
-Run them through the existing configured PostgreSQL test environment. A direct
-SQL observation on another engine version establishes its named mechanism;
-the PostgreSQL 17/Flyway route supplies that separate acceptance observation.
+The retained [V005 receipt](../receipts/hosted-postgresql-proof.json) identifies
+its earlier observation. The separate
+[native recovery receipt](../receipts/owned-postgresql17-recovery-proof.json)
+uses PostgreSQL 17.10 and direct SQL transactions; its seven scenarios establish
+database-process recovery at the same source coordinate.
 
 
 ## Pending-outbox lookup at V007

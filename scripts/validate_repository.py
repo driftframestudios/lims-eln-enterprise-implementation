@@ -177,7 +177,10 @@ CURRENT_RECONCILIATION_TIME = "2026-10-02T22:14:32Z"
 ACCEPTED_PRIOR_HOSTED_COMMIT = "205401a530e984e031bb2c52a1654c6b5f82bc6d"
 HISTORICAL_PRIOR_HOSTED_COMMIT = "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
 PREDECESSOR_DATABASE_HOSTED_COMMIT = "e15f0a37520b651cf83e856c3b9d67ab9f42cd9b"
-CURRENT_DATABASE_HOSTED_COMMIT = "2d12b111edb86f1f16f02338933a827b767a687f"
+RETAINED_V005_HOSTED_COMMIT = "2d12b111edb86f1f16f02338933a827b767a687f"
+CURRENT_DATABASE_HOSTED_COMMIT = "83889fa87b740d824e82f5c9ffb0c515e6823148"
+HOSTED_V007_RECEIPT_CONTENT_DIGEST = "sha256:23478818302eae8eaa27ea2b9608f1a5ec440d719afd649ecaa07f087b8478e4"
+OWNED_PG17_RECEIPT_CONTENT_DIGEST = "sha256:4fec7349b7729238ceeb86c6691fcbbbfa829dd465ec9a90a9197a5769e74e6e"
 EXCLUDED_DIRECTORY_NAMES = {
     ".git",
     ".mypy_cache",
@@ -401,6 +404,8 @@ def classify_hosted_postgresql_receipt_binding(
     observed_commit = str(hosted_bindings.get("repository_commit", ""))
     if repository_version == "0.3.2":
         if observed_commit == CURRENT_DATABASE_HOSTED_COMMIT:
+            return "observed_v007_artifacts"
+        if observed_commit == RETAINED_V005_HOSTED_COMMIT:
             return "observed_v005_artifacts"
         raise AssertionError(
             "current 0.3.2 hosted receipt requires its exact observed commit"
@@ -429,6 +434,7 @@ def validate_hosted_postgresql_coordinate_state(
     """Keep the active database state aligned with its receipt generation."""
 
     expected_states = {
+        "observed_v007_artifacts": "v007_database_artifacts_observed",
         "observed_v005_artifacts": "v005_observed_successor_candidate",
         "observed_predecessor": "predecessor_observed_successor_candidate",
     }
@@ -441,7 +447,7 @@ def validate_hosted_postgresql_coordinate_state(
 def validate_current_hosted_postgresql_receipt_contract(
     hosted_receipt: dict,
 ) -> None:
-    """Bind the complete current hosted receipt identity and evidence set."""
+    """Preserve the retained V005 hosted receipt identity and evidence set."""
 
     expected_identity = {
         "schema_version": "1.1.0",
@@ -520,6 +526,84 @@ def validate_current_hosted_postgresql_receipt_contract(
             "current hosted PostgreSQL receipt requires its exact identity and "
             "complete evidence set"
         )
+
+
+def validate_observed_execution_receipt(
+    receipt: dict,
+    *,
+    observed_content_digest: str,
+    current_artifact_digests: tuple[str, ...] = (),
+) -> None:
+    """Admit exact recorded evidence, then compare its named current artifacts."""
+
+    from jsonschema import Draft202012Validator, FormatChecker
+
+    schema = json.loads(
+        (ROOT / "contracts/execution-receipt.v1.1.schema.json").read_text(encoding="utf-8")
+    )
+    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    if next(validator.iter_errors(receipt), None) is not None:
+        raise AssertionError("observed execution receipt requires the typed v1.1 contract")
+    content = json.dumps(
+        receipt, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    if "sha256:" + sha256(content).hexdigest() != observed_content_digest:
+        raise AssertionError("observed execution receipt requires its exact recorded evidence")
+    if receipt["evidence_mode"] != "observed" or receipt["assurance_stage"] != "verified":
+        raise AssertionError("observed execution receipt requires its verified observation state")
+    if not set(current_artifact_digests).issubset(receipt["artifact_digests"]):
+        raise AssertionError("current artifacts require the receipt's exact observed bindings")
+
+
+def validate_current_database_observations() -> None:
+    """Bind current database and recovery source to the two observed V007 routes."""
+
+    hosted = json.loads(
+        (ROOT / "receipts/hosted-postgresql-v007-proof.json").read_text(encoding="utf-8")
+    )
+    validate_observed_execution_receipt(
+        hosted,
+        observed_content_digest=HOSTED_V007_RECEIPT_CONTENT_DIGEST,
+        current_artifact_digests=tuple(file_digest(ROOT / path) for path in (
+            "release/bounded-caller-bindings.json",
+            "database/flyway-release.json",
+            "database/flyway-artifact-inventory.json",
+            "receipts/postgresql-v007-plan-observations.json",
+            ".github/workflows/ci.yml",
+        )),
+    )
+    role = json.loads((ROOT / "release/repository-role.json").read_text(encoding="utf-8"))
+    validate_hosted_postgresql_coordinate_state(
+        binding_kind=classify_hosted_postgresql_receipt_binding(hosted["version_bindings"]),
+        coordinate_state=role["database_hosted_evidence"]["coordinate_state"],
+    )
+
+    native = json.loads(
+        (ROOT / "receipts/owned-postgresql17-recovery-proof.json").read_text(encoding="utf-8")
+    )
+    # Match the observation harness's path-NUL-content-NUL source coordinate.
+    paths = [ROOT / "scripts/check_database_restart.py", ROOT / "pyproject.toml",
+             ROOT / "uv.lock", *sorted((ROOT / "src").rglob("*.py"))]
+    runtime_digest = sha256()
+    for path in sorted(paths):
+        runtime_digest.update(
+            path.relative_to(ROOT).as_posix().encode("utf-8") + b"\0"
+            + path.read_bytes() + b"\0"
+        )
+    migration_inventory = json.loads(
+        (ROOT / "database/flyway-artifact-inventory.json").read_text(encoding="utf-8")
+    )
+    migration_digests = tuple(
+        file_digest(ROOT / artifact["path"])
+        for artifact in migration_inventory["artifacts"]
+        if artifact["kind"] in {"cluster_role_provisioning", "versioned_migration"}
+    )
+    validate_observed_execution_receipt(
+        native,
+        observed_content_digest=OWNED_PG17_RECEIPT_CONTENT_DIGEST,
+        current_artifact_digests=("sha256:" + runtime_digest.hexdigest(), *migration_digests),
+    )
 
 
 def validate_promotion_lifecycle(
@@ -821,9 +905,9 @@ def validate_promotion_lifecycle(
     }
     expected_development_observation = {
         "scope": "database_artifacts",
-        "coordinate_state": "v005_observed_successor_candidate",
+        "coordinate_state": "v007_database_artifacts_observed",
         "flyway_version": "13.8.1",
-        "receipt": "receipts/hosted-postgresql-proof.json",
+        "receipt": "receipts/hosted-postgresql-v007-proof.json",
     }
     if (
         machine.get("lifecycle_state") != "post_release_development"
@@ -1358,9 +1442,9 @@ def validate_manifests() -> None:
         set(database_hosted_evidence)
         != {"receipt_path", "coordinate_state", "promotion_signal"}
         or database_hosted_evidence.get("receipt_path")
-        != "receipts/hosted-postgresql-proof.json"
+        != "receipts/hosted-postgresql-v007-proof.json"
         or database_hosted_evidence.get("coordinate_state")
-        != "v005_observed_successor_candidate"
+        != "v007_database_artifacts_observed"
         or database_hosted_evidence.get("promotion_signal")
         != "implementation-validation"
     ):
@@ -1622,10 +1706,6 @@ def validate_manifests() -> None:
         )
     hosted_bindings = hosted_receipt.get("version_bindings", {})
     binding_kind = classify_hosted_postgresql_receipt_binding(hosted_bindings)
-    validate_hosted_postgresql_coordinate_state(
-        binding_kind=binding_kind,
-        coordinate_state=str(database_hosted_evidence.get("coordinate_state", "")),
-    )
     flyway_generation_scenarios = {
         "SCN-DB-FLYWAY-MIGRATOR-AUTHORITY",
         "SCN-DB-FLYWAY-ARTIFACT-INVENTORY",
@@ -1686,7 +1766,7 @@ def validate_manifests() -> None:
         validate_current_hosted_postgresql_receipt_contract(hosted_receipt)
         current_bindings = {
             "repository": "0.3.2",
-            "repository_commit": CURRENT_DATABASE_HOSTED_COMMIT,
+            "repository_commit": RETAINED_V005_HOSTED_COMMIT,
             "workflow_run": (
                 "https://github.com/driftframestudios/"
                 "lims-eln-enterprise-implementation/actions/runs/37071257377"
@@ -1727,6 +1807,8 @@ def validate_manifests() -> None:
             "hosted PostgreSQL receipt requires the privileged-routine and "
             "fenced-worker scenarios"
         )
+
+    validate_current_database_observations()
 
 
 def validate_synthetic_fixtures() -> None:

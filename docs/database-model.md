@@ -121,5 +121,14 @@ order by child, parent, definition;
 
 Compare the returned keys to the versioned migrations and each edge above.
 Current local catalog inspection observed 20 tables and 26 foreign keys on
-PostgreSQL 18.6 through direct transactional SQL; the retained hosted receipt
-continues to identify its PostgreSQL 17/Flyway V005 observation.
+PostgreSQL 18.6 through direct transactional SQL. The
+[V007 hosted receipt](../receipts/hosted-postgresql-v007-proof.json) records the
+PostgreSQL 17.10/Flyway clean and upgrade controls. Its
+[normalized plan observations](../receipts/postgresql-v007-plan-observations.json)
+record both ordinary-role runs with 1,000 specimens and 10,000 pending messages.
+Each selected an index-only outbox scan with 10 rows per loop over 1,000 loops and
+12,000 outbox shared-buffer hits. The emitted sample records scan type and
+buffers; the separate catalog test verifies the named partial index's keys,
+predicate, owner and final schema privilege boundary. Timings describe those
+synthetic runs. Complete summary materialization retains its O(N) result and
+allocation cost.
