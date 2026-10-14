@@ -111,9 +111,43 @@ def assert_expected_specimen(case, document, specimen_id):
     measurement = receipt["normalized_observation"]
     case.assertEqual(
         (measurement["analyte"], measurement["value"], measurement["unit"]),
-        ("synthetic-dna", "12.5", "ng/uL"),
+        ("SYNTHETIC-DNA", "12.5", "ng/uL"),
     )
     case.assertIs(document["projection"]["reconciled"], True)
+
+
+class GoldenExpectationTests(unittest.TestCase):
+    def specimen(self):
+        return {
+            "tenant_id": "SYN-TENANT-A", "specimen_id": "SYN-ORACLE-01",
+            "state": "released", "version": 5,
+            "events": [{}, {}, {}, {}, {"event_type": "specimen.release"}],
+            "custody": {"location": "SYN-LAB-A/RECEIVING"},
+            "instrument_receipts": [{
+                "raw_sha256": "b3712720cf47cec3ab2d3f51ca6949d848866592494a0271f84d31b11828bae3",
+                "normalized_observation": {
+                    "analyte": "SYNTHETIC-DNA", "value": "12.5", "unit": "ng/uL",
+                },
+            }],
+            "projection": {"reconciled": True},
+        }
+
+    def test_normalized_literal_preserves_lowercase_raw_identity(self):
+        self.assertEqual(RAW, b'{"analyte":"synthetic-dna","value":"12.5","unit":"ng/uL"}')
+        assert_expected_specimen(self, self.specimen(), "SYN-ORACLE-01")
+
+    def test_lowercase_measurement_fails_the_independent_oracle(self):
+        document = self.specimen()
+        document["instrument_receipts"][0]["normalized_observation"]["analyte"] = "synthetic-dna"
+        with self.assertRaises(AssertionError):
+            assert_expected_specimen(self, document, "SYN-ORACLE-01")
+
+    def test_normalized_bytes_cannot_replace_the_raw_digest(self):
+        document = self.specimen()
+        normalized = RAW.replace(b"synthetic-dna", b"SYNTHETIC-DNA")
+        document["instrument_receipts"][0]["raw_sha256"] = sha256(normalized).hexdigest()
+        with self.assertRaises(AssertionError):
+            assert_expected_specimen(self, document, "SYN-ORACLE-01")
 
 
 class LauncherCompositionTests(unittest.TestCase):
