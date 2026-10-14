@@ -92,6 +92,9 @@ the selected dependency and ordinary database identity.
 
 The [local entry runbook](docs/runbooks/local-workbench-entry.v0.1.md) supplies
 configuration, isolation, first-download versus repeat execution, and recovery.
+The [owned database restart proof](docs/runbooks/owned-database-restart.v0.1.md)
+creates private disposable clusters to exercise fast shutdown, immediate crash
+recovery, retained state, replay, and pending-transaction rollback.
 The [package handoff](docs/runbooks/program-package-handoff.v0.1.md) owns exact
 Program 0.4.0 receiving evidence. This `develop` entry is a candidate for the
 next release; the signed release baseline retains its original scope.
