@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:driftframe:lims-eln:workbench-capabilities:1.0.0",
+  "title": "Workbench composition capabilities",
+  "description": "A bounded description of the composed local-reference application. Dependency readiness and caller authority have separate observation routes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_id", "runtime", "shared_contracts", "operations", "administrative_interface", "readiness_path"],
+  "properties": {
+    "contract_id": {"const": "urn:driftframe:lims-eln:workbench-capabilities:1.0.0"},
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state_adapter", "state_lifetime", "access_scope"],
+      "properties": {
+        "state_adapter": {"enum": ["process_local", "postgresql"]},
+        "state_lifetime": {"enum": ["process", "database"]},
+        "access_scope": {"const": "local_reference"}
+      },
+      "oneOf": [
+        {"properties": {"state_adapter": {"const": "process_local"}, "state_lifetime": {"const": "process"}}},
+        {"properties": {"state_adapter": {"const": "postgresql"}, "state_lifetime": {"const": "database"}}}
+      ]
+    },
+    "shared_contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_package_version", "expected_contract_version", "version_compatible"],
+      "properties": {
+        "expected_package_version": {"type": "string", "maxLength": 32, "pattern": "^[0-9]+[.][0-9]+[.][0-9]+(?![\\s\\S])"},
+        "expected_contract_version": {"type": "string", "maxLength": 32, "pattern": "^[0-9]+[.][0-9]+[.][0-9]+(?![\\s\\S])"},
+        "version_compatible": {"type": "boolean"}
+      }
+    },
+    "operations": {
+      "const": {
+        "summary": {"method": "GET", "path": "/api/workbench/summary", "tenant_context": "header_and_query"},
+        "specimen": {"method": "GET", "path": "/api/workbench/specimens/{specimen_id}", "tenant_context": "header_and_query"},
+        "observation": {"method": "GET", "path": "/api/workbench/observations/{run_id}", "tenant_context": "header_and_query"},
+        "golden_specimen": {"method": "POST", "path": "/api/workbench/golden-runs", "tenant_context": "header_and_body"},
+        "instrument_recovery": {"method": "POST", "path": "/api/workbench/instrument-recovery-runs", "tenant_context": "header_and_body"}
+      }
+    },
+    "administrative_interface": {"const": "python_library"},
+    "readiness_path": {"const": "/health/ready"}
+  }
+}

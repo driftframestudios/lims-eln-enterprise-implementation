@@ -19,7 +19,9 @@ from ..idempotency import IdempotencyError, TransactionRetryRequired
 from ..model import DomainError
 from ..ports import VendorRevisionConflict
 from ..vendors import AmbiguousOutcomePending
+from .capabilities import describe_workbench, require_state_adapter
 from .service import ObservationAbsent, SpecimenAbsent, WorkbenchService
+from .shared_contracts import contract_available
 
 
 _PACKAGE_ROOT = Path(__file__).resolve().parent
@@ -73,6 +75,7 @@ class WorkbenchPort(Protocol):
 def create_app(service: WorkbenchPort | None = None) -> FastAPI:
     """Create an application with an injectable state composition root."""
     workbench = service or WorkbenchService()
+    state_adapter = require_state_adapter(workbench.state_adapter)
     templates = Jinja2Templates(directory=str(_PACKAGE_ROOT / "templates"))
     app = FastAPI(
         title="LIMS/ELN Golden Specimen Workbench",
@@ -156,6 +159,16 @@ def create_app(service: WorkbenchPort | None = None) -> FastAPI:
             headers={"Cache-Control": "no-store"},
         )
 
+    def capability_document() -> dict[str, Any]:
+        return describe_workbench(state_adapter, package_compatible=contract_available())
+
+    @app.get("/api/workbench/capabilities")
+    def capabilities() -> JSONResponse:
+        return JSONResponse(
+            content=capability_document(),
+            headers={"Cache-Control": "no-store"},
+        )
+
     @app.get("/workbench", include_in_schema=False)
     def workbench_page(request: Request) -> Any:
         return templates.TemplateResponse(
@@ -166,7 +179,9 @@ def create_app(service: WorkbenchPort | None = None) -> FastAPI:
                 "default_actor": "SYN-ACTOR-01",
                 "default_scientist": "SYN-SCIENTIST-01",
                 "default_quality_actor": "SYN-QUALITY-01",
+                "capabilities": capability_document(),
             },
+            headers={"Cache-Control": "no-store"},
         )
 
     @app.get("/api/workbench/summary")

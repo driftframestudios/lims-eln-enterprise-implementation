@@ -1,0 +1,7 @@
+{
+  "source_repository": "driftframestudios/lims-eln-program-specification",
+  "source_commit": "17ebe3f04b05fa6ae82bc1856cc298703f28aa58",
+  "source_path": "schemas/workbench-capabilities.v1.schema.json",
+  "schema_sha256": "sha256:c4b5859d2b543b26970fb3b5b577b11e5f50415be7484c891257f4d2d0d83808",
+  "contract_id": "urn:driftframe:lims-eln:workbench-capabilities:1.0.0"
+}
