@@ -7,6 +7,7 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
+import json
 from threading import RLock
 from typing import Any, Callable, Mapping
 
@@ -24,6 +25,7 @@ from ..model import (
     DomainEvent,
     SpecimenAggregate,
     canonical_digest,
+    canonical_json,
     require_aware_utc,
 )
 from ..store import InMemoryOutbox, InMemorySpecimenRepository
@@ -83,7 +85,7 @@ class SpecimenView:
             "specimen_id": self.aggregate.specimen_id,
             "state": self.aggregate.state.value,
             "version": self.aggregate.version,
-            "attributes": dict(self.aggregate.attributes),
+            "attributes": json.loads(canonical_json(self.aggregate.attributes)),
             "events": [_event_document(event) for event in self.aggregate.events],
             "custody": _custody_document(self.custody),
             "instrument_receipts": [
@@ -597,7 +599,7 @@ def _event_document(event: DomainEvent) -> dict[str, Any]:
         "command_id": event.command_id,
         "command_digest": event.command_digest,
         "occurred_at": require_aware_utc(event.occurred_at).isoformat(),
-        "payload": dict(event.payload),
+        "payload": json.loads(canonical_json(event.payload)),
         "reason_code": event.reason_code,
     }
 
