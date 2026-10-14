@@ -166,7 +166,7 @@ class DbApiInvocationLedger:
     """Persist exact replay ownership with lease-token and fencing-token CAS."""
 
     INSERT = """
-        insert into bounded_call_invocation (
+        insert into public.bounded_call_invocation (
             tenant_id, call_id, invocation_sha256, operation_name,
             operation_version, operation_contract_sha256, state,
             lease_token, fencing_token, lease_expires_at_utc
@@ -184,12 +184,12 @@ class DbApiInvocationLedger:
             operation_contract_sha256, state, lease_token::text,
             fencing_token, lease_expires_at_utc, output_document,
             result_sha256, recovery_reason
-        from bounded_call_invocation
+        from public.bounded_call_invocation
         where tenant_id = %s and call_id = %s
         for update
     """
     EXPIRE_TO_RECOVERY = """
-        update bounded_call_invocation
+        update public.bounded_call_invocation
         set state = 'recovery_required',
             recovery_reason = 'lease_expired_before_completion'
         where tenant_id = %s
@@ -202,7 +202,7 @@ class DbApiInvocationLedger:
         returning recovery_reason
     """
     COMPLETE = """
-        update bounded_call_invocation
+        update public.bounded_call_invocation
         set state = 'completed',
             output_document = %s::jsonb,
             result_sha256 = %s,
@@ -218,18 +218,11 @@ class DbApiInvocationLedger:
         returning call_id
     """
     RELEASE = """
-        delete from bounded_call_invocation
-        where tenant_id = %s
-          and call_id = %s
-          and invocation_sha256 = %s
-          and state = 'in_progress'
-          and lease_expires_at_utc > %s
-          and lease_token = %s::uuid
-          and fencing_token = %s
-        returning call_id
+        select released_call_id
+          from public.release_bounded_call_invocation(%s, %s, %s, %s::uuid, %s)
     """
     MARK_RECOVERY = """
-        update bounded_call_invocation
+        update public.bounded_call_invocation
         set state = 'recovery_required',
             recovery_reason = %s
         where tenant_id = %s
@@ -442,7 +435,6 @@ class DbApiInvocationLedger:
         lease_token: str,
         fencing_token: int,
     ) -> None:
-        released_at = require_aware_utc(self._clock())
         with _transaction(self._connection_factory) as cursor:
             PostgresTenantBinding(self._tenant_context_provider(tenant_id)).bind(
                 cursor,
@@ -454,7 +446,6 @@ class DbApiInvocationLedger:
                     tenant_id,
                     call_id,
                     content_digest,
-                    released_at,
                     lease_token,
                     fencing_token,
                 ),
@@ -502,7 +493,7 @@ class DbApiCallReceiptStore:
     """Append call receipts through a fixed DB-API statement and tenant binding."""
 
     INSERT = """
-        insert into bounded_call_receipt (
+        insert into public.bounded_call_receipt (
             receipt_id, call_id, caller_id, actor_id, tenant_id,
             operation_name, operation_version, operation_contract_sha256,
             effect_class, resource_ids, payload_sha256, invocation_sha256,

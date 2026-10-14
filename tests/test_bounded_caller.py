@@ -758,7 +758,7 @@ class FakeCursor:
 
     def execute(self, operation: str, parameters: tuple[object, ...]) -> None:
         self.executions.append((operation, parameters))
-        if self.fail_insert and "insert into bounded_call_receipt" in operation:
+        if self.fail_insert and "insert into public.bounded_call_receipt" in operation:
             raise RuntimeError("synthetic insert failure")
 
     def fetchone(self) -> tuple[object, ...] | None:
@@ -838,7 +838,7 @@ class ProductionReceiptAdapterTests(unittest.TestCase):
         self.assertEqual(connection.commits, 1)
         self.assertEqual(connection.rollbacks, 0)
         self.assertEqual(json.loads(cursor.executions[0][1][0])["tenant_id"], TENANT)
-        self.assertIn("insert into bounded_call_receipt", cursor.executions[1][0])
+        self.assertIn("insert into public.bounded_call_receipt", cursor.executions[1][0])
         self.assertTrue(cursor.closed)
         self.assertTrue(connection.closed)
 

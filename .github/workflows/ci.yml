@@ -234,10 +234,10 @@ jobs:
           SQL
 
       - name: Prove live tenant, custody, and outbox invariants
-        run: python3 -m unittest tests.test_postgres_integration -v
+        run: python3 -m unittest tests.test_postgres_integration tests.test_durable_invocation_postgres -v
 
   postgres-upgrade:
-    name: PostgreSQL 17 migration 003 through 005 upgrade and replay proof
+    name: PostgreSQL 17 migration 003 through current head upgrade and replay proof
     if: ${{ vars.ENABLE_GITHUB_ACTIONS == 'true' && inputs.confirm_run }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -271,6 +271,7 @@ jobs:
     env:
       PYTHONPATH: src
       LIMS_TEST_POSTGRES_ADMIN_DSN: postgresql://laboratory_bootstrap:synthetic-ci-bootstrap-password@127.0.0.1:5432/laboratory
+      LIMS_TEST_POSTGRES_APP_DSN: postgresql://laboratory_app:synthetic-ci-app-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_UPGRADE_OUTBOX_DSN: postgresql://laboratory_outbox_worker:synthetic-ci-outbox-password@127.0.0.1:5432/laboratory
       LIMS_TEST_POSTGRES_UPGRADE_RECOVERY_DSN: postgresql://laboratory_outbox_recovery_operator:synthetic-ci-recovery-password@127.0.0.1:5432/laboratory
       LIMS_TEST_TENANT_HMAC_HEX: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -494,6 +495,8 @@ jobs:
         run: |
           psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --set ON_ERROR_STOP=1 <<'SQL'
+          alter role laboratory_app
+              password 'synthetic-ci-app-password';
           alter role laboratory_outbox_worker
               password 'synthetic-ci-outbox-password';
           alter role laboratory_outbox_recovery_operator
@@ -512,6 +515,7 @@ jobs:
         run: >-
           python3 -m unittest
           tests.test_postgres_integration.PostgresUpgradeBoundaryIntegrationTests
+          tests.test_durable_invocation_postgres
           -v
 
       - name: Prove clean and upgraded schema convergence
