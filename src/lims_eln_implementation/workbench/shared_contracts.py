@@ -9,7 +9,7 @@ import json
 from typing import Any, Mapping
 
 
-EXPECTED_PACKAGE_VERSION = "0.4.0"
+EXPECTED_PACKAGE_VERSION = "0.5.0"
 EXPECTED_CONTRACT_VERSION = "1.0.0"
 
 
@@ -239,7 +239,7 @@ def _contracts_module() -> Any:
     except ModuleNotFoundError as error:
         raise SharedContractUnavailable(
             "shared observation generation requires "
-            "lims-eln-program-specification 0.4.0; install the released contract "
+            "lims-eln-program-specification 0.5.0; install the released contract "
             "package for the integrated constellation encounter"
         ) from error
     package_version = getattr(contracts, "__version__", "unversioned")

@@ -74,3 +74,9 @@ the changed behavior and carry its result to the receiving PR.
 
 Return to the [Enterprise overview](../README.md) or the
 [constellation starting guide](https://github.com/driftframestudios/lims-eln-program-specification/blob/main/docs/README.md).
+
+## Offline insurance and administrative study
+
+[Run the offline administrative journey](offline-administrative-journey.md) to
+inspect exact catalog lookup, reviewed policy inputs, paired output comparisons,
+and complete local replay using the packaged synthetic examples.

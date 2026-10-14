@@ -6,37 +6,37 @@
     "repository": "driftframestudios/lims-eln-program-specification",
     "distribution_name": "lims-eln-program-specification",
     "import_name": "lims_eln_contracts",
-    "package_version": "0.4.0",
+    "package_version": "0.5.0",
     "contract_version": "1.0.0",
-    "source_commit": "d8f41d0ce98a75120c99f0a23d00796ae8a8b913",
+    "source_commit": "43a687464b3803a7bcb88d1dcdc4ea39009904de",
     "source_identity": {
       "scope": [
         "pyproject.toml",
         "src/lims_eln_contracts"
       ],
       "algorithm": "path-length-bytes-sha256-v1",
-      "digest": "sha256:41b46ebf96cff4192984b8b38f5fd4c4b55a312fda265d24f5329170ece5ab47"
+      "digest": "sha256:d0c407564024f68dd24ca3f6ddb8bea1d04283b06edb5eedbc146a525df51bf7"
     },
-    "requirement": "lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@d8f41d0ce98a75120c99f0a23d00796ae8a8b913",
+    "requirement": "lims-eln-program-specification @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@43a687464b3803a7bcb88d1dcdc4ea39009904de",
     "consumer_conformance": {
       "state": "observed",
       "environment": "clean Python 3.12 environment",
       "command": "python3 scripts/validate_received_contracts.py --require-installed-program --program-source ../lims-eln-program-specification",
       "observed_values": {
-        "distribution_version": "0.4.0",
-        "import_version": "0.4.0",
+        "distribution_version": "0.5.0",
+        "import_version": "0.5.0",
         "contract_version": "1.0.0",
         "direct_url": "https://github.com/driftframestudios/lims-eln-program-specification.git",
-        "direct_url_requested_revision": "d8f41d0ce98a75120c99f0a23d00796ae8a8b913",
-        "direct_url_commit": "d8f41d0ce98a75120c99f0a23d00796ae8a8b913",
-        "source_digest": "sha256:41b46ebf96cff4192984b8b38f5fd4c4b55a312fda265d24f5329170ece5ab47",
+        "direct_url_requested_revision": "43a687464b3803a7bcb88d1dcdc4ea39009904de",
+        "direct_url_commit": "43a687464b3803a7bcb88d1dcdc4ea39009904de",
+        "source_digest": "sha256:d0c407564024f68dd24ca3f6ddb8bea1d04283b06edb5eedbc146a525df51bf7",
         "operation_count": 3,
         "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
         "observation_producers": [
           "implementation",
           "simulation"
         ],
-        "schema_count": 9,
+        "schema_count": 11,
         "administrative_resources": [
           "canonical_bundle",
           "adapter",
@@ -45,8 +45,8 @@
         ]
       },
       "observations": [
-        "installed distribution version is 0.4.0",
-        "lims_eln_contracts.__version__ is 0.4.0",
+        "installed distribution version is 0.5.0",
+        "lims_eln_contracts.__version__ is 0.5.0",
         "lims_eln_contracts.CONTRACT_VERSION is 1.0.0",
         "the PEP 610 source URL, requested revision, and commit match the reviewed source",
         "the scoped package source digest matches the reviewed binding",
