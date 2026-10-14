@@ -57,3 +57,10 @@ under Enterprise #68. Its source checks precede the separately activated local
 journey. Enterprise #60 retains administrative durability and lifecycle modes.
 The broader shell and navigation continue under
 [Enterprise #62](https://github.com/driftframestudios/lims-eln-enterprise-implementation/issues/62).
+
+## Receive a database lifecycle record
+
+The [lifecycle receiver](database-lifecycle-receiver.md) checks a separately
+pinned Program companion against Enterprise-authored ownership, history and
+capability counterexamples. It reports documentary admission; the launcher
+owns actual resource operations and configured observations.

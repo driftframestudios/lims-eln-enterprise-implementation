@@ -1,0 +1,2 @@
+# Source-only lifecycle receiving profile; the application retains its own lock.
+lims-eln-program-specification[lifecycle] @ git+https://github.com/driftframestudios/lims-eln-program-specification.git@ea0140036a3392557eed78124cdf9e3831bff999

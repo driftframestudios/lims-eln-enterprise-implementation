@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:driftframe:lims-eln:database-lifecycle-profile:1.0.0",
+  "title": "Database lifecycle profile and operation record",
+  "description": "One named database, its requested lifecycle, declared ownership, and separately recorded observations. Semantic admission is owned by scripts/database_lifecycle.py; execution and authority verification remain runtime-owned.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_ref", "schema_version", "source", "profile_ref", "evidence_class", "invocation", "requested_profile", "resource", "composition", "readiness", "operations", "unresolved_resource_refs"],
+  "properties": {
+    "schema_ref": {"const": "urn:driftframe:lims-eln:database-lifecycle-profile:1.0.0"},
+    "schema_version": {"const": "1.0.0"},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_ref", "revision"],
+      "properties": {
+        "source_ref": {"$ref": "#/$defs/semanticRef"},
+        "revision": {"type": "string", "pattern": "^(?!0{40}(?![\\s\\S]))[a-f0-9]{40}(?![\\s\\S])", "maxLength": 40}
+      }
+    },
+    "profile_ref": {"$ref": "#/$defs/semanticRef"},
+    "evidence_class": {"enum": ["authored_example", "caller_supplied_observation"]},
+    "invocation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["invocation_ref", "owner_ref"],
+      "properties": {
+        "invocation_ref": {"$ref": "#/$defs/semanticRef"},
+        "owner_ref": {"$ref": "#/$defs/semanticRef"}
+      }
+    },
+    "requested_profile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["disposition", "engine", "engine_major", "migration_ref", "credential_receiver_class", "permitted_actions", "cleanup_policy", "recovery_ref"],
+      "properties": {
+        "disposition": {"enum": ["disposable", "retained", "external"]},
+        "engine": {"const": "postgresql"},
+        "engine_major": {"type": "integer", "minimum": 1, "maximum": 99},
+        "migration_ref": {"$ref": "#/$defs/semanticRef"},
+        "credential_receiver_class": {"enum": ["invocation_runtime", "operator_runtime", "external_owner_runtime"]},
+        "permitted_actions": {"type": "array", "minItems": 1, "maxItems": 7, "uniqueItems": true, "items": {"$ref": "#/$defs/action"}},
+        "cleanup_policy": {"enum": ["current_invocation_owned", "explicit_owner_decision", "external_owner_only"]},
+        "recovery_ref": {"$ref": "#/$defs/semanticRef"}
+      }
+    },
+    "resource": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resource_ref", "owner_ref", "creation_owner_ref", "created_by_invocation_ref", "initial_state", "state"],
+      "properties": {
+        "resource_ref": {"$ref": "#/$defs/semanticRef"},
+        "owner_ref": {"$ref": "#/$defs/semanticRef"},
+        "creation_owner_ref": {"$ref": "#/$defs/semanticRef"},
+        "created_by_invocation_ref": {"$ref": "#/$defs/optionalRef"},
+        "initial_state": {"$ref": "#/$defs/resourceState"},
+        "state": {"$ref": "#/$defs/resourceState"}
+      }
+    },
+    "composition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["state", "capability_ref", "capability_digest"],
+      "properties": {
+        "state": {"enum": ["not_observed", "observed"]},
+        "capability_ref": {"$ref": "#/$defs/optionalRef"},
+        "capability_digest": {"anyOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]}
+      },
+      "allOf": [{
+        "if": {"properties": {"state": {"const": "not_observed"}}},
+        "then": {"properties": {"capability_ref": {"type": "null"}, "capability_digest": {"type": "null"}}},
+        "else": {"properties": {"capability_ref": {"$ref": "#/$defs/semanticRef"}, "capability_digest": {"$ref": "#/$defs/digest"}}}
+      }]
+    },
+    "readiness": {
+      "type": "object", "additionalProperties": false,
+      "required": ["state", "observation_ref"],
+      "properties": {
+        "state": {"enum": ["not_observed", "ready", "unready"]},
+        "observation_ref": {"$ref": "#/$defs/optionalRef"}
+      },
+      "allOf": [{
+        "if": {"properties": {"state": {"const": "not_observed"}}},
+        "then": {"properties": {"observation_ref": {"type": "null"}}},
+        "else": {"properties": {"observation_ref": {"$ref": "#/$defs/semanticRef"}}}
+      }]
+    },
+    "operations": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/operation"}},
+    "unresolved_resource_refs": {"type": "array", "maxItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/semanticRef"}}
+  },
+  "$defs": {
+    "semanticRef": {"type": "string", "maxLength": 68, "pattern": "^ref:[a-z][a-z0-9-]{0,63}(?![\\s\\S])"},
+    "optionalRef": {"anyOf": [{"$ref": "#/$defs/semanticRef"}, {"type": "null"}]},
+    "digest": {"type": "string", "maxLength": 71, "pattern": "^sha256:[a-f0-9]{64}(?![\\s\\S])"},
+    "action": {"enum": ["create", "migrate", "restore", "retain", "cleanup", "inspect", "stop"]},
+    "resourceState": {"enum": ["absent", "present", "retained", "removed", "unresolved"]},
+    "operation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["operation_ref", "action", "from_state", "to_state", "outcome", "authority", "compatibility", "evidence_ref", "failure_code"],
+      "properties": {
+        "operation_ref": {"$ref": "#/$defs/semanticRef"},
+        "action": {"$ref": "#/$defs/action"},
+        "from_state": {"$ref": "#/$defs/resourceState"},
+        "to_state": {"$ref": "#/$defs/resourceState"},
+        "outcome": {"enum": ["requested", "succeeded", "failed", "unresolved"]},
+        "authority": {
+          "type": "object", "additionalProperties": false,
+          "required": ["owner_ref", "actor_ref", "decision_ref", "basis", "destructive_authorized"],
+          "properties": {
+            "owner_ref": {"$ref": "#/$defs/semanticRef"},
+            "actor_ref": {"$ref": "#/$defs/semanticRef"},
+            "decision_ref": {"$ref": "#/$defs/semanticRef"},
+            "basis": {"enum": ["invocation_owned", "explicit_owner_decision"]},
+            "destructive_authorized": {"type": "boolean"}
+          }
+        },
+        "compatibility": {
+          "type": "object", "additionalProperties": false,
+          "required": ["state", "engine_major", "migration_ref", "observation_ref"],
+          "properties": {
+            "state": {"enum": ["not_observed", "compatible", "incompatible"]},
+            "engine_major": {"type": ["integer", "null"], "minimum": 1, "maximum": 99},
+            "migration_ref": {"$ref": "#/$defs/optionalRef"},
+            "observation_ref": {"$ref": "#/$defs/optionalRef"}
+          },
+          "allOf": [{
+            "if": {"properties": {"state": {"const": "not_observed"}}},
+            "then": {"properties": {"engine_major": {"type": "null"}, "migration_ref": {"type": "null"}, "observation_ref": {"type": "null"}}},
+            "else": {"properties": {"engine_major": {"type": "integer"}, "migration_ref": {"$ref": "#/$defs/semanticRef"}, "observation_ref": {"$ref": "#/$defs/semanticRef"}}}
+          }]
+        },
+        "evidence_ref": {"$ref": "#/$defs/optionalRef"},
+        "failure_code": {"enum": [null, "create_failed", "migrate_failed", "restore_failed", "retain_failed", "cleanup_failed", "inspect_failed", "stop_failed", "resource_unresolved"]}
+      }
+    }
+  }
+}

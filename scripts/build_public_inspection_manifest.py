@@ -90,6 +90,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
         (
             "Makefile",
             "scripts/*.py",
+            "requirements-lifecycle.txt",
             "tests/*.py",
             ".github/workflows/*.yml",
         ),
