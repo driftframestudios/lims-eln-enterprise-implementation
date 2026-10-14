@@ -453,9 +453,16 @@ jobs:
           run_flyway validate
           run_flyway info
           run_flyway migrate
+          expected_migrations="$(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          inventory = json.loads(Path('database/flyway-artifact-inventory.json').read_text())
+          print(sum(artifact['kind'] == 'versioned_migration' for artifact in inventory['artifacts']))
+          PY
+          )"
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
-            --command 'select count(*) from public.flyway_schema_history where version is not null and success')" = "5"
+            --command 'select count(*) from public.flyway_schema_history where version is not null and success')" = "$expected_migrations"
           test "$(psql "$LIMS_TEST_POSTGRES_ADMIN_DSN" --no-psqlrc \
             --tuples-only --no-align --set ON_ERROR_STOP=1 \
             --command "select count(*) from public.transactional_outbox where tenant_id = 'SYN-UPGRADE-TENANT' and delivery_state = 'ready' and delivery_attempts = 0 and fencing_token = 0")" = "2"
