@@ -124,6 +124,13 @@ crash recovery, in-flight commit loss, restore and failover retain their own
 acceptance. HTML parsing observes authored text without executing scripts;
 renew browser evidence when visitor layout or interaction changes.
 
+The harness holds a listening loopback socket through child startup, requests
+and shutdown. The existing launcher passes its inherited `--fd` to Uvicorn;
+the child receives only that descriptor through `pass_fds`. Kernel socket
+ownership keeps the HTTP endpoint attached to this invocation before the
+Golden transaction. Liveness then observes whether the owned server can answer.
+This native inherited-descriptor route uses the existing POSIX local profile.
+
 Each child has a bounded startup and termination wait. Only the test's child
 processes are stopped. Logs, request, responses and failure traces remain in
 protected output. A failed stage ends the journey and preserves its checkpoint;
@@ -135,6 +142,15 @@ for approval before a repair or another configured attempt.
 If diagnostic storage also fails, the public report retains the bounded stage
 failure and names the storage limitation. The original failure remains available
 in local exception context; private error text stays outside the public report.
+
+Child cleanup encloses acquisition and parent log closure. Both artifacts and
+launcher logs release their raw descriptor when file-object construction fails.
+Focused counterexamples cover log-close failure, termination escalation,
+descriptor wrapping and competing attempts to bind the owned listener. The
+ordinary source composition tests declare exact package and contract versions
+through doubles, so the lightweight `test` profile remains sufficient; incompatible
+versions keep their explicit cases. Configured execution continues to receive
+the real installed Program package and PostgreSQL connection.
 
 ## Checkpoint 4: review, assurance handoff and owned cleanup
 

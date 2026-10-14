@@ -1,7 +1,7 @@
 {
   "artifact_groups": [
     {
-      "aggregate_sha256": "sha256:15b6ff28d487e0a43dac3fe4ddbf99f7531c5837e903c843a3dbda83f3434aa9",
+      "aggregate_sha256": "sha256:78e892fbb0be2819d4cf453f129dbeeca927fc2992436b979835145a056ae085",
       "artifacts": [
         {
           "path": ".python-version",
@@ -160,8 +160,8 @@
         },
         {
           "path": "src/lims_eln_implementation/workbench/cli.py",
-          "sha256": "sha256:7c40607ccfb45f32f0392b96f4bbc205c9ae3c85e93dd71686ca697d2e61ee70",
-          "size_bytes": 1277
+          "sha256": "sha256:19ad991a50b6fac41a647b252f393609fd5a1219989691abb1aac2327aa16a04",
+          "size_bytes": 1650
         },
         {
           "path": "src/lims_eln_implementation/workbench/export.py",
@@ -444,7 +444,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:f2f0c213e3391c51517158d75598b249ea20fb5a60b1db20405c27a364a110f9",
+      "aggregate_sha256": "sha256:673ce91fbed034a89e904294210a33fe6c7eb7706b4d04880274096062194e5f",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -553,8 +553,8 @@
         },
         {
           "path": "tests/test_configured_workbench_capabilities.py",
-          "sha256": "sha256:879e3135d0bdca7bf6361979b40bb2f4d44700df2ab6675b850f0f79c19636c5",
-          "size_bytes": 23943
+          "sha256": "sha256:7f7f7bd1aa503d30a535f4933195e1813ece43aef5ae2c24dc8d09ce563cae5b",
+          "size_bytes": 33075
         },
         {
           "path": "tests/test_custody_instrument.py",
@@ -723,7 +723,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:bb6f0e5f8ced04ab815963bedcc9fe6f734c68d5f7a23cc4af114d770719df4d",
+      "aggregate_sha256": "sha256:87403bb4fe33f1e606614822354d82cf8bbc1aa6189e7db4d31bc6dd325a17e5",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -872,8 +872,8 @@
         },
         {
           "path": "docs/runbooks/configured-capability-proof.v0.1.md",
-          "sha256": "sha256:6f4efa019784b3877a2ab007858df3d3c451fcbbdaebdf43fd104c437a1f0e4e",
-          "size_bytes": 9801
+          "sha256": "sha256:1e2bbdc802bd86186f2ef7f5332a8047a223e70ccb2338c8eee6fa71e0bd5723",
+          "size_bytes": 10870
         },
         {
           "path": "docs/runbooks/local-container-entry.v0.1.md",
@@ -1064,7 +1064,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:786fa663636bbf03109bf50de0952d70f88ddbfbb42e997f4e13108177c1eee8",
+    "aggregate_sha256": "sha256:287dd87db7c6965ca793d80b4e895a089b30d95826142072f8171621871ce9d9",
     "kind": "content_addressed_artifact_inventory"
   }
 }

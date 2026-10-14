@@ -21,7 +21,7 @@ import time
 import traceback
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, call, patch
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 from uuid import uuid4
@@ -118,7 +118,7 @@ def assert_expected_specimen(case, document, specimen_id):
 
 class LauncherCompositionTests(unittest.TestCase):
     @contextmanager
-    def configured_factory(self, connect):
+    def configured_factory(self, connect, *, package_version, contract_version):
         with tempfile.TemporaryDirectory() as directory:
             password = Path(directory) / "password"
             key = Path(directory) / "key"
@@ -133,6 +133,10 @@ class LauncherCompositionTests(unittest.TestCase):
             }
             with patch.dict(os.environ, environment, clear=True), patch.dict(
                 sys.modules, {"psycopg": SimpleNamespace(connect=connect)}
+            ), patch.object(
+                shared_contracts, "import_module", return_value=SimpleNamespace(
+                    __version__=package_version, CONTRACT_VERSION=contract_version,
+                ),
             ):
                 yield runtime.create_configured_app(), environment
 
@@ -140,7 +144,10 @@ class LauncherCompositionTests(unittest.TestCase):
         first = RecordingConnection(ReadinessCursor())
         recovered = RecordingConnection(ReadinessCursor())
         connect = Mock(side_effect=[first, OSError("protected-outage-canary"), recovered])
-        with self.configured_factory(connect) as (app, environment), TestClient(app) as client:
+        with self.configured_factory(
+            connect, package_version=shared_contracts.EXPECTED_PACKAGE_VERSION,
+            contract_version=shared_contracts.EXPECTED_CONTRACT_VERSION,
+        ) as (app, environment), TestClient(app) as client:
             self.assertIsInstance(app.state.workbench, PostgresWorkbenchService)
             document = assert_composition(self, client.get)
             connect.assert_not_called()
@@ -170,13 +177,13 @@ class LauncherCompositionTests(unittest.TestCase):
             (shared_contracts.EXPECTED_PACKAGE_VERSION, "0.0.0"),
         ):
             with self.subTest(package=package_version, contract=contract_version):
-                package = SimpleNamespace(__version__=package_version, CONTRACT_VERSION=contract_version)
                 connect = Mock()
-                with patch.object(shared_contracts, "import_module", return_value=package), patch.object(
-                    runtime, "_read_secret"
-                ) as read_secret:
+                with patch.object(runtime, "_read_secret") as read_secret:
                     with self.assertRaises(runtime.RuntimeConfigurationError) as caught:
-                        with self.configured_factory(connect):
+                        with self.configured_factory(
+                            connect, package_version=package_version,
+                            contract_version=contract_version,
+                        ):
                             self.fail("incompatible factory requires a configuration decision")
                     self.assertEqual(str(caught.exception), "PostgreSQL entry requires the reviewed contracts extra")
                     read_secret.assert_not_called()
@@ -184,7 +191,10 @@ class LauncherCompositionTests(unittest.TestCase):
 
     def test_changed_package_reports_compatibility_separately_from_dependency(self):
         connect = Mock(return_value=RecordingConnection(ReadinessCursor()))
-        with self.configured_factory(connect) as (app, _), TestClient(app) as client:
+        with self.configured_factory(
+            connect, package_version=shared_contracts.EXPECTED_PACKAGE_VERSION,
+            contract_version=shared_contracts.EXPECTED_CONTRACT_VERSION,
+        ) as (app, _), TestClient(app) as client:
             with patch.object(shared_contracts, "import_module", return_value=SimpleNamespace(
                 __version__="0.0.0", CONTRACT_VERSION=shared_contracts.EXPECTED_CONTRACT_VERSION
             )):
@@ -214,6 +224,22 @@ class LocalOnlyRedirects(HTTPRedirectHandler):
         raise RuntimeError("configured proof expects direct local responses")
 
 
+@contextmanager
+def private_output(path):
+    """Transfer an exclusively created descriptor to its file object or release it."""
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        handle = os.fdopen(descriptor, "wb")
+    except BaseException as primary:
+        try:
+            os.close(descriptor)
+        except OSError:
+            primary.add_note("Private output descriptor cleanup requires operator inspection.")
+        raise
+    with handle:
+        yield handle
+
+
 @unittest.skipUnless(
     os.environ.get("LIMS_CONFIGURED_CAPABILITY_PROOF") == "1",
     "configured launcher journey awaits the Issue 68 handoff and owned local database",
@@ -222,8 +248,7 @@ class ConfiguredLauncherJourney(unittest.TestCase):
     """One Golden transaction; own child processes, preserve database and recovery artifacts."""
 
     def private_artifact(self, name, payload):
-        descriptor = os.open(self.output / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(descriptor, "wb") as handle:
+        with private_output(self.output / name) as handle:
             handle.write(payload)
 
     def checkpoint(self, name, document):
@@ -248,49 +273,52 @@ class ConfiguredLauncherJourney(unittest.TestCase):
 
     @contextmanager
     def launcher(self, label, environment):
-        with socket.socket() as reservation:
-            reservation.bind(("127.0.0.1", 0))
-            port = reservation.getsockname()[1]
-        self.origin = f"http://127.0.0.1:{port}"
-        descriptor = os.open(self.output / (label + ".log"), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(descriptor, "wb") as log:
-            process = subprocess.Popen(
-                [sys.executable, "-m", "lims_eln_implementation.workbench.cli",
-                 "--adapter", "postgresql", "--host", "127.0.0.1", "--port", str(port)],
-                cwd=ROOT, env=environment, stdin=subprocess.DEVNULL,
-                stdout=log, stderr=subprocess.STDOUT,
-            )
-        primary = None
-        try:
-            deadline = time.monotonic() + 20
-            while time.monotonic() < deadline:
-                if process.poll() is not None:
-                    raise RuntimeError("launcher exited before liveness")
-                try:
-                    if self.request("/health/live").status_code == 200:
-                        break
-                except (URLError, TimeoutError):
-                    time.sleep(0.1)
-            else:
-                raise RuntimeError("launcher liveness deadline elapsed")
-            yield
-        except BaseException as error:
-            primary = error
-            raise
-        finally:
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            listener.listen(128)
+            port = listener.getsockname()[1]
+            self.origin = f"http://127.0.0.1:{port}"
+            process = None
+            primary = None
             try:
-                if process.poll() is None:
-                    process.terminate()
+                with private_output(self.output / (label + ".log")) as log:
+                    process = subprocess.Popen(
+                        [sys.executable, "-m", "lims_eln_implementation.workbench.cli",
+                         "--adapter", "postgresql", "--host", "127.0.0.1", "--port", str(port),
+                         "--fd", str(listener.fileno())],
+                        cwd=ROOT, env=environment, stdin=subprocess.DEVNULL,
+                        stdout=log, stderr=subprocess.STDOUT,
+                        pass_fds=(listener.fileno(),),
+                    )
+                deadline = time.monotonic() + 20
+                while time.monotonic() < deadline:
+                    if process.poll() is not None:
+                        raise RuntimeError("launcher exited before liveness")
                     try:
-                        process.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        process.kill()
-                        process.wait(timeout=5)
-            except Exception:
-                if primary is not None:
-                    primary.add_note("Owned launcher cleanup requires operator inspection.")
+                        if self.request("/health/live").status_code == 200:
+                            break
+                    except (URLError, TimeoutError):
+                        time.sleep(0.1)
                 else:
-                    raise RuntimeError("owned launcher cleanup remains unresolved") from None
+                    raise RuntimeError("launcher liveness deadline elapsed")
+                yield
+            except BaseException as error:
+                primary = error
+                raise
+            finally:
+                try:
+                    if process is not None and process.poll() is None:
+                        process.terminate()
+                        try:
+                            process.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.wait(timeout=5)
+                except Exception:
+                    if primary is not None:
+                        primary.add_note("Owned launcher cleanup requires operator inspection.")
+                    else:
+                        raise RuntimeError("owned launcher cleanup remains unresolved") from None
 
     def ready(self, status):
         response = self.request("/health/ready")
@@ -426,6 +454,173 @@ class ConfiguredLauncherJourney(unittest.TestCase):
             "database_cleanup": "retained_for_named_owner",
             "completed_at": datetime.now(UTC).isoformat(),
         })
+
+
+class LauncherSocketTests(unittest.TestCase):
+    def test_cli_passes_inherited_listener_to_the_existing_factory(self):
+        with patch.dict(os.environ, {}, clear=True), patch(
+            "sys.argv", ["lims-eln-workbench", "--adapter", "postgresql", "--fd", "27"]
+        ), patch.object(cli.uvicorn, "run") as run:
+            cli.main()
+            self.assertEqual(os.environ["LIMS_WORKBENCH_ADAPTER"], "postgresql")
+        run.assert_called_once_with(
+            "lims_eln_implementation.workbench.runtime:create_configured_app",
+            factory=True, host="127.0.0.1", port=8000, reload=False, fd=27,
+        )
+
+    def test_cli_rejects_negative_listener_descriptor_before_startup(self):
+        with patch.dict(os.environ, {}, clear=True), patch(
+            "sys.argv", ["lims-eln-workbench", "--fd", "-1"]
+        ), patch("sys.stderr", io.StringIO()), patch.object(cli.uvicorn, "run") as run:
+            with self.assertRaises(SystemExit) as stopped:
+                cli.main()
+            self.assertEqual(stopped.exception.code, 2)
+            run.assert_not_called()
+
+    def test_listener_stays_owned_across_child_acquisition_and_requests(self):
+        case = ConfiguredLauncherJourney(
+            "test_launcher_composition_readiness_and_golden_persistence"
+        )
+        child = Mock()
+        child.poll.return_value = None
+        endpoint = None
+
+        def competing_bind_is_rejected():
+            with socket.socket() as competitor:
+                with self.assertRaises(OSError):
+                    competitor.bind(endpoint)
+
+        def acquire(arguments, **options):
+            nonlocal endpoint
+            self.assertEqual(len(options["pass_fds"]), 1)
+            descriptor = options["pass_fds"][0]
+            self.assertEqual(arguments[arguments.index("--fd") + 1], str(descriptor))
+            with socket.fromfd(descriptor, socket.AF_INET, socket.SOCK_STREAM) as inherited:
+                self.assertEqual(inherited.getsockopt(socket.SOL_SOCKET, socket.SO_ACCEPTCONN), 1)
+                endpoint = inherited.getsockname()
+            competing_bind_is_rejected()
+            return child
+
+        def request(path):
+            self.assertEqual(path, "/health/live")
+            competing_bind_is_rejected()
+            return SimpleNamespace(status_code=200)
+
+        with tempfile.TemporaryDirectory() as directory:
+            case.output = Path(directory)
+            with patch.object(subprocess, "Popen", side_effect=acquire), patch.object(
+                case, "request", side_effect=request
+            ):
+                with case.launcher("owned-listener", {}):
+                    competing_bind_is_rejected()
+                    child.terminate.assert_not_called()
+            child.terminate.assert_called_once_with()
+            child.wait.assert_called_once_with(timeout=5)
+            with socket.socket() as successor:
+                successor.bind(endpoint)
+
+
+class ConfiguredProofResourceTests(unittest.TestCase):
+    def case(self):
+        case = ConfiguredLauncherJourney(
+            "test_launcher_composition_readiness_and_golden_persistence"
+        )
+        case.output = Path("protected-output-canary")
+        return case
+
+    def listener(self):
+        listener = MagicMock()
+        listener.__enter__.return_value = listener
+        listener.getsockname.return_value = ("127.0.0.1", 12345)
+        listener.fileno.return_value = 27
+        return listener
+
+    def test_artifact_and_log_release_descriptors_when_fdopen_fails(self):
+        for target in ("artifact", "launcher"):
+            with self.subTest(target=target):
+                primary = OSError("wrapping-protected-canary")
+                case = self.case()
+                with patch.object(socket, "socket", return_value=self.listener()), patch.object(
+                    os, "open", return_value=101
+                ), patch.object(os, "fdopen", side_effect=primary), patch.object(
+                    os, "close"
+                ) as close, patch.object(subprocess, "Popen") as acquire:
+                    with self.assertRaises(OSError) as stopped:
+                        if target == "artifact":
+                            case.private_artifact("candidate.json", b"{}")
+                        else:
+                            with case.launcher("candidate", {}):
+                                self.fail("descriptor wrapping failure must end acquisition")
+                    self.assertIs(stopped.exception, primary)
+                    close.assert_called_once_with(101)
+                    acquire.assert_not_called()
+
+    def test_descriptor_cleanup_failure_preserves_wrapping_error(self):
+        primary = OSError("wrapping-protected-canary")
+        with patch.object(os, "open", return_value=101), patch.object(
+            os, "fdopen", side_effect=primary
+        ), patch.object(os, "close", side_effect=OSError("cleanup-protected-canary")):
+            with self.assertRaises(OSError) as stopped:
+                self.case().private_artifact("candidate.json", b"{}")
+        self.assertIs(stopped.exception, primary)
+        self.assertEqual(primary.__notes__, [
+            "Private output descriptor cleanup requires operator inspection."
+        ])
+
+    @contextmanager
+    def log_close_fault(self, child):
+        case = self.case()
+        primary = OSError("log-close-protected-canary")
+        log = MagicMock()
+        log.__enter__.return_value = log
+        log.__exit__.side_effect = primary
+        with patch.object(socket, "socket", return_value=self.listener()), patch.object(
+            os, "open", return_value=101
+        ), patch.object(os, "fdopen", return_value=log), patch.object(
+            subprocess, "Popen", return_value=child
+        ), patch.object(case, "request") as request:
+            yield case, primary, request
+
+    def test_log_close_failure_terminates_and_reaps_the_acquired_child(self):
+        child = Mock()
+        child.poll.return_value = None
+        with self.log_close_fault(child) as (case, primary, request):
+            with self.assertRaises(OSError) as stopped:
+                with case.launcher("candidate", {}):
+                    self.fail("log closure failure must end acquisition")
+            self.assertIs(stopped.exception, primary)
+            request.assert_not_called()
+        child.terminate.assert_called_once_with()
+        child.wait.assert_called_once_with(timeout=5)
+        child.kill.assert_not_called()
+
+    def test_log_close_failure_kills_and_reaps_after_the_grace_deadline(self):
+        child = Mock()
+        child.poll.return_value = None
+        child.wait.side_effect = [subprocess.TimeoutExpired("owned-child", 5), 0]
+        with self.log_close_fault(child) as (case, primary, request):
+            with self.assertRaises(OSError) as stopped:
+                with case.launcher("candidate", {}):
+                    self.fail("log closure failure must end acquisition")
+            self.assertIs(stopped.exception, primary)
+            request.assert_not_called()
+        child.terminate.assert_called_once_with()
+        child.kill.assert_called_once_with()
+        self.assertEqual(child.wait.call_args_list, [call(timeout=5), call(timeout=5)])
+
+    def test_child_cleanup_failure_preserves_the_log_close_error(self):
+        child = Mock()
+        child.poll.return_value = None
+        child.terminate.side_effect = OSError("child-cleanup-protected-canary")
+        with self.log_close_fault(child) as (case, primary, request):
+            with self.assertRaises(OSError) as stopped:
+                with case.launcher("candidate", {}):
+                    self.fail("log closure failure must end acquisition")
+            self.assertIs(stopped.exception, primary)
+            request.assert_not_called()
+        self.assertEqual(primary.__notes__, [
+            "Owned launcher cleanup requires operator inspection."
+        ])
 
 
 class ConfiguredProofFailureTests(unittest.TestCase):
