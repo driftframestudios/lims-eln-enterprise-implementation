@@ -132,6 +132,10 @@ the test does not retry a Golden transaction or reset state. Use the existing
 with the retained exact request. A newly authored defect goes to the parent/user
 for approval before a repair or another configured attempt.
 
+If diagnostic storage also fails, the public report retains the bounded stage
+failure and names the storage limitation. The original failure remains available
+in local exception context; private error text stays outside the public report.
+
 ## Checkpoint 4: review, assurance handoff and owned cleanup
 
 Give the parent one concise return for Governance Issue 49: exact source commit,

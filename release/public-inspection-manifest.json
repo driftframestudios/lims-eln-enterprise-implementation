@@ -444,7 +444,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:4d2c0e4463a3f727d6abc264df819336504d88eb778901aa616b9fa0f6dc500a",
+      "aggregate_sha256": "sha256:f2f0c213e3391c51517158d75598b249ea20fb5a60b1db20405c27a364a110f9",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -553,8 +553,8 @@
         },
         {
           "path": "tests/test_configured_workbench_capabilities.py",
-          "sha256": "sha256:9278e160b0617173279bd134c5427f4d445f0a123c1b95af703a0e00ab867951",
-          "size_bytes": 21094
+          "sha256": "sha256:879e3135d0bdca7bf6361979b40bb2f4d44700df2ab6675b850f0f79c19636c5",
+          "size_bytes": 23943
         },
         {
           "path": "tests/test_custody_instrument.py",
@@ -723,7 +723,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:1398400ba02f944df1ee3e98a1c9f3cfcc4103c23ded5bb0fcbf5c7900cab98e",
+      "aggregate_sha256": "sha256:bb6f0e5f8ced04ab815963bedcc9fe6f734c68d5f7a23cc4af114d770719df4d",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -872,8 +872,8 @@
         },
         {
           "path": "docs/runbooks/configured-capability-proof.v0.1.md",
-          "sha256": "sha256:498adcf19ceba235da80fbdd3a2fe3404a44654d3776bd328273a0260f55bc54",
-          "size_bytes": 9561
+          "sha256": "sha256:6f4efa019784b3877a2ab007858df3d3c451fcbbdaebdf43fd104c437a1f0e4e",
+          "size_bytes": 9801
         },
         {
           "path": "docs/runbooks/local-container-entry.v0.1.md",
@@ -1064,7 +1064,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:5dc65e5e18e7cbc1d73a180e9bbb4b8bd8d5a95cd59737eb32e7fc4db01b30b7",
+    "aggregate_sha256": "sha256:786fa663636bbf03109bf50de0952d70f88ddbfbb42e997f4e13108177c1eee8",
     "kind": "content_addressed_artifact_inventory"
   }
 }

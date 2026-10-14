@@ -307,11 +307,18 @@ class ConfiguredLauncherJourney(unittest.TestCase):
         try:
             self.journey()
         except Exception:
-            if self.output is not None:
-                self.private_artifact("failure.txt", traceback.format_exc().encode())
-            raise AssertionError(
+            failure = AssertionError(
                 f"Issue 68 stopped at {self.stage}; preserve the owned database and local checkpoint."
-            ) from None
+            )
+            if self.output is not None:
+                try:
+                    self.private_artifact("failure.txt", traceback.format_exc().encode())
+                except Exception:
+                    failure.add_note(
+                        "Protected diagnostic storage is unavailable; "
+                        "the original failure remains in local exception context."
+                    )
+            raise failure from None
 
     def journey(self):
         self.assertEqual(os.environ.get("LIMS_CAPABILITY_DATABASE_OWNERSHIP"), "owned_issue68")
@@ -419,6 +426,60 @@ class ConfiguredLauncherJourney(unittest.TestCase):
             "database_cleanup": "retained_for_named_owner",
             "completed_at": datetime.now(UTC).isoformat(),
         })
+
+
+class ConfiguredProofFailureTests(unittest.TestCase):
+    def stopped_case(self):
+        case = ConfiguredLauncherJourney(
+            "test_launcher_composition_readiness_and_golden_persistence"
+        )
+        primary = ValueError("primary-protected-canary")
+
+        def fail_journey():
+            case.stage = "golden_transaction"
+            case.output = Path("protected-output-canary")
+            raise primary
+
+        return case, primary, fail_journey
+
+    def test_diagnostic_write_failure_preserves_primary_context_and_bounded_report(self):
+        case, primary, fail_journey = self.stopped_case()
+        with patch.object(case, "journey", side_effect=fail_journey), patch.object(
+            case, "private_artifact", side_effect=OSError("diagnostic-protected-canary")
+        ), self.assertRaises(AssertionError) as stopped:
+            case.test_launcher_composition_readiness_and_golden_persistence()
+        failure = stopped.exception
+        self.assertIs(failure.__context__, primary)
+        self.assertTrue(failure.__suppress_context__)
+        self.assertEqual(str(failure), (
+            "Issue 68 stopped at golden_transaction; "
+            "preserve the owned database and local checkpoint."
+        ))
+        self.assertEqual(failure.__notes__, [
+            "Protected diagnostic storage is unavailable; "
+            "the original failure remains in local exception context."
+        ])
+        public_report = "".join(traceback.format_exception(failure))
+        for canary in (
+            "primary-protected-canary", "diagnostic-protected-canary", "protected-output-canary",
+        ):
+            self.assertNotIn(canary, public_report)
+
+    def test_successful_diagnostic_retains_private_detail_and_bounded_report(self):
+        case, primary, fail_journey = self.stopped_case()
+        with patch.object(case, "journey", side_effect=fail_journey), patch.object(
+            case, "private_artifact"
+        ) as record, self.assertRaises(AssertionError) as stopped:
+            case.test_launcher_composition_readiness_and_golden_persistence()
+        self.assertIs(stopped.exception.__context__, primary)
+        record.assert_called_once()
+        name, payload = record.call_args.args
+        self.assertEqual(name, "failure.txt")
+        self.assertIn(b"primary-protected-canary", payload)
+        self.assertEqual(getattr(stopped.exception, "__notes__", []), [])
+        self.assertNotIn(
+            "primary-protected-canary", "".join(traceback.format_exception(stopped.exception))
+        )
 
 
 if __name__ == "__main__":
