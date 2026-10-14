@@ -73,6 +73,7 @@ class TransactionContentionTests(unittest.TestCase):
     def test_api_returns_a_specific_value_free_retry_problem(self):
         from fastapi.testclient import TestClient
         service = Mock()
+        service.state_adapter = "postgresql"
         service.observation.side_effect = TransactionRetryRequired(
             "Retry the complete request with its original identity and inputs."
         )

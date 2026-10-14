@@ -444,7 +444,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:a64f7e719d6eb5fb4fb611d9137fb57ce07519c0c38754e0a2de4924e091bbc2",
+      "aggregate_sha256": "sha256:e8a50e5252f68874fcf7e01e5b4feb370fc22f3d9a85f8051083dc63a437dc27",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -658,8 +658,8 @@
         },
         {
           "path": "tests/test_workbench_contention.py",
-          "sha256": "sha256:e23e1dc08b041e6d1091da8e00c50e8dca24404f5d3394d0fce997d90a384aa9",
-          "size_bytes": 8091
+          "sha256": "sha256:657bf53a38e68b4521372d7409340196e8e2988b573376817185935dcfa627c2",
+          "size_bytes": 8136
         },
         {
           "path": "tests/test_workbench_export.py",
@@ -1054,7 +1054,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:2e266a05850959ec381a3d468866ea018fdee79c4859bc4ee698f5f12c9f218b",
+    "aggregate_sha256": "sha256:2209b9c752c3ba9673cfe03ca7bbb413f29acf5c319f31fe7b143c9125300535",
     "kind": "content_addressed_artifact_inventory"
   }
 }
