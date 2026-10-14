@@ -17,7 +17,7 @@
     },
     {
       "path": "src/lims_eln_implementation/production_adapters.py",
-      "sha256": "a2a528075862d2c09f427776bedbddccc8975e6b008b9c47dec6eca988e9670e",
+      "sha256": "8b357d0f8681d2fdfde549ac4a97982fffb523cc368c74722628aaa00477927b",
       "responsibility": "qualified durable invocation and receipt persistence with database-verified signed tenant assertions plus version-banded vendor SDK integration seams"
     },
     {
@@ -89,6 +89,11 @@
       "path": "src/lims_eln_implementation/workbench/cli.py",
       "sha256": "19ad991a50b6fac41a647b252f393609fd5a1219989691abb1aac2327aa16a04",
       "responsibility": "loopback-default launcher with explicit adapter and process-owned application factory"
+    },
+    {
+      "path": "sql/V006__bounded_invocation_release.sql",
+      "sha256": "7e1f12134f5d00ce8b488ac6da37e86b89969d5051a4b6b47accd7217f359c94",
+      "responsibility": "tenant-bound pre-effect invocation release through a lease and fencing checked routine"
     }
   ],
   "operation_bindings": [

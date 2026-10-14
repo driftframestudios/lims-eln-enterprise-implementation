@@ -571,7 +571,7 @@ class BranchFlowTests(unittest.TestCase):
             [flyway_release["container_image"], flyway_release["container_image"]],
         )
         self.assertIn("-target=003 migrate", workflow)
-        self.assertIn("migration 003 through 005", workflow.lower())
+        self.assertIn("migration 003 through current head", workflow.lower())
         self.assertIn("run_flyway validate", workflow)
         self.assertIn("run_flyway info", workflow)
         self.assertIn("FLYWAY_USER: laboratory_migrator", workflow)
@@ -601,7 +601,8 @@ class BranchFlowTests(unittest.TestCase):
             2,
         )
         self.assertIn(
-            "python3 -m unittest tests.test_postgres_integration -v",
+            "python3 -m unittest tests.test_postgres_integration "
+            "tests.test_durable_invocation_postgres -v",
             workflow,
         )
         self.assertIn(

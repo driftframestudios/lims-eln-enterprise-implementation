@@ -170,7 +170,7 @@ inventory includes the exact Flyway 13.8.1 source and its separately observed
 hosted database receipt without recasting that post-release work as part of the
 signed release. It binds every current
 FastAPI and domain source, Flyway V001 through
-V005, local contract and synthetic input, operational configuration, behavior
+V006, local contract and synthetic input, operational configuration, behavior
 proof, evidence record, and public orientation file by path, byte length,
 SHA-256 digest, group digest, and one aggregate content identity. The signed
 annotated tag `v0.3.1` identifies the prior accepted source release. Its later
@@ -234,6 +234,11 @@ measurement lineage, tenant-scoped outbox identity, immutable outbox content,
 worker crash/reclaim, stale-fence rejection, and the durable FastAPI workbench's
 restart, exact replay, changed-content collision, tenant isolation, rollback,
 instrument recovery, and canonical-digest checks.
+
+The current V006 successor adds ordinary-role invocation release and canonical
+ledger relation binding. The retained hosted PostgreSQL receipt continues to
+identify its observed V005 source; the successor receives its own configured
+PostgreSQL 17/Flyway observation.
 
 ## Evidence and authority
 

@@ -61,7 +61,7 @@ class DatabaseMigrationTests(unittest.TestCase):
             release["flyway_version"],
         )
         self.assertEqual(release["credentials"], "runtime_environment_only")
-        self.assertEqual(release["migration_head"], "005")
+        self.assertEqual(release["migration_head"], "006")
         self.assertEqual(release["authenticated_login"], "laboratory_migrator")
         self.assertEqual(release["migration_role"], "laboratory_owner")
 
@@ -93,6 +93,7 @@ class DatabaseMigrationTests(unittest.TestCase):
                 "sql/V003__trusted_routines_and_outbox_cas.sql",
                 "sql/V004__outbox_attempt_evidence_and_recovery.sql",
                 "sql/V005__golden_specimen_workbench.sql",
+                "sql/V006__bounded_invocation_release.sql",
             ],
         )
         for artifact in inventory["artifacts"]:
@@ -131,7 +132,7 @@ class DatabaseMigrationTests(unittest.TestCase):
         self.assertEqual(coordinate["promotion_signal"], "implementation-validation")
         self.assertEqual(
             coordinate["coordinate_state"],
-            "current_database_artifacts_observed",
+            "v005_observed_successor_candidate",
         )
         self.assertEqual(
             receipt["release_claim_id"],
@@ -174,6 +175,23 @@ class DatabaseMigrationTests(unittest.TestCase):
             "development commit.",
             receipt["limitations"],
         )
+
+    def test_v001_through_v005_retain_their_observed_bytes(self) -> None:
+        expected = {
+            "sql/V001__laboratory_core.sql":
+                "d0a8a360debb70f5dfdfcb8834ae8558a285e3f852014b91d9c521a2bd9ec7e4",
+            "sql/V002__principal_data_boundaries.sql":
+                "ed9f4f4f342eb133575c1e1920558427ae0044750c61885bee7d89d4ac8afe91",
+            "sql/V003__trusted_routines_and_outbox_cas.sql":
+                "13925ea70a930ef69240de8e0ffe56e5cb4479fb64e48cf41e6051dc8eb66a70",
+            "sql/V004__outbox_attempt_evidence_and_recovery.sql":
+                "2cb392ab1d59ce8db7cf163da221c09e898f65358462819f81ab29b558386b36",
+            "sql/V005__golden_specimen_workbench.sql":
+                "6366a6093992c6fa42770cb5e6706a9109cbbcf2c0828f14bfe8af9288e0ed6e",
+        }
+        for relative, digest in expected.items():
+            with self.subTest(migration=relative):
+                self.assertEqual(hashlib.sha256((ROOT / relative).read_bytes()).hexdigest(), digest)
 
     def test_flyway_safety_controls_are_explicit(self) -> None:
         config = load_properties(CONFIG_PATH)
@@ -223,7 +241,7 @@ class DatabaseMigrationTests(unittest.TestCase):
         migrations = sorted((ROOT / "sql").glob("V*__*.sql"))
         self.assertEqual(
             [MIGRATION_NAME.fullmatch(path.name).group("version") for path in migrations],
-            ["001", "002", "003", "004", "005"],
+            ["001", "002", "003", "004", "005", "006"],
         )
         for migration in migrations:
             sql = migration.read_text(encoding="utf-8")

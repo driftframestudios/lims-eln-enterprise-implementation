@@ -99,7 +99,7 @@ class PromotionLifecycleTests(unittest.TestCase):
     def test_hosted_receipt_version_and_commit_stay_bound(self) -> None:
         hosted = load("receipts/hosted-postgresql-proof.json")["version_bindings"]
         self.assertEqual(
-            "current_database_artifacts",
+            "observed_v005_artifacts",
             classify_hosted_postgresql_receipt_binding(hosted),
         )
 
@@ -131,8 +131,8 @@ class PromotionLifecycleTests(unittest.TestCase):
         )
 
         validate_hosted_postgresql_coordinate_state(
-            binding_kind="current_database_artifacts",
-            coordinate_state="current_database_artifacts_observed",
+            binding_kind="observed_v005_artifacts",
+            coordinate_state="v005_observed_successor_candidate",
         )
         for binding_kind in (
             "observed_predecessor",
@@ -146,7 +146,7 @@ class PromotionLifecycleTests(unittest.TestCase):
                 ):
                     validate_hosted_postgresql_coordinate_state(
                         binding_kind=binding_kind,
-                        coordinate_state="current_database_artifacts_observed",
+                        coordinate_state="v005_observed_successor_candidate",
                     )
 
     def test_current_hosted_receipt_requires_complete_exact_evidence(self) -> None:

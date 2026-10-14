@@ -7,7 +7,7 @@ boundaries, applied history, checksum validation, status, and replay behavior.
 `database/flyway-release.json` pins the exact open-source Alpine image by version
 and multi-architecture digest. `database/flyway-artifact-inventory.json` binds
 the configuration, callback, cluster-role prerequisite, and every
-V001-through-V005 migration by individual SHA-256 plus an ordered aggregate
+V001-through-V006 migration by individual SHA-256 plus an ordered aggregate
 SHA-256. The release manifest binds both the
 inventory file and aggregate, creating one independently reviewable release
 coordinate while Flyway continues to own applied history and mechanics.
@@ -145,15 +145,15 @@ post-migration configuration stage.
 
 ## Fresh and successor paths
 
-The clean path provisions cluster roles, applies V001 through V005, validates,
+The clean path provisions cluster roles, applies V001 through V006, validates,
 inspects, and replays. The successor path provisions the same roles, runs
 `migrate -target=003`, seeds representative pre-V004 rows, and then runs the
-head migration. The head step applies V004 and V005 in order.
+head migration. The head step applies V004 through V006 in order.
 
 V004 deliberately rejects historical outbox terminal state that lacks the new
 attempt and outcome ledgers. The rejection leaves Flyway history at V003 and
 retains the historical row for an explicit export, attestation, conversion, or
-disposition. After that disposition, Flyway applies V004 and V005 and a replay
+disposition. After that disposition, Flyway applies V004 through V006 and a replay
 reports zero pending work. A second clean database reaches the same schema; schema-only
 comparison proves clean-versus-upgrade convergence.
 
@@ -247,3 +247,22 @@ A database promotion receipt binds:
   risk; and
 - separate accountable Engineering, Security, Operations, Scientific, Quality,
   and Regulatory decisions.
+
+## Ordinary-role invocation release at V006
+
+The general DB-API invocation adapter uses schema-qualified canonical ledger and
+receipt relations. V006 adds `public.release_bounded_call_invocation`: the
+application receives execution permission on this narrow routine while direct
+DELETE remains with the table owner. The routine binds the signed tenant,
+invocation digest, current lease token, fencing token, in-progress state and
+server-observed expiry before releasing one pre-effect reservation. Completed,
+recovery and stale ownership retain their canonical evidence.
+
+The retained hosted receipt records PostgreSQL 17 and Flyway 13.8.1 through
+V005 at its exact historical source. Current V006 source is a successor
+candidate. Configured ordinary-role tests in
+`tests/test_durable_invocation_postgres.py` cover release, stale ownership,
+completed/recovery retention, canonical replay and temporary relation shadows.
+Run them through the existing configured PostgreSQL test environment. A direct
+SQL observation on another engine version establishes its named mechanism;
+the PostgreSQL 17/Flyway route supplies that separate acceptance observation.
