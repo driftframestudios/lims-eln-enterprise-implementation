@@ -429,7 +429,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:fe80e1532d50c38c8ede9078fbd8541ce3dcab43e1d73dc44290403da0408239",
+      "aggregate_sha256": "sha256:1a3608e05e5328678012a9c0fd7fbd90b1030bb3c603ec925e82fad9304f4800",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -465,6 +465,11 @@
           "path": "scripts/check_branch_flow.py",
           "sha256": "sha256:076f141e6da40d4eecbdaf3a72da219186abfb000fba7320ca4819148006fcb1",
           "size_bytes": 5296
+        },
+        {
+          "path": "scripts/check_database_restart.py",
+          "sha256": "sha256:3fbe8520bed136a78b740ddf0e233959dd0e5023851c3ba802d2520e4fce4190",
+          "size_bytes": 22825
         },
         {
           "path": "scripts/prepare_container_context.py",
@@ -545,6 +550,11 @@
           "path": "tests/test_database_migrations.py",
           "sha256": "sha256:48e69fa4c059d751d00845669081cb4e51c54eec9562c319d224be40486c163d",
           "size_bytes": 13770
+        },
+        {
+          "path": "tests/test_database_restart_proof.py",
+          "sha256": "sha256:0a7c415397b4a9585984000802500b27ec24fdb2ff51854251975ae87144882c",
+          "size_bytes": 7562
         },
         {
           "path": "tests/test_labkey_adapter.py",
@@ -698,7 +708,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:e53508a7b892a3d7e011ee60a2d6d3f1b81bae26511f448af3f55be7908d84bc",
+      "aggregate_sha256": "sha256:6ad1551b7e3cfedaec36551b234c5371882ecc94fccdbfb969a7b4f7aebfdea4",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -787,8 +797,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:e3227a10185fbc26d7df2fe109a4c486bfe4730582e2a6aac94a524ce8cf47b5",
-          "size_bytes": 27928
+          "sha256": "sha256:bfa537763d5514ac1e1faeccb660914af3bfa75bf4936fffbba665ba6965d0c3",
+          "size_bytes": 28156
         },
         {
           "path": "SECURITY.md",
@@ -859,6 +869,11 @@
           "path": "docs/runbooks/migration-cutover-and-restore.md",
           "sha256": "sha256:da1f3d23fced4f6ee5a980c7c963cc5df4f0adacd66296e9737033537aebd884",
           "size_bytes": 3306
+        },
+        {
+          "path": "docs/runbooks/owned-database-restart.v0.1.md",
+          "sha256": "sha256:27699664f9705e07ca8bb6f4fe3d6e949ba74a34d54f9fd9b7d6a432d30db715",
+          "size_bytes": 6976
         },
         {
           "path": "docs/runbooks/program-package-handoff.v0.1.md",
@@ -1029,7 +1044,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:34e4b637104e3c53e96ae489299e4b3e19e52406133346ccbf3e97f29a9709ec",
+    "aggregate_sha256": "sha256:24060e6527c3999b38554a01bf5ff55b44fb0313773934b6014161746ce15186",
     "kind": "content_addressed_artifact_inventory"
   }
 }
