@@ -32,7 +32,7 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/api.py",
-      "sha256": "9c84cdf10a8b341961db3324883af8588917a336b54bbf42a3dd61ba35b09715",
+      "sha256": "ba8ec2010d8ec9fda83f0d010ad24923c11bf4ee5b5d1c7e72cf9430169618c5",
       "responsibility": "injectable FastAPI delivery boundary with state-adapter readiness and typed authority decisions"
     },
     {

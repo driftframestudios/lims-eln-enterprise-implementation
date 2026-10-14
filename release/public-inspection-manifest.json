@@ -1,7 +1,7 @@
 {
   "artifact_groups": [
     {
-      "aggregate_sha256": "sha256:e5d60464cd86d603e836c43ab643e489e48f084da96d2ee8e1b162adec2455f4",
+      "aggregate_sha256": "sha256:15b6ff28d487e0a43dac3fe4ddbf99f7531c5837e903c843a3dbda83f3434aa9",
       "artifacts": [
         {
           "path": ".python-version",
@@ -150,8 +150,13 @@
         },
         {
           "path": "src/lims_eln_implementation/workbench/api.py",
-          "sha256": "sha256:9c84cdf10a8b341961db3324883af8588917a336b54bbf42a3dd61ba35b09715",
-          "size_bytes": 10774
+          "sha256": "sha256:ba8ec2010d8ec9fda83f0d010ad24923c11bf4ee5b5d1c7e72cf9430169618c5",
+          "size_bytes": 11422
+        },
+        {
+          "path": "src/lims_eln_implementation/workbench/capabilities.py",
+          "sha256": "sha256:d3c9021b5e705847948597411ae5ee7485af62299a3bccf4d0e24d7b9a9cf212",
+          "size_bytes": 2532
         },
         {
           "path": "src/lims_eln_implementation/workbench/cli.py",
@@ -190,13 +195,13 @@
         },
         {
           "path": "src/lims_eln_implementation/workbench/static/workbench.js",
-          "sha256": "sha256:f128a927b5da2b7a980d427a1ac435946d9a7848d8aeee3c46f088cbbe51e32f",
-          "size_bytes": 8685
+          "sha256": "sha256:f0f51c55f14f8632f733f25bf95036c1a03bf2d657c53f0e694601f7d06b6abf",
+          "size_bytes": 8703
         },
         {
           "path": "src/lims_eln_implementation/workbench/templates/workbench.html",
-          "sha256": "sha256:d8b15a157fe44e5452cd24d7f2420bf1c7d1e289c0f89edb9084b51f767d545f",
-          "size_bytes": 7625
+          "sha256": "sha256:2d6f8c71b32472000d47038b68443bdaca4d65c9a5f52daf1babcab3f48ccfc3",
+          "size_bytes": 8101
         },
         {
           "path": "uv.lock",
@@ -305,7 +310,7 @@
       "responsibility": "Flyway V001 through V005, its bounded identity, and deployment-shape database support."
     },
     {
-      "aggregate_sha256": "sha256:51fa492872f2e79f0ee545f99e1a5ab4f1a16f3bfe0212efdd8008a9cd243001",
+      "aggregate_sha256": "sha256:6bb2a794bd6bac5a914a1513e395f9d0a89981903cedce713d89db512102b62a",
       "artifacts": [
         {
           "path": "contracts/execution-receipt.v1.1.schema.json",
@@ -348,6 +353,16 @@
           "size_bytes": 1139
         },
         {
+          "path": "contracts/workbench-capabilities.source.json",
+          "sha256": "sha256:1c6c31c77ee42e33734a4d66a3aec59f6fcc871f0056d75d8fd7433e5193d4f3",
+          "size_bytes": 374
+        },
+        {
+          "path": "contracts/workbench-capabilities.v1.schema.json",
+          "sha256": "sha256:c4b5859d2b543b26970fb3b5b577b11e5f50415be7484c891257f4d2d0d83808",
+          "size_bytes": 2549
+        },
+        {
           "path": "fixtures/synthetic/instrument-message.json",
           "sha256": "sha256:f10fea83beb317f8dd76a9cbd89c25440a270c75d36624cf0dae8f85054499f8",
           "size_bytes": 73
@@ -369,7 +384,7 @@
         },
         {
           "path": "release/bounded-caller-bindings.json",
-          "sha256": "sha256:87352783bd200b9b5e2c1a6a24e3e0611afa93d88868102cbbf2a188662526fa",
+          "sha256": "sha256:762a150c94531d968af5c7e23bbd2d7d156016c9a302c6dde1fc9b7efaa95cb7",
           "size_bytes": 6805
         },
         {
@@ -429,7 +444,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:fe80e1532d50c38c8ede9078fbd8541ce3dcab43e1d73dc44290403da0408239",
+      "aggregate_sha256": "sha256:a64f7e719d6eb5fb4fb611d9137fb57ce07519c0c38754e0a2de4924e091bbc2",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -637,6 +652,11 @@
           "size_bytes": 5282
         },
         {
+          "path": "tests/test_workbench_capabilities.py",
+          "sha256": "sha256:3d6c992abf277b38bfeeed3e99df86f5bc6c473de94ebca02eeb77444961c7d5",
+          "size_bytes": 6537
+        },
+        {
           "path": "tests/test_workbench_contention.py",
           "sha256": "sha256:e23e1dc08b041e6d1091da8e00c50e8dca24404f5d3394d0fce997d90a384aa9",
           "size_bytes": 8091
@@ -698,7 +718,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:e53508a7b892a3d7e011ee60a2d6d3f1b81bae26511f448af3f55be7908d84bc",
+      "aggregate_sha256": "sha256:d610bf8d08cd14a4452be32cedc7e91873da498d6c99a4f368d33bc38e05d7da",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -797,8 +817,13 @@
         },
         {
           "path": "docs/README.md",
-          "sha256": "sha256:13fb8d590d74102d191eefa235a521af789d32cc43c8f45d08ad502f27e165a0",
-          "size_bytes": 4862
+          "sha256": "sha256:20ad7832ebdbbcce09d4b4a0adc6a35d038bbc4fff1bf6684c351bca70325dc7",
+          "size_bytes": 5198
+        },
+        {
+          "path": "docs/WORKBENCH_CAPABILITIES.md",
+          "sha256": "sha256:bb09e75c167e9f9f410539179ade28dd6922730180b816db7638bd2d9d9e0d9e",
+          "size_bytes": 3405
         },
         {
           "path": "docs/architecture.md",
@@ -877,7 +902,7 @@
         },
         {
           "path": "first-receipt.json",
-          "sha256": "sha256:a50e3876f81d023f5af80716496dfd8416a7dace5ebbbf439dcc2bfd30e3f706",
+          "sha256": "sha256:3ef98df244d738437b69f1303f226be684153fe11b50ba4c429a06a95c4c05c0",
           "size_bytes": 6522
         },
         {
@@ -887,7 +912,7 @@
         },
         {
           "path": "machine-node.json",
-          "sha256": "sha256:0bf705428313ec05e176ca74c800d5c126578f0a1c49a062afc1e3794287b828",
+          "sha256": "sha256:3166f634097c2ac27ce0cbc851ce951d85b1d45554a211d4ab2b4109eb8bec8d",
           "size_bytes": 5645
         },
         {
@@ -1029,7 +1054,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:34e4b637104e3c53e96ae489299e4b3e19e52406133346ccbf3e97f29a9709ec",
+    "aggregate_sha256": "sha256:2e266a05850959ec381a3d468866ea018fdee79c4859bc4ee698f5f12c9f218b",
     "kind": "content_addressed_artifact_inventory"
   }
 }

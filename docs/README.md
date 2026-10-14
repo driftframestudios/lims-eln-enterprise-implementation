@@ -80,3 +80,10 @@ Return to the [Enterprise overview](../README.md) or the
 [Run the offline administrative journey](offline-administrative-journey.md) to
 inspect exact catalog lookup, reviewed policy inputs, paired output comparisons,
 and complete local replay using the packaged synthetic examples.
+
+## Read the active application capabilities
+
+The [capability guide](WORKBENCH_CAPABILITIES.md) explains the workbench's
+adapter, state lifetime, expected package, and implemented operation routes.
+The authored runtime label and `/api/workbench/capabilities` use the same
+projection; `/health/ready` remains the dependency observation.
