@@ -37,12 +37,12 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/postgres.py",
-      "sha256": "8a34bce87d72e122e9fd050aba5f6475b46891378fed5574fd94fe5dba904e90",
+      "sha256": "5fdd8bfba4fb3fbf7d5710192c02c384e2d34fdeeed600b5bf29b4aca76410ae",
       "responsibility": "repeatable-read PostgreSQL Golden Specimen composition with tenant binding, lease-and-fence completion, exact replay evidence, and authenticated recovery"
     },
     {
       "path": "src/lims_eln_implementation/workbench/service.py",
-      "sha256": "fa843248807842f30f46d78ae9e36ed257e21888a5ff44bf6151d62a15666230",
+      "sha256": "8c03c1125498ac213f14af55da9a0e58776be08f5298051b12af3f155c1c53f0",
       "responsibility": "process-local workbench composition and the shared visitor-facing result shape"
     },
     {
