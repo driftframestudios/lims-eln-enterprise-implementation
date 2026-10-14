@@ -1,0 +1,118 @@
+{
+  "schema_ref": "urn:driftframe:lims-eln:database-lifecycle-profile:1.0.0",
+  "schema_version": "1.0.0",
+  "source": {
+    "source_ref": "ref:program-database-lifecycle",
+    "revision": "ea0140036a3392557eed78124cdf9e3831bff999"
+  },
+  "profile_ref": "ref:enterprise-retained-receipt",
+  "evidence_class": "authored_example",
+  "invocation": {
+    "invocation_ref": "ref:enterprise-launch-attempt",
+    "owner_ref": "ref:enterprise-invocation-owner"
+  },
+  "requested_profile": {
+    "disposition": "retained",
+    "engine": "postgresql",
+    "engine_major": 17,
+    "migration_ref": "ref:enterprise-flyway-v-seven",
+    "credential_receiver_class": "operator_runtime",
+    "permitted_actions": [
+      "create",
+      "migrate",
+      "restore",
+      "cleanup",
+      "inspect",
+      "stop",
+      "retain"
+    ],
+    "cleanup_policy": "explicit_owner_decision",
+    "recovery_ref": "ref:enterprise-owner-recovery"
+  },
+  "resource": {
+    "resource_ref": "ref:enterprise-synthetic-database",
+    "owner_ref": "ref:database-steward",
+    "creation_owner_ref": "ref:database-original-creator",
+    "created_by_invocation_ref": null,
+    "initial_state": "retained",
+    "state": "retained"
+  },
+  "composition": {
+    "state": "not_observed",
+    "capability_ref": null,
+    "capability_digest": null
+  },
+  "readiness": {
+    "state": "not_observed",
+    "observation_ref": null
+  },
+  "operations": [
+    {
+      "operation_ref": "ref:enterprise-event-1",
+      "action": "restore",
+      "from_state": "retained",
+      "to_state": "present",
+      "outcome": "succeeded",
+      "authority": {
+        "owner_ref": "ref:database-steward",
+        "actor_ref": "ref:enterprise-invocation-owner",
+        "decision_ref": "ref:enterprise-action-decision",
+        "basis": "explicit_owner_decision",
+        "destructive_authorized": true
+      },
+      "compatibility": {
+        "state": "compatible",
+        "engine_major": 17,
+        "migration_ref": "ref:enterprise-flyway-v-seven",
+        "observation_ref": "ref:enterprise-compatibility-observation"
+      },
+      "evidence_ref": "ref:enterprise-event-observation",
+      "failure_code": null
+    },
+    {
+      "operation_ref": "ref:enterprise-event-2",
+      "action": "retain",
+      "from_state": "present",
+      "to_state": "retained",
+      "outcome": "succeeded",
+      "authority": {
+        "owner_ref": "ref:database-steward",
+        "actor_ref": "ref:enterprise-invocation-owner",
+        "decision_ref": "ref:enterprise-action-decision",
+        "basis": "explicit_owner_decision",
+        "destructive_authorized": false
+      },
+      "compatibility": {
+        "state": "not_observed",
+        "engine_major": null,
+        "migration_ref": null,
+        "observation_ref": null
+      },
+      "evidence_ref": "ref:enterprise-event-observation",
+      "failure_code": null
+    },
+    {
+      "operation_ref": "ref:enterprise-event-3",
+      "action": "stop",
+      "from_state": "retained",
+      "to_state": "retained",
+      "outcome": "requested",
+      "authority": {
+        "owner_ref": "ref:database-steward",
+        "actor_ref": "ref:enterprise-invocation-owner",
+        "decision_ref": "ref:enterprise-action-decision",
+        "basis": "explicit_owner_decision",
+        "destructive_authorized": false
+      },
+      "compatibility": {
+        "state": "not_observed",
+        "engine_major": null,
+        "migration_ref": null,
+        "observation_ref": null
+      },
+      "evidence_ref": null,
+      "failure_code": null
+    }
+  ],
+  "unresolved_resource_refs": []
+}

@@ -1,0 +1,14 @@
+{
+  "source_repository": "driftframestudios/lims-eln-program-specification",
+  "source_commit": "ea0140036a3392557eed78124cdf9e3831bff999",
+  "source_path": "schemas/database-lifecycle-profile.v1.schema.json",
+  "schema_sha256": "sha256:baf035a23aee30c09f410ec157268a42559a4dde824772ead080ece0f56478ca",
+  "contract_id": "urn:driftframe:lims-eln:database-lifecycle-profile:1.0.0",
+  "source_ref": "ref:program-database-lifecycle",
+  "package_version": "0.7.0",
+  "receiving_profile": "requirements-lifecycle.txt",
+  "source_identity": {
+    "algorithm": "path-length-bytes-sha256-v1",
+    "digest": "sha256:de724ba26579094771e61571fa67efdf6faf1e20e328a3672ff05c761100b47d"
+  }
+}

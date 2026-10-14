@@ -1,0 +1,97 @@
+{
+  "schema_ref": "urn:driftframe:lims-eln:database-lifecycle-profile:1.0.0",
+  "schema_version": "1.0.0",
+  "source": {
+    "source_ref": "ref:program-database-lifecycle",
+    "revision": "ea0140036a3392557eed78124cdf9e3831bff999"
+  },
+  "profile_ref": "ref:enterprise-disposable-receipt",
+  "evidence_class": "authored_example",
+  "invocation": {
+    "invocation_ref": "ref:enterprise-launch-attempt",
+    "owner_ref": "ref:enterprise-invocation-owner"
+  },
+  "requested_profile": {
+    "disposition": "disposable",
+    "engine": "postgresql",
+    "engine_major": 17,
+    "migration_ref": "ref:enterprise-flyway-v-seven",
+    "credential_receiver_class": "invocation_runtime",
+    "permitted_actions": [
+      "create",
+      "migrate",
+      "restore",
+      "cleanup",
+      "inspect",
+      "stop"
+    ],
+    "cleanup_policy": "current_invocation_owned",
+    "recovery_ref": "ref:enterprise-owner-recovery"
+  },
+  "resource": {
+    "resource_ref": "ref:enterprise-synthetic-database",
+    "owner_ref": "ref:enterprise-invocation-owner",
+    "creation_owner_ref": "ref:enterprise-invocation-owner",
+    "created_by_invocation_ref": "ref:enterprise-launch-attempt",
+    "initial_state": "absent",
+    "state": "unresolved"
+  },
+  "composition": {
+    "state": "not_observed",
+    "capability_ref": null,
+    "capability_digest": null
+  },
+  "readiness": {
+    "state": "not_observed",
+    "observation_ref": null
+  },
+  "operations": [
+    {
+      "operation_ref": "ref:enterprise-event-1",
+      "action": "create",
+      "from_state": "absent",
+      "to_state": "unresolved",
+      "outcome": "unresolved",
+      "authority": {
+        "owner_ref": "ref:enterprise-invocation-owner",
+        "actor_ref": "ref:enterprise-invocation-owner",
+        "decision_ref": "ref:enterprise-action-decision",
+        "basis": "invocation_owned",
+        "destructive_authorized": false
+      },
+      "compatibility": {
+        "state": "not_observed",
+        "engine_major": null,
+        "migration_ref": null,
+        "observation_ref": null
+      },
+      "evidence_ref": "ref:enterprise-event-observation",
+      "failure_code": "resource_unresolved"
+    },
+    {
+      "operation_ref": "ref:enterprise-event-2",
+      "action": "inspect",
+      "from_state": "unresolved",
+      "to_state": "unresolved",
+      "outcome": "requested",
+      "authority": {
+        "owner_ref": "ref:enterprise-invocation-owner",
+        "actor_ref": "ref:enterprise-invocation-owner",
+        "decision_ref": "ref:enterprise-action-decision",
+        "basis": "invocation_owned",
+        "destructive_authorized": false
+      },
+      "compatibility": {
+        "state": "not_observed",
+        "engine_major": null,
+        "migration_ref": null,
+        "observation_ref": null
+      },
+      "evidence_ref": null,
+      "failure_code": null
+    }
+  ],
+  "unresolved_resource_refs": [
+    "ref:enterprise-synthetic-database"
+  ]
+}

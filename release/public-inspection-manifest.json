@@ -320,8 +320,18 @@
       "responsibility": "Flyway V001 through V007, its bounded identity, and deployment-shape database support."
     },
     {
-      "aggregate_sha256": "sha256:194ee58376e5256740d4ffbe8e2374739d04ed7c79b214ffb780297c518ec044",
+      "aggregate_sha256": "sha256:9944727b92b1bc469178886994db9c5a3eb1d5929ee677020a2216ef696b9485",
       "artifacts": [
+        {
+          "path": "contracts/database-lifecycle-profile.source.json",
+          "sha256": "sha256:44cb3298756f2f42e4db80d27a59822f73ada56498c1583373ac454a04a3bce4",
+          "size_bytes": 679
+        },
+        {
+          "path": "contracts/database-lifecycle-profile.v1.schema.json",
+          "sha256": "sha256:baf035a23aee30c09f410ec157268a42559a4dde824772ead080ece0f56478ca",
+          "size_bytes": 7393
+        },
         {
           "path": "contracts/execution-receipt.v1.1.schema.json",
           "sha256": "sha256:0664deaf6b55ad2a7c4a80e8bd4153b235d6481c44786aa79bbf2ddd1408077a",
@@ -371,6 +381,31 @@
           "path": "contracts/workbench-capabilities.v1.schema.json",
           "sha256": "sha256:c4b5859d2b543b26970fb3b5b577b11e5f50415be7484c891257f4d2d0d83808",
           "size_bytes": 2549
+        },
+        {
+          "path": "fixtures/synthetic/database-lifecycle-cleanup-failed.json",
+          "sha256": "sha256:50e64562f69cf2bc891ed16b6e1db913b386faaeaee269e9f95213702e96607c",
+          "size_bytes": 3636
+        },
+        {
+          "path": "fixtures/synthetic/database-lifecycle-disposable.json",
+          "sha256": "sha256:b2125f12180e85511f880cce35fe3450e98518d6b9ea53208b9d97e5bee59fc4",
+          "size_bytes": 3636
+        },
+        {
+          "path": "fixtures/synthetic/database-lifecycle-external.json",
+          "sha256": "sha256:bb8ba7f394d8f735a4d45525b38fe3e325d3192c6efd185d9a43d9dbbafad9e5",
+          "size_bytes": 2829
+        },
+        {
+          "path": "fixtures/synthetic/database-lifecycle-retained.json",
+          "sha256": "sha256:0acf1927f8418a56847dec01de186fd8eaee161d2212b6a9884dc2d050c66eff",
+          "size_bytes": 3568
+        },
+        {
+          "path": "fixtures/synthetic/database-lifecycle-unresolved.json",
+          "sha256": "sha256:76a7ec37304b33278cd7d8fface9c62027d3642169c185d325d5fa9ff86d7adb",
+          "size_bytes": 2918
         },
         {
           "path": "fixtures/synthetic/instrument-message.json",
@@ -454,7 +489,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:ad17d08c9d9ec3e57cbbd9403aba29ed9fb84f0c47e3d67cfbba6857bef5809e",
+      "aggregate_sha256": "sha256:f403c868964f0110525a49f6f3004071adc84d5120459ecd8de624f672daa72f",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -472,14 +507,19 @@
           "size_bytes": 340
         },
         {
+          "path": "requirements-lifecycle.txt",
+          "sha256": "sha256:8a2c0de8960aa2fb8bfab5995236cee2af5a94c93da4f07cad907e23de7b1541",
+          "size_bytes": 242
+        },
+        {
           "path": "scripts/build_package_archive.py",
           "sha256": "sha256:ca2a9fbf46be42cb090296ddcaaca34e7c188da90520ca78d6c5bfc5f2db366f",
           "size_bytes": 2845
         },
         {
           "path": "scripts/build_public_inspection_manifest.py",
-          "sha256": "sha256:e3464b3ad109a3cb577482c98be2c272a40a841528d4bb7da27bf38dc0610341",
-          "size_bytes": 22461
+          "sha256": "sha256:acfe4f9dc0a8cac95ea75d9822235bebdcb14da9ec99f11acdc3f2be84ebe7c1",
+          "size_bytes": 22503
         },
         {
           "path": "scripts/check_automation_contract.py",
@@ -505,6 +545,11 @@
           "path": "scripts/prepare_local_secrets.py",
           "sha256": "sha256:decde647926b296dcc0ebc58412d519bd68fc5895740daa87ab696899869d66d",
           "size_bytes": 4576
+        },
+        {
+          "path": "scripts/receive_database_lifecycle.py",
+          "sha256": "sha256:5a6e0623e9d88e50d14cf7dbf5be2d49a3c81965cfbaecfaf2669b2d34d8c3d2",
+          "size_bytes": 8582
         },
         {
           "path": "scripts/validate_implementation.py",
@@ -575,6 +620,11 @@
           "path": "tests/test_custody_instrument.py",
           "sha256": "sha256:c00e11e39264e72ddf08538452a92fca50daf26d032887d0aa9434a3cb225680",
           "size_bytes": 14695
+        },
+        {
+          "path": "tests/test_database_lifecycle_receiver.py",
+          "sha256": "sha256:ffa9e23ff653bd088d04251b2cd075c73275e38e9e4f88223263763554dff61f",
+          "size_bytes": 21273
         },
         {
           "path": "tests/test_database_migrations.py",
@@ -773,7 +823,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:404452d8755423a7f12ae8ff6442f2b6fcaf1500279cd75183367be976a3fdb0",
+      "aggregate_sha256": "sha256:abff68a3f8e7ffce8dcc44f5bc3c909e16ad7752073e4c96079f6e129a6bd14e",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -877,8 +927,8 @@
         },
         {
           "path": "docs/WORKBENCH_CAPABILITIES.md",
-          "sha256": "sha256:743c5941be5b59f8268ba7fa776610b6829dda1e7683972fa8a10bc7ced2683e",
-          "size_bytes": 3527
+          "sha256": "sha256:b66ee00cde20ed0fbd6a4b7f59d8ead6c513b6617515ab373ca1d38320363284",
+          "size_bytes": 3857
         },
         {
           "path": "docs/architecture.md",
@@ -894,6 +944,11 @@
           "path": "docs/data-primitive-corrective-ledger.md",
           "sha256": "sha256:c71f01ebe91def959f8436f9af1face234cbae934c0567a13d5e2ec3e3b51ef7",
           "size_bytes": 34151
+        },
+        {
+          "path": "docs/database-lifecycle-receiver.md",
+          "sha256": "sha256:8947ae7058a67c2adf195e6270c5342834317c4728fad93f1112a558d5a19aff",
+          "size_bytes": 5725
         },
         {
           "path": "docs/database-migrations.md",
@@ -1124,7 +1179,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:c72d24c028b1c169e215be202146682e5a9132bccfe44c86b410ece75d91ea3f",
+    "aggregate_sha256": "sha256:642db097c16532557dc7fe305386a9478f6f268fae1e9c3477d33e7bf27b2954",
     "kind": "content_addressed_artifact_inventory"
   }
 }
