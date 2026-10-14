@@ -41,6 +41,7 @@ from ..model import (
     SpecimenAggregate,
     SpecimenState,
     canonical_digest,
+    canonical_json,
     require_aware_utc,
 )
 from ..security import (
@@ -1786,13 +1787,7 @@ def _aggregate_document(aggregate: SpecimenAggregate) -> dict[str, Any]:
 
 
 def _json(value: Any) -> str:
-    return json.dumps(
-        value,
-        allow_nan=False,
-        ensure_ascii=True,
-        separators=(",", ":"),
-        sort_keys=True,
-    )
+    return canonical_json(value)
 
 
 def _measurement_from_ingress(result: IngressResult) -> _NormalizedMeasurementFact:

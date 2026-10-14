@@ -16,7 +16,7 @@ system boundaries and returns the evidence as a single tenant-scoped read model.
 
 The workbench has two explicit state postures. The process-local adapter is a
 deterministic engineering encounter; a restart begins a fresh encounter. The
-PostgreSQL adapter runs the same FastAPI contract against V001–V005, and a
+PostgreSQL adapter runs the same FastAPI contract against V001–V007, and a
 fresh service instance reloads its specimen from canonical stored state. When
 the independently distributed accepted Program contract package is installed,
 the same stored state also yields the exact typed observation. The Flyway chain

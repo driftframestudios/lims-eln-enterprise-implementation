@@ -433,7 +433,7 @@ class SqlTenantStructureTests(unittest.TestCase):
             migration,
         )
 
-    def test_published_migrations_remain_immutable_and_005_is_successor(self) -> None:
+    def test_published_migrations_remain_immutable_and_sequence_is_explicit(self) -> None:
         migration_003 = ROOT / "sql" / "V003__trusted_routines_and_outbox_cas.sql"
         self.assertEqual(
             hashlib.sha256(migration_003.read_bytes()).hexdigest(),
@@ -442,7 +442,7 @@ class SqlTenantStructureTests(unittest.TestCase):
         migrations = sorted((ROOT / "sql").glob("V*__*.sql"))
         self.assertEqual(
             [path.name.split("__", 1)[0] for path in migrations],
-            ["V001", "V002", "V003", "V004", "V005"],
+            ["V001", "V002", "V003", "V004", "V005", "V006", "V007"],
         )
 
     def test_workbench_reuses_canonical_measurement_and_custody_truth(self) -> None:

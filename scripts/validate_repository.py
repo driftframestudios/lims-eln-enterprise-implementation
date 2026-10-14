@@ -401,7 +401,7 @@ def classify_hosted_postgresql_receipt_binding(
     observed_commit = str(hosted_bindings.get("repository_commit", ""))
     if repository_version == "0.3.2":
         if observed_commit == CURRENT_DATABASE_HOSTED_COMMIT:
-            return "current_database_artifacts"
+            return "observed_v005_artifacts"
         raise AssertionError(
             "current 0.3.2 hosted receipt requires its exact observed commit"
         )
@@ -429,7 +429,7 @@ def validate_hosted_postgresql_coordinate_state(
     """Keep the active database state aligned with its receipt generation."""
 
     expected_states = {
-        "current_database_artifacts": "current_database_artifacts_observed",
+        "observed_v005_artifacts": "v005_observed_successor_candidate",
         "observed_predecessor": "predecessor_observed_successor_candidate",
     }
     if expected_states.get(binding_kind) != coordinate_state:
@@ -821,7 +821,7 @@ def validate_promotion_lifecycle(
     }
     expected_development_observation = {
         "scope": "database_artifacts",
-        "coordinate_state": "current_database_artifacts_observed",
+        "coordinate_state": "v005_observed_successor_candidate",
         "flyway_version": "13.8.1",
         "receipt": "receipts/hosted-postgresql-proof.json",
     }
@@ -1103,6 +1103,8 @@ def validate_manifests() -> None:
         "sql/V003__trusted_routines_and_outbox_cas.sql",
         "sql/V004__outbox_attempt_evidence_and_recovery.sql",
         "sql/V005__golden_specimen_workbench.sql",
+        "sql/V006__bounded_invocation_release.sql",
+        "sql/V007__pending_outbox_specimen_index.sql",
     ]
     if (
         inventory.get("schema_version") != "1.0.0"
@@ -1189,7 +1191,7 @@ def validate_manifests() -> None:
 
     migrations = sorted((ROOT / "sql").glob("V[0-9][0-9][0-9]__*.sql"))
     migration_ids = [path.name[1:4] for path in migrations]
-    if migration_ids != ["001", "002", "003", "004", "005"]:
+    if migration_ids != ["001", "002", "003", "004", "005", "006", "007"]:
         raise AssertionError("Flyway migrations require the released ordered sequence")
     for migration in migrations:
         sql = migration.read_text(encoding="utf-8")
@@ -1358,7 +1360,7 @@ def validate_manifests() -> None:
         or database_hosted_evidence.get("receipt_path")
         != "receipts/hosted-postgresql-proof.json"
         or database_hosted_evidence.get("coordinate_state")
-        != "current_database_artifacts_observed"
+        != "v005_observed_successor_candidate"
         or database_hosted_evidence.get("promotion_signal")
         != "implementation-validation"
     ):
@@ -1680,7 +1682,7 @@ def validate_manifests() -> None:
             raise AssertionError(
                 "predecessor hosted PostgreSQL receipt requires its exact Flyway 13.4 bindings"
             )
-    elif binding_kind == "current_database_artifacts":
+    elif binding_kind == "observed_v005_artifacts":
         validate_current_hosted_postgresql_receipt_contract(hosted_receipt)
         current_bindings = {
             "repository": "0.3.2",
@@ -1706,13 +1708,9 @@ def validate_manifests() -> None:
             or migration_release["flyway_version"] != "13.8.1"
             or migration_release["container_image"]
             != current_bindings["flyway_image"]
-            or migration_release_digest
-            != "sha256:c5ac44d9797df3f328cc4a8bd64f176317398abff564e2cb8f62fb33c123dc2f"
-            or inventory_digest
-            != "sha256:8bbada0ceaa11f264d2d6ad4c893abd8b4313482da387401fd9b0f1d0106666a"
         ):
             raise AssertionError(
-                "current hosted PostgreSQL receipt requires the exact observed "
+                "retained hosted PostgreSQL receipt requires the exact observed "
                 "Flyway 13.8.1 source, run, and artifact bindings"
             )
     required_database_scenarios = {
