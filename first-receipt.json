@@ -11,7 +11,7 @@
     {
       "contract_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
       "version": "0.3.2",
-      "digest": "sha256:87352783bd200b9b5e2c1a6a24e3e0611afa93d88868102cbbf2a188662526fa"
+      "digest": "sha256:6131dae47a5c1e9b661fe41024b8d1cf96164f1524ba7b7200e79ca122fdd3a8"
     },
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",

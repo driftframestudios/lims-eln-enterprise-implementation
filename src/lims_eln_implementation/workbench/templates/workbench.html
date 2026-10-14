@@ -23,7 +23,9 @@
         <span class="signal" aria-hidden="true"></span>
         <div>
           <strong>Local evidence encounter</strong>
-          <span>Process-local state · synthetic fixtures</span>
+        <span>{{ 'PostgreSQL-backed state' if capabilities.runtime.state_adapter == 'postgresql' else 'Process-local state' }} · synthetic fixtures</span>
+        <span data-expected-package-version="{{ capabilities.shared_contracts.expected_package_version }}">Shared contracts {{ capabilities.shared_contracts.expected_package_version }}: {{ 'version compatible' if capabilities.shared_contracts.version_compatible else 'compatible package needed' }}</span>
+        <a href="/api/workbench/capabilities">View application capabilities</a>
         </div>
       </div>
     </header>
