@@ -19,7 +19,7 @@ and start child processes.
 ```sh
 uv sync --locked --extra postgres --extra test --no-editable
 .venv/bin/python scripts/check_database_restart.py \
-  --postgres-bin /path/to/postgresql/bin --expected-major 18
+  --postgres-bin /path/to/postgresql/bin --expected-major 17
 ```
 
 The same observation has an opt-in test entry:
@@ -27,7 +27,7 @@ The same observation has an opt-in test entry:
 ```sh
 LIMS_DATABASE_RESTART_CHECK=1 \
 LIMS_RESTART_POSTGRES_BIN=/path/to/postgresql/bin \
-LIMS_RESTART_EXPECTED_MAJOR=18 \
+LIMS_RESTART_EXPECTED_MAJOR=17 \
 .venv/bin/python -m unittest tests.test_database_restart_proof -v
 ```
 
@@ -75,15 +75,21 @@ needs its own bounded retrieval, query-plan, and resource observation.
 6. Exercise a controlled exception after starting another owned cluster, check
    its cleanup, and start and clean up a fresh cluster for re-entry.
 
-PostgreSQL documents [fast and immediate shutdown](https://www.postgresql.org/docs/18/server-shutdown.html)
+PostgreSQL documents [fast and immediate shutdown](https://www.postgresql.org/docs/17/server-shutdown.html)
 as separate events: fast shutdown aborts open transactions and shuts down
 cleanly; immediate shutdown requires WAL recovery at the next start. The
-[`pg_ctl` interface](https://www.postgresql.org/docs/18/app-pg-ctl.html) supplies
+[`pg_ctl` interface](https://www.postgresql.org/docs/17/app-pg-ctl.html) supplies
 bounded start and stop waits. The harness enables and observes `fsync`,
 `synchronous_commit`, and `full_page_writes`; it also records checksum and WAL
-settings. Actual runtime output identifies the engine exercised. PostgreSQL 18.6
-observations cover this local process-recovery mechanism. PostgreSQL 17 and the
-Flyway migration runner retain their separately configured observation routes.
+settings. The [admitted native PostgreSQL 17.10 observation](../../receipts/owned-postgresql17-recovery-proof.json)
+records all seven scenarios, 20 retained public tables, three server lifetimes,
+and cleanup of three owned clusters at source
+`83889fa87b740d824e82f5c9ffb0c515e6823148`. The engine was built from the bound
+official source archive. Its observed `data_checksums=off` setting keeps
+storage-corruption detection outside this recovery claim. The
+[hosted PostgreSQL 17/Flyway receipt](../../receipts/hosted-postgresql-v007-proof.json)
+records the separate containerized migration route. Earlier PostgreSQL 18.6
+observations retain their named local scope.
 
 ## Resource ownership and failure recovery
 

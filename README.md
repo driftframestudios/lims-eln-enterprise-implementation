@@ -239,10 +239,16 @@ worker crash/reclaim, stale-fence rejection, and the durable FastAPI workbench's
 restart, exact replay, changed-content collision, tenant isolation, rollback,
 instrument recovery, and canonical-digest checks.
 
-The current V007 successor adds a per-specimen pending-outbox index alongside
-ordinary-role invocation release and canonical ledger relation binding. The retained hosted PostgreSQL receipt continues to
-identify its observed V005 source; the successor receives its own configured
-PostgreSQL 17/Flyway observation.
+The [V007 hosted receipt](receipts/hosted-postgresql-v007-proof.json) records
+PostgreSQL 17.10 and Flyway 13.8.1 clean/upgrade verification at source
+`83889fa87b740d824e82f5c9ffb0c515e6823148`. It covers ordinary-role invocation
+release, canonical ledger binding and the pending-outbox index. The
+[plan observations](receipts/postgresql-v007-plan-observations.json) retain the
+actual planner and buffer results. The separate
+[native PostgreSQL 17 recovery receipt](receipts/owned-postgresql17-recovery-proof.json)
+records fast restart, immediate crash recovery and rollback at that same source,
+using direct SQL migration execution. The retained
+[V005 receipt](receipts/hosted-postgresql-proof.json) keeps its original evidence.
 
 ## Evidence and authority
 
