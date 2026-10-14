@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+from dataclasses import replace
+import json
 
 from lims_eln_implementation.idempotency import (
     ContentCollision,
@@ -10,11 +12,16 @@ from lims_eln_implementation.idempotency import (
 from lims_eln_implementation.lifecycle import LifecycleService
 from lims_eln_implementation.model import (
     DomainError,
+    DomainEvent,
     RevisionConflict,
     SpecimenState,
+    SpecimenAggregate,
     TransitionRejected,
+    canonical_json,
 )
-from lims_eln_implementation.store import InMemorySpecimenRepository
+from lims_eln_implementation.store import InMemoryAtomicExecutor, InMemorySpecimenRepository
+from lims_eln_implementation.workbench.service import SpecimenView
+from lims_eln_implementation.workbench.postgres import _aggregate_document, _json
 
 from helpers import command
 
@@ -60,6 +67,74 @@ class LifecycleTests(unittest.TestCase):
     def test_command_requires_string_keyed_finite_json(self) -> None:
         with self.assertRaisesRegex(DomainError, "string-keyed"):
             command("cmd-key-shape", "register", 0, payload={1: "value"})
+
+    def test_direct_domain_values_own_nested_json_and_event_membership(self) -> None:
+        source = {"values": [{"value": "12.5", "missing": None}], "pending": False}
+        planned = command("cmd-direct", "register", 0)
+        event = DomainEvent(
+            "event-direct", planned.tenant_id, planned.specimen_id, 1,
+            "specimen.registered", planned.actor_id, planned.command_id,
+            planned.content_digest, planned.occurred_at, source,
+        )
+        events = [event]
+        aggregate = SpecimenAggregate(
+            planned.tenant_id, planned.specimen_id, SpecimenState.REGISTERED,
+            1, source, events,
+        )
+        source["values"][0]["value"] = "caller-edited"
+        events.clear()
+        expected = {"values": [{"value": "12.5", "missing": None}], "pending": False}
+        self.assertEqual(json.loads(canonical_json(event.payload)), expected)
+        self.assertEqual(json.loads(canonical_json(aggregate.attributes)), expected)
+        self.assertEqual(aggregate.events, (event,))
+        for owned in (event.payload, aggregate.attributes):
+            with self.assertRaises(TypeError):
+                owned["pending"] = True
+            with self.assertRaises(TypeError):
+                owned["values"][0]["value"] = "later-edit"
+            with self.assertRaises(TypeError):
+                owned["values"][0] = {}
+
+    def test_returned_values_preserve_replay_and_populated_rollback(self) -> None:
+        original = command("cmd-owned", "register", 0, payload={"nested": [{"value": 0}]})
+        digest = original.content_digest
+        accepted = self.service.register(original)
+        before = canonical_json(accepted.attributes)
+        for owned in (accepted.attributes, accepted.events[0].payload):
+            with self.assertRaises(TypeError):
+                owned["nested"][0]["value"] = 2
+        replay = self.service.register(original)
+        self.assertIs(replay, accepted)
+        self.assertEqual(original.content_digest, digest)
+        self.assertEqual(replay.events[0].command_digest, digest)
+
+        def failed_operation():
+            candidate = replace(accepted, version=2, attributes={"nested": [{"value": 1}]})
+            self.repository.save(candidate, previous_version=1)
+            raise RuntimeError("synthetic failure after candidate save")
+
+        with self.assertRaisesRegex(RuntimeError, "after candidate save"):
+            InMemoryAtomicExecutor((self.repository,)).execute(failed_operation)
+        restored = self.repository.get(original.tenant_id, original.specimen_id)
+        self.assertIs(restored, accepted)
+        self.assertEqual(canonical_json(restored.attributes), before)
+        self.assertEqual(restored.version, 1)
+        self.assertEqual(len(restored.events), 1)
+
+    def test_nested_domain_values_project_to_detached_json_documents(self) -> None:
+        aggregate = self.service.register(
+            command("cmd-document", "register", 0, payload={"nested": [{"value": 0}]})
+        )
+        view = SpecimenView(aggregate, None, (), None)
+        document = view.to_document()
+        self.assertEqual(json.loads(json.dumps(document)), document)
+        document["attributes"]["nested"][0]["value"] = 1
+        document["events"][0]["payload"]["nested"][0]["value"] = 2
+        self.assertEqual(view.to_document()["attributes"]["nested"][0]["value"], 0)
+        self.assertEqual(view.to_document()["events"][0]["payload"]["nested"][0]["value"], 0)
+        stored = json.loads(_json(_aggregate_document(aggregate)))
+        self.assertEqual(stored["attributes"], {"nested": [{"value": 0}]})
+        self.assertEqual(json.loads(_json(aggregate.events[0].payload)), stored["attributes"])
 
     def test_matching_in_progress_command_fails_closed(self) -> None:
         ledger: IdempotencyLedger = IdempotencyLedger()

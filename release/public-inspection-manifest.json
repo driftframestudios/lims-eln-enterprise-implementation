@@ -1,7 +1,7 @@
 {
   "artifact_groups": [
     {
-      "aggregate_sha256": "sha256:e5d60464cd86d603e836c43ab643e489e48f084da96d2ee8e1b162adec2455f4",
+      "aggregate_sha256": "sha256:447eec42bcaef4914c197625be2dc9902c37563d52be1011c7088def19443afd",
       "artifacts": [
         {
           "path": ".python-version",
@@ -100,8 +100,8 @@
         },
         {
           "path": "src/lims_eln_implementation/model.py",
-          "sha256": "sha256:6d2d93a5b56f8638466c29d1fee0dcfe362c936303ef03a1c4908366470f1eba",
-          "size_bytes": 5586
+          "sha256": "sha256:882b1ba0fb96f1761e4e304a85dbc6ffa411c59ce92c309df4b569a510185888",
+          "size_bytes": 6379
         },
         {
           "path": "src/lims_eln_implementation/observability.py",
@@ -165,8 +165,8 @@
         },
         {
           "path": "src/lims_eln_implementation/workbench/postgres.py",
-          "sha256": "sha256:8a34bce87d72e122e9fd050aba5f6475b46891378fed5574fd94fe5dba904e90",
-          "size_bytes": 76843
+          "sha256": "sha256:5fdd8bfba4fb3fbf7d5710192c02c384e2d34fdeeed600b5bf29b4aca76410ae",
+          "size_bytes": 76745
         },
         {
           "path": "src/lims_eln_implementation/workbench/runtime.py",
@@ -175,8 +175,8 @@
         },
         {
           "path": "src/lims_eln_implementation/workbench/service.py",
-          "sha256": "sha256:fa843248807842f30f46d78ae9e36ed257e21888a5ff44bf6151d62a15666230",
-          "size_bytes": 23141
+          "sha256": "sha256:8c03c1125498ac213f14af55da9a0e58776be08f5298051b12af3f155c1c53f0",
+          "size_bytes": 23217
         },
         {
           "path": "src/lims_eln_implementation/workbench/shared_contracts.py",
@@ -305,7 +305,7 @@
       "responsibility": "Flyway V001 through V005, its bounded identity, and deployment-shape database support."
     },
     {
-      "aggregate_sha256": "sha256:51fa492872f2e79f0ee545f99e1a5ab4f1a16f3bfe0212efdd8008a9cd243001",
+      "aggregate_sha256": "sha256:59ed53f072f8911446e89ad8778365b8304caf2c984411c25edce7181e308bc6",
       "artifacts": [
         {
           "path": "contracts/execution-receipt.v1.1.schema.json",
@@ -369,7 +369,7 @@
         },
         {
           "path": "release/bounded-caller-bindings.json",
-          "sha256": "sha256:87352783bd200b9b5e2c1a6a24e3e0611afa93d88868102cbbf2a188662526fa",
+          "sha256": "sha256:365633b7a275657b134607e832b1664d37e98626d8cb43f4e0c14d7dae55d2ac",
           "size_bytes": 6805
         },
         {
@@ -429,7 +429,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:fe80e1532d50c38c8ede9078fbd8541ce3dcab43e1d73dc44290403da0408239",
+      "aggregate_sha256": "sha256:04ff4e4dd2e3cb14e701d98248a9d0dae7131c25963314e4f572113217e66002",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -553,8 +553,8 @@
         },
         {
           "path": "tests/test_lifecycle.py",
-          "sha256": "sha256:f15359d2438bb518d09d6842d013def12a2fc0cfb4ee6c727a8f29ff79bfaf33",
-          "size_bytes": 5756
+          "sha256": "sha256:122c1e6acae7052e72190a16042e6790ad1f9e39563d225b68880c1df4fb86b1",
+          "size_bytes": 9744
         },
         {
           "path": "tests/test_local_container_security.py",
@@ -698,7 +698,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:e53508a7b892a3d7e011ee60a2d6d3f1b81bae26511f448af3f55be7908d84bc",
+      "aggregate_sha256": "sha256:2c88a9e74dde9035935b1ee342d3689afae446ea65aba94eac083759b9f69483",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -877,7 +877,7 @@
         },
         {
           "path": "first-receipt.json",
-          "sha256": "sha256:a50e3876f81d023f5af80716496dfd8416a7dace5ebbbf439dcc2bfd30e3f706",
+          "sha256": "sha256:2afdb8651608322bc6c3822805ff8c0b2df7bcbd6b56e2db25c7144f47e714e0",
           "size_bytes": 6522
         },
         {
@@ -887,7 +887,7 @@
         },
         {
           "path": "machine-node.json",
-          "sha256": "sha256:0bf705428313ec05e176ca74c800d5c126578f0a1c49a062afc1e3794287b828",
+          "sha256": "sha256:daed5a83bd881276f80f6f389474f94260df99269514796858a92e7928d3f1e2",
           "size_bytes": 5645
         },
         {
@@ -1029,7 +1029,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:34e4b637104e3c53e96ae489299e4b3e19e52406133346ccbf3e97f29a9709ec",
+    "aggregate_sha256": "sha256:d971b6b29bcc14e6ff09891eebbee1250755b29da7aff98ff31a785a82284c50",
     "kind": "content_addressed_artifact_inventory"
   }
 }
