@@ -41,7 +41,7 @@ conformance. A sibling checkout remains an explicit development choice.
 
 ## Select durable state
 
-Prepare PostgreSQL 17 through the existing role provisioner, Flyway V001-V006,
+Prepare PostgreSQL 17 through the existing role provisioner, Flyway V001-V007,
 and role-bootstrap sequence. The local profile needs the `SYN-TENANT-A`
 tenant, the ordinary `laboratory_app` login, and a verifier entry whose key
 identifier matches `LIMS_WORKBENCH_TENANT_KEY_ID`. The existing Compose

@@ -1104,6 +1104,7 @@ def validate_manifests() -> None:
         "sql/V004__outbox_attempt_evidence_and_recovery.sql",
         "sql/V005__golden_specimen_workbench.sql",
         "sql/V006__bounded_invocation_release.sql",
+        "sql/V007__pending_outbox_specimen_index.sql",
     ]
     if (
         inventory.get("schema_version") != "1.0.0"
@@ -1190,7 +1191,7 @@ def validate_manifests() -> None:
 
     migrations = sorted((ROOT / "sql").glob("V[0-9][0-9][0-9]__*.sql"))
     migration_ids = [path.name[1:4] for path in migrations]
-    if migration_ids != ["001", "002", "003", "004", "005", "006"]:
+    if migration_ids != ["001", "002", "003", "004", "005", "006", "007"]:
         raise AssertionError("Flyway migrations require the released ordered sequence")
     for migration in migrations:
         sql = migration.read_text(encoding="utf-8")

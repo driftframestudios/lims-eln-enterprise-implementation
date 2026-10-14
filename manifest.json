@@ -17,7 +17,7 @@
   },
   "public_inspection": {
     "manifest": "release/public-inspection-manifest.json",
-    "manifest_digest": "sha256:dff7e6aa01fe49891f0e0c41b625cc56a441dbdbccc7e702905ebd5fe125306e",
+    "manifest_digest": "sha256:c2a12be8d3e881ab890af4bd4b78de5feca63b986c85b01997f5c477dcf5226c",
     "authority": "repository_owned_inspection_bytes",
     "cross_repository_coordinate_state": "accepted_and_consumer_observed"
   },
@@ -61,11 +61,11 @@
   "database": {
     "engine": "postgresql",
     "qualified_major": 17,
-    "migration_head": "006",
+    "migration_head": "007",
     "migration_product": "Flyway Community",
     "migration_product_version": "13.8.1",
     "migration_release": "database/flyway-release.json",
-    "migration_release_digest": "sha256:376f0a4aee877a7a2d638bdad23ca9c0fbf3e9c1709bb51c8baedf232cb92b9d",
+    "migration_release_digest": "sha256:264ac36e29ca4329d8dec9452bd2088c4acc8eed15947634da1d246af3efa5fd",
     "migration_configuration": "flyway.conf",
     "migration_transaction_policy": "one_transaction_per_migration",
     "tenant_authority": "signed_short_lived_database_verified_context",

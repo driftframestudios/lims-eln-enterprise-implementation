@@ -170,7 +170,7 @@ inventory includes the exact Flyway 13.8.1 source and its separately observed
 hosted database receipt without recasting that post-release work as part of the
 signed release. It binds every current
 FastAPI and domain source, Flyway V001 through
-V006, local contract and synthetic input, operational configuration, behavior
+V007, local contract and synthetic input, operational configuration, behavior
 proof, evidence record, and public orientation file by path, byte length,
 SHA-256 digest, group digest, and one aggregate content identity. The signed
 annotated tag `v0.3.1` identifies the prior accepted source release. Its later
@@ -228,15 +228,16 @@ The ordinary local proof runs configured-database tests when their explicit
 synthetic DSNs and verification key are present. CI also provisions PostgreSQL
 17, provisions cluster roles separately, applies the Flyway chain, validates
 and inspects history, targets V003, proves transactional V004 rejection, applies
-V004 and V005, replays the head, compares clean and upgraded schemas, and exercises unsigned and
+V004 through the current head, replays the head, compares clean and upgraded
+schemas, and exercises unsigned and
 tampered tenant contexts, temporary-relation shadowing, custody CAS/replay,
 measurement lineage, tenant-scoped outbox identity, immutable outbox content,
 worker crash/reclaim, stale-fence rejection, and the durable FastAPI workbench's
 restart, exact replay, changed-content collision, tenant isolation, rollback,
 instrument recovery, and canonical-digest checks.
 
-The current V006 successor adds ordinary-role invocation release and canonical
-ledger relation binding. The retained hosted PostgreSQL receipt continues to
+The current V007 successor adds a per-specimen pending-outbox index alongside
+ordinary-role invocation release and canonical ledger relation binding. The retained hosted PostgreSQL receipt continues to
 identify its observed V005 source; the successor receives its own configured
 PostgreSQL 17/Flyway observation.
 
