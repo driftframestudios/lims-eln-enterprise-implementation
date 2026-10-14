@@ -15,7 +15,7 @@ CONTRACT_PACKAGE_AVAILABLE = find_spec("lims_eln_contracts") is not None
 
 @unittest.skipUnless(
     CONTRACT_PACKAGE_AVAILABLE,
-    "integrated contract proof requires lims-eln-program-specification 0.5.0",
+    "integrated contract proof requires lims-eln-program-specification 0.6.0",
 )
 class SharedContractBindingTests(unittest.TestCase):
     def test_shared_scenario_and_observation_envelope_converge(self) -> None:
@@ -33,9 +33,9 @@ class SharedContractBindingTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            distribution_version("lims-eln-program-specification"), "0.5.0"
+            distribution_version("lims-eln-program-specification"), "0.6.0"
         )
-        self.assertEqual(shared_package_version, "0.5.0")
+        self.assertEqual(shared_package_version, "0.6.0")
         self.assertEqual(CONTRACT_VERSION, "1.0.0")
 
         operation_catalog = load_operation_catalog()

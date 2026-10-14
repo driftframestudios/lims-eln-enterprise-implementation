@@ -109,6 +109,12 @@ class CatalogSnapshot:
                 raise AdministrativeBoundaryError("code_key_boundary")
         return self._codes.get((system, release, code))
 
+    def lookup_term(self, term_id: str) -> IdentifiedTerm | None:
+        """Resolve one exact term identity in expected O(1) time."""
+        if type(term_id) is not str or len(term_id) > 128:
+            raise AdministrativeBoundaryError("term_key_boundary")
+        return self._terms.get(term_id)
+
     def classify(self, raw_label: str | None, *, classification_id: str, context_ref: str) -> InsuranceClassification:
         key = normalize_alias(raw_label) if raw_label is not None else ""
         candidates = tuple(self._terms[item] for item in self._aliases.get(key, ()))

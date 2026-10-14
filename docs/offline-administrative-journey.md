@@ -85,3 +85,75 @@ credentials, released receipts and publication settings retain their roles.
 Program #71 owns study meaning. Simulation #38 owns larger independent scenario
 packs, Comparative #41 owns measured effects, and Governance #38 owns assurance.
 Source acceptance, main promotion, release tags and publication remain separate.
+
+## Carry a reviewed proposal into policy evaluation
+
+The reviewed journey connects a fresh classification to the policy inputs that
+actually determine the result:
+
+```bash
+python -m lims_eln_implementation.administrative.reviewed_journey
+```
+
+The contracts-enabled environment described above supplies Program's typed
+models. This entry uses one packaged, authored two-arm example. Review records
+are fixture data; an operational receiver supplies its own accountable review
+and admission boundary.
+
+| Input and review | Accepted classification | Policy result |
+| --- | --- | --- |
+| `Commercial`, accepted | Commercial | `policy-outcome:standard_processing` |
+| `Commercial + community support bridge`, explicitly revised to both catalog terms | Commercial and Supplemental | `policy-outcome:manual_review` |
+
+Both arms retain the same scientific output. The result contains accepted
+classification JSON, proposal/context/catalog/reviewer lineage, policy input
+and evaluation identities, and Program's separate interpretation companion.
+The companion reports one planned pair, two usable outputs, and one eligible
+pair under declared-input comparison. Its expected-pair coverage is zero: the
+independent expected policy outcomes live in the focused tests, while the study
+itself carries no embedded expected-pair record. A stricter analysis profile can
+require those records explicitly.
+
+### Revise a source while retaining the last accepted value
+
+`accept_classification(proposal, context, catalog, request)` is a pure
+transition. `ClassificationReviewRequest` names the exact proposal digest,
+context digest, catalog binding, and Program `AccountableReview`. An `accept`
+action preserves the proposed standing. A `revise` action selects exact catalog
+term identities. Unknown, ambiguous, and abstained values retain their distinct
+meanings when accepted as such.
+
+The caller retains the earlier `ReviewedClassification` while preparing a
+successor. A changed raw label, source identity, context, or catalog requires a
+new bound review request. `AdministrativeBoundaryError.code` identifies the
+recovery boundary; an unsuccessful transition leaves the earlier immutable
+value available. Persisted classification JSON uses Program's existing schema.
+The small transition wrapper is process-local.
+
+`evaluate_reviewed_classification` reproduces the transition against its current
+sources before evaluation. Service day, evaluation time, review time, policy
+version, context effectivity, and jurisdiction each retain a separate check.
+The semantic evaluation identifier stays stable across equivalent inputs;
+`evaluated_at` records the occurrence. The existing replay ledger binds the
+complete run input and adapter identity, returning the original occurrence for
+an exact replay.
+
+Catalog preparation builds dictionary indexes once. Exact term lookup has
+expected constant cost; bounded review and policy work scale with the selected
+source material and prepared predicates. The typed local transition receives
+admitted values. Arbitrary external bundles retain a separate byte, identity,
+and record-budget intake before this finite example expands.
+
+The ordinary fixture-backed journey remains available through the original
+command. Its independent fixture results and the reviewed transition answer
+separate questions. Broader administrative adapters, demographic studies,
+population inference, and externally executed models retain their own evidence
+and authorization routes.
+
+The study's subject and episode identifiers come from the reviewed context;
+the full release-scoped context remains bound by its digest. The reviewed
+adapter has its own execution identity, including hashes of the four owned
+administrative implementation modules. A changed adapter or implementation
+therefore receives a different replay fingerprint. These hashes establish
+source identity for the local example; the receiving environment retains
+responsibility for its installed package and reviewer authority.

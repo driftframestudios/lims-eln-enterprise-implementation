@@ -1,7 +1,7 @@
 {
   "artifact_groups": [
     {
-      "aggregate_sha256": "sha256:ffc7e35b8238899ec46a4f378946a07e633332690fc64d98d5d4bbcc3f509d9b",
+      "aggregate_sha256": "sha256:82cfca1016c5fef705c878d6affaa9a3691c042ccc48525ac9b89e654480bb73",
       "artifacts": [
         {
           "path": ".python-version",
@@ -10,7 +10,7 @@
         },
         {
           "path": "pyproject.toml",
-          "sha256": "sha256:4e6410a85330bda867dbbc58148890144fa243c11d0a1c6b9aa698a2d59c66c2",
+          "sha256": "sha256:751000cf5ce64baa44ab058459a53b1f97911084326d27792fc27c8aef4ccc38",
           "size_bytes": 1250
         },
         {
@@ -34,14 +34,24 @@
           "size_bytes": 567
         },
         {
+          "path": "src/lims_eln_implementation/administrative/acceptance.py",
+          "sha256": "sha256:e4566b00fa3b308648ec9b47403241244bb6d314677b888f8f37fc7a2781e940",
+          "size_bytes": 6373
+        },
+        {
           "path": "src/lims_eln_implementation/administrative/core.py",
-          "sha256": "sha256:96e6c2c24151a6cb6532a74086e0f95bb3abd80e973bcea6d2060fdd02411738",
-          "size_bytes": 13744
+          "sha256": "sha256:db4292b0fa7f9621e68ac48b186ae9c53a3b11fba639e418a7465be57d98589b",
+          "size_bytes": 14046
         },
         {
           "path": "src/lims_eln_implementation/administrative/journey.py",
           "sha256": "sha256:0d5dfad6238355ffb7b80b490ecb62684036c94bc9d96ebd69775abdb0dbde78",
           "size_bytes": 14681
+        },
+        {
+          "path": "src/lims_eln_implementation/administrative/reviewed_journey.py",
+          "sha256": "sha256:7d6738a967c49773b9f880348c31ee1359db36f52a67093de0e6b449ede264c1",
+          "size_bytes": 11101
         },
         {
           "path": "src/lims_eln_implementation/application.py",
@@ -170,7 +180,7 @@
         },
         {
           "path": "src/lims_eln_implementation/workbench/shared_contracts.py",
-          "sha256": "sha256:0329045bd4e4fdeeeeb13c30492bc5646c6b9acb4e745c9c5ae586f28c83bd4a",
+          "sha256": "sha256:8fe8f9467ba69ffd5d32ed28eb48dd6571c7e9a307d1e9740448f46faa3a3f10",
           "size_bytes": 11401
         },
         {
@@ -190,7 +200,7 @@
         },
         {
           "path": "uv.lock",
-          "sha256": "sha256:9a1dd79f4abf6d05f1c7401a23bee2df63933606611911fce866b7d48eaca7de",
+          "sha256": "sha256:5cd852954d1524c7aa4b71c5ac12ed362c094339d02b002a8b0e22f9c466a8f2",
           "size_bytes": 133091
         }
       ],
@@ -295,7 +305,7 @@
       "responsibility": "Flyway V001 through V005, its bounded identity, and deployment-shape database support."
     },
     {
-      "aggregate_sha256": "sha256:370688f5e26ab755db16bd1d0a9ebeadb3480df534735b2cb0692624187c854a",
+      "aggregate_sha256": "sha256:96748a53f64d21823dbbea97e38cf4344b1908dee31b0d46e136e83da04b2da0",
       "artifacts": [
         {
           "path": "contracts/execution-receipt.v1.1.schema.json",
@@ -359,12 +369,12 @@
         },
         {
           "path": "release/bounded-caller-bindings.json",
-          "sha256": "sha256:618cef39aa26b2ff993dabf8566d91c89c1e39ee7eb7626ebd491bfb5d13fb6c",
+          "sha256": "sha256:148bbfc68fb44850d4d1f55f59197ac7d04ce7a96517e2e2404844e247686ed7",
           "size_bytes": 6805
         },
         {
           "path": "release/external-contract-coordinates.json",
-          "sha256": "sha256:ef3bb27784e75c3ea06ab23e6cdb8dc54f1d8a5a54d34726d060757916725c44",
+          "sha256": "sha256:93fcc0a9ed583e34569cf45f5f1aa524415f1d6ddcbdf0776db10e0ac53d5827",
           "size_bytes": 7048
         }
       ],
@@ -419,7 +429,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:1f92d0caef6ece881375ae7019ddb36de6f2aeed4c977eb65e6bbab6e805329e",
+      "aggregate_sha256": "sha256:8d8ba384e10d310a4f25c50a7b9eac1c9d15541908ead2d41045e0005849376d",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -458,7 +468,7 @@
         },
         {
           "path": "scripts/prepare_container_context.py",
-          "sha256": "sha256:e025791a8722f2622ecca470cf2c557219116b44c61b127e93017efc913dee6d",
+          "sha256": "sha256:da2001b17763fda2c45a6b87eefbaeefecd6c92b808b70e00f5d390f6bb3645b",
           "size_bytes": 7265
         },
         {
@@ -473,12 +483,12 @@
         },
         {
           "path": "scripts/validate_received_contracts.py",
-          "sha256": "sha256:4af050841e10e6045fcb0a042e3d72a599eb15644e31f6bb9709ff4c8ed6d188",
-          "size_bytes": 45461
+          "sha256": "sha256:34df8bdf3d7d96a46d020e30bf9183c396bdd7a875a51eb1f211e9a8a7948221",
+          "size_bytes": 45504
         },
         {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:94f636ff5c979508cde868fa99d53f5eb3e72683ce51c54d7e953718ff820183",
+          "sha256": "sha256:db024ee09fd99ce4ce1768d748271140ba7e794ad011afcb8594ab55c087e6ac",
           "size_bytes": 82593
         },
         {
@@ -573,18 +583,23 @@
         },
         {
           "path": "tests/test_public_inspection_manifest.py",
-          "sha256": "sha256:73dd9dfc0590d09cb02072bd0986020d3be812699008f74492b0275da531445b",
+          "sha256": "sha256:12e6b12deb7209097fe1abc7506e8a637e7fe3feb39110888c027217519069e6",
           "size_bytes": 14625
         },
         {
           "path": "tests/test_received_contracts.py",
-          "sha256": "sha256:9c96e2be20ca2c7ed89340ced4c9f457d6dba338436ac38cbfe4c8389b6049a6",
-          "size_bytes": 30760
+          "sha256": "sha256:7a4bd864deeffda3c693ba07a1e819a616b4860d34597879994b99ddcc04cac7",
+          "size_bytes": 30811
         },
         {
           "path": "tests/test_recovery_runbooks.py",
           "sha256": "sha256:8b5ecf598f42ad1d3dec1f98b2d7e1c3b8fb5a9fad4d2eeb5222e1e611cebfdf",
           "size_bytes": 2035
+        },
+        {
+          "path": "tests/test_reviewed_administrative_journey.py",
+          "sha256": "sha256:ad427f3c21c50896a2c753dcf8de624aeeb020d540496320e2eb8d520e335dea",
+          "size_bytes": 12402
         },
         {
           "path": "tests/test_runtime_configuration.py",
@@ -598,7 +613,7 @@
         },
         {
           "path": "tests/test_shared_contract_binding.py",
-          "sha256": "sha256:af046d1c228e4923edaa740bb72e836f1964b994cac93a44f4dfa5206fc0d3a6",
+          "sha256": "sha256:eafb133cea206185a86388623fd0db49058a2d2f2557483fbc89d134d7d0f2ee",
           "size_bytes": 8004
         },
         {
@@ -678,7 +693,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:18d3ec03e25dabf6d24f8e1bb02045adf18f293506183f840091e39db15e0b78",
+      "aggregate_sha256": "sha256:8df5bfb081b01775c01516eef474b500d2aa92e8ed0e54167b2bafff2dc40115",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -807,8 +822,8 @@
         },
         {
           "path": "docs/offline-administrative-journey.md",
-          "sha256": "sha256:0936d1425a64466bbc41ed3b82c3f0a35a2523ced030f2f3d2cf4a04bd501006",
-          "size_bytes": 4987
+          "sha256": "sha256:cae67d30728bd6baf661d3555558b38291c3c2515d2cc48ea90a1ab02b777799",
+          "size_bytes": 8983
         },
         {
           "path": "docs/qualification-boundaries.md",
@@ -857,7 +872,7 @@
         },
         {
           "path": "first-receipt.json",
-          "sha256": "sha256:02f927d59464f07a3027bfdd2d9e4dd9e9077b890b199fe4cae2bb15a844a986",
+          "sha256": "sha256:a99319a47f94da85bef0e9e4b0f47da02097ed57ee8836f77a820e19af5b4ebe",
           "size_bytes": 6522
         },
         {
@@ -867,7 +882,7 @@
         },
         {
           "path": "machine-node.json",
-          "sha256": "sha256:857c93859a7b94f6b0d5808f26330838fc2d7bcb406972034ba337f14b2b5d15",
+          "sha256": "sha256:53176302c8e9367100e5cd7e53233d1502ee715344081d97d1bbbaf042f44ed0",
           "size_bytes": 5645
         },
         {
@@ -888,18 +903,18 @@
   "canonicalization": "ordered-path-nul-sha256-lf-v1",
   "coordinate_boundaries": [
     {
-      "accepted_revision": "43a687464b3803a7bcb88d1dcdc4ea39009904de",
+      "accepted_revision": "b3e63ff9126a28ff959761d4d959426c00d39192",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:ef3bb27784e75c3ea06ab23e6cdb8dc54f1d8a5a54d34726d060757916725c44",
+      "coordinate_manifest_sha256": "sha256:93fcc0a9ed583e34569cf45f5f1aa524415f1d6ddcbdf0776db10e0ac53d5827",
       "coordinate_state": "accepted_source_consumer_observed",
-      "declared_release": "0.5.0",
+      "declared_release": "0.6.0",
       "role": "program_contract",
-      "source_digest": "sha256:d0c407564024f68dd24ca3f6ddb8bea1d04283b06edb5eedbc146a525df51bf7"
+      "source_digest": "sha256:82f4c1d4e5213e24ed37949bde0e015c579484537d9c9b8dda6c9ae37e58d84b"
     },
     {
       "accepted_revision": "c8d7150b8c4e6277bc504a7c69289cb5b949b0ee",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:ef3bb27784e75c3ea06ab23e6cdb8dc54f1d8a5a54d34726d060757916725c44",
+      "coordinate_manifest_sha256": "sha256:93fcc0a9ed583e34569cf45f5f1aa524415f1d6ddcbdf0776db10e0ac53d5827",
       "coordinate_state": "accepted_release",
       "declared_release": "2.2.0",
       "role": "governance_schema",
@@ -912,7 +927,7 @@
       "canonical_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
       "closure_artifact_path": "release/future-reality-2028-06-30-v1.json",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:ef3bb27784e75c3ea06ab23e6cdb8dc54f1d8a5a54d34726d060757916725c44",
+      "coordinate_manifest_sha256": "sha256:93fcc0a9ed583e34569cf45f5f1aa524415f1d6ddcbdf0776db10e0ac53d5827",
       "coordinate_state": "accepted_release",
       "declared_release": "forecast-2028-FR-v1",
       "role": "simulated_final_state",
@@ -925,7 +940,7 @@
       "canonical_closure_digest": "sha256:33bcc14da24309b7716728b3f0204008e8f7ebf58de75f9e40a5986b421f06b5",
       "closure_artifact_path": "fixtures/simulated-closures/future-reality-2028-06-30-v1.json",
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:ef3bb27784e75c3ea06ab23e6cdb8dc54f1d8a5a54d34726d060757916725c44",
+      "coordinate_manifest_sha256": "sha256:93fcc0a9ed583e34569cf45f5f1aa524415f1d6ddcbdf0776db10e0ac53d5827",
       "coordinate_state": "accepted_release",
       "declared_release": "comparison-v0.3.1",
       "role": "comparative_evidence",
@@ -942,7 +957,7 @@
         "material_divergence": 3
       },
       "coordinate_manifest": "release/external-contract-coordinates.json",
-      "coordinate_manifest_sha256": "sha256:ef3bb27784e75c3ea06ab23e6cdb8dc54f1d8a5a54d34726d060757916725c44",
+      "coordinate_manifest_sha256": "sha256:93fcc0a9ed583e34569cf45f5f1aa524415f1d6ddcbdf0776db10e0ac53d5827",
       "coordinate_state": "accepted_return",
       "declared_release": "comparison-v0.3.2",
       "docs_revision": "6ccc087875b439eb70304771f534434acae3f01c",
@@ -1009,7 +1024,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:9d3dfb303c005ac3bf88367f2e222c100fffbab49401f4daaa0adefc18ab5660",
+    "aggregate_sha256": "sha256:f2fb4e0932e13c3f8405c690871671c19371b58b9cad2ef2ad40f66320cc8651",
     "kind": "content_addressed_artifact_inventory"
   }
 }
