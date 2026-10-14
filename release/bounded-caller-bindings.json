@@ -47,7 +47,7 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/shared_contracts.py",
-      "sha256": "0329045bd4e4fdeeeeb13c30492bc5646c6b9acb4e745c9c5ae586f28c83bd4a",
+      "sha256": "c60d5bca48367bce6a291c30101ea0afdf035ba5930199adbc125e4e7200c1bd",
       "responsibility": "optional exact projection from workbench state into the independently distributed Program observation contract"
     },
     {

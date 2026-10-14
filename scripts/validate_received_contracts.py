@@ -19,14 +19,14 @@ COORDINATE_PATH = Path("release/external-contract-coordinates.json")
 PROGRAM_REPOSITORY = "driftframestudios/lims-eln-program-specification"
 PROGRAM_DISTRIBUTION = "lims-eln-program-specification"
 PROGRAM_IMPORT = "lims_eln_contracts"
-PROGRAM_VERSION = "0.5.0"
+PROGRAM_VERSION = "0.6.1"
 PROGRAM_CONTRACT_VERSION = "1.0.0"
-PROGRAM_COMMIT = "43a687464b3803a7bcb88d1dcdc4ea39009904de"
+PROGRAM_COMMIT = "83a97deb76b9a5636cc7da484d350d5556c51661"
 PROGRAM_SOURCE_URL = (
     "https://github.com/driftframestudios/lims-eln-program-specification.git"
 )
 PROGRAM_SOURCE_DIGEST = (
-    "sha256:d0c407564024f68dd24ca3f6ddb8bea1d04283b06edb5eedbc146a525df51bf7"
+    "sha256:f12f3c3048204ab1714bfc4eccaadaf27dbc5f2fc7616bfb114cc0b48dd2ff31"
 )
 PROGRAM_REQUIREMENT = (
     "lims-eln-program-specification @ git+https://github.com/"
@@ -38,8 +38,8 @@ PROGRAM_CONFORMANCE_COMMAND = (
     "--program-source ../lims-eln-program-specification"
 )
 PROGRAM_OBSERVATIONS = {
-    "installed distribution version is 0.5.0",
-    "lims_eln_contracts.__version__ is 0.5.0",
+    "installed distribution version is 0.6.1",
+    "lims_eln_contracts.__version__ is 0.6.1",
     "lims_eln_contracts.CONTRACT_VERSION is 1.0.0",
     "the PEP 610 source URL, requested revision, and commit match the reviewed source",
     "the scoped package source digest matches the reviewed binding",
@@ -60,11 +60,12 @@ PROGRAM_OBSERVED_VALUES = {
     "operation_count": 3,
     "scenario_id": "SCN-GOLDEN-SPECIMEN-001",
     "observation_producers": ["implementation", "simulation"],
-    "schema_count": 11,
+    "schema_count": 12,
     "administrative_resources": ["canonical_bundle", "adapter", "independent_multilabel_policy", "counterfactual"],
 }
 
 PROGRAM_SCHEMA_NAMES = (
+    "study-interpretation.v1.schema.json",
     "administrative-study.v1.schema.json",
     "administrative-study-comparison.v1.schema.json",
     "bounded-call-receipt.v1.schema.json",

@@ -258,7 +258,7 @@ requires-dist = [
     { name = "httpx2", marker = "extra == 'test'", specifier = ">=2.12,<3" },
     { name = "jinja2", specifier = ">=3.1.6,<4" },
     { name = "jsonschema", extras = ["format-nongpl"], marker = "extra == 'test'", specifier = ">=4.23,<5" },
-    { name = "lims-eln-program-specification", marker = "extra == 'contracts'", git = "https://github.com/driftframestudios/lims-eln-program-specification.git?rev=43a687464b3803a7bcb88d1dcdc4ea39009904de" },
+    { name = "lims-eln-program-specification", marker = "extra == 'contracts'", git = "https://github.com/driftframestudios/lims-eln-program-specification.git?rev=83a97deb76b9a5636cc7da484d350d5556c51661" },
     { name = "psycopg", extras = ["binary"], marker = "extra == 'postgres'", specifier = ">=3.3,<4" },
     { name = "pydantic", specifier = ">=2.13,<3" },
     { name = "uvicorn", specifier = ">=0.52,<1" },
@@ -267,8 +267,8 @@ provides-extras = ["contracts", "postgres", "test"]
 
 [[package]]
 name = "lims-eln-program-specification"
-version = "0.5.0"
-source = { git = "https://github.com/driftframestudios/lims-eln-program-specification.git?rev=43a687464b3803a7bcb88d1dcdc4ea39009904de#43a687464b3803a7bcb88d1dcdc4ea39009904de" }
+version = "0.6.1"
+source = { git = "https://github.com/driftframestudios/lims-eln-program-specification.git?rev=83a97deb76b9a5636cc7da484d350d5556c51661#83a97deb76b9a5636cc7da484d350d5556c51661" }
 dependencies = [
     { name = "pydantic" },
 ]

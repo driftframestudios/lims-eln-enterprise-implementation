@@ -36,7 +36,7 @@ class ReceivedContractTests(unittest.TestCase):
         direct_url_text: str | None = None,
         operation_count: int = 3,
         scenario_id: str = "SCN-GOLDEN-SPECIMEN-001",
-        schema_count: int = 11,
+        schema_count: int = 12,
         schema_is_object: bool = True,
         shadow_import: bool = False,
     ) -> tuple[SimpleNamespace, SimpleNamespace]:
@@ -60,23 +60,24 @@ class ReceivedContractTests(unittest.TestCase):
                     "vcs_info": {
                         "vcs": "git",
                         "requested_revision": (
-                            "43a687464b3803a7bcb88d1dcdc4ea39009904de"
+                            "83a97deb76b9a5636cc7da484d350d5556c51661"
                         ),
                         "commit_id": (
-                            "43a687464b3803a7bcb88d1dcdc4ea39009904de"
+                            "83a97deb76b9a5636cc7da484d350d5556c51661"
                         ),
                     },
                 }
             )
 
         distribution = SimpleNamespace(
-            version="0.5.0",
+            version="0.6.1",
             files=[Path("lims_eln_contracts/__init__.py")],
             locate_file=lambda relative_path: root / "site-packages" / relative_path,
             read_text=lambda name: direct_url_text if name == "direct_url.json" else None,
         )
         scenario = SimpleNamespace(scenario_id=scenario_id)
         schema_names = [
+            "study-interpretation.v1.schema.json",
             "administrative-study.v1.schema.json",
             "administrative-study-comparison.v1.schema.json",
             "bounded-call-receipt.v1.schema.json",
@@ -91,7 +92,7 @@ class ReceivedContractTests(unittest.TestCase):
         ][:schema_count]
         contracts = SimpleNamespace(
             __file__=str(module_path),
-            __version__="0.5.0",
+            __version__="0.6.1",
             CONTRACT_VERSION="1.0.0",
             SCHEMA_RESOURCE_NAMES=schema_names,
             load_operation_catalog=lambda: SimpleNamespace(
@@ -113,7 +114,7 @@ class ReceivedContractTests(unittest.TestCase):
         coordinates = load_coordinates(ROOT)
         self.assertEqual(
             coordinates["program_contract"]["source_commit"],
-            "43a687464b3803a7bcb88d1dcdc4ea39009904de",
+            "83a97deb76b9a5636cc7da484d350d5556c51661",
         )
         self.assertEqual(coordinates["governance"]["schema_release"], "2.2.0")
         self.assertEqual(
