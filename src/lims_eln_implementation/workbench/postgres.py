@@ -50,6 +50,7 @@ from ..security import (
     TenantSessionBindingError,
 )
 from ..store import InMemorySpecimenRepository
+from ..resource_cleanup import Cleanup
 from ..vendors import FaultMode, InMemoryVendorGateway, ProjectionOutcome, VendorProjectionService
 from .service import ObservationAbsent, SpecimenAbsent
 from .shared_contracts import SharedContractUnavailable, build_observation, contract_available
@@ -87,44 +88,33 @@ FailureProbe = Callable[[str], None]
 def _transaction(connection_factory: ConnectionFactory) -> Iterator[Cursor]:
     """Own one transaction and release its cursor and connection explicitly."""
 
-    connection = connection_factory()
     cursor: Cursor | None = None
     primary_error: BaseException | None = None
+    cleanup = Cleanup()
+    connection = connection_factory()
     try:
         cursor = connection.cursor()
         yield cursor
         connection.commit()
     except BaseException as error:
         primary_error = error
-        try:
-            connection.rollback()
-        except Exception as rollback_error:  # noqa: BLE001
-            primary_error.add_note(
-                "PostgreSQL rollback also failed with "
-                f"{type(rollback_error).__name__}; the primary error remains authoritative"
-            )
+        cleanup.attempt("rollback", connection.rollback)
         sqlstate = getattr(error, "sqlstate", None)
-        if isinstance(sqlstate, str) and sqlstate in {"40001", "40P01"}:
-            raise TransactionRetryRequired(
+        if isinstance(error, Exception) and isinstance(sqlstate, str) and sqlstate in {"40001", "40P01"}:
+            cleanup.retain_on(error)
+            primary_error = TransactionRetryRequired(
                 "Concurrent database work changed this transaction. "
                 "Retry the complete request with its original identity and inputs."
-            ) from error
+            )
+            raise primary_error from error
         raise
     finally:
-        release_error: Exception | None = None
         if cursor is not None:
-            try:
-                cursor.close()
-            except Exception as error:  # noqa: BLE001
-                release_error = error
-        try:
-            connection.close()
-        except Exception as error:  # noqa: BLE001
-            release_error = release_error or error
-        if primary_error is None and release_error is not None:
-            raise RuntimeError(
-                "PostgreSQL workbench resources require complete release"
-            ) from release_error
+            cleanup.attempt("cursor_close", cursor.close)
+        cleanup.attempt("connection_close", connection.close)
+        cleanup.finish(primary_error, lambda: RuntimeError(
+            "PostgreSQL workbench resources require complete release"
+        ))
 
 
 @dataclass(frozen=True, slots=True)

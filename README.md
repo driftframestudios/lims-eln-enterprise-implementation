@@ -373,6 +373,13 @@ observes late-failure rollback and a clean retry, then reconstructs the response
 from canonical stored state after restart. Separate-transaction or external-
 write uncertainty remains in `recovery_required` and receives reconciliation
 ownership.
+Database adapters attempt rollback and each acquired cursor/connection release
+once. The first control interruption remains observable after the remaining
+cleanup attempts; ordinary transaction failures keep their existing meaning.
+Local exception diagnostics retain named `cleanup_failures`, with value-free
+stage/type notes. Receipt and invocation adapters share their transaction owner;
+the workbench retains its whole-request SQLSTATE retry translation.
+
 External vendor effects use a stable request identity, qualified SDK and API
 bands, response-identity checks, and authoritative readback for timeouts,
 cleanup ambiguity, or unexpected confirmation. Driver and SDK bands accept
