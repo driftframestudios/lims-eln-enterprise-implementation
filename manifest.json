@@ -17,7 +17,7 @@
   },
   "public_inspection": {
     "manifest": "release/public-inspection-manifest.json",
-    "manifest_digest": "sha256:301c854ff006ba3480bb28f173dd17a02ae3479554391681c58a76b837f67134",
+    "manifest_digest": "sha256:62bdca5c10775b80069e3fc2cbad7ad23d296eae44c095fb248d48f9fd79e68e",
     "authority": "repository_owned_inspection_bytes",
     "cross_repository_coordinate_state": "accepted_and_consumer_observed"
   },
@@ -37,7 +37,7 @@
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:621df8cea31371df62de229c4b78d32f007efb0378eef3825bf16533e36c3a65",
+    "binding_digest": "sha256:f5c1ad5a67bf8276e9259d77b1a60b0994714b5ddf868de0d6160d385de62b23",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",
@@ -61,11 +61,11 @@
   "database": {
     "engine": "postgresql",
     "qualified_major": 17,
-    "migration_head": "007",
+    "migration_head": "008",
     "migration_product": "Flyway Community",
     "migration_product_version": "13.8.1",
     "migration_release": "database/flyway-release.json",
-    "migration_release_digest": "sha256:264ac36e29ca4329d8dec9452bd2088c4acc8eed15947634da1d246af3efa5fd",
+    "migration_release_digest": "sha256:58527f73f3f39d3db3e9065dfcc803fea6ef44f9b74654741eb53e0352cd94fa",
     "migration_configuration": "flyway.conf",
     "migration_transaction_policy": "one_transaction_per_migration",
     "tenant_authority": "signed_short_lived_database_verified_context",

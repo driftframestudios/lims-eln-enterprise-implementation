@@ -7,7 +7,7 @@ boundaries, applied history, checksum validation, status, and replay behavior.
 `database/flyway-release.json` pins the exact open-source Alpine image by version
 and multi-architecture digest. `database/flyway-artifact-inventory.json` binds
 the configuration, callback, cluster-role prerequisite, and every
-V001-through-V007 migration by individual SHA-256 plus an ordered aggregate
+V001-through-V008 migration by individual SHA-256 plus an ordered aggregate
 SHA-256. The release manifest binds both the
 inventory file and aggregate, creating one independently reviewable release
 coordinate while Flyway continues to own applied history and mechanics.

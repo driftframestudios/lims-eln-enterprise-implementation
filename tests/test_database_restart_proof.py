@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from scripts.check_database_restart import OwnedPostgres, RestartProofError, exercise
 
@@ -143,6 +143,41 @@ class OwnedPostgresTests(unittest.TestCase):
         self.assertEqual(run.call_args.kwargs["timeout"], 35)
         self.fake_command.start()
 
+    def test_authored_history_is_explicit_and_keeps_source_order(self):
+        sources = [
+            {"path": "database/provision_cluster_roles.sql", "sha256": "a" * 64},
+            {"path": "sql/V001__first.sql", "sha256": "b" * 64},
+            {"path": "sql/V002__second.sql", "sha256": "c" * 64},
+        ]
+        connection = MagicMock()
+        cursor = connection.__enter__.return_value.cursor.return_value.__enter__.return_value
+        with self.create() as cluster, patch.object(cluster, "connect", return_value=connection) as connect:
+            metadata = cluster.install_authored_history_fixture(sources)
+        connect.assert_called_once_with("proof_owner")
+        self.assertEqual(cursor.executemany.call_args.args[1], [
+            (1, "001", "SQL", "V001__first.sql", 0, True),
+            (2, "002", "SQL", "V002__second.sql", 0, True),
+        ])
+        self.assertEqual(metadata, {
+            "origin": "authored_native_proof_fixture", "rows": 2,
+            "checksum_meaning": "placeholder_zero", "source_binding": "migration_sources_sha256",
+        })
+        ddl = cursor.execute.call_args.args[0]
+        self.assertIn("owner to laboratory_owner", ddl)
+        self.assertIn("revoke all on public.flyway_schema_history from public, laboratory_app", ddl)
+        self.assertIn("Authored native proof fixture", ddl)
+
+    def test_authored_history_rejects_incomplete_source_sets_before_connecting(self):
+        for paths in ([], ["sql/V002__second.sql"], ["sql/V001__first.sql"] * 2,
+                      ["sql/V001xxfirst.sql"], ["sql/V001__first.sql", "sql/V003__third.sql"]):
+            with self.subTest(paths=paths), self.create() as cluster:
+                with patch.object(cluster, "connect") as connect:
+                    with self.assertRaises(RestartProofError):
+                        cluster.install_authored_history_fixture(
+                            [{"path": path, "sha256": "a" * 64} for path in paths]
+                        )
+                    connect.assert_not_called()
+
 
 @unittest.skipUnless(os.environ.get("LIMS_DATABASE_RESTART_CHECK") == "1",
                      "explicit native owned-cluster activation enables database restart proof")
@@ -155,6 +190,10 @@ class ConfiguredDatabaseRestartTests(unittest.TestCase):
         self.assertEqual(result["server_lifetimes"], 3)
         self.assertEqual(result["owned_clusters_cleaned"], 3)
         self.assertEqual(len(result["scenarios"]), 7)
+        self.assertEqual(result["migration_history_fixture"], {
+            "origin": "authored_native_proof_fixture", "rows": 8,
+            "checksum_meaning": "placeholder_zero", "source_binding": "migration_sources_sha256",
+        })
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "artifact_set": "postgresql-flyway-head-007",
+  "artifact_set": "postgresql-flyway-head-008",
   "canonicalization": "ordered-path-nul-sha256-lf-v1",
   "artifacts": [
     {
@@ -59,7 +59,13 @@
       "version": "007",
       "path": "sql/V007__pending_outbox_specimen_index.sql",
       "sha256": "bcd2b1ef557cbff04f74780c6b0493102750e5dcff8477e0c8405eaf3cdf8c78"
+    },
+    {
+      "kind": "versioned_migration",
+      "version": "008",
+      "path": "sql/V008__workbench_migration_provenance.sql",
+      "sha256": "5be95a710c717ed8c30bbb1b1b6e452187ba068172a14c8999f3862fc8811c7f"
     }
   ],
-  "aggregate_sha256": "sha256:24e25a5268b8f359953615eff98620a5c342ad10e58fed47199dcaa936dd8ebe"
+  "aggregate_sha256": "sha256:18608fe1881a4c8c2e205e02692c41c5b9b829fb9f877a00a198c2710aafd1ac"
 }

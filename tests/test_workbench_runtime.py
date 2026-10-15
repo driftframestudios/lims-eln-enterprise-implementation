@@ -175,10 +175,31 @@ class AdapterReadinessTests(unittest.TestCase):
         self.assertTrue(any("bind_tenant_context" in operation for operation in operations))
         self.assertTrue(any("specimen_workbench_snapshot" in operation for operation in operations))
         self.assertTrue(any("bounded_call_invocation" in operation for operation in operations))
+        self.assertIn("select laboratory_security.workbench_migration_head()", operations)
         self.assertEqual(connection.commits, 1)
         self.assertTrue(connection.closed)
 
+    def assert_provenance_readiness_failure(self) -> None:
+        for head in (None, ("007",)):
+            class UnavailableProvenanceCursor(ReadinessCursor):
+                def fetchone(self):
+                    if "workbench_migration_head" in self.last_operation:
+                        return head
+                    return super().fetchone()
+
+            with self.subTest(migration_head=head):
+                connection = RecordingConnection(UnavailableProvenanceCursor())
+                service = PostgresWorkbenchService(
+                    lambda: connection, tenant_context_provider=context_for,
+                )
+                with TestClient(create_app(service)) as client:
+                    self.assertEqual(client.get("/health/live").status_code, 200)
+                    self.assertEqual(client.get("/health/ready").status_code, 503)
+                self.assertEqual((connection.commits, connection.rollbacks), (0, 1))
+                self.assertTrue(connection.closed)
+
     def test_privileged_or_changed_database_identity_stays_unready(self) -> None:
+        self.assert_provenance_readiness_failure()
         for role in (
             ("laboratory_bootstrap", "laboratory_bootstrap", True, True),
             ("laboratory_app", "laboratory_app", False, True),

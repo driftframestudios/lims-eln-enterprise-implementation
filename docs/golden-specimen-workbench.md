@@ -16,7 +16,7 @@ system boundaries and returns the evidence as a single tenant-scoped read model.
 
 The workbench has two explicit state postures. The process-local adapter is a
 deterministic engineering encounter; a restart begins a fresh encounter. The
-PostgreSQL adapter runs the same FastAPI contract against V001–V007, and a
+PostgreSQL adapter runs the same FastAPI contract against V001–V008, and a
 fresh service instance reloads its specimen from canonical stored state. When
 the independently distributed accepted Program contract package is installed,
 the same stored state also yields the exact typed observation. The Flyway chain
@@ -75,6 +75,47 @@ under that identity produces an explainable collision and invites a new run
 identity.
 
 ## HTTP surface
+
+### Execution-time database provenance
+
+Each newly completed PostgreSQL run stores its migration head in durable
+coordinate version `3.0.0`. The source-owned V008 function reads successful,
+contiguous Flyway history through a narrow execution grant. The ordinary
+application role retains its existing table permissions. The result digest binds
+the configuration alongside the specimen snapshot and receipt identity.
+
+Replay and observation export use this stored configuration. A later migration
+changes the head recorded by a new run; an earlier run keeps its own head.
+Version `2.0.0` coordinates remain readable with `migration_head: null` and
+`migration_provenance: unrecorded_legacy`. Historical stored coordinates and
+receipts retain their bytes. Fresh exports state the information actually
+available, and their configuration digests reflect that distinction.
+
+Drain existing application transactions, complete Flyway migration and
+validation, then admit new application transactions. The function observes the transaction's history
+snapshot; migration exclusion remains a deployment responsibility. Failed,
+missing, mixed-type or incomplete history holds a new completion. Resolve that
+history through Flyway before retrying the same request. Future migration heads
+retain the three-digit contiguous SQL-chain convention; application compatibility
+continues through source review and configured checks.
+
+Readiness includes the provenance reader. Unavailable history holds readiness
+and new completions; stored observations retain their read route. Attested
+baselines and direct-SQL installations remain distinct profiles: the current
+new-run reader requires the complete versioned SQL history. A future profile
+can add a separately reviewed provenance contract for those installations.
+The native proof authors an explicitly labeled history fixture after applying
+the SQL sources. Its placeholder checksums exercise admission and replay;
+Flyway CLI validation retains its own source-checksum evidence.
+
+The existing V007 hosted and native receipts retain their named source scope.
+V008 integration requires renewed configured evidence. The current-source
+observation guard remains active until that evidence is admitted.
+
+PostgreSQL's [function-security guidance](https://www.postgresql.org/docs/17/perm-functions.html)
+informs the fixed search path and qualified objects; Flyway retains
+[migration transactions](https://documentation.red-gate.com/fd/migration-transaction-handling-273973399.html)
+and applied-history validation.
 
 | Method | Path | Purpose |
 |---|---|---|

@@ -196,6 +196,42 @@ class OwnedPostgres:
         return [{"path": p.relative_to(ROOT).as_posix(), "sha256": sha256(p.read_bytes()).hexdigest()}
                 for p in sources]
 
+    def install_authored_history_fixture(self, migrations: list[dict[str, str]]) -> dict:
+        """Author a history fixture for the owned direct-SQL proof only.
+
+        Source SHA-256 bindings remain in the returned migration inventory.
+        The placeholder checksums exercise history shape rather than Flyway's
+        independent checksum algorithm or configured migration execution.
+        """
+        self._check_paths()
+        rows = []
+        for artifact in migrations:
+            if artifact["path"] == "database/provision_cluster_roles.sql":
+                continue
+            match = re.fullmatch(r"sql/V([0-9]{3})__[a-z0-9_]+[.]sql", artifact["path"])
+            require(match is not None, "authored history requires declared versioned SQL sources")
+            version = match.group(1)
+            rows.append((int(version), version, "SQL", Path(artifact["path"]).name, 0, True))
+        require(bool(rows) and [row[0] for row in rows] == list(range(1, len(rows) + 1)),
+                "authored history requires one ordered contiguous source chain")
+        with self.connect("proof_owner") as connection, connection.cursor() as cursor:
+            cursor.execute("""
+                create table public.flyway_schema_history (
+                    installed_rank integer primary key, version text, type text,
+                    script text, checksum integer, success boolean
+                );
+                alter table public.flyway_schema_history owner to laboratory_owner;
+                revoke all on public.flyway_schema_history from public, laboratory_app;
+                comment on table public.flyway_schema_history is
+                    'Authored native proof fixture; Flyway CLI validation has a separate evidence route.';
+            """)
+            cursor.executemany(
+                "insert into public.flyway_schema_history values (%s,%s,%s,%s,%s,%s)", rows,
+            )
+        return {"origin": "authored_native_proof_fixture", "rows": len(rows),
+                "checksum_meaning": "placeholder_zero",
+                "source_binding": "migration_sources_sha256"}
+
     def close(self) -> None:
         self._check_paths()
         if self._data_identity is not None:
@@ -318,6 +354,7 @@ def exercise(binaries: Path, expected_major: int, timeout: int = 30) -> dict:
     source = source_coordinate()
     with OwnedPostgres(binaries, expected_major, timeout) as cluster:
         migrations = cluster.install()
+        history_fixture = cluster.install_authored_history_fixture(migrations)
         proof = LaboratoryProof(cluster)
         original = proof.run(proof.service())
         require(original["specimen"]["state"] == "released" and original["specimen"]["version"] == 5,
@@ -386,6 +423,7 @@ def exercise(binaries: Path, expected_major: int, timeout: int = 30) -> dict:
                   "python_version": platform.python_version(), "psycopg_version": psycopg.__version__,
                   "postgresql_version": cluster.version, "durability_settings": settings,
                   "migration_method": "psql_single_transaction_per_source_file", "migration_sources": migrations,
+                  "migration_history_fixture": history_fixture,
                   "server_lifetimes": len(lifetimes),
                   "retained_table_rows": {name: len(rows) for name, rows in before.items()},
                   "retained_snapshot_sha256": sha256(encoded(before)).hexdigest(),

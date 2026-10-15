@@ -1631,7 +1631,7 @@ class PostgresGoldenSpecimenIntegrationTests(unittest.TestCase):
             )
             self.assertEqual(
                 typed.result.producer_detail["configuration"]["migration_head"],
-                "005",
+                "008",
             )
 
         temporal = self.scalar(

@@ -11,6 +11,7 @@ and every returned document is rebuilt in a fresh tenant-bound transaction.
 from __future__ import annotations
 
 import json
+import re
 from base64 import b64encode
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
@@ -81,6 +82,38 @@ class Connection(Protocol):
 
 ConnectionFactory = Callable[[], Connection]
 FailureProbe = Callable[[str], None]
+
+
+class MigrationProvenanceUnavailable(RuntimeError):
+    """A new result requires an admitted execution-time migration coordinate."""
+
+
+def _recorded_migration_configuration(value: object) -> dict[str, str]:
+    if (
+        not isinstance(value, Mapping)
+        or set(value) != {"migration_head", "migration_provenance"}
+        or value.get("migration_provenance") != "recorded_at_execution"
+        or not isinstance(value.get("migration_head"), str)
+        or re.fullmatch(r"[0-9]{3}", value["migration_head"]) is None
+        or int(value["migration_head"]) < 8
+    ):
+        raise MigrationProvenanceUnavailable(
+            "workbench result requires its recorded migration head; "
+            "reconcile the durable coordinate with its source-owned history"
+        )
+    return dict(value)
+
+
+def _capture_migration_configuration(cursor: Cursor) -> dict[str, str]:
+    cursor.execute("select laboratory_security.workbench_migration_head()")
+    row = cursor.fetchone()
+    if row is None or len(row) != 1:
+        raise MigrationProvenanceUnavailable(
+            "workbench execution requires one source-owned migration head"
+        )
+    return _recorded_migration_configuration({
+        "migration_head": row[0], "migration_provenance": "recorded_at_execution",
+    })
 
 
 @contextmanager
@@ -202,7 +235,7 @@ class PostgresWorkbenchService:
         self._failure_probe = failure_probe or (lambda _: None)
 
     def check_ready(self) -> None:
-        """Exercise tenant binding, application identity, and V005 read permissions.
+        """Exercise identity, canonical reads, and execution provenance readiness.
 
         LIMIT 0 checks relation shape and access without materializing specimen
         rows. Transaction ownership and resource release stay with the adapter.
@@ -217,6 +250,7 @@ class PostgresWorkbenchService:
                 raise TenantSessionBindingError(
                     "workbench readiness requires the ordinary laboratory_app identity"
                 )
+            _capture_migration_configuration(cursor)
             cursor.execute(
                 "select 1 from public.specimen_workbench_snapshot "
                 "where tenant_id = %s limit 0", (self._tenant_id,),
@@ -863,6 +897,10 @@ class PostgresWorkbenchService:
     ) -> None:
         if lease_token is None or fencing_token is None:
             raise RuntimeError("invocation materialization requires its lease and fence")
+        successful = plan.ingress.normalized_observation is not None
+        execution_configuration = (
+            _capture_migration_configuration(cursor) if successful else None
+        )
         if mode == "initial":
             self._insert_specimen(cursor, plan.aggregate)
             self._insert_events(cursor, plan.new_events)
@@ -910,7 +948,6 @@ class PostgresWorkbenchService:
             if resolution is None or str(resolution[0]) != "accepted_replacement":
                 raise RuntimeError("instrument recovery requires a durable resolution")
 
-        successful = plan.ingress.normalized_observation is not None
         specimen_snapshot: dict[str, Any] | None = None
         outbox_topics: list[str] | None = None
         if successful:
@@ -926,7 +963,8 @@ class PostgresWorkbenchService:
             )
             outbox_topics = [str(row[0]) for row in cursor.fetchall()]
         coordinate = {
-            "coordinate_version": "2.0.0",
+            "coordinate_version": "3.0.0",
+            "execution_configuration": execution_configuration,
             "mode": mode,
             "run_id": run_id,
             "recovery_of_run_id": plan.recovery_of_run_id,
@@ -1455,10 +1493,19 @@ class PostgresWorkbenchService:
                 "specimen_snapshot",
                 "outbox_topics",
             }
+            version = coordinate.get("coordinate_version")
+            if version == "3.0.0":
+                required_coordinate_fields.add("execution_configuration")
+            elif version != "2.0.0":
+                raise RuntimeError("durable run coordinate requires released version 2.0.0 or 3.0.0")
             if set(coordinate) != required_coordinate_fields:
                 raise RuntimeError("durable run coordinate requires its released fields")
-            if coordinate["coordinate_version"] != "2.0.0":
-                raise RuntimeError("durable run coordinate requires released version 2.0.0")
+            configuration = (
+                _recorded_migration_configuration(coordinate["execution_configuration"])
+                if version == "3.0.0" else {
+                    "migration_head": None, "migration_provenance": "unrecorded_legacy",
+                }
+            )
             if coordinate["run_id"] != run_id:
                 raise RuntimeError("durable run coordinate requires the requested run identity")
             if canonical_digest(coordinate) != str(run_row[5]):
@@ -1628,7 +1675,7 @@ class PostgresWorkbenchService:
                 result=specimen,
                 state_adapter="postgresql",
                 governed_locator=f"postgresql://workbench/{tenant_id}/{run_id}",
-                configuration_detail={"migration_head": "005"},
+                configuration_detail=configuration,
                 producer_detail={
                     "outbox_topics": outbox_topics,
                     "durable_run_coordinate": {
