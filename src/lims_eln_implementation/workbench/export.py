@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 from hashlib import sha256
 import json
 import os
@@ -11,6 +12,7 @@ import signal
 import stat
 import sys
 
+from ..resource_cleanup import Cleanup
 from .shared_contracts import SharedContractUnavailable, validate_observation_bytes
 
 MAX_OBSERVATION_BYTES = 2 * 1024 * 1024
@@ -24,6 +26,25 @@ class ExportHeld(ExportError):
     """A completed writer or operator reconciliation can release this hold."""
 
 
+@contextmanager
+def _owned_stream(descriptor: int, mode: str):
+    """Own the raw descriptor independently of stream construction and release."""
+    stream = None
+    primary = None
+    cleanup = Cleanup()
+    try:
+        stream = os.fdopen(descriptor, mode, closefd=False)
+        yield stream
+    except BaseException as error:
+        primary = error
+        raise
+    finally:
+        if stream is not None:
+            cleanup.attempt("stream_close", stream.close)
+        cleanup.attempt("file_close", lambda: os.close(descriptor))
+        cleanup.finish(primary, lambda: OSError("artifact stream requires complete release"))
+
+
 def _existing_matches(directory: int, name: str, payload: bytes) -> bool:
     """Read one bounded regular artifact through the already-owned directory."""
     try:
@@ -32,7 +53,7 @@ def _existing_matches(directory: int, name: str, payload: bytes) -> bool:
         )
     except FileNotFoundError:
         return False
-    with os.fdopen(descriptor, "rb") as source:
+    with _owned_stream(descriptor, "rb") as source:
         info = os.fstat(source.fileno())
         if (
             not stat.S_ISREG(info.st_mode)
@@ -53,16 +74,21 @@ def _publish(payload: bytes, destination: Path) -> str:
     """O(n) byte work/space; one directory fd owns all publication paths."""
     if destination.name in {"", ".", ".."}:
         raise ExportError("select a named artifact in the protected output directory")
+    created = False
+    publication_state = "unpublished"
+    pending_state = "absent"
+    primary = None
+    cleanup = Cleanup()
     directory = os.open(
         destination.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
     )
-    temporary = ".pending-export-" + secrets.token_hex(12)
-    created = False
     try:
+        temporary = ".pending-export-" + secrets.token_hex(12)
         info = os.fstat(directory)
         if stat.S_IMODE(info.st_mode) != 0o700 or info.st_uid != os.getuid():
             raise ExportError("output directory requires owner-only mode 0700")
         if _existing_matches(directory, destination.name, payload):
+            publication_state = "reused"
             os.fsync(directory)
             return "reused"
         descriptor = os.open(
@@ -70,10 +96,12 @@ def _publish(payload: bytes, destination: Path) -> str:
             0o600, dir_fd=directory,
         )
         created = True
-        with os.fdopen(descriptor, "wb") as target:
+        pending_state = "owned"
+        with _owned_stream(descriptor, "wb") as target:
             target.write(payload)
             target.flush()
             os.fsync(target.fileno())
+        publication_state = "unknown"
         try:
             os.link(
                 temporary, destination.name, src_dir_fd=directory,
@@ -82,16 +110,36 @@ def _publish(payload: bytes, destination: Path) -> str:
         except FileExistsError:
             # Another cooperative exporter may have published the same bytes.
             if _existing_matches(directory, destination.name, payload):
+                publication_state = "reused"
                 return "reused"
             raise ExportError("destination changed during publication") from None
+        publication_state = "published"
         return "published"
+    except BaseException as error:
+        primary = error
+        raise
     finally:
+        def remove_pending() -> None:
+            nonlocal pending_state
+            pending_state = "reconcile"
+            os.unlink(temporary, dir_fd=directory)
+            pending_state = "absent"
+
+        if created:
+            cleanup.attempt("pending_unlink", remove_pending)
+            cleanup.attempt("directory_sync", lambda: os.fsync(directory))
+        cleanup.attempt("directory_close", lambda: os.close(directory))
+        if primary is not None:
+            primary.publication_state = publication_state
+            primary.pending_state = pending_state
         try:
-            if created:
-                os.unlink(temporary, dir_fd=directory)
-                os.fsync(directory)
-        finally:
-            os.close(directory)
+            cleanup.finish(primary, lambda: OSError(
+                "publication requires storage reconciliation; retain complete artifacts"
+            ))
+        except BaseException as error:
+            error.publication_state = publication_state
+            error.pending_state = pending_state
+            raise
 
 
 def export_observation(
@@ -110,10 +158,15 @@ def export_observation(
         raise ExportError("observation requires the installed contract and matching identities") from None
     try:
         status = _publish(payload, destination)
-    except OSError:
-        raise ExportError(
+    except OSError as error:
+        stopped = ExportError(
             "publication stopped; retain accepted artifacts and inspect protected storage"
-        ) from None
+        )
+        stopped.publication_state = getattr(error, "publication_state", "unpublished")
+        stopped.pending_state = getattr(error, "pending_state", "absent")
+        stopped.cleanup_failures = getattr(error, "cleanup_failures", ())
+        stopped.primary_error = error
+        raise stopped from None
     return {"status": status, "sha256": sha256(payload).hexdigest()}
 
 

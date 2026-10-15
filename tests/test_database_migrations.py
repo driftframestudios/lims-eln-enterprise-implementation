@@ -128,12 +128,12 @@ class DatabaseMigrationTests(unittest.TestCase):
             {"receipt_path", "coordinate_state", "promotion_signal"},
         )
         self.assertEqual(
-            coordinate["receipt_path"], "receipts/hosted-postgresql-v007-proof.json"
+            coordinate["receipt_path"], "receipts/hosted-postgresql-resource-cleanup-proof.json"
         )
         self.assertEqual(coordinate["promotion_signal"], "implementation-validation")
         self.assertEqual(
             coordinate["coordinate_state"],
-            "v007_database_artifacts_observed",
+            "resource_cleanup_database_artifacts_observed",
         )
         self.assertEqual(
             receipt["release_claim_id"],

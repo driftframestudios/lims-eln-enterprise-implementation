@@ -82,6 +82,17 @@ after storage recovery. Exact-byte reuse retries the directory sync before
 reporting success; another sync failure preserves the artifact and remains
 unsuccessful.
 
+The exporter attempts each owned release once, including when another cleanup
+step raises an interruption. Local Python callers can inspect `publication_state`
+(`unpublished`, `published`, `reused`, or `unknown`) and `pending_state`
+(`absent`, `owned`, or `reconcile`) on a publication failure. `unknown` covers
+loss of the link operation's result; inspect the retained artifact and use exact
+replay to reconcile it. Secondary exception objects remain in `cleanup_failures`
+with their stage names; `primary_error` preserves an earlier failure when cleanup
+selects a control interruption. These diagnostics stay with the local operator.
+The CLI emits a bounded message and preserves interruption exit 130 separately
+from ordinary failure exit 1 and the existing hold exit 75.
+
 SIGINT and SIGTERM use cleanup and a bounded status message. Forced termination
 or host loss may retain a private pending file. After confirming the earlier
 process has stopped, inspect and reconcile the named pending entry locally.

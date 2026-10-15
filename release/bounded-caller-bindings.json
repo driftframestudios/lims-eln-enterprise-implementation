@@ -17,8 +17,13 @@
     },
     {
       "path": "src/lims_eln_implementation/production_adapters.py",
-      "sha256": "8b357d0f8681d2fdfde549ac4a97982fffb523cc368c74722628aaa00477927b",
+      "sha256": "02826ddabeabead2e4e3dc26221215bfc762ca5a5e6687ca8cd4c42af72b49a0",
       "responsibility": "qualified durable invocation and receipt persistence with database-verified signed tenant assertions plus version-banded vendor SDK integration seams"
+    },
+    {
+      "path": "src/lims_eln_implementation/resource_cleanup.py",
+      "sha256": "24c96bfc3f2c05a0e43aa387999c1e2d6d619316a59a6417ad93c342966457ba",
+      "responsibility": "one-attempt owned resource cleanup with preserved control identity and bounded local diagnostics"
     },
     {
       "path": "src/lims_eln_implementation/security.py",
@@ -37,7 +42,7 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/postgres.py",
-      "sha256": "5fdd8bfba4fb3fbf7d5710192c02c384e2d34fdeeed600b5bf29b4aca76410ae",
+      "sha256": "0f3e8ff2e8c72ff58c2b4d4cb7b26eb3a051c46e30240fd7b0cb80c53d19c118",
       "responsibility": "repeatable-read PostgreSQL Golden Specimen composition with tenant binding, lease-and-fence completion, exact replay evidence, and authenticated recovery"
     },
     {

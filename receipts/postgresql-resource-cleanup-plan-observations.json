@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0.0",
+  "observation_id": "OBSERVATION-POSTGRESQL17-RESOURCE-CLEANUP-PENDING-COUNTS-001",
+  "repository_commit": "ae213e7c01262431030a2a8d81129bed090f1376",
+  "workflow_run": "https://github.com/driftframestudios/lims-eln-enterprise-implementation/actions/runs/38761716006",
+  "observed_at": "2026-10-15T15:37:09Z",
+  "authenticated_role": "laboratory_app",
+  "tenant_authority": "signed_short_lived_database_verified_context",
+  "query_source": "tests/test_pending_outbox_postgres.py",
+  "query_scope": "specimen_workbench_snapshot pending counts for one signed tenant, ordered by specimen_id",
+  "observations": [
+    {
+      "job_name": "PostgreSQL 17 migration 003 through current head upgrade and replay proof",
+      "job_id": "116514429586",
+      "result": "passed",
+      "expected_rows": 1000,
+      "expected_pending_count_per_specimen": 10,
+      "execution_ms": 1289.709,
+      "observation": "pending_outbox_count",
+      "outbox_nodes": [
+        {
+          "Actual Loops": 1000,
+          "Actual Rows": 10,
+          "Node Type": "Index Only Scan",
+          "Shared Hit Blocks": 12000,
+          "Shared Read Blocks": 0
+        }
+      ],
+      "pending_messages": 10000,
+      "server_version_num": "170010",
+      "shared_hit_blocks": 22025,
+      "shared_read_blocks": 0,
+      "specimens": 1000
+    },
+    {
+      "job_name": "PostgreSQL 17 migration and constructive boundary proof",
+      "job_id": "116514428880",
+      "result": "passed",
+      "expected_rows": 1000,
+      "expected_pending_count_per_specimen": 10,
+      "execution_ms": 1167.645,
+      "observation": "pending_outbox_count",
+      "outbox_nodes": [
+        {
+          "Actual Loops": 1000,
+          "Actual Rows": 10,
+          "Node Type": "Index Only Scan",
+          "Shared Hit Blocks": 12000,
+          "Shared Read Blocks": 0
+        }
+      ],
+      "pending_messages": 10000,
+      "server_version_num": "170010",
+      "shared_hit_blocks": 20026,
+      "shared_read_blocks": 0,
+      "specimens": 1000
+    }
+  ],
+  "limitations": [
+    "Both named jobs returned 1,000 specimen rows with ten pending messages each and observed the recorded plan after ANALYZE of the synthetic fixture.",
+    "Plan choice, elapsed time and buffer activity describe these executions. Representative tenant skew, concurrency, cache state and production service objectives require their own observations.",
+    "The full summary query still materializes every selected specimen; the partial index reduces each pending-count lookup while result construction remains proportional to the returned rows.",
+    "Raw logs and connection configuration remain with the hosted execution owner; this artifact retains only the normalized query observation."
+  ]
+}

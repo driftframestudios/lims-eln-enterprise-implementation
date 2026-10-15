@@ -21,7 +21,7 @@
     {
       "contract_id": "IMPLEMENTATION-BOUNDED-CALLER-001",
       "version": "0.3.2",
-      "digest": "sha256:621df8cea31371df62de229c4b78d32f007efb0378eef3825bf16533e36c3a65"
+      "digest": "sha256:6cdbf53a82197f61f3e13e421da6aa75ec0253e7b1f8d996f97b7893f2250d5e"
     },
     {
       "contract_id": "IMPLEMENTATION-DATABASE-MIGRATIONS-001",
@@ -68,9 +68,9 @@
   },
   "current_development_observation": {
     "scope": "database_artifacts",
-    "coordinate_state": "v007_database_artifacts_observed",
+    "coordinate_state": "resource_cleanup_database_artifacts_observed",
     "flyway_version": "13.8.1",
-    "receipt": "receipts/hosted-postgresql-v007-proof.json"
+    "receipt": "receipts/hosted-postgresql-resource-cleanup-proof.json"
   },
   "first_receipt_contract_id": "FIRST-RCP-IMPLEMENTATION-001",
   "open_receipts": [

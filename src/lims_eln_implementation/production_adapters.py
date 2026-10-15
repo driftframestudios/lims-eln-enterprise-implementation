@@ -21,6 +21,7 @@ from .bounded_caller import (
 from .model import canonical_json, require_aware_utc
 from .ports import ExternalRecord, VendorGateway, WriteCertainty, WriteResult
 from .security import PostgresTenantBinding, TenantContextProvider
+from .resource_cleanup import Cleanup
 
 
 class AdapterVersionError(RuntimeError):
@@ -131,35 +132,25 @@ def _transaction(
     connection_factory: Callable[[], DbApiConnection],
 ) -> Iterator[DbApiCursor]:
     """Open one explicit DB-API transaction and release each owned resource."""
-    connection = connection_factory()
     cursor: DbApiCursor | None = None
     primary_error: BaseException | None = None
+    cleanup = Cleanup()
+    connection = connection_factory()
     try:
         cursor = connection.cursor()
         yield cursor
         connection.commit()
     except BaseException as error:
         primary_error = error
-        try:
-            connection.rollback()
-        except Exception:
-            pass
+        cleanup.attempt("rollback", connection.rollback)
         raise
     finally:
-        release_errors: list[Exception] = []
         if cursor is not None:
-            try:
-                cursor.close()
-            except Exception as error:
-                release_errors.append(error)
-        try:
-            connection.close()
-        except Exception as error:
-            release_errors.append(error)
-        if release_errors and primary_error is None:
-            raise ResourceReleaseError(
-                "database resources require successful cursor and connection release"
-            ) from release_errors[0]
+            cleanup.attempt("cursor_close", cursor.close)
+        cleanup.attempt("connection_close", connection.close)
+        cleanup.finish(primary_error, lambda: ResourceReleaseError(
+            "database resources require successful cursor and connection release"
+        ))
 
 
 class DbApiInvocationLedger:
@@ -527,11 +518,7 @@ class DbApiCallReceiptStore:
         self._tenant_context_provider = tenant_context_provider
 
     def append(self, receipt: CallReceipt) -> None:
-        connection = self._connection_factory()
-        cursor: DbApiCursor | None = None
-        primary_error: BaseException | None = None
-        try:
-            cursor = connection.cursor()
+        with _transaction(self._connection_factory) as cursor:
             PostgresTenantBinding(
                 self._tenant_context_provider(receipt.tenant_id)
             ).bind(cursor, expected_tenant_id=receipt.tenant_id)
@@ -560,30 +547,6 @@ class DbApiCallReceiptStore:
                     receipt.recorded_at,
                 ),
             )
-            connection.commit()
-        except BaseException as error:
-            primary_error = error
-            try:
-                connection.rollback()
-            except Exception:
-                pass
-            raise
-        finally:
-            release_errors: list[Exception] = []
-            if cursor is not None:
-                try:
-                    cursor.close()
-                except Exception as error:
-                    release_errors.append(error)
-            try:
-                connection.close()
-            except Exception as error:
-                release_errors.append(error)
-            if release_errors and primary_error is None:
-                raise ResourceReleaseError(
-                    "database receipt resources require successful cursor and "
-                    "connection release"
-                ) from release_errors[0]
 
 
 @dataclass(frozen=True, slots=True)

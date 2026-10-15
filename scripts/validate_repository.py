@@ -178,9 +178,12 @@ ACCEPTED_PRIOR_HOSTED_COMMIT = "205401a530e984e031bb2c52a1654c6b5f82bc6d"
 HISTORICAL_PRIOR_HOSTED_COMMIT = "ef3320686842a2c7f1ab98c12479c3ed7c5709f5"
 PREDECESSOR_DATABASE_HOSTED_COMMIT = "e15f0a37520b651cf83e856c3b9d67ab9f42cd9b"
 RETAINED_V005_HOSTED_COMMIT = "2d12b111edb86f1f16f02338933a827b767a687f"
-CURRENT_DATABASE_HOSTED_COMMIT = "83889fa87b740d824e82f5c9ffb0c515e6823148"
+RETAINED_V007_HOSTED_COMMIT = "83889fa87b740d824e82f5c9ffb0c515e6823148"
+CURRENT_DATABASE_HOSTED_COMMIT = "ae213e7c01262431030a2a8d81129bed090f1376"
 HOSTED_V007_RECEIPT_CONTENT_DIGEST = "sha256:23478818302eae8eaa27ea2b9608f1a5ec440d719afd649ecaa07f087b8478e4"
 OWNED_PG17_RECEIPT_CONTENT_DIGEST = "sha256:4fec7349b7729238ceeb86c6691fcbbbfa829dd465ec9a90a9197a5769e74e6e"
+HOSTED_RESOURCE_CLEANUP_RECEIPT_CONTENT_DIGEST = "sha256:b9784aae8e4cd91c99c305d09ee2e0c871bc82b0e97d8c58df75766a1d0144cc"
+OWNED_RESOURCE_CLEANUP_RECEIPT_CONTENT_DIGEST = "sha256:d2e6ef5743728488ddc2bdb85619b31d875dc8803ae0a361addb30b6f36a68fc"
 EXCLUDED_DIRECTORY_NAMES = {
     ".git",
     ".mypy_cache",
@@ -404,6 +407,8 @@ def classify_hosted_postgresql_receipt_binding(
     observed_commit = str(hosted_bindings.get("repository_commit", ""))
     if repository_version == "0.3.2":
         if observed_commit == CURRENT_DATABASE_HOSTED_COMMIT:
+            return "observed_resource_cleanup_artifacts"
+        if observed_commit == RETAINED_V007_HOSTED_COMMIT:
             return "observed_v007_artifacts"
         if observed_commit == RETAINED_V005_HOSTED_COMMIT:
             return "observed_v005_artifacts"
@@ -434,6 +439,7 @@ def validate_hosted_postgresql_coordinate_state(
     """Keep the active database state aligned with its receipt generation."""
 
     expected_states = {
+        "observed_resource_cleanup_artifacts": "resource_cleanup_database_artifacts_observed",
         "observed_v007_artifacts": "v007_database_artifacts_observed",
         "observed_v005_artifacts": "v005_observed_successor_candidate",
         "observed_predecessor": "predecessor_observed_successor_candidate",
@@ -557,19 +563,33 @@ def validate_observed_execution_receipt(
 
 
 def validate_current_database_observations() -> None:
-    """Bind current database and recovery source to the two observed V007 routes."""
+    """Preserve historical observations and bind the current cleanup successor."""
+
+    for path, recorded_digest, retained_artifact_digests in (
+        (
+            "receipts/hosted-postgresql-v007-proof.json",
+            HOSTED_V007_RECEIPT_CONTENT_DIGEST,
+            (file_digest(ROOT / "receipts/postgresql-v007-plan-observations.json"),),
+        ),
+        ("receipts/owned-postgresql17-recovery-proof.json", OWNED_PG17_RECEIPT_CONTENT_DIGEST, ()),
+    ):
+        validate_observed_execution_receipt(
+            json.loads((ROOT / path).read_text(encoding="utf-8")),
+            observed_content_digest=recorded_digest,
+            current_artifact_digests=retained_artifact_digests,
+        )
 
     hosted = json.loads(
-        (ROOT / "receipts/hosted-postgresql-v007-proof.json").read_text(encoding="utf-8")
+        (ROOT / "receipts/hosted-postgresql-resource-cleanup-proof.json").read_text(encoding="utf-8")
     )
     validate_observed_execution_receipt(
         hosted,
-        observed_content_digest=HOSTED_V007_RECEIPT_CONTENT_DIGEST,
+        observed_content_digest=HOSTED_RESOURCE_CLEANUP_RECEIPT_CONTENT_DIGEST,
         current_artifact_digests=tuple(file_digest(ROOT / path) for path in (
             "release/bounded-caller-bindings.json",
             "database/flyway-release.json",
             "database/flyway-artifact-inventory.json",
-            "receipts/postgresql-v007-plan-observations.json",
+            "receipts/postgresql-resource-cleanup-plan-observations.json",
             ".github/workflows/ci.yml",
         )),
     )
@@ -580,7 +600,7 @@ def validate_current_database_observations() -> None:
     )
 
     native = json.loads(
-        (ROOT / "receipts/owned-postgresql17-recovery-proof.json").read_text(encoding="utf-8")
+        (ROOT / "receipts/owned-postgresql17-resource-cleanup-proof.json").read_text(encoding="utf-8")
     )
     # Match the observation harness's path-NUL-content-NUL source coordinate.
     paths = [ROOT / "scripts/check_database_restart.py", ROOT / "pyproject.toml",
@@ -601,7 +621,7 @@ def validate_current_database_observations() -> None:
     )
     validate_observed_execution_receipt(
         native,
-        observed_content_digest=OWNED_PG17_RECEIPT_CONTENT_DIGEST,
+        observed_content_digest=OWNED_RESOURCE_CLEANUP_RECEIPT_CONTENT_DIGEST,
         current_artifact_digests=("sha256:" + runtime_digest.hexdigest(), *migration_digests),
     )
 
@@ -905,9 +925,9 @@ def validate_promotion_lifecycle(
     }
     expected_development_observation = {
         "scope": "database_artifacts",
-        "coordinate_state": "v007_database_artifacts_observed",
+        "coordinate_state": "resource_cleanup_database_artifacts_observed",
         "flyway_version": "13.8.1",
-        "receipt": "receipts/hosted-postgresql-v007-proof.json",
+        "receipt": "receipts/hosted-postgresql-resource-cleanup-proof.json",
     }
     if (
         machine.get("lifecycle_state") != "post_release_development"
@@ -1386,6 +1406,7 @@ def validate_manifests() -> None:
     if len(source_paths) != len(set(source_paths)):
         raise AssertionError("bounded-caller source bindings require unique paths")
     required_workbench_paths = {
+        "src/lims_eln_implementation/resource_cleanup.py",
         "src/lims_eln_implementation/application.py",
         "src/lims_eln_implementation/workbench/api.py",
         "src/lims_eln_implementation/workbench/postgres.py",
@@ -1442,9 +1463,9 @@ def validate_manifests() -> None:
         set(database_hosted_evidence)
         != {"receipt_path", "coordinate_state", "promotion_signal"}
         or database_hosted_evidence.get("receipt_path")
-        != "receipts/hosted-postgresql-v007-proof.json"
+        != "receipts/hosted-postgresql-resource-cleanup-proof.json"
         or database_hosted_evidence.get("coordinate_state")
-        != "v007_database_artifacts_observed"
+        != "resource_cleanup_database_artifacts_observed"
         or database_hosted_evidence.get("promotion_signal")
         != "implementation-validation"
     ):
