@@ -44,6 +44,12 @@ formal configured receipt admission retains its
 
 The proof runs the repository role provisioner and each current versioned SQL
 migration through `psql`, with one transaction per source file. It creates a
+clearly labeled, authored history fixture with placeholder checksums so the
+application can exercise its execution-provenance contract. The summary names
+this fixture and binds the applied source files by SHA-256; the separate Flyway
+CLI proof owns migration discovery, checksum validation and tool execution.
+The helper is shared with the focused provenance test and operates only inside
+the harness-owned disposable cluster. The proof then creates a
 synthetic tenant and an invocation-generated HMAC verifier. The signed ordinary
 `laboratory_app` role executes and reads the released Golden Specimen journey;
 a privileged observer snapshots all public tables in one read-only repeatable

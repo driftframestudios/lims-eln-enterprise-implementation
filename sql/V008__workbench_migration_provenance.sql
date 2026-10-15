@@ -26,8 +26,8 @@ begin
 
     select count(*), count(distinct version), min(version), max(version),
            bool_and((success and type = 'SQL' and checksum is not null
-                     and version ~ '^[0-9]{3}$'
-                     and script like 'V' || version || '__%.sql') is true)
+                     and version ~ E'\\A[0-9]{3}\\Z'
+                     and script ~ (E'\\AV' || version || E'__[a-z0-9_]+[.]sql\\Z')) is true)
       into row_count, distinct_versions, first_version, last_version,
            complete_sql_history
       from public.flyway_schema_history;

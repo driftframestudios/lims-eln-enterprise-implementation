@@ -16,12 +16,12 @@ from lims_eln_implementation.workbench.postgres import (
 )
 from test_workbench_postgres_adapter import (
     MissingQualityService,
-    PostgresWorkbenchAdapterTests,
     ReadCursor,
     RecordingConnection,
     RecordingCursor,
     VALID_RAW,
     context_for,
+    golden_arguments,
 )
 
 
@@ -96,7 +96,7 @@ class MigrationProvenanceTests(unittest.TestCase):
         cursor = HeadCursor(head)
         connection = RecordingConnection(cursor)
         service = CaptureService(lambda: connection, tenant_context_provider=context_for)
-        arguments = PostgresWorkbenchAdapterTests().arguments(VALID_RAW)
+        arguments = golden_arguments(VALID_RAW)
         service.run_golden_specimen(**arguments)
         writes = [(sql, args) for sql, args in cursor.operations
                   if "output_document =" in sql]
@@ -121,7 +121,7 @@ class MigrationProvenanceTests(unittest.TestCase):
         connection = RecordingConnection(HeadCursor(None))
         service = CaptureService(lambda: connection, tenant_context_provider=context_for)
         with self.assertRaises(MigrationProvenanceUnavailable):
-            service.run_golden_specimen(**PostgresWorkbenchAdapterTests().arguments(VALID_RAW))
+            service.run_golden_specimen(**golden_arguments(VALID_RAW))
         self.assertEqual((connection.commits, connection.rollbacks), (0, 1))
         self.assertFalse(any("insert into public.specimen" in sql
                              for sql, _ in connection.recording_cursor.operations))

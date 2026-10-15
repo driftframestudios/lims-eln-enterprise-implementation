@@ -17,7 +17,7 @@
   },
   "public_inspection": {
     "manifest": "release/public-inspection-manifest.json",
-    "manifest_digest": "sha256:ee48050614dde03c74ebddc4f8d53b5bec24d6c7077a9d1f979f1c4bbaba28ba",
+    "manifest_digest": "sha256:62bdca5c10775b80069e3fc2cbad7ad23d296eae44c095fb248d48f9fd79e68e",
     "authority": "repository_owned_inspection_bytes",
     "cross_repository_coordinate_state": "accepted_and_consumer_observed"
   },
@@ -37,7 +37,7 @@
   },
   "bounded_caller": {
     "binding_manifest": "release/bounded-caller-bindings.json",
-    "binding_digest": "sha256:3fb67407e6042cdda31d349a4d86f5ca85e51bc90dfdad31617a1b4c12103f0c",
+    "binding_digest": "sha256:f5c1ad5a67bf8276e9259d77b1a60b0994714b5ddf868de0d6160d385de62b23",
     "registered_operations": [
       "specimen.read",
       "specimen.review_flag.set",
@@ -65,7 +65,7 @@
     "migration_product": "Flyway Community",
     "migration_product_version": "13.8.1",
     "migration_release": "database/flyway-release.json",
-    "migration_release_digest": "sha256:762d3a53175296eda084b88a2495b7c2021d766750c1efdd81ebb2893326e73d",
+    "migration_release_digest": "sha256:58527f73f3f39d3db3e9065dfcc803fea6ef44f9b74654741eb53e0352cd94fa",
     "migration_configuration": "flyway.conf",
     "migration_transaction_policy": "one_transaction_per_migration",
     "tenant_authority": "signed_short_lived_database_verified_context",

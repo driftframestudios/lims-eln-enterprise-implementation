@@ -18,8 +18,8 @@
   },
   "artifact_inventory": {
     "path": "database/flyway-artifact-inventory.json",
-    "sha256": "03f1c2380cb81aa3dd21e1d243b1c9290ac31ea195eeaca6f8823f324e5a0aa6",
-    "aggregate_sha256": "sha256:fbc8d021fd17eaa5628b26eb18ca66019aefa8b341a78584c1f9e4c736370cb9"
+    "sha256": "30f22cb4a25722e74a632b67bfd7d595c4957680c3766568a5848aabb4673687",
+    "aggregate_sha256": "sha256:18608fe1881a4c8c2e205e02692c41c5b9b829fb9f877a00a198c2710aafd1ac"
   },
   "baseline_policy": "explicit_attested_baseline_only",
   "cluster_role_provisioning": {

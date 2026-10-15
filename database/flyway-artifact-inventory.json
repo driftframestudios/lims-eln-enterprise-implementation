@@ -64,8 +64,8 @@
       "kind": "versioned_migration",
       "version": "008",
       "path": "sql/V008__workbench_migration_provenance.sql",
-      "sha256": "daa016e307dc81f794cfc5791398485355813915587f1dcb75bd9ef033b15230"
+      "sha256": "5be95a710c717ed8c30bbb1b1b6e452187ba068172a14c8999f3862fc8811c7f"
     }
   ],
-  "aggregate_sha256": "sha256:fbc8d021fd17eaa5628b26eb18ca66019aefa8b341a78584c1f9e4c736370cb9"
+  "aggregate_sha256": "sha256:18608fe1881a4c8c2e205e02692c41c5b9b829fb9f877a00a198c2710aafd1ac"
 }

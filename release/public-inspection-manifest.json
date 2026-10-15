@@ -1,7 +1,7 @@
 {
   "artifact_groups": [
     {
-      "aggregate_sha256": "sha256:035181ca303af21b4eaddd20d20644347e806185a3ade0d01cc9a85831a67fd0",
+      "aggregate_sha256": "sha256:9483babc1224affc0ce319864965c4c82f0e73de4341d272d08c7ac59721f956",
       "artifacts": [
         {
           "path": ".python-version",
@@ -170,8 +170,8 @@
         },
         {
           "path": "src/lims_eln_implementation/workbench/postgres.py",
-          "sha256": "sha256:bd042ad606786e795922910008898d55a8e8305473606d51a0d391c1315c9684",
-          "size_bytes": 78656
+          "sha256": "sha256:4c240fac13ba9398094568d5c4b01696e5b6d6c5f33ec1f9e0a8cdc578237a9b",
+          "size_bytes": 78707
         },
         {
           "path": "src/lims_eln_implementation/workbench/runtime.py",
@@ -213,16 +213,16 @@
       "responsibility": "FastAPI, domain, adapter, and package source that defines executable behavior."
     },
     {
-      "aggregate_sha256": "sha256:5de5b4bf25407bbfb894cd62921895e69de9e3ff965cc303be7cf07722f10aa4",
+      "aggregate_sha256": "sha256:8b409345f0d27e012ed1bc309edd41566ff828b6595a7ad97cab332fe03f11c2",
       "artifacts": [
         {
           "path": "database/flyway-artifact-inventory.json",
-          "sha256": "sha256:03f1c2380cb81aa3dd21e1d243b1c9290ac31ea195eeaca6f8823f324e5a0aa6",
+          "sha256": "sha256:30f22cb4a25722e74a632b67bfd7d595c4957680c3766568a5848aabb4673687",
           "size_bytes": 2502
         },
         {
           "path": "database/flyway-release.json",
-          "sha256": "sha256:762d3a53175296eda084b88a2495b7c2021d766750c1efdd81ebb2893326e73d",
+          "sha256": "sha256:58527f73f3f39d3db3e9065dfcc803fea6ef44f9b74654741eb53e0352cd94fa",
           "size_bytes": 1287
         },
         {
@@ -312,8 +312,8 @@
         },
         {
           "path": "sql/V008__workbench_migration_provenance.sql",
-          "sha256": "sha256:daa016e307dc81f794cfc5791398485355813915587f1dcb75bd9ef033b15230",
-          "size_bytes": 2061
+          "sha256": "sha256:5be95a710c717ed8c30bbb1b1b6e452187ba068172a14c8999f3862fc8811c7f",
+          "size_bytes": 2084
         },
         {
           "path": "sql/afterConnect.sql",
@@ -325,7 +325,7 @@
       "responsibility": "Flyway V001 through V008, its bounded identity, and deployment-shape database support."
     },
     {
-      "aggregate_sha256": "sha256:6c7321a9dd94840fae4afc4168ae1f937cc8e83b278243f4b5291aeccf6e12c2",
+      "aggregate_sha256": "sha256:87d7f42328eabbf590ab4a3f1636e855dc2dd40e95844ede6975cbee6b0624de",
       "artifacts": [
         {
           "path": "contracts/database-lifecycle-profile.source.json",
@@ -434,7 +434,7 @@
         },
         {
           "path": "release/bounded-caller-bindings.json",
-          "sha256": "sha256:3fb67407e6042cdda31d349a4d86f5ca85e51bc90dfdad31617a1b4c12103f0c",
+          "sha256": "sha256:f5c1ad5a67bf8276e9259d77b1a60b0994714b5ddf868de0d6160d385de62b23",
           "size_bytes": 7349
         },
         {
@@ -494,7 +494,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:f2232f38a391387049711dece5c14ba34d01535ef30a233861eaee2a21c88288",
+      "aggregate_sha256": "sha256:a799fe9bbf24a0acc9a69da55528c45eaeb0d6a09bb5ee882971cd518ca7cc81",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -538,8 +538,8 @@
         },
         {
           "path": "scripts/check_database_restart.py",
-          "sha256": "sha256:3fbe8520bed136a78b740ddf0e233959dd0e5023851c3ba802d2520e4fce4190",
-          "size_bytes": 22825
+          "sha256": "sha256:546a4fde5200c1a9c82575eed49e0ebd87745b7d10fa8cd20d555c07aac26a64",
+          "size_bytes": 25086
         },
         {
           "path": "scripts/prepare_container_context.py",
@@ -643,8 +643,8 @@
         },
         {
           "path": "tests/test_database_restart_proof.py",
-          "sha256": "sha256:0a7c415397b4a9585984000802500b27ec24fdb2ff51854251975ae87144882c",
-          "size_bytes": 7562
+          "sha256": "sha256:13986ec46c084db881253fd3c31cc0cfbc7faee914cb51f849fc0103b6c1791b",
+          "size_bytes": 9849
         },
         {
           "path": "tests/test_durable_invocation_postgres.py",
@@ -673,8 +673,8 @@
         },
         {
           "path": "tests/test_migration_provenance_postgres.py",
-          "sha256": "sha256:487d624696ea7fb93db5053368e45ae6939754e13d4551f9e336db243fe3bf1f",
-          "size_bytes": 6119
+          "sha256": "sha256:6366f65a6acca43c2dec2292d0cba440f08375ec61303bff8cf411f4b7e962cd",
+          "size_bytes": 6981
         },
         {
           "path": "tests/test_observability_application.py",
@@ -768,18 +768,18 @@
         },
         {
           "path": "tests/test_workbench_migration_provenance.py",
-          "sha256": "sha256:4b83f3acc99fd0f309c9a8f818bfd42c037b058586c3b8af13453d201c7e3711",
-          "size_bytes": 7493
+          "sha256": "sha256:6b7c01a84c0530f5674885deaf3ae2cc8f8177ea1aeffe7e35b87a6fd6a951d4",
+          "size_bytes": 7430
         },
         {
           "path": "tests/test_workbench_postgres_adapter.py",
-          "sha256": "sha256:98520cad373eca24ad1707d15b09704d94176e5e286276653052d34cded2ab30",
-          "size_bytes": 13290
+          "sha256": "sha256:679c91d91f53ad4e0aec077a0137c970b82ee319ab3e945e3c43a2989c5108cf",
+          "size_bytes": 13413
         },
         {
           "path": "tests/test_workbench_runtime.py",
-          "sha256": "sha256:01d33d8f5a81c38fcd2eec9ace7062fd0fed23cb753517f4f358545ca9b2aa57",
-          "size_bytes": 10902
+          "sha256": "sha256:279d053fad97346d57c00cdadac0097120eca32e9d05137a29be802e5301c4b8",
+          "size_bytes": 12043
         },
         {
           "path": "tests/test_workbench_service.py",
@@ -838,7 +838,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:d1ba42fb0b2375f9394ed546e31583096244ae8a3e54724b9ea36eba08df897d",
+      "aggregate_sha256": "sha256:bc7263d1a8c50e64d519c3f783fcd00ce7614d48a6f92668235c55412664385f",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -977,8 +977,8 @@
         },
         {
           "path": "docs/golden-specimen-workbench.md",
-          "sha256": "sha256:177b8c44269891dc2c7a11e9f036f4bf1d8a6b81825af124acedfdc13fbcad5a",
-          "size_bytes": 9877
+          "sha256": "sha256:e7a6431692a5f51c501dd23fc6e8a665cbc359cc235e854ed3f46261445cca2b",
+          "size_bytes": 10494
         },
         {
           "path": "docs/offline-administrative-journey.md",
@@ -1022,8 +1022,8 @@
         },
         {
           "path": "docs/runbooks/owned-database-restart.v0.1.md",
-          "sha256": "sha256:9c3ebcd0a9c48e2c0618a6d264b0c323273e496021fb6098bf4acedf8e3dd1b9",
-          "size_bytes": 7402
+          "sha256": "sha256:9b57d529221f44108abf0e5e72b8856263d9b48ed5aa7e41285a50e70ce80e8e",
+          "size_bytes": 7854
         },
         {
           "path": "docs/runbooks/program-package-handoff.v0.1.md",
@@ -1042,7 +1042,7 @@
         },
         {
           "path": "first-receipt.json",
-          "sha256": "sha256:ba350063d0e7b61385580c6d266b0f1945dafd0071e75964a9d27036bc744e43",
+          "sha256": "sha256:8b431acc5a86e04674d914eef74eddff5f3e98eedf0063e4564fbb101337a67a",
           "size_bytes": 6522
         },
         {
@@ -1052,7 +1052,7 @@
         },
         {
           "path": "machine-node.json",
-          "sha256": "sha256:de2be2ce01900fbee366716665e5ecb05f47e8e904b267209ad708ace3f2b4df",
+          "sha256": "sha256:15db54b9fe7252437138d9b9ab748684b92c45fd191f7fde6f1d36d2dd1d0889",
           "size_bytes": 5647
         },
         {
@@ -1194,7 +1194,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:bd8546712cc1173a20ae7ece0fe8ac5d41b614e795c35509ac8571fc5cfe1688",
+    "aggregate_sha256": "sha256:566aa80f9dcc8d771f256f434c7a3429125f1db3be211263fa7ede9e6b42493f",
     "kind": "content_addressed_artifact_inventory"
   }
 }

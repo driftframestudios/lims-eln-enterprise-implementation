@@ -91,13 +91,22 @@ Version `2.0.0` coordinates remain readable with `migration_head: null` and
 receipts retain their bytes. Fresh exports state the information actually
 available, and their configuration digests reflect that distinction.
 
-Complete Flyway migration and validation during a quiescent workbench phase,
-then admit application work. The function observes the transaction's history
+Drain existing application transactions, complete Flyway migration and
+validation, then admit new application transactions. The function observes the transaction's history
 snapshot; migration exclusion remains a deployment responsibility. Failed,
 missing, mixed-type or incomplete history holds a new completion. Resolve that
 history through Flyway before retrying the same request. Future migration heads
 retain the three-digit contiguous SQL-chain convention; application compatibility
 continues through source review and configured checks.
+
+Readiness includes the provenance reader. Unavailable history holds readiness
+and new completions; stored observations retain their read route. Attested
+baselines and direct-SQL installations remain distinct profiles: the current
+new-run reader requires the complete versioned SQL history. A future profile
+can add a separately reviewed provenance contract for those installations.
+The native proof authors an explicitly labeled history fixture after applying
+the SQL sources. Its placeholder checksums exercise admission and replay;
+Flyway CLI validation retains its own source-checksum evidence.
 
 The existing V007 hosted and native receipts retain their named source scope.
 V008 integration requires renewed configured evidence. The current-source

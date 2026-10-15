@@ -235,7 +235,7 @@ class PostgresWorkbenchService:
         self._failure_probe = failure_probe or (lambda _: None)
 
     def check_ready(self) -> None:
-        """Exercise tenant binding, application identity, and V005 read permissions.
+        """Exercise identity, canonical reads, and execution provenance readiness.
 
         LIMIT 0 checks relation shape and access without materializing specimen
         rows. Transaction ownership and resource release stay with the adapter.
@@ -250,6 +250,7 @@ class PostgresWorkbenchService:
                 raise TenantSessionBindingError(
                     "workbench readiness requires the ordinary laboratory_app identity"
                 )
+            _capture_migration_configuration(cursor)
             cursor.execute(
                 "select 1 from public.specimen_workbench_snapshot "
                 "where tenant_id = %s limit 0", (self._tenant_id,),

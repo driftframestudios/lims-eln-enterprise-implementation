@@ -22,6 +22,21 @@ VALID_RAW = b'{"analyte":"synthetic-dna","value":"12.5","unit":"ng/uL"}'
 QUARANTINED_RAW = b'{"analyte":" ","value":"12.5","unit":"ng/uL"}'
 
 
+def golden_arguments(raw: bytes) -> dict[str, Any]:
+    """One independent request fixture shared by adapter boundary tests."""
+    return {
+        "run_id": "SYN-RUN-001",
+        "tenant_id": "SYN-TENANT-A",
+        "specimen_id": "SYN-SPECIMEN-0001",
+        "actor_id": "SYN-ACTOR-01",
+        "scientist_id": "SYN-SCIENTIST-01",
+        "quality_actor_id": "SYN-QUALITY-01",
+        "occurred_at": NOW,
+        "raw_instrument_json": raw,
+        "vendor_payload": {"status": "under_review"},
+    }
+
+
 def context_for(tenant_id: str) -> SignedTenantContext:
     return SignedTenantContext(
         tenant_id=tenant_id,
@@ -131,17 +146,7 @@ class PostgresWorkbenchAdapterTests(unittest.TestCase):
         )
 
     def arguments(self, raw: bytes) -> dict[str, Any]:
-        return {
-            "run_id": "SYN-RUN-001",
-            "tenant_id": "SYN-TENANT-A",
-            "specimen_id": "SYN-SPECIMEN-0001",
-            "actor_id": "SYN-ACTOR-01",
-            "scientist_id": "SYN-SCIENTIST-01",
-            "quality_actor_id": "SYN-QUALITY-01",
-            "occurred_at": NOW,
-            "raw_instrument_json": raw,
-            "vendor_payload": {"status": "under_review"},
-        }
+        return golden_arguments(raw)
 
     def test_quarantine_commits_named_recovery_state_after_tenant_binding(self) -> None:
         connection = RecordingConnection()
