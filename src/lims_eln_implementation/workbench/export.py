@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from contextlib import contextmanager
 from hashlib import sha256
+import io
 import json
 import os
 from pathlib import Path
@@ -28,12 +29,19 @@ class ExportHeld(ExportError):
 
 @contextmanager
 def _owned_stream(descriptor: int, mode: str):
-    """Own the raw descriptor independently of stream construction and release."""
+    """Close both stream layers before releasing their separately owned descriptor."""
+    raw = None
     stream = None
     primary = None
     cleanup = Cleanup()
     try:
-        stream = os.fdopen(descriptor, mode, closefd=False)
+        raw = io.FileIO(descriptor, mode, closefd=False)
+        if mode == "rb":
+            stream = io.BufferedReader(raw)
+        elif mode == "wb":
+            stream = io.BufferedWriter(raw)
+        else:
+            raise ValueError("artifact streams require binary read or write mode")
         yield stream
     except BaseException as error:
         primary = error
@@ -41,8 +49,22 @@ def _owned_stream(descriptor: int, mode: str):
     finally:
         if stream is not None:
             cleanup.attempt("stream_close", stream.close)
-        cleanup.attempt("file_close", lambda: os.close(descriptor))
-        cleanup.finish(primary, lambda: OSError("artifact stream requires complete release"))
+        if raw is not None and not raw.closed:
+            cleanup.attempt("raw_stream_close", raw.close)
+        retained = raw is not None and not raw.closed
+        # A live raw stream could flush buffered bytes into a later owner of this fd.
+        if not retained:
+            cleanup.attempt("file_close", lambda: os.close(descriptor))
+        if retained and primary is not None:
+            primary.retained_stream = raw
+            primary.retained_descriptor = descriptor
+        try:
+            cleanup.finish(primary, lambda: OSError("artifact stream requires complete release"))
+        except BaseException as error:
+            if retained:
+                error.retained_stream = raw
+                error.retained_descriptor = descriptor
+            raise
 
 
 def _existing_matches(directory: int, name: str, payload: bytes) -> bool:

@@ -248,10 +248,13 @@ retain the actual planner and buffer results. The source workflow's Python jobs
 rejected the earlier current-source receipt binding; this successor records the
 successful database jobs, and its admission receives separate complete Python
 validation. The separate
-[native PostgreSQL 17 recovery receipt](receipts/owned-postgresql17-resource-cleanup-proof.json)
-records fast restart, immediate crash recovery and rollback at that same source,
+[native PostgreSQL 17 recovery receipt](receipts/owned-postgresql17-stream-ownership-proof.json)
+records fast restart, immediate crash recovery and rollback at source
+`a35dbaae69e8488a976bc580b3ea90addf12a9b1`, after the export stream follow-up,
 using direct SQL migration execution. Local fault-injection tests cover teardown
-interruptions and export publication state. The retained
+interruptions, descriptor reuse and export publication state. The
+[preceding native cleanup receipt](receipts/owned-postgresql17-resource-cleanup-proof.json)
+retains its own source observation. The retained
 [V007 hosted](receipts/hosted-postgresql-v007-proof.json),
 [prior native recovery](receipts/owned-postgresql17-recovery-proof.json) and
 [V005 hosted](receipts/hosted-postgresql-proof.json) receipts keep their original
