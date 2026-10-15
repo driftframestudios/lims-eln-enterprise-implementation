@@ -93,6 +93,30 @@ selects a control interruption. These diagnostics stay with the local operator.
 The CLI emits a bounded message and preserves interruption exit 130 separately
 from ordinary failure exit 1 and the existing hold exit 75.
 
+The exporter owns a raw `FileIO` object, its buffered reader or writer, and the
+OS descriptor separately. After buffered close, it inspects the raw object's
+closed state and attempts direct invalidation while that object remains live.
+This direct attempt can follow a buffered close that reached raw close before
+raising. Once the raw object is closed, later buffered finalization cannot
+access a reused descriptor; the OS descriptor receives one release attempt.
+The two stream objects are the same layers created by ordinary buffered open;
+the additional owned reference and release checks use constant space. The explicit
+buffer uses `io.DEFAULT_BUFFER_SIZE`; ordinary buffered open can choose a
+device-derived size. Total byte work remains O(B) within the 2 MiB admission
+boundary; throughput and exact allocation parity require separate measurement.
+
+If direct raw invalidation leaves the object live, its numeric descriptor stays
+owned until reconciliation. The originating or selected exception exposes
+`retained_stream` and `retained_descriptor`; follow `primary_error` when an outer
+translation or cleanup signal carries that earlier exception. The local
+operator first closes the retained raw object, confirms its `closed` state,
+and then closes the retained descriptor once. Keep this order so a later buffer
+flush retains its original resource identity. Pending-file and directory cleanup
+still receive their independent attempts. An OS-close error after raw
+invalidation has a different uncertain-release boundary: retain its diagnostic
+and follow platform reconciliation rather than automatically retrying that
+numeric descriptor. Raw exceptions and descriptors stay in local diagnostics.
+
 SIGINT and SIGTERM use cleanup and a bounded status message. Forced termination
 or host loss may retain a private pending file. After confirming the earlier
 process has stopped, inspect and reconcile the named pending entry locally.

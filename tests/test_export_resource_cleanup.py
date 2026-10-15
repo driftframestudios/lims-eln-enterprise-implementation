@@ -1,6 +1,7 @@
 """Acquisition, publication and cleanup faults retain owned storage and control."""
 
 import errno
+import io
 import os
 from pathlib import Path
 import stat
@@ -49,7 +50,7 @@ class ExportResourceCleanupTests(unittest.TestCase):
                 if existing:
                     export._publish(b"accepted", target)
                 with patch.object(export.os, "open", side_effect=acquire), patch.object(
-                    export.os, "fdopen", side_effect=OSError("private transfer")
+                    export.io, "FileIO", side_effect=OSError("private transfer")
                 ), patch.object(export.os, "close", wraps=os.close) as close:
                     with self.assertRaises(OSError):
                         export._publish(b"accepted", target)
@@ -181,10 +182,10 @@ class ExportResourceCleanupTests(unittest.TestCase):
     def test_stream_close_control_keeps_primary_and_releases_directory(self):
         primary = OSError("private write")
         control = KeyboardInterrupt()
-        real_fdopen = os.fdopen
+        real_buffer = io.BufferedWriter
         class InterruptedStream:
-            def __init__(self, descriptor, mode):
-                self.stream = real_fdopen(descriptor, mode, closefd=False)
+            def __init__(self, raw):
+                self.stream = real_buffer(raw)
                 self.close_attempts = 0
             def write(self, payload):
                 raise primary
@@ -193,13 +194,12 @@ class ExportResourceCleanupTests(unittest.TestCase):
                 self.stream.close()
                 raise control
         streams = []
-        def open_stream(descriptor, mode, *, closefd):
-            self.assertFalse(closefd)
-            stream = InterruptedStream(descriptor, mode)
+        def open_stream(raw):
+            stream = InterruptedStream(raw)
             streams.append(stream)
             return stream
         with tempfile.TemporaryDirectory() as directory:
-            with patch.object(export.os, "fdopen", side_effect=open_stream):
+            with patch.object(export.io, "BufferedWriter", side_effect=open_stream):
                 with self.assertRaises(KeyboardInterrupt) as caught:
                     export._publish(b"accepted", Path(directory) / "observation.json")
             self.assertIs(caught.exception, control)
@@ -215,23 +215,23 @@ class ExportResourceCleanupTests(unittest.TestCase):
                 if existing:
                     export._publish(b"accepted", target)
                 opened = []
-                real_fdopen = os.fdopen
+                real_buffer = io.BufferedReader if existing else io.BufferedWriter
                 class InterruptedClose:
-                    def __init__(self, descriptor, mode, *, closefd):
-                        self.descriptor = descriptor
-                        self.stream = real_fdopen(descriptor, mode, closefd=closefd)
+                    def __init__(self, raw):
+                        self.descriptor = raw.fileno()
+                        self.stream = real_buffer(raw)
                         self.close_attempts = 0
                     def __getattr__(self, name):
                         return getattr(self.stream, name)
                     def close(self):
                         self.close_attempts += 1
                         raise KeyboardInterrupt()
-                def construct(descriptor, mode, *, closefd):
-                    self.assertFalse(closefd)
-                    stream = InterruptedClose(descriptor, mode, closefd=closefd)
+                def construct(raw):
+                    self.assertFalse(raw.closefd)
+                    stream = InterruptedClose(raw)
                     opened.append(stream)
                     return stream
-                with patch.object(export.os, "fdopen", side_effect=construct), patch.object(
+                with patch.object(export.io, real_buffer.__name__, side_effect=construct), patch.object(
                     export.os, "close", wraps=os.close
                 ) as close:
                     with self.assertRaises(KeyboardInterrupt) as caught:
@@ -239,6 +239,7 @@ class ExportResourceCleanupTests(unittest.TestCase):
                     self.assertEqual(close.call_count, 2)
                 stream, = opened
                 self.assertEqual(stream.close_attempts, 1)
+                self.assertTrue(stream.stream.raw.closed)
                 with self.assertRaises(OSError) as closed:
                     os.fstat(stream.descriptor)
                 self.assertEqual(closed.exception.errno, errno.EBADF)
@@ -249,23 +250,223 @@ class ExportResourceCleanupTests(unittest.TestCase):
                     self.assertEqual(target.read_bytes(), b"accepted")
 
     def test_partial_stream_construction_keeps_raw_ownership(self):
-        wrappers = []
-        real_fdopen = os.fdopen
-        def partial(descriptor, mode, *, closefd):
-            self.assertFalse(closefd)
-            wrappers.append(real_fdopen(descriptor, mode, closefd=closefd))
-            raise OSError("private constructor failure")
+        for existing in (False, True):
+            wrappers = []
+            descriptors = []
+            real_buffer = io.BufferedReader if existing else io.BufferedWriter
+            def partial(raw):
+                descriptors.append(raw.fileno())
+                wrappers.append(real_buffer(raw))
+                raise OSError("private constructor failure")
+            with self.subTest(existing=existing), tempfile.TemporaryDirectory() as directory:
+                target = Path(directory) / "observation.json"
+                if existing:
+                    export._publish(b"accepted", target)
+                with patch.object(export.io, real_buffer.__name__, side_effect=partial), patch.object(
+                    export.os, "close", wraps=os.close
+                ) as close:
+                    with self.assertRaises(OSError):
+                        export._publish(b"accepted", target)
+                    self.assertEqual(close.call_count, 2)
+                self.assertTrue(wrappers[0].raw.closed)
+                with self.assertRaises(OSError) as closed:
+                    os.fstat(descriptors[0])
+                self.assertEqual(closed.exception.errno, errno.EBADF)
+                wrappers[0].close()
+                self.assertEqual(list(Path(directory).glob(".pending-export-*")), [])
+                if existing:
+                    self.assertEqual(target.read_bytes(), b"accepted")
+
+    def test_late_buffer_release_preserves_the_next_descriptor_owner(self):
+        for existing in (False, True):
+            for primary_type, secondary_type in (
+                (OSError, KeyboardInterrupt), (KeyboardInterrupt, OSError),
+                (SystemExit, KeyboardInterrupt), (OSError, OSError),
+            ):
+                primary = primary_type("private operation")
+                secondary = secondary_type("private teardown")
+                opened = []
+                real_buffer = io.BufferedReader if existing else io.BufferedWriter
+                class FailedStream:
+                    def __init__(self, raw):
+                        self.descriptor = raw.fileno()
+                        self.stream = real_buffer(raw)
+                    def __getattr__(self, name):
+                        return getattr(self.stream, name)
+                    def read(self, size):
+                        self.stream.peek(1)
+                        raise primary
+                    def flush(self):
+                        raise primary
+                    def close(self):
+                        raise secondary
+                def construct(raw):
+                    stream = FailedStream(raw)
+                    opened.append(stream)
+                    return stream
+                with self.subTest(existing=existing, primary=primary_type, secondary=secondary_type), tempfile.TemporaryDirectory() as directory:
+                    target = Path(directory) / "observation.json"
+                    if existing:
+                        export._publish(b"accepted", target)
+                    expected = primary_type if primary_type is not OSError else (
+                        secondary_type if secondary_type is KeyboardInterrupt else export.ExportError
+                    )
+                    with patch.object(export, "validate_observation_bytes", return_value=None), patch.object(
+                        export.io, real_buffer.__name__, side_effect=construct
+                    ):
+                        with self.assertRaises(expected) as caught:
+                            export.export_observation(b"accepted", target, tenant_id="SYN-TENANT", run_id="SYN-RUN")
+                    observed = caught.exception
+                    if primary_type is not OSError:
+                        self.assertIs(observed, primary)
+                    elif secondary_type is KeyboardInterrupt:
+                        self.assertIs(observed, secondary)
+                        self.assertIs(observed.primary_error, primary)
+                    else:
+                        self.assertIs(observed.primary_error, primary)
+                        self.assertNotIn("private", str(observed))
+                    self.assertEqual(observed.publication_state, "unpublished")
+                    self.assertEqual(observed.pending_state, "absent")
+                    self.assertEqual([f.error for f in observed.cleanup_failures], [secondary])
+                    stream, = opened
+                    with self.assertRaises(OSError) as closed:
+                        os.fstat(stream.descriptor)
+                    self.assertEqual(closed.exception.errno, errno.EBADF)
+                    later = Path(directory) / "later-owner.bin"
+                    later.write_bytes(b"later accepted bytes")
+                    descriptor = os.open(later, os.O_RDWR)
+                    if descriptor != stream.descriptor:
+                        os.dup2(descriptor, stream.descriptor)
+                    try:
+                        # Exercise late close itself before inspecting implementation state.
+                        stream.stream.close()
+                        self.assertEqual(later.read_bytes(), b"later accepted bytes")
+                        self.assertTrue(stream.stream.raw.closed)
+                        os.fstat(stream.descriptor)
+                        if existing:
+                            self.assertEqual(target.read_bytes(), b"accepted")
+                        else:
+                            self.assertFalse(target.exists())
+                    finally:
+                        os.close(stream.descriptor)
+                        if descriptor != stream.descriptor:
+                            os.close(descriptor)
+
+    def test_raw_close_failure_retains_live_stream_and_descriptor_for_reconciliation(self):
+        real_raw, real_buffer = io.FileIO, io.BufferedWriter
+        for failure_type in (OSError, KeyboardInterrupt, SystemExit):
+            primary = OSError("private flush")
+            secondary = OSError("private buffer close")
+            failure = failure_type("private raw close")
+            acquired = []
+            class RetainedRaw(real_raw):
+                def close(self):
+                    raise failure
+            class FailedBuffer:
+                def __init__(self, raw):
+                    self.stream = real_buffer(raw)
+                def __getattr__(self, name):
+                    return getattr(self.stream, name)
+                def flush(self):
+                    raise primary
+                def close(self):
+                    raise secondary
+            def construct(descriptor, mode, *, closefd):
+                raw = RetainedRaw(descriptor, mode, closefd=closefd)
+                acquired.append(raw)
+                return raw
+            with self.subTest(failure=failure_type), tempfile.TemporaryDirectory() as directory:
+                target = Path(directory) / "observation.json"
+                try:
+                    with patch.object(export, "validate_observation_bytes", return_value=None), patch.object(
+                        export.io, "FileIO", side_effect=construct
+                    ), patch.object(export.io, "BufferedWriter", side_effect=FailedBuffer), patch.object(
+                        export.os, "close", wraps=os.close
+                    ) as close:
+                        expected = export.ExportError if failure_type is OSError else failure_type
+                        with self.assertRaises(expected) as caught:
+                            export.export_observation(b"accepted", target, tenant_id="SYN-TENANT", run_id="SYN-RUN")
+                        self.assertEqual(close.call_count, 1)  # The directory can still release.
+                    owner = caught.exception.primary_error if failure_type is OSError else caught.exception
+                    raw, = acquired
+                    self.assertIs(owner.retained_stream, raw)
+                    self.assertEqual(owner.retained_descriptor, raw.fileno())
+                    self.assertFalse(raw.closed)
+                    os.fstat(owner.retained_descriptor)
+                    self.assertEqual([f.error for f in owner.cleanup_failures], [secondary, failure])
+                    self.assertEqual(caught.exception.publication_state, "unpublished")
+                    self.assertEqual(caught.exception.pending_state, "absent")
+                    self.assertEqual(list(Path(directory).iterdir()), [])
+                    if failure_type is not OSError:
+                        self.assertIs(caught.exception, failure)
+                        self.assertIs(failure.primary_error, primary)
+                finally:
+                    for raw in acquired:
+                        descriptor = raw.fileno()
+                        real_raw.close(raw)
+                        os.close(descriptor)
+
+    def test_direct_raw_invalidation_follows_interrupted_buffer_owned_close(self):
+        real_raw = io.FileIO
+        control = KeyboardInterrupt()
+        acquired = []
+        class InterruptedRaw(real_raw):
+            attempts = 0
+            def close(self):
+                self.attempts += 1
+                if self.attempts == 1:
+                    raise control
+                real_raw.close(self)
+        def construct(descriptor, mode, *, closefd):
+            raw = InterruptedRaw(descriptor, mode, closefd=closefd)
+            acquired.append((raw, descriptor))
+            return raw
         with tempfile.TemporaryDirectory() as directory:
-            with patch.object(export.os, "fdopen", side_effect=partial), patch.object(
+            with patch.object(export.io, "FileIO", side_effect=construct), patch.object(
                 export.os, "close", wraps=os.close
             ) as close:
-                with self.assertRaises(OSError):
+                with self.assertRaises(KeyboardInterrupt) as caught:
                     export._publish(b"accepted", Path(directory) / "observation.json")
                 self.assertEqual(close.call_count, 2)
+            self.assertIs(caught.exception, control)
+            raw, descriptor = acquired[0]
+            self.assertEqual(raw.attempts, 2)
+            self.assertTrue(raw.closed)
             with self.assertRaises(OSError) as closed:
-                os.fstat(wrappers[0].fileno())
+                os.fstat(descriptor)
             self.assertEqual(closed.exception.errno, errno.EBADF)
-            wrappers[0].close()
+            self.assertEqual(list(Path(directory).iterdir()), [])
+
+    def test_raw_close_that_invalidates_then_raises_still_releases_descriptor(self):
+        real_raw, real_buffer = io.FileIO, io.BufferedWriter
+        control = KeyboardInterrupt()
+        descriptors = []
+        class ClosedRaw(real_raw):
+            def close(self):
+                real_raw.close(self)
+                raise control
+        class FailedBuffer:
+            def __init__(self, raw):
+                self.stream = real_buffer(raw)
+            def __getattr__(self, name):
+                return getattr(self.stream, name)
+            def close(self):
+                raise OSError("private buffer close")
+        def construct(descriptor, mode, *, closefd):
+            descriptors.append(descriptor)
+            return ClosedRaw(descriptor, mode, closefd=closefd)
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(export.io, "FileIO", side_effect=construct), patch.object(
+                export.io, "BufferedWriter", side_effect=FailedBuffer
+            ), patch.object(export.os, "close", wraps=os.close) as close:
+                with self.assertRaises(KeyboardInterrupt) as caught:
+                    export._publish(b"accepted", Path(directory) / "observation.json")
+                self.assertEqual(close.call_count, 2)
+            self.assertIs(caught.exception, control)
+            self.assertFalse(hasattr(control, "retained_descriptor"))
+            with self.assertRaises(OSError) as closed:
+                os.fstat(descriptors[0])
+            self.assertEqual(closed.exception.errno, errno.EBADF)
             self.assertEqual(list(Path(directory).iterdir()), [])
 
     def test_cli_keeps_interruption_exit_distinct_when_cleanup_also_fails(self):
