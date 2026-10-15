@@ -149,7 +149,7 @@ class PromotionLifecycleTests(unittest.TestCase):
                         coordinate_state="v005_observed_successor_candidate",
                     )
 
-    def test_v007_current_coordinate_requires_its_own_observation(self) -> None:
+    def test_retained_v007_coordinate_requires_its_own_observation(self) -> None:
         bindings = load("receipts/hosted-postgresql-v007-proof.json")["version_bindings"]
         self.assertEqual("observed_v007_artifacts", classify_hosted_postgresql_receipt_binding(bindings))
         validate_hosted_postgresql_coordinate_state(
@@ -163,6 +163,26 @@ class PromotionLifecycleTests(unittest.TestCase):
                         binding_kind=binding_kind,
                         coordinate_state="v007_database_artifacts_observed",
                     )
+
+    def test_resource_cleanup_coordinate_requires_its_successor_observation(self) -> None:
+        bindings = load("receipts/hosted-postgresql-resource-cleanup-proof.json")["version_bindings"]
+        self.assertEqual("observed_resource_cleanup_artifacts", classify_hosted_postgresql_receipt_binding(bindings))
+        validate_hosted_postgresql_coordinate_state(
+            binding_kind="observed_resource_cleanup_artifacts",
+            coordinate_state="resource_cleanup_database_artifacts_observed",
+        )
+        for binding_kind in (
+            "observed_v007_artifacts", "observed_v005_artifacts",
+            "observed_predecessor", "accepted_prior", "historical_prior",
+        ):
+            with self.subTest(binding=binding_kind):
+                with self.assertRaisesRegex(AssertionError, "matching receipt binding"):
+                    validate_hosted_postgresql_coordinate_state(
+                        binding_kind=binding_kind,
+                        coordinate_state="resource_cleanup_database_artifacts_observed",
+                    )
+        with self.assertRaisesRegex(AssertionError, "exact observed commit"):
+            classify_hosted_postgresql_receipt_binding(bindings | {"repository_commit": "1" * 40})
 
     def test_current_hosted_receipt_requires_complete_exact_evidence(self) -> None:
         receipt = load("receipts/hosted-postgresql-proof.json")

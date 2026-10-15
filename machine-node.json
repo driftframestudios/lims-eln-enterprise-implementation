@@ -68,9 +68,9 @@
   },
   "current_development_observation": {
     "scope": "database_artifacts",
-    "coordinate_state": "v007_database_artifacts_observed",
+    "coordinate_state": "resource_cleanup_database_artifacts_observed",
     "flyway_version": "13.8.1",
-    "receipt": "receipts/hosted-postgresql-v007-proof.json"
+    "receipt": "receipts/hosted-postgresql-resource-cleanup-proof.json"
   },
   "first_receipt_contract_id": "FIRST-RCP-IMPLEMENTATION-001",
   "open_receipts": [

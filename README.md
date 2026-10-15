@@ -239,16 +239,23 @@ worker crash/reclaim, stale-fence rejection, and the durable FastAPI workbench's
 restart, exact replay, changed-content collision, tenant isolation, rollback,
 instrument recovery, and canonical-digest checks.
 
-The [V007 hosted receipt](receipts/hosted-postgresql-v007-proof.json) records
-PostgreSQL 17.10 and Flyway 13.8.1 clean/upgrade verification at source
-`83889fa87b740d824e82f5c9ffb0c515e6823148`. It covers ordinary-role invocation
-release, canonical ledger binding and the pending-outbox index. The
-[plan observations](receipts/postgresql-v007-plan-observations.json) retain the
-actual planner and buffer results. The separate
-[native PostgreSQL 17 recovery receipt](receipts/owned-postgresql17-recovery-proof.json)
+The [resource cleanup hosted receipt](receipts/hosted-postgresql-resource-cleanup-proof.json)
+records successful PostgreSQL 17.10 and Flyway 13.8.1 clean/upgrade database jobs
+at source `ae213e7c01262431030a2a8d81129bed090f1376`, after the transaction and
+export resource ownership repair. The
+[current plan observations](receipts/postgresql-resource-cleanup-plan-observations.json)
+retain the actual planner and buffer results. The source workflow's Python jobs
+rejected the earlier current-source receipt binding; this successor records the
+successful database jobs, and its admission receives separate complete Python
+validation. The separate
+[native PostgreSQL 17 recovery receipt](receipts/owned-postgresql17-resource-cleanup-proof.json)
 records fast restart, immediate crash recovery and rollback at that same source,
-using direct SQL migration execution. The retained
-[V005 receipt](receipts/hosted-postgresql-proof.json) keeps its original evidence.
+using direct SQL migration execution. Local fault-injection tests cover teardown
+interruptions and export publication state. The retained
+[V007 hosted](receipts/hosted-postgresql-v007-proof.json),
+[prior native recovery](receipts/owned-postgresql17-recovery-proof.json) and
+[V005 hosted](receipts/hosted-postgresql-proof.json) receipts keep their original
+source coordinates and evidence.
 
 ## Evidence and authority
 
