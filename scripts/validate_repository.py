@@ -184,6 +184,7 @@ HOSTED_V007_RECEIPT_CONTENT_DIGEST = "sha256:23478818302eae8eaa27ea2b9608f1a5ec4
 OWNED_PG17_RECEIPT_CONTENT_DIGEST = "sha256:4fec7349b7729238ceeb86c6691fcbbbfa829dd465ec9a90a9197a5769e74e6e"
 HOSTED_RESOURCE_CLEANUP_RECEIPT_CONTENT_DIGEST = "sha256:b9784aae8e4cd91c99c305d09ee2e0c871bc82b0e97d8c58df75766a1d0144cc"
 OWNED_RESOURCE_CLEANUP_RECEIPT_CONTENT_DIGEST = "sha256:d2e6ef5743728488ddc2bdb85619b31d875dc8803ae0a361addb30b6f36a68fc"
+OWNED_STREAM_OWNERSHIP_RECEIPT_CONTENT_DIGEST = "sha256:938f1fc3d57d5fdebc7d03d4a7603c21fe555622dac68231dffe600e32ac6363"
 EXCLUDED_DIRECTORY_NAMES = {
     ".git",
     ".mypy_cache",
@@ -572,6 +573,7 @@ def validate_current_database_observations() -> None:
             (file_digest(ROOT / "receipts/postgresql-v007-plan-observations.json"),),
         ),
         ("receipts/owned-postgresql17-recovery-proof.json", OWNED_PG17_RECEIPT_CONTENT_DIGEST, ()),
+        ("receipts/owned-postgresql17-resource-cleanup-proof.json", OWNED_RESOURCE_CLEANUP_RECEIPT_CONTENT_DIGEST, ()),
     ):
         validate_observed_execution_receipt(
             json.loads((ROOT / path).read_text(encoding="utf-8")),
@@ -600,7 +602,7 @@ def validate_current_database_observations() -> None:
     )
 
     native = json.loads(
-        (ROOT / "receipts/owned-postgresql17-resource-cleanup-proof.json").read_text(encoding="utf-8")
+        (ROOT / "receipts/owned-postgresql17-stream-ownership-proof.json").read_text(encoding="utf-8")
     )
     # Match the observation harness's path-NUL-content-NUL source coordinate.
     paths = [ROOT / "scripts/check_database_restart.py", ROOT / "pyproject.toml",
@@ -621,7 +623,7 @@ def validate_current_database_observations() -> None:
     )
     validate_observed_execution_receipt(
         native,
-        observed_content_digest=OWNED_RESOURCE_CLEANUP_RECEIPT_CONTENT_DIGEST,
+        observed_content_digest=OWNED_STREAM_OWNERSHIP_RECEIPT_CONTENT_DIGEST,
         current_artifact_digests=("sha256:" + runtime_digest.hexdigest(), *migration_digests),
     )
 

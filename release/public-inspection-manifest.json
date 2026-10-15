@@ -494,7 +494,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:3f2ab62034a0bcb2104648322582ef2708fa40539b8a4987f839ec36f01ca09e",
+      "aggregate_sha256": "sha256:57dec33e027d6c9e8ced4f986372af3d71a167d21025b0883adb60c1670aaa57",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -568,8 +568,8 @@
         },
         {
           "path": "scripts/validate_repository.py",
-          "sha256": "sha256:560914331a9d6ddaef8278ed5c15244e891610ab439cc7e446af01a8d9a8b8c0",
-          "size_bytes": 87668
+          "sha256": "sha256:0395eba46a6379afad91873939736e4f0b47b78dbaa9421514663109f7a962f1",
+          "size_bytes": 87910
         },
         {
           "path": "tests/__init__.py",
@@ -638,8 +638,8 @@
         },
         {
           "path": "tests/test_database_observation_receipts.py",
-          "sha256": "sha256:b6db7a9fd0e34594bf08462fc65539ac6e4e8b5c1f10ceb0a23ae21fcea26417",
-          "size_bytes": 8835
+          "sha256": "sha256:c44b2032342f5f87be050df956d11620962f8a3bfe32238ab312bcb2d50f5070",
+          "size_bytes": 9441
         },
         {
           "path": "tests/test_database_resource_cleanup.py",
@@ -791,7 +791,7 @@
       "responsibility": "Repository validation and tests for tenant isolation, scientific correctness, replay, recovery, and delivery evidence."
     },
     {
-      "aggregate_sha256": "sha256:a90a5dba40d2d0ba5c3fd9009fa6f115222830691181265a1d3fd42b5b548a27",
+      "aggregate_sha256": "sha256:bc444c0519a7dc58d418215d2821bb2636e44d425da75037a9e177382da33293",
       "artifacts": [
         {
           "path": "receipts/hosted-postgresql-proof.json",
@@ -829,6 +829,11 @@
           "size_bytes": 4195
         },
         {
+          "path": "receipts/owned-postgresql17-stream-ownership-proof.json",
+          "sha256": "sha256:47711680ca8b8731e767ce3c2b57f377487a1adad0da2e7ff53662354cf0995c",
+          "size_bytes": 4364
+        },
+        {
           "path": "receipts/postgresql-resource-cleanup-plan-observations.json",
           "sha256": "sha256:3ac44f5cd0ee7431a7462f54e4c874b31a37cec21e829027d94c3538deb7b15d",
           "size_bytes": 2763
@@ -853,7 +858,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:9f32172d7a8e407a46ecfbee43c4ad7aaba8fd07d500510140ac491fd6a265f6",
+      "aggregate_sha256": "sha256:590ce7fc8b502dd74abfde639d45d12cdef8bdb612011136651e7f3dceeb27f2",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -942,8 +947,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "sha256:11309593ee23d86004bff3dda831a5e05b56031e2d12e01043a78887b264d72f",
-          "size_bytes": 29845
+          "sha256": "sha256:a731b23780a5cbd8c14c7922e0acb91ef0ba182eaf2169ee72e9cbbd83339c71",
+          "size_bytes": 30063
         },
         {
           "path": "SECURITY.md",
@@ -1209,7 +1214,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:552e6f4f2e9e8df48b544000f2741b1f945fd853814e60a0100c9ed68bdab737",
+    "aggregate_sha256": "sha256:764c1d0d842cba5cdced5e0ebef032f6a161d185bdd4f5aa8b760590920816a4",
     "kind": "content_addressed_artifact_inventory"
   }
 }

@@ -12,6 +12,7 @@ from scripts.validate_repository import (
     HOSTED_V007_RECEIPT_CONTENT_DIGEST,
     OWNED_PG17_RECEIPT_CONTENT_DIGEST,
     OWNED_RESOURCE_CLEANUP_RECEIPT_CONTENT_DIGEST,
+    OWNED_STREAM_OWNERSHIP_RECEIPT_CONTENT_DIGEST,
     file_digest,
     validate_current_database_observations,
     validate_observed_execution_receipt,
@@ -36,6 +37,7 @@ class DatabaseObservationReceiptTests(unittest.TestCase):
                 ("receipts/owned-postgresql17-recovery-proof.json", OWNED_PG17_RECEIPT_CONTENT_DIGEST),
                 ("receipts/hosted-postgresql-resource-cleanup-proof.json", HOSTED_RESOURCE_CLEANUP_RECEIPT_CONTENT_DIGEST),
                 ("receipts/owned-postgresql17-resource-cleanup-proof.json", OWNED_RESOURCE_CLEANUP_RECEIPT_CONTENT_DIGEST),
+                ("receipts/owned-postgresql17-stream-ownership-proof.json", OWNED_STREAM_OWNERSHIP_RECEIPT_CONTENT_DIGEST),
             )
         ]
 
@@ -101,6 +103,7 @@ class DatabaseObservationReceiptTests(unittest.TestCase):
             "receipts/owned-postgresql17-recovery-proof.json",
             "receipts/hosted-postgresql-resource-cleanup-proof.json",
             "receipts/owned-postgresql17-resource-cleanup-proof.json",
+            "receipts/owned-postgresql17-stream-ownership-proof.json",
         ):
             target = ROOT / relative_path
             def changed_receipt(path, *args, **kwargs):
@@ -142,6 +145,7 @@ class DatabaseObservationReceiptTests(unittest.TestCase):
         for relative_path in (
             "scripts/check_database_restart.py",
             "src/lims_eln_implementation/resource_cleanup.py",
+            "src/lims_eln_implementation/workbench/export.py",
         ):
             target = ROOT / relative_path
             def changed_runtime(path):
@@ -166,3 +170,9 @@ class DatabaseObservationReceiptTests(unittest.TestCase):
         ):
             with self.subTest(path=relative_path):
                 self.assertEqual(file_digest(ROOT / relative_path), "sha256:" + expected)
+
+    def test_prior_resource_cleanup_native_receipt_retains_its_exact_bytes(self):
+        self.assertEqual(
+            file_digest(ROOT / "receipts/owned-postgresql17-resource-cleanup-proof.json"),
+            "sha256:dc28e5a81c3054c1af3ef3891d05927b202a866bfded2d41e01a83d84f91fad8",
+        )
