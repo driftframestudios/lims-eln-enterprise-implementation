@@ -442,7 +442,7 @@ class SqlTenantStructureTests(unittest.TestCase):
         migrations = sorted((ROOT / "sql").glob("V*__*.sql"))
         self.assertEqual(
             [path.name.split("__", 1)[0] for path in migrations],
-            ["V001", "V002", "V003", "V004", "V005", "V006", "V007"],
+            ["V001", "V002", "V003", "V004", "V005", "V006", "V007", "V008"],
         )
 
     def test_workbench_reuses_canonical_measurement_and_custody_truth(self) -> None:

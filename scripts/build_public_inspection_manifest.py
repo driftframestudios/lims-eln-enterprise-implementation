@@ -41,7 +41,7 @@ ARTIFACT_GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     ),
     (
         "database_evolution",
-        "Flyway V001 through V007, its bounded identity, and deployment-shape database support.",
+        "Flyway V001 through V008, its bounded identity, and deployment-shape database support.",
         (
             "flyway.conf",
             "database/*.json",

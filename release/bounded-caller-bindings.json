@@ -37,7 +37,7 @@
     },
     {
       "path": "src/lims_eln_implementation/workbench/postgres.py",
-      "sha256": "5fdd8bfba4fb3fbf7d5710192c02c384e2d34fdeeed600b5bf29b4aca76410ae",
+      "sha256": "bd042ad606786e795922910008898d55a8e8305473606d51a0d391c1315c9684",
       "responsibility": "repeatable-read PostgreSQL Golden Specimen composition with tenant binding, lease-and-fence completion, exact replay evidence, and authenticated recovery"
     },
     {
@@ -94,6 +94,11 @@
       "path": "sql/V006__bounded_invocation_release.sql",
       "sha256": "7e1f12134f5d00ce8b488ac6da37e86b89969d5051a4b6b47accd7217f359c94",
       "responsibility": "tenant-bound pre-effect invocation release through a lease and fencing checked routine"
+    },
+    {
+      "path": "sql/V008__workbench_migration_provenance.sql",
+      "sha256": "daa016e307dc81f794cfc5791398485355813915587f1dcb75bd9ef033b15230",
+      "responsibility": "read-only execution-time migration provenance through a signed-tenant application function"
     }
   ],
   "operation_bindings": [

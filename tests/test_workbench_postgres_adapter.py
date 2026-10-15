@@ -49,6 +49,8 @@ class RecordingCursor:
         operation = self.last_operation
         if "bind_tenant_context" in operation:
             return (self.tenant_id,)
+        if "workbench_migration_head" in operation:
+            return ("008",)
         if "insert into public.bounded_call_invocation" in operation:
             return (
                 "in_progress",

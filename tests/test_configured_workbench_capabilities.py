@@ -461,7 +461,8 @@ class ConfiguredLauncherJourney(unittest.TestCase):
                 observation.text.encode(), tenant_id=runtime.TENANT_ID, run_id=run_id,
             )
             detail = observation.json()["result"]["producer_detail"]["configuration"]
-            self.assertEqual((detail["state_adapter"], detail["migration_head"]), ("postgresql", "005"))
+            self.assertEqual((detail["state_adapter"], detail["migration_head"]), ("postgresql", "008"))
+            self.assertEqual(detail["migration_provenance"], "recorded_at_execution")
             self.checkpoint("03-restarted", response.json())
         self.stage = "unavailable_dependency"
         with socket.socket() as unavailable:

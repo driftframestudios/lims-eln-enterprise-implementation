@@ -8,7 +8,7 @@
   "locations": [
     "filesystem:sql"
   ],
-  "migration_head": "007",
+  "migration_head": "008",
   "authenticated_login": "laboratory_migrator",
   "migration_role": "laboratory_owner",
   "role_assumption": "database_scoped_startup_role_after_connect_verified_noinherit_membership",
@@ -18,8 +18,8 @@
   },
   "artifact_inventory": {
     "path": "database/flyway-artifact-inventory.json",
-    "sha256": "019592b48b726e27c14b59afa655e8cdcd71ad68c8c1907988f5b86501deb0e6",
-    "aggregate_sha256": "sha256:24e25a5268b8f359953615eff98620a5c342ad10e58fed47199dcaa936dd8ebe"
+    "sha256": "03f1c2380cb81aa3dd21e1d243b1c9290ac31ea195eeaca6f8823f324e5a0aa6",
+    "aggregate_sha256": "sha256:fbc8d021fd17eaa5628b26eb18ca66019aefa8b341a78584c1f9e4c736370cb9"
   },
   "baseline_policy": "explicit_attested_baseline_only",
   "cluster_role_provisioning": {
