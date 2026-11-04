@@ -120,6 +120,32 @@ The open review count returns to zero while `quarantine_history_count` retains
 the evidence that review occurred. Exact recovery replay returns the recorded
 outcome.
 
+## Try instrument message replay
+
+The [executable example](../tests/test_custody_instrument.py) calls
+[`InstrumentIngress.ingest`](../src/lims_eln_implementation/instrument.py) on
+a synthetic measurement of `1.250 ng/uL`. Sending the same bytes under the
+same tenant and message ID returns `replayed`. Adding a single space to the
+JSON under that identity sends the changed message to quarantine. Looking up
+the original identity still returns the accepted value with its decimal scale.
+
+From the repository root, use `uv` and CPython 3.12 to run the docstring,
+the ingress regressions, and the two identity cases in an isolated environment:
+
+```sh
+example_env="$(mktemp -d)"
+uv venv --python 3.12 "$example_env"
+uv pip install --python "$example_env/bin/python" --require-hashes \
+  --only-binary=:all: -r requirements-examples.txt
+"$example_env/bin/python" -m pytest -q --doctest-modules \
+  tests/test_custody_instrument.py tests/optional/test_instrument_identity.py \
+  -k 'InstrumentIngressTests or identity_component'
+```
+
+Each case exercises a fresh in-memory ledger. The same message ID can name a
+new record for another tenant. Database persistence and concurrent workbench
+requests have their own application and database tests.
+
 ## Evidence boundary
 
 This workbench establishes engineering verification with synthetic fixtures.

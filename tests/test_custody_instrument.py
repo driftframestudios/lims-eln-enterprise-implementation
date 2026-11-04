@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import unittest
+from dataclasses import replace
 
 from lims_eln_implementation.custody import CustodyService
 from lims_eln_implementation.instrument import (
@@ -16,7 +17,7 @@ from lims_eln_implementation.store import (
     OutboxMessage,
 )
 
-from helpers import NOW
+from tests.helpers import NOW
 
 
 class CustodyTests(unittest.TestCase):
@@ -180,6 +181,35 @@ class CustodyTests(unittest.TestCase):
 
 
 class InstrumentIngressTests(unittest.TestCase):
+    """Submit a synthetic instrument message and inspect its first recorded result.
+
+    >>> from datetime import UTC, datetime
+    >>> ingress = InstrumentIngress()
+    >>> message = InstrumentEnvelope(
+    ...     tenant_id="SYN-TENANT-A", message_id="SYN-MSG-001",
+    ...     instrument_id="SYN-INSTRUMENT-01", specimen_id="SYN-SPECIMEN-01",
+    ...     captured_at=datetime(2026, 7, 28, 12, tzinfo=UTC),
+    ...     media_type="application/json",
+    ...     raw_bytes=b'{"analyte":"A","value":"1.250","unit":"ng/uL"}',
+    ... )
+    >>> ingress.ingest(message).disposition.value
+    'accepted'
+    >>> ingress.ingest(message).disposition.value
+    'replayed'
+
+    A trailing space preserves the JSON measurement but changes the source bytes.
+
+    >>> changed = replace(message, raw_bytes=message.raw_bytes + b" ")
+    >>> collision = ingress.ingest(changed)
+    >>> collision.disposition.value, collision.reason_code
+    ('quarantined', 'message_identity_collision')
+    >>> first = ingress.result(message.tenant_id, message.message_id)
+    >>> first.disposition.value
+    'accepted'
+    >>> first.normalized_observation.value, first.normalized_observation.unit
+    ('1.250', 'ng/uL')
+    """
+
     def setUp(self) -> None:
         self.ingress = InstrumentIngress()
 
@@ -263,19 +293,28 @@ class InstrumentIngressTests(unittest.TestCase):
         self.assertIn("repair", result.recovery)
 
     def test_nonfinite_duplicate_and_structured_values_enter_quarantine(self) -> None:
-        examples = {
-            "nonfinite": b'{"analyte":"A","value":NaN,"unit":"ng/uL"}',
-            "duplicate": b'{"analyte":"A","value":"1","value":"2","unit":"ng/uL"}',
-            "structured": b'{"analyte":"A","value":{"n":1},"unit":"ng/uL"}',
-            "boolean": b'{"analyte":"A","value":true,"unit":"ng/uL"}',
-        }
-        for index, (label, raw) in enumerate(examples.items(), start=1):
+        examples = (
+            ("nonfinite", b'"value":NaN', "malformed_json"),
+            ("duplicate", b'"value":"1","value":"2"', "malformed_json"),
+            ("structured", b'"value":{"n":1}', "quantity_requires_mapping"),
+            ("boolean", b'"value":true', "quantity_requires_mapping"),
+        )
+        for label, member, reason in examples:
             with self.subTest(label=label):
-                result = self.ingress.ingest(
-                    self.envelope(raw, message_id=f"SYN-STRICT-{index}")
-                )
+                raw = b'{"analyte":"A",' + member + b',"unit":"ng/uL"}'
+                envelope = self.envelope(raw, message_id=f"SYN-STRICT-{label}")
+                result = self.ingress.ingest(envelope)
                 self.assertEqual(result.disposition, IngressDisposition.QUARANTINED)
+                self.assertEqual(result.reason_code, reason)
                 self.assertIsNone(result.normalized_digest)
+
+    def test_naive_timestamp_leaves_the_identity_available(self) -> None:
+        envelope = self.envelope(b'{"analyte":"A","value":"1","unit":"ng/uL"}')
+        with self.assertRaisesRegex(DomainError, "explicit timezone"):
+            self.ingress.ingest(replace(envelope, captured_at=NOW.replace(tzinfo=None)))
+        self.assertIsNone(self.ingress.result(envelope.tenant_id, envelope.message_id))
+        self.assertEqual(self.ingress.quarantine, [])
+        self.assertEqual(self.ingress.ingest(envelope).disposition, IngressDisposition.ACCEPTED)
 
     def test_analyte_and_released_fields_require_profile_conformance(self) -> None:
         object_analyte = self.ingress.ingest(
@@ -349,6 +388,8 @@ class InstrumentIngressTests(unittest.TestCase):
         self.assertEqual(replay.disposition, IngressDisposition.REPLAYED)
         self.assertEqual(replay.reason_code, "malformed_json")
         self.assertEqual(changed.reason_code, "message_identity_collision")
+        retained = self.ingress.result(envelope.tenant_id, envelope.message_id)
+        self.assertEqual(retained, first)
 
 
 if __name__ == "__main__":

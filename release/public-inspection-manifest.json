@@ -494,7 +494,7 @@
       "responsibility": "Runtime, telemetry, infrastructure, and exclusion configuration that shapes deployment and protected-material handling."
     },
     {
-      "aggregate_sha256": "sha256:57dec33e027d6c9e8ced4f986372af3d71a167d21025b0883adb60c1670aaa57",
+      "aggregate_sha256": "sha256:ff6a08535f1827a7be59a12d27b3af5f00dd3c7ac704c66a42891ecd81e75e2e",
       "artifacts": [
         {
           "path": ".github/workflows/ci.yml",
@@ -512,6 +512,11 @@
           "size_bytes": 340
         },
         {
+          "path": "requirements-examples.txt",
+          "sha256": "sha256:903cc15903799d1b298fd3d419f9cd6c19f7d486ec160385352a64a3218dd980",
+          "size_bytes": 1140
+        },
+        {
           "path": "requirements-lifecycle.txt",
           "sha256": "sha256:8a2c0de8960aa2fb8bfab5995236cee2af5a94c93da4f07cad907e23de7b1541",
           "size_bytes": 242
@@ -523,8 +528,8 @@
         },
         {
           "path": "scripts/build_public_inspection_manifest.py",
-          "sha256": "sha256:acfe4f9dc0a8cac95ea75d9822235bebdcb14da9ec99f11acdc3f2be84ebe7c1",
-          "size_bytes": 22503
+          "sha256": "sha256:cd019f2874b10e2e73d84f7edbe1027f83d19966577a78cd9068b85e98210c6c",
+          "size_bytes": 22579
         },
         {
           "path": "scripts/check_automation_contract.py",
@@ -582,6 +587,11 @@
           "size_bytes": 661
         },
         {
+          "path": "tests/optional/test_instrument_identity.py",
+          "sha256": "sha256:c01ae522ba3bba047a5e5d28d855d248b689ebedc6f0c3c26c1b1088576c9905",
+          "size_bytes": 1384
+        },
+        {
           "path": "tests/test_administrative_core.py",
           "sha256": "sha256:fb18382bb4984d08dd326d654b280ab8f400672e77d8f7d8d08258c64086820e",
           "size_bytes": 6880
@@ -623,8 +633,8 @@
         },
         {
           "path": "tests/test_custody_instrument.py",
-          "sha256": "sha256:c00e11e39264e72ddf08538452a92fca50daf26d032887d0aa9434a3cb225680",
-          "size_bytes": 14695
+          "sha256": "sha256:4a8f09248e83395bce6eb0882c8f07bf83a16a3ab30f89d0076b3dc40dcb2674",
+          "size_bytes": 16692
         },
         {
           "path": "tests/test_database_lifecycle_receiver.py",
@@ -858,7 +868,7 @@
       "responsibility": "Synthetic verification records whose own mode, stage, environment, and limitations define their evidence reach."
     },
     {
-      "aggregate_sha256": "sha256:590ce7fc8b502dd74abfde639d45d12cdef8bdb612011136651e7f3dceeb27f2",
+      "aggregate_sha256": "sha256:f790bdd1096faf90879abc76b0690efd82f53035c772b72144846a9dc43803ee",
       "artifacts": [
         {
           "path": ".agents/skills/README.md",
@@ -957,8 +967,8 @@
         },
         {
           "path": "docs/README.md",
-          "sha256": "sha256:20ad7832ebdbbcce09d4b4a0adc6a35d038bbc4fff1bf6684c351bca70325dc7",
-          "size_bytes": 5198
+          "sha256": "sha256:483089dedbd9148d09f21fc9f7320dbc4ff272449c0d1ac056f5d3e83a6b0506",
+          "size_bytes": 5426
         },
         {
           "path": "docs/WORKBENCH_CAPABILITIES.md",
@@ -997,8 +1007,8 @@
         },
         {
           "path": "docs/golden-specimen-workbench.md",
-          "sha256": "sha256:ad7eb08cd6c17bea9f7a8e083970b49a6be8efa0f2738597db0c12b53b9f52cc",
-          "size_bytes": 7955
+          "sha256": "sha256:0d786ae2b0170a0f69f86a452d383f68f614e74b647738e30ba63e3a79f1d974",
+          "size_bytes": 9195
         },
         {
           "path": "docs/offline-administrative-journey.md",
@@ -1214,7 +1224,7 @@
   "repository_release": "0.3.2",
   "schema_version": "1.0.0",
   "source_identity": {
-    "aggregate_sha256": "sha256:764c1d0d842cba5cdced5e0ebef032f6a161d185bdd4f5aa8b760590920816a4",
+    "aggregate_sha256": "sha256:885cafadba7432fc687e9f3dcd93b06b4a9e2808d8263c09e021d190be573fda",
     "kind": "content_addressed_artifact_inventory"
   }
 }
