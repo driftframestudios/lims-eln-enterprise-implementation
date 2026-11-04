@@ -33,6 +33,7 @@ owns health checks, grants, replay, configuration, and recovery.
 | --- | --- | --- |
 | Explore the interface and a first example | Process-local command above | Fresh in-memory state for each process |
 | Retain state across restarts | [PostgreSQL native entry](runbooks/local-workbench-entry.v0.1.md) | Explicit database roles, migrations, configuration, and readiness |
+| Distinguish an instrument replay from a collision | [Run the instrument message example](golden-specimen-workbench.md#try-instrument-message-replay) | One synthetic measurement, its original bytes, and the retained decision |
 | Reproduce the container journey | [Container entry](runbooks/local-container-entry.v0.1.md) | Prepared external secret files, a named Compose project, retained data, and recovery steps |
 | Inspect a completed run elsewhere | [Observation export](runbooks/local-observation-export.v0.1.md) | A selected run and its exported observation for a receiving comparison |
 | Compare implementation and selected-future behavior | [Comparative Evidence](https://github.com/driftframestudios/lims-eln-comparative-evidence) | Matching JSON/HTML reports with explicit input and evidence standing |
